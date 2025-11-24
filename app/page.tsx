@@ -5,6 +5,7 @@ import { RefreshCw } from 'lucide-react';
 import { ExpandableRow } from '@/components/ExpandableRow';
 import { detectRepoType, getTypeColor } from '@/lib/repo-type';
 import { calculateDocHealth, getDocHealthColor } from '@/lib/doc-health';
+import { getLanguageColor } from '@/lib/language-colors';
 
 interface Repo {
   id: string;
@@ -192,7 +193,7 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-6 py-4">
                         {repo.language ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/30 text-blue-300 border border-blue-800">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getLanguageColor(repo.language)}`}>
                             {repo.language}
                           </span>
                         ) : (

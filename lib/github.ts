@@ -15,6 +15,7 @@ export interface RepoMetadata {
   createdAt: string;
   updatedAt: string;
   pushedAt: string;
+  isFork: boolean;
 }
 
 export interface BranchInfo {
@@ -63,6 +64,7 @@ export class GitHubClient {
       createdAt: repo.created_at || '',
       updatedAt: repo.updated_at || '',
       pushedAt: repo.pushed_at || '',
+      isFork: repo.fork || false,
     }));
   }
 

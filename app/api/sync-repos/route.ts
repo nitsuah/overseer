@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
             try {
             // Upsert repo - Neon returns array directly, not { rows: [...] }
             const repoRows = await db`
-                INSERT INTO repos (name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, last_synced, updated_at)
-                VALUES (${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, NOW(), NOW())
+                INSERT INTO repos (name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, is_fork, last_synced, updated_at)
+                VALUES (${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, ${repo.isFork}, NOW(), NOW())
                 ON CONFLICT (name) DO UPDATE SET
                   description = EXCLUDED.description,
                   language = EXCLUDED.language,
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
                   url = EXCLUDED.url,
                   homepage = EXCLUDED.homepage,
                   topics = EXCLUDED.topics,
+                  is_fork = EXCLUDED.is_fork,
                   last_synced = NOW(),
                   updated_at = NOW()
                 RETURNING id;

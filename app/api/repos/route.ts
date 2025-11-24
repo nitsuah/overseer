@@ -7,7 +7,7 @@ export async function GET() {
 
         const repos = await db`
             SELECT * FROM repos
-            ORDER BY updated_at DESC, stars DESC
+            ORDER BY is_fork ASC, stars DESC, updated_at DESC
         `;
 
         return NextResponse.json(repos);

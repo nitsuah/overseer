@@ -1,15 +1,18 @@
 # Tasks
 
 ## Todo
-- [ ] Add unit tests for markdown parsers
-- [ ] Implement "Fix All" for multiple repositories simultaneously
-- [ ] Add "Last Commit Age" to health metrics
-- [ ] Improve error handling for GitHub API rate limits
-- [ ] Add loading skeletons for dashboard rows
+- [ ] Add unit tests for GitHub client (fix mocking issues)
+- [ ] Implement baseline GitHub API metrics (Last Commit Date, Open PR/Issue Counts)
+- [ ] Add README Freshness metric
+- [ ] Implement Health Score Meter visualization
+- [ ] Add Last Commit Date to dashboard rows
+- [ ] Implement Sync Status timestamp display
+- [ ] Add pre-commit hooks to project
+- [ ] Implement full E2E tests with Playwright
 
 ## In Progress
-- [ ] Polishing Dashboard UI/UX
-- [ ] Refactoring API routes for better error handling
+- [x] Code coverage improvements (parsers now at 87.5%)
+- [ ] Documentation updates across all files
 
 ## Done
 - [x] Setup Next.js project with TypeScript and Tailwind

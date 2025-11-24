@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
             
             // Upsert repo - Neon returns array directly, not { rows: [...] }
             const repoRows = await db`
-                INSERT INTO repos (name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, is_fork, repo_type, last_synced, updated_at)
-                VALUES (${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, ${repo.isFork}, ${repoType.type}, NOW(), NOW())
+                INSERT INTO repos (name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, is_fork, repo_type, is_hidden, last_synced, updated_at)
+                VALUES (${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, ${repo.isFork}, ${repoType.type}, FALSE, NOW(), NOW())
                 ON CONFLICT (name) DO UPDATE SET
                   description = EXCLUDED.description,
                   language = EXCLUDED.language,
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
                   topics = EXCLUDED.topics,
                   is_fork = EXCLUDED.is_fork,
                   repo_type = EXCLUDED.repo_type,
+                  is_hidden = FALSE,
                   last_synced = NOW(),
                   updated_at = NOW()
                 RETURNING id;

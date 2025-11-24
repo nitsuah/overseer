@@ -7,6 +7,7 @@ export async function GET() {
 
         const repos = await db`
             SELECT * FROM repos
+            WHERE is_hidden = FALSE OR is_hidden IS NULL
             ORDER BY 
                 is_fork ASC,
                 CASE 

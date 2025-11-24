@@ -1,9 +1,9 @@
 'use client';
 
 import { Fragment, useEffect, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, X, Filter } from 'lucide-react';
 import { ExpandableRow } from '@/components/ExpandableRow';
-import { detectRepoType, getTypeColor } from '@/lib/repo-type';
+import { detectRepoType, getTypeColor, RepoType } from '@/lib/repo-type';
 import { calculateDocHealth, getDocHealthColor } from '@/lib/doc-health';
 import { getLanguageColor } from '@/lib/language-colors';
 
@@ -18,6 +18,8 @@ interface Repo {
   homepage: string | null;
   topics: string[];
   last_synced: string;
+  is_fork?: boolean;
+  repo_type?: string;
 }
 
 interface RepoDetails {
@@ -45,6 +47,12 @@ export default function DashboardPage() {
   const [expandedRepos, setExpandedRepos] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  
+  // Filter state
+  const [filterType, setFilterType] = useState<RepoType | 'all'>('all');
+  const [filterLanguage, setFilterLanguage] = useState<string>('all');
+  const [filterFork, setFilterFork] = useState<'all' | 'no-forks' | 'forks-only'>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchRepos();
@@ -114,6 +122,45 @@ export default function DashboardPage() {
     setExpandedRepos(newExpanded);
   }
 
+  async function handleRemoveRepo(repoName: string) {
+    if (!confirm(`Hide "${repoName}" from the list? You can re-sync to bring it back.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/repos/${repoName}/hide`, { method: 'POST' });
+      if (res.ok) {
+        await fetchRepos();
+        // Remove from expanded and details
+        const newExpanded = new Set(expandedRepos);
+        newExpanded.delete(repoName);
+        setExpandedRepos(newExpanded);
+        const newDetails = { ...repoDetails };
+        delete newDetails[repoName];
+        setRepoDetails(newDetails);
+      }
+    } catch (error) {
+      console.error('Failed to hide repo:', error);
+    }
+  }
+
+  // Get unique languages and types for filters
+  const languages = Array.from(new Set(repos.map(r => r.language).filter(Boolean))) as string[];
+  const repoTypes: RepoType[] = ['web-app', 'game', 'tool', 'library', 'bot', 'research', 'unknown'];
+
+  // Filter repos
+  const filteredRepos = repos.filter(repo => {
+    // Use stored repo_type if available, otherwise detect it
+    const repoType = (repo.repo_type as RepoType) || detectRepoType(repo.name, repo.description, repo.language, repo.topics).type;
+    
+    if (filterType !== 'all' && repoType !== filterType) return false;
+    if (filterLanguage !== 'all' && repo.language !== filterLanguage) return false;
+    if (filterFork === 'no-forks' && repo.is_fork) return false;
+    if (filterFork === 'forks-only' && !repo.is_fork) return false;
+    
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -124,24 +171,97 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">Repositories</h2>
-          <p className="text-slate-400 mt-1">
-            {repos.length} {repos.length === 1 ? 'repository' : 'repositories'} tracked
-          </p>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold">Repositories</h2>
+            <p className="text-slate-400 mt-1">
+              {filteredRepos.length} of {repos.length} {repos.length === 1 ? 'repository' : 'repositories'} {filteredRepos.length !== repos.length ? '(filtered)' : ''}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                showFilters 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                  : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+              }`}
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+            </button>
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed rounded-lg transition-colors"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing...' : 'Sync Repos'}
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed rounded-lg transition-colors"
-        >
-          <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-          {syncing ? 'Syncing...' : 'Sync Repos'}
-        </button>
+
+        {showFilters && (
+          <div className="glass rounded-lg p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Filters</h3>
+              <button
+                onClick={() => {
+                  setFilterType('all');
+                  setFilterLanguage('all');
+                  setFilterFork('all');
+                }}
+                className="text-sm text-slate-400 hover:text-slate-200"
+              >
+                Clear all
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Type</label>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value as RepoType | 'all')}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Types</option>
+                  {repoTypes.map(type => (
+                    <option key={type} value={type}>{type.replace('-', ' ')}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Language</label>
+                <select
+                  value={filterLanguage}
+                  onChange={(e) => setFilterLanguage(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Languages</option>
+                  {languages.sort().map(lang => (
+                    <option key={lang} value={lang}>{lang}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Fork Status</label>
+                <select
+                  value={filterFork}
+                  onChange={(e) => setFilterFork(e.target.value as 'all' | 'no-forks' | 'forks-only')}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Repos</option>
+                  <option value="no-forks">No Forks</option>
+                  <option value="forks-only">Forks Only</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {repos.length === 0 ? (
+      {filteredRepos.length === 0 ? (
         <div className="glass rounded-lg p-12 text-center">
           <p className="text-slate-400 text-lg">No repositories found</p>
           <p className="text-slate-500 text-sm mt-2">
@@ -160,11 +280,18 @@ export default function DashboardPage() {
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Stars</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Docs</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Links</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {repos.map((repo) => {
+              {filteredRepos.map((repo) => {
+                // Use stored repo_type if available, otherwise detect it
+                const repoType = (repo.repo_type as RepoType) || detectRepoType(repo.name, repo.description, repo.language, repo.topics).type;
                 const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
+                // Override type if we have stored type
+                if (repo.repo_type) {
+                  typeInfo.type = repoType;
+                }
                 const details = repoDetails[repo.name];
                 const docHealth = details
                   ? calculateDocHealth(details.docStatuses, typeInfo.type)
@@ -243,10 +370,19 @@ export default function DashboardPage() {
                           )}
                         </div>
                       </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleRemoveRepo(repo.name)}
+                          className="text-slate-400 hover:text-red-400 transition-colors"
+                          title="Hide this repository"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </td>
                     </tr>
                     {isExpanded && details && (
                       <tr>
-                        <td colSpan={7} className="p-0">
+                        <td colSpan={8} className="p-0">
                           <ExpandableRow
                             repoName={repo.name}
                             tasks={details.tasks}

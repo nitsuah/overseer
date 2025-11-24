@@ -9,7 +9,8 @@
     "lint": "eslint",
     "setup-db": "tsx scripts/setup-db.ts",
     "migrate:add-is-fork": "tsx scripts/add-is-fork.ts",
-    "migrate:add-repo-type": "tsx scripts/add-repo-type.ts"
+    "migrate:add-repo-type": "tsx scripts/add-repo-type.ts",
+    "migrate:add-is-hidden": "tsx scripts/add-is-hidden.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { auth, signOut } from "@/auth";
+import { redirect } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -9,11 +11,18 @@ export const metadata: Metadata = {
   description: "A unified dashboard for managing all your GitHub repositories",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
+  // Redirect to login if not authenticated (except on login page)
+  if (!session && !children?.toString().includes('login')) {
+    redirect('/login');
+  }
+
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} bg-slate-950 text-white antialiased`}>
@@ -25,14 +34,33 @@ export default function RootLayout({
                 <h1 className="text-xl font-bold">Overseer</h1>
               </div>
               <div className="flex items-center gap-4">
-                <a
-                  href="https://github.com/nitsuah/overseer"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-slate-400 hover:text-white transition-colors"
-                >
-                  GitHub
-                </a>
+                {session?.user && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      {session.user.image && (
+                        <img
+                          src={session.user.image}
+                          alt={session.user.name || 'User'}
+                          className="h-8 w-8 rounded-full"
+                        />
+                      )}
+                      <span className="text-sm text-slate-300">{session.user.name}</span>
+                    </div>
+                    <form
+                      action={async () => {
+                        "use server"
+                        await signOut({ redirectTo: '/login' })
+                      }}
+                    >
+                      <button
+                        type="submit"
+                        className="text-sm text-slate-400 hover:text-white transition-colors"
+                      >
+                        Sign out
+                      </button>
+                    </form>
+                  </>
+                )}
               </div>
             </div>
           </div>

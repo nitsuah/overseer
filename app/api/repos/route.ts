@@ -7,7 +7,20 @@ export async function GET() {
 
         const repos = await db`
             SELECT * FROM repos
-            ORDER BY is_fork ASC, stars DESC, updated_at DESC
+            ORDER BY 
+                is_fork ASC,
+                CASE 
+                    WHEN repo_type = 'unknown' THEN 999
+                    WHEN repo_type = 'web-app' THEN 1
+                    WHEN repo_type = 'game' THEN 2
+                    WHEN repo_type = 'tool' THEN 3
+                    WHEN repo_type = 'library' THEN 4
+                    WHEN repo_type = 'bot' THEN 5
+                    WHEN repo_type = 'research' THEN 6
+                    ELSE 999
+                END ASC,
+                stars DESC, 
+                updated_at DESC
         `;
 
         return NextResponse.json(repos);

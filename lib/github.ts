@@ -171,4 +171,57 @@ export class GitHubClient {
 
     return prData.html_url;
   }
+
+  async createPrForFiles(
+    repo: string,
+    branchName: string,
+    files: Array<{ path: string; content: string }>,
+    message: string
+  ): Promise<string> {
+    // 1. Get default branch SHA
+    const { data: repoData } = await this.octokit.repos.get({
+      owner: this.owner,
+      repo,
+    });
+    const defaultBranch = repoData.default_branch;
+
+    const { data: refData } = await this.octokit.git.getRef({
+      owner: this.owner,
+      repo,
+      ref: `heads/${defaultBranch}`,
+    });
+    let sha = refData.object.sha;
+
+    // 2. Create new branch
+    await this.octokit.git.createRef({
+      owner: this.owner,
+      repo,
+      ref: `refs/heads/${branchName}`,
+      sha,
+    });
+
+    // 3. Create/Update files
+    for (const file of files) {
+      await this.octokit.repos.createOrUpdateFileContents({
+        owner: this.owner,
+        repo,
+        path: file.path,
+        message: `docs: add ${file.path}`,
+        content: Buffer.from(file.content).toString('base64'),
+        branch: branchName,
+      });
+    }
+
+    // 4. Create PR
+    const { data: prData } = await this.octokit.pulls.create({
+      owner: this.owner,
+      repo,
+      title: message,
+      head: branchName,
+      base: defaultBranch,
+      body: `Automated PR to add missing documentation:\n\n${files.map(f => `- ${f.path}`).join('\n')}`,
+    });
+
+    return prData.html_url;
+  }
 }

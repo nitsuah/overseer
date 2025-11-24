@@ -13,6 +13,7 @@
     "migrate:add-is-hidden": "tsx scripts/add-is-hidden.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@neondatabase/serverless": "^1.0.2",
     "@octokit/rest": "^22.0.1",
     "gray-matter": "^4.0.3",

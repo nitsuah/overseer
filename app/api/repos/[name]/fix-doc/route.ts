@@ -32,10 +32,19 @@ export async function POST(
             return NextResponse.json({ error: 'Template not found' }, { status: 404 });
         }
 
-        // Initialize GitHub client
-        const githubToken = process.env.GITHUB_TOKEN;
-        if (!githubToken) throw new Error('GITHUB_TOKEN not configured');
-        const github = new GitHubClient(githubToken, 'nitsuah'); // TODO: Get owner dynamically or from session? For now hardcoded as per sync-repos
+        // Get repo owner and full name
+        const db = getNeonClient();
+        const repoRows = await db`SELECT full_name FROM repos WHERE name = ${repoName} LIMIT 1`;
+        if (repoRows.length === 0) {
+            return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
+        }
+        const fullName = repoRows[0].full_name;
+        const owner = fullName.split('/')[0];
+
+        // Initialize GitHub client with session token
+        const githubToken = (session as any).accessToken;
+        if (!githubToken) throw new Error('GitHub access token not found in session');
+        const github = new GitHubClient(githubToken, owner);
 
         // Create a new branch
         const branchName = `docs/add-${docType.toLowerCase()}-${Date.now()}`;

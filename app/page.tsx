@@ -195,6 +195,32 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleFixAllDocs(repoName: string) {
+    if (!confirm(`Create a single PR to add ALL missing docs to ${repoName}?`)) {
+      return;
+    }
+
+    try {
+      setFixingDoc(true);
+      const res = await fetch(`/api/repos/${repoName}/fix-all-docs`, {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`PR created successfully! Added ${data.count} files.`);
+      } else {
+        const err = await res.json();
+        alert(err.message || `Failed to create PR: ${err.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to fix all docs:', error);
+      alert('Failed to create PR');
+    } finally {
+      setFixingDoc(false);
+    }
+  }
+
   // Get unique languages and types for filters
   const languages = Array.from(new Set(repos.map(r => r.language).filter(Boolean))) as string[];
   const repoTypes: RepoType[] = ['web-app', 'game', 'tool', 'library', 'bot', 'research', 'unknown'];
@@ -328,7 +354,20 @@ export default function DashboardPage() {
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300 hidden md:table-cell">Description</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Language</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Health</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Docs</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                  <div className="flex items-center gap-2">
+                    Docs
+                    <button
+                      onClick={() => {
+                        // This is a bit hacky, we'll implement a proper batch fix later or per-repo
+                        // For now let's just show the label
+                      }}
+                      className="text-xs font-normal text-blue-400 hover:text-blue-300 hidden"
+                    >
+                      Fix All
+                    </button>
+                  </div>
+                </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Links</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
               </tr>
@@ -431,6 +470,16 @@ export default function DashboardPage() {
                             <span className={`text-xs font-medium ml-1 ${getDocHealthColor(docHealth?.score || 0)}`}>
                               {docHealth?.score}%
                             </span>
+                            {docHealth && docHealth.score < 100 && (
+                              <button
+                                onClick={() => handleFixAllDocs(repo.name)}
+                                className="ml-2 text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors"
+                                title="Fix all missing docs"
+                                disabled={fixingDoc}
+                              >
+                                Fix All
+                              </button>
+                            )}
                           </div>
                         ) : (
                           <span className="text-slate-500 text-sm">—</span>

@@ -7,10 +7,36 @@ import { parseMetrics } from './parsers/metrics';
 export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any) {
     const owner = repo.fullName.split('/')[0];
 
-    // Upsert repo
+    // Fetch additional metrics
+    let lastCommitDate = null;
+    let openPrs = 0;
+
+    try {
+        // Use pushedAt from repo metadata as last commit approximation
+        lastCommitDate = repo.pushedAt;
+    } catch (e) {
+        console.warn(`Failed to get commit data for ${repo.fullName}`, e);
+    }
+
+    try {
+        // Get open PRs count
+        const prs = await github.getPullRequests(repo.name, owner);
+        openPrs = prs.length;
+    } catch (e) {
+        console.warn(`Failed to fetch PRs for ${repo.fullName}`, e);
+    }
+
+    // Upsert repo with new metrics
     const repoRows = await db`
-        INSERT INTO repos (name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, last_synced, updated_at)
-        VALUES (${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, NOW(), NOW())
+        INSERT INTO repos (
+            name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, 
+            last_synced, updated_at, last_commit_date, open_prs, open_issues_count
+        )
+        VALUES (
+            ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
+            ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
+            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${repo.openIssues}
+        )
         ON CONFLICT (name) DO UPDATE SET
           description = EXCLUDED.description,
           language = EXCLUDED.language,
@@ -21,7 +47,10 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           homepage = EXCLUDED.homepage,
           topics = EXCLUDED.topics,
           last_synced = NOW(),
-          updated_at = NOW()
+          updated_at = NOW(),
+          last_commit_date = EXCLUDED.last_commit_date,
+          open_prs = EXCLUDED.open_prs,
+          open_issues_count = EXCLUDED.open_issues_count
         RETURNING id;
     `;
     const repoId = repoRows[0].id;

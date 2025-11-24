@@ -1,29 +1,16 @@
-# Tasks
-
-## Todo
-- [ ] Add unit tests for GitHub client (fix mocking issues)
-- [ ] Implement baseline GitHub API metrics (Last Commit Date, Open PR/Issue Counts)
-- [ ] Add README Freshness metric
-- [ ] Implement Health Score Meter visualization
-- [ ] Add Last Commit Date to dashboard rows
-- [ ] Implement Sync Status timestamp display
-- [ ] Add pre-commit hooks to project
-- [ ] Implement full E2E tests with Playwright
-
-## In Progress
-- [x] Code coverage improvements (parsers now at 87.5%)
-- [ ] Documentation updates across all files
-
-## Done
-- [x] Setup Next.js project with TypeScript and Tailwind
-- [x] Configure Neon Postgres database
-- [x] Implement GitHub OAuth with NextAuth
-- [x] Create `sync-repos` Netlify function
 - [x] Build main dashboard table with sorting and filtering
 - [x] Implement "Fix Missing Docs" feature
 - [x] Integrate Google Gemini for AI summaries
 - [x] Add "Add Custom Repo" functionality
-
+- [x] Code coverage improvements (parsers now at 87.5%)
+- [x] Implement baseline GitHub API metrics (Last Commit Date, Open PR/Issue Counts)
+- [x] Add Last Commit Date to dashboard rows
+- [x] Implement Sync Status timestamp display
+- [ ] Update all metrics
+- [ ] Validate Health Score Meter visualization
+- [ ] Add pre-commit hooks to project
+- [ ] Implement full E2E tests with Playwright
+- [ ] Add metrics to track pre-commit, e2e, playwright (either by file detection or metric inclusion/flags in METRICS.md)
 <!--
 AGENT INSTRUCTIONS:
 1. Add new tasks to "Todo" as they arise.

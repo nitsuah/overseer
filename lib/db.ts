@@ -31,6 +31,9 @@ export interface Repo {
     testing_status: string | null;
     coverage_score: number | null;
     ai_summary: string | null;
+    last_commit_date: string | null;
+    open_prs: number;
+    open_issues_count: number;
 }
 
 export interface Task {

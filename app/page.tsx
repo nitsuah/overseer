@@ -1,11 +1,12 @@
 'use client';
 
 import { Fragment, useEffect, useState } from 'react';
-import { RefreshCw, X, Filter, FileText, Map, ListTodo, Activity, ChevronDown, ChevronUp, Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { RefreshCw, X, Filter, FileText, Map, ListTodo, Activity, ChevronDown, ChevronUp, Shield, ShieldAlert, ShieldCheck, Clock, GitPullRequest, AlertCircle } from 'lucide-react';
 import { ExpandableRow } from '@/components/ExpandableRow';
 import { detectRepoType, getTypeColor, RepoType } from '@/lib/repo-type';
 import { calculateDocHealth, getDocHealthColor } from '@/lib/doc-health';
 import { getLanguageColor } from '@/lib/language-colors';
+import { formatTimeAgo, getCommitFreshnessColor } from '@/lib/date-utils';
 
 interface Repo {
   id: string;
@@ -24,6 +25,9 @@ interface Repo {
   testing_status?: string;
   coverage_score?: number;
   ai_summary?: string;
+  last_commit_date?: string | null;
+  open_prs?: number;
+  open_issues_count?: number;
 }
 
 interface RepoDetails {
@@ -352,8 +356,8 @@ export default function DashboardPage() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${showFilters
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
                 }`}
             >
               <Filter className="h-4 w-4" />
@@ -446,6 +450,7 @@ export default function DashboardPage() {
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300 hidden md:table-cell">Description</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Language</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Health</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Activity</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
                   <div className="flex items-center gap-2">
                     Docs
@@ -461,6 +466,7 @@ export default function DashboardPage() {
                   </div>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Links</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300 hidden lg:table-cell">Last Sync</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
               </tr>
             </thead>
@@ -552,6 +558,29 @@ export default function DashboardPage() {
                           )}
                         </div>
                       </td>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1 text-xs">
+                          <div className={`flex items-center gap-1 ${getCommitFreshnessColor(repo.last_commit_date)}`} title={repo.last_commit_date || 'No commits'}>
+                            <Clock className="h-3 w-3" />
+                            <span>{formatTimeAgo(repo.last_commit_date)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-slate-400">
+                            {(repo.open_prs !== undefined && repo.open_prs > 0) && (
+                              <span className="flex items-center gap-1" title={`${repo.open_prs} open PRs`}>
+                                <GitPullRequest className="h-3 w-3" />
+                                {repo.open_prs}
+                              </span>
+                            )}
+                            {(repo.open_issues_count !== undefined && repo.open_issues_count > 0) && (
+                              <span className="flex items-center gap-1" title={`${repo.open_issues_count} open issues`}>
+                                <AlertCircle className="h-3 w-3" />
+                                {repo.open_issues_count}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
                       <td className="px-6 py-4">
                         {details ? (
                           <div className="flex items-center gap-2">
@@ -629,6 +658,11 @@ export default function DashboardPage() {
                           )}
                         </div>
                       </td>
+                      <td className="px-6 py-4 hidden lg:table-cell">
+                        <div className="text-xs text-slate-400">
+                          {formatTimeAgo(repo.last_synced)}
+                        </div>
+                      </td>
                       <td className="px-6 py-4">
                         <button
                           onClick={() => handleRemoveRepo(repo.name)}
@@ -641,7 +675,7 @@ export default function DashboardPage() {
                     </tr>
                     {isExpanded && details && (
                       <tr>
-                        <td colSpan={8} className="p-0">
+                        <td colSpan={10} className="p-0">
                           <ExpandableRow
                             repoName={repo.name}
                             tasks={details.tasks}

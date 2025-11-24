@@ -23,6 +23,7 @@ interface Repo {
   health_score?: number;
   testing_status?: string;
   coverage_score?: number;
+  ai_summary?: string;
 }
 
 interface RepoDetails {
@@ -60,6 +61,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [fixingDoc, setFixingDoc] = useState(false);
+  const [generatingSummary, setGeneratingSummary] = useState<string | null>(null);
+  const [showAddRepo, setShowAddRepo] = useState(false);
+  const [addRepoUrl, setAddRepoUrl] = useState('');
+  const [addingRepo, setAddingRepo] = useState(false);
 
   // Filter state
   const [filterType, setFilterType] = useState<RepoType | 'all'>('all');
@@ -83,6 +88,36 @@ export default function DashboardPage() {
       console.error('Failed to fetch repos:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleAddRepo(e: React.FormEvent) {
+    e.preventDefault();
+    if (!addRepoUrl.trim()) return;
+
+    try {
+      setAddingRepo(true);
+      const res = await fetch('/api/repos/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: addRepoUrl }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Successfully added ${data.repo.fullName}`);
+        setAddRepoUrl('');
+        setShowAddRepo(false);
+        await fetchRepos();
+      } else {
+        const err = await res.json();
+        alert(`Failed to add repo: ${err.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to add repo:', error);
+      alert('Failed to add repo');
+    } finally {
+      setAddingRepo(false);
     }
   }
 
@@ -173,7 +208,7 @@ export default function DashboardPage() {
     }
 
     try {
-      setFixingDoc(true); // Set loading state
+      setFixingDoc(true);
       const res = await fetch(`/api/repos/${repoName}/fix-doc`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -191,7 +226,7 @@ export default function DashboardPage() {
       console.error('Failed to fix doc:', error);
       alert('Failed to create PR');
     } finally {
-      setFixingDoc(false); // Clear loading state
+      setFixingDoc(false);
     }
   }
 
@@ -218,6 +253,29 @@ export default function DashboardPage() {
       alert('Failed to create PR');
     } finally {
       setFixingDoc(false);
+    }
+  }
+
+  async function handleGenerateSummary(repoName: string) {
+    try {
+      setGeneratingSummary(repoName);
+      const res = await fetch(`/api/repos/${repoName}/generate-summary`, {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Update local state
+        setRepos(prev => prev.map(r => r.name === repoName ? { ...r, ai_summary: data.summary } : r));
+      } else {
+        const err = await res.json();
+        alert(`Failed to generate summary: ${err.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to generate summary:', error);
+      alert('Failed to generate summary');
+    } finally {
+      setGeneratingSummary(null);
     }
   }
 
@@ -257,11 +315,45 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {showAddRepo ? (
+              <form onSubmit={handleAddRepo} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={addRepoUrl}
+                  onChange={(e) => setAddRepoUrl(e.target.value)}
+                  placeholder="owner/repo or URL"
+                  className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  disabled={addingRepo}
+                  className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                >
+                  {addingRepo ? 'Adding...' : 'Add'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddRepo(false)}
+                  className="p-2 text-slate-400 hover:text-slate-200"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setShowAddRepo(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors"
+              >
+                <span className="text-xl leading-none">+</span>
+                Add Repo
+              </button>
+            )}
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${showFilters
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
                 }`}
             >
               <Filter className="h-4 w-4" />
@@ -408,12 +500,36 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-400 hidden md:table-cell">
-                        <div
-                          className={`cursor-pointer hover:text-slate-300 transition-colors ${isDescExpanded ? '' : 'truncate max-w-md'}`}
-                          onClick={() => toggleDescription(repo.name)}
-                          title="Click to expand/collapse"
-                        >
-                          {repo.description || '—'}
+                        <div className="flex flex-col gap-1">
+                          <div
+                            className={`cursor-pointer hover:text-slate-300 transition-colors ${isDescExpanded ? '' : 'truncate max-w-md'}`}
+                            onClick={() => toggleDescription(repo.name)}
+                            title="Click to expand/collapse"
+                          >
+                            {repo.description || '—'}
+                          </div>
+                          {repo.ai_summary && (
+                            <div className="text-xs text-blue-300/80 italic mt-1 border-l-2 border-blue-500/30 pl-2">
+                              AI: {repo.ai_summary}
+                            </div>
+                          )}
+                          {!repo.ai_summary && isExpanded && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleGenerateSummary(repo.name);
+                              }}
+                              className="text-xs text-blue-500 hover:text-blue-400 text-left mt-1 flex items-center gap-1"
+                              disabled={generatingSummary === repo.name}
+                            >
+                              {generatingSummary === repo.name ? (
+                                <RefreshCw className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Activity className="h-3 w-3" />
+                              )}
+                              Generate AI Summary
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">

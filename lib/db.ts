@@ -30,6 +30,7 @@ export interface Repo {
     health_score: number;
     testing_status: string | null;
     coverage_score: number | null;
+    ai_summary: string | null;
 }
 
 export interface Task {

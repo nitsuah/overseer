@@ -68,10 +68,35 @@ export class GitHubClient {
     }));
   }
 
-  async getFileContent(repo: string, path: string): Promise<string | null> {
+  async getRepo(owner: string, repo: string): Promise<RepoMetadata> {
+    const { data } = await this.octokit.repos.get({
+      owner,
+      repo,
+    });
+
+    return {
+      name: data.name,
+      fullName: data.full_name,
+      description: data.description,
+      language: data.language,
+      stars: data.stargazers_count,
+      forks: data.forks_count,
+      openIssues: data.open_issues_count,
+      defaultBranch: data.default_branch,
+      url: data.html_url,
+      homepage: data.homepage,
+      topics: data.topics || [],
+      createdAt: data.created_at || new Date().toISOString(),
+      updatedAt: data.updated_at || new Date().toISOString(),
+      pushedAt: data.pushed_at || new Date().toISOString(),
+      isFork: data.fork || false,
+    };
+  }
+
+  async getFileContent(repo: string, path: string, owner?: string): Promise<string | null> {
     try {
       const { data } = await this.octokit.repos.getContent({
-        owner: this.owner,
+        owner: owner || this.owner,
         repo,
         path,
       });
@@ -88,9 +113,9 @@ export class GitHubClient {
     }
   }
 
-  async getBranches(repo: string): Promise<BranchInfo[]> {
+  async getBranches(repo: string, owner?: string): Promise<BranchInfo[]> {
     const { data } = await this.octokit.repos.listBranches({
-      owner: this.owner,
+      owner: owner || this.owner,
       repo,
       per_page: 100,
     });
@@ -101,9 +126,9 @@ export class GitHubClient {
     }));
   }
 
-  async getPullRequests(repo: string): Promise<PullRequestInfo[]> {
+  async getPullRequests(repo: string, owner?: string): Promise<PullRequestInfo[]> {
     const { data } = await this.octokit.pulls.list({
-      owner: this.owner,
+      owner: owner || this.owner,
       repo,
       state: 'open',
       per_page: 100,
@@ -120,22 +145,25 @@ export class GitHubClient {
       labels: pr.labels.map((label) => (typeof label === 'string' ? label : label.name || '')),
     }));
   }
+
   async createPrForFile(
     repo: string,
     branchName: string,
     filePath: string,
     content: string,
-    message: string
+    message: string,
+    owner?: string
   ): Promise<string> {
+    const repoOwner = owner || this.owner;
     // 1. Get default branch SHA
     const { data: repoData } = await this.octokit.repos.get({
-      owner: this.owner,
+      owner: repoOwner,
       repo,
     });
     const defaultBranch = repoData.default_branch;
 
     const { data: refData } = await this.octokit.git.getRef({
-      owner: this.owner,
+      owner: repoOwner,
       repo,
       ref: `heads/${defaultBranch}`,
     });
@@ -143,7 +171,7 @@ export class GitHubClient {
 
     // 2. Create new branch
     await this.octokit.git.createRef({
-      owner: this.owner,
+      owner: repoOwner,
       repo,
       ref: `refs/heads/${branchName}`,
       sha,
@@ -151,7 +179,7 @@ export class GitHubClient {
 
     // 3. Create/Update file
     await this.octokit.repos.createOrUpdateFileContents({
-      owner: this.owner,
+      owner: repoOwner,
       repo,
       path: filePath,
       message,
@@ -161,7 +189,7 @@ export class GitHubClient {
 
     // 4. Create PR
     const { data: prData } = await this.octokit.pulls.create({
-      owner: this.owner,
+      owner: repoOwner,
       repo,
       title: message,
       head: branchName,
@@ -176,17 +204,19 @@ export class GitHubClient {
     repo: string,
     branchName: string,
     files: Array<{ path: string; content: string }>,
-    message: string
+    message: string,
+    owner?: string
   ): Promise<string> {
+    const repoOwner = owner || this.owner;
     // 1. Get default branch SHA
     const { data: repoData } = await this.octokit.repos.get({
-      owner: this.owner,
+      owner: repoOwner,
       repo,
     });
     const defaultBranch = repoData.default_branch;
 
     const { data: refData } = await this.octokit.git.getRef({
-      owner: this.owner,
+      owner: repoOwner,
       repo,
       ref: `heads/${defaultBranch}`,
     });
@@ -194,7 +224,7 @@ export class GitHubClient {
 
     // 2. Create new branch
     await this.octokit.git.createRef({
-      owner: this.owner,
+      owner: repoOwner,
       repo,
       ref: `refs/heads/${branchName}`,
       sha,
@@ -203,7 +233,7 @@ export class GitHubClient {
     // 3. Create/Update files
     for (const file of files) {
       await this.octokit.repos.createOrUpdateFileContents({
-        owner: this.owner,
+        owner: repoOwner,
         repo,
         path: file.path,
         message: `docs: add ${file.path}`,
@@ -214,7 +244,7 @@ export class GitHubClient {
 
     // 4. Create PR
     const { data: prData } = await this.octokit.pulls.create({
-      owner: this.owner,
+      owner: repoOwner,
       repo,
       title: message,
       head: branchName,

@@ -8,7 +8,7 @@
 - [ ] Current task
 
 ## Done
-- [ ] Completed task
+- [x] Completed task
 
 <!--
 AGENT INSTRUCTIONS:

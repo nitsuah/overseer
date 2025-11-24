@@ -1,0 +1,72 @@
+
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { GitHubClient } from '@/lib/github';
+import { getNeonClient } from '@/lib/db';
+import { syncRepo } from '@/lib/sync';
+
+export async function POST(request: NextRequest) {
+    try {
+        const session = await auth();
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { url } = await request.json();
+        if (!url) {
+            return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+        }
+
+        // Parse owner/repo from URL
+        // Supports:
+        // - https://github.com/owner/repo
+        // - owner/repo
+        let owner = '';
+        let repo = '';
+
+        if (url.startsWith('http')) {
+            const parts = url.split('github.com/');
+            if (parts.length < 2) {
+                return NextResponse.json({ error: 'Invalid GitHub URL' }, { status: 400 });
+            }
+            const pathParts = parts[1].split('/');
+            owner = pathParts[0];
+            repo = pathParts[1];
+        } else {
+            const parts = url.split('/');
+            if (parts.length !== 2) {
+                return NextResponse.json({ error: 'Invalid format. Use "owner/repo" or full URL' }, { status: 400 });
+            }
+            owner = parts[0];
+            repo = parts[1];
+        }
+
+        // Remove .git if present
+        repo = repo.replace('.git', '');
+
+        // Initialize GitHub client
+        const githubToken = (session as any).accessToken;
+        if (!githubToken) throw new Error('GitHub access token not found in session');
+        const github = new GitHubClient(githubToken, owner);
+
+        // Fetch repo metadata
+        let repoMeta;
+        try {
+            repoMeta = await github.getRepo(owner, repo);
+        } catch (e: any) {
+            if (e.status === 404) {
+                return NextResponse.json({ error: 'Repository not found on GitHub' }, { status: 404 });
+            }
+            throw e;
+        }
+
+        // Sync repo (inserts into DB and fetches docs)
+        const db = getNeonClient();
+        await syncRepo(repoMeta, github, db);
+
+        return NextResponse.json({ success: true, repo: repoMeta });
+    } catch (error: any) {
+        console.error('Error adding repo:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

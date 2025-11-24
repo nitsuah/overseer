@@ -25,10 +25,6 @@ npm run dev
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-## 📝 License
-
-This project is licensed under the MIT License.
-
 <!--
 AGENT INSTRUCTIONS:
 This file is the face of the project.

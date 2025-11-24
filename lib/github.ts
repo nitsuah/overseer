@@ -120,4 +120,55 @@ export class GitHubClient {
       labels: pr.labels.map((label) => (typeof label === 'string' ? label : label.name || '')),
     }));
   }
+  async createPrForFile(
+    repo: string,
+    branchName: string,
+    filePath: string,
+    content: string,
+    message: string
+  ): Promise<string> {
+    // 1. Get default branch SHA
+    const { data: repoData } = await this.octokit.repos.get({
+      owner: this.owner,
+      repo,
+    });
+    const defaultBranch = repoData.default_branch;
+
+    const { data: refData } = await this.octokit.git.getRef({
+      owner: this.owner,
+      repo,
+      ref: `heads/${defaultBranch}`,
+    });
+    const sha = refData.object.sha;
+
+    // 2. Create new branch
+    await this.octokit.git.createRef({
+      owner: this.owner,
+      repo,
+      ref: `refs/heads/${branchName}`,
+      sha,
+    });
+
+    // 3. Create/Update file
+    await this.octokit.repos.createOrUpdateFileContents({
+      owner: this.owner,
+      repo,
+      path: filePath,
+      message,
+      content: Buffer.from(content).toString('base64'),
+      branch: branchName,
+    });
+
+    // 4. Create PR
+    const { data: prData } = await this.octokit.pulls.create({
+      owner: this.owner,
+      repo,
+      title: message,
+      head: branchName,
+      base: defaultBranch,
+      body: `Automated PR to add ${filePath}`,
+    });
+
+    return prData.html_url;
+  }
 }

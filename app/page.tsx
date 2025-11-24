@@ -59,6 +59,7 @@ export default function DashboardPage() {
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [fixingDoc, setFixingDoc] = useState(false);
 
   // Filter state
   const [filterType, setFilterType] = useState<RepoType | 'all'>('all');
@@ -163,6 +164,34 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Failed to hide repo:', error);
+    }
+  }
+
+  async function handleFixDoc(repoName: string, docType: string) {
+    if (!confirm(`Create a PR to add ${docType.toUpperCase()}.md to ${repoName}?`)) {
+      return;
+    }
+
+    try {
+      setFixingDoc(true); // Set loading state
+      const res = await fetch(`/api/repos/${repoName}/fix-doc`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docType }),
+      });
+
+      if (res.ok) {
+        alert('PR created successfully!');
+        // Ideally fetch details again or show a link
+      } else {
+        const err = await res.json();
+        alert(`Failed to create PR: ${err.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to fix doc:', error);
+      alert('Failed to create PR');
+    } finally {
+      setFixingDoc(false); // Clear loading state
     }
   }
 
@@ -360,24 +389,44 @@ export default function DashboardPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <span className={`text-lg font-bold ${health.color}`}>{health.grade}</span>
-                          {repo.testing_status === 'passing' && <ShieldCheck className="h-4 w-4 text-green-400" />}
-                          {repo.testing_status === 'failing' && <ShieldAlert className="h-4 w-4 text-red-400" />}
+                          {repo.testing_status === 'passing' && <span title="Tests Passing"><ShieldCheck className="h-4 w-4 text-green-400" /></span>}
+                          {repo.testing_status === 'failing' && <span title="Tests Failing"><ShieldAlert className="h-4 w-4 text-red-400" /></span>}
+                          {!repo.testing_status && <span title="No Test Status"><Shield className="h-4 w-4 text-slate-600" /></span>}
+                          {repo.coverage_score !== null && repo.coverage_score !== undefined && (
+                            <span className="text-xs text-slate-400">{repo.coverage_score}%</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         {details ? (
                           <div className="flex items-center gap-2">
-                            {details.docStatuses.find(d => d.doc_type === 'readme' && d.exists) && (
+                            {details.docStatuses.find(d => d.doc_type === 'readme' && d.exists) ? (
                               <span title="README"><FileText className="h-4 w-4 text-slate-400" /></span>
+                            ) : (
+                              <button onClick={() => handleFixDoc(repo.name, 'readme')} title="Add README" className="opacity-20 hover:opacity-100 transition-opacity" disabled={fixingDoc}>
+                                <FileText className={`h-4 w-4 ${fixingDoc ? 'animate-pulse text-blue-400' : 'text-slate-400'}`} />
+                              </button>
                             )}
-                            {details.docStatuses.find(d => d.doc_type === 'roadmap' && d.exists) && (
+                            {details.docStatuses.find(d => d.doc_type === 'roadmap' && d.exists) ? (
                               <span title="ROADMAP"><Map className="h-4 w-4 text-blue-400" /></span>
+                            ) : (
+                              <button onClick={() => handleFixDoc(repo.name, 'roadmap')} title="Add ROADMAP" className="opacity-20 hover:opacity-100 transition-opacity" disabled={fixingDoc}>
+                                <Map className={`h-4 w-4 ${fixingDoc ? 'animate-pulse text-blue-400' : 'text-blue-400'}`} />
+                              </button>
                             )}
-                            {details.docStatuses.find(d => d.doc_type === 'tasks' && d.exists) && (
+                            {details.docStatuses.find(d => d.doc_type === 'tasks' && d.exists) ? (
                               <span title="TASKS"><ListTodo className="h-4 w-4 text-purple-400" /></span>
+                            ) : (
+                              <button onClick={() => handleFixDoc(repo.name, 'tasks')} title="Add TASKS" className="opacity-20 hover:opacity-100 transition-opacity" disabled={fixingDoc}>
+                                <ListTodo className={`h-4 w-4 ${fixingDoc ? 'animate-pulse text-blue-400' : 'text-purple-400'}`} />
+                              </button>
                             )}
-                            {details.docStatuses.find(d => d.doc_type === 'metrics' && d.exists) && (
+                            {details.docStatuses.find(d => d.doc_type === 'metrics' && d.exists) ? (
                               <span title="METRICS"><Activity className="h-4 w-4 text-green-400" /></span>
+                            ) : (
+                              <button onClick={() => handleFixDoc(repo.name, 'metrics')} title="Add METRICS" className="opacity-20 hover:opacity-100 transition-opacity" disabled={fixingDoc}>
+                                <Activity className={`h-4 w-4 ${fixingDoc ? 'animate-pulse text-blue-400' : 'text-green-400'}`} />
+                              </button>
                             )}
                             <span className={`text-xs font-medium ml-1 ${getDocHealthColor(docHealth?.score || 0)}`}>
                               {docHealth?.score}%

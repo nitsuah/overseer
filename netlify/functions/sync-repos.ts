@@ -21,7 +21,7 @@ export const handler: Handler = async (event) => {
 
         for (const repo of repos) {
             // Upsert repo
-            const { rows: repoRows } = await db`
+            const repoRows = await db`
         INSERT INTO repos (name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, last_synced, updated_at)
         VALUES (${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, NOW(), NOW())
         ON CONFLICT (name) DO UPDATE SET

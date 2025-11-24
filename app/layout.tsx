@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { auth, signOut } from "@/auth";
-import { redirect } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,11 +16,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
-
-  // Redirect to login if not authenticated (except on login page)
-  if (!session && !children?.toString().includes('login')) {
-    redirect('/login');
-  }
 
   return (
     <html lang="en" className="dark">

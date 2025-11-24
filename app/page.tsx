@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { ExpandableRow } from '@/components/ExpandableRow';
 import { detectRepoType, getTypeColor } from '@/lib/repo-type';
@@ -171,7 +171,7 @@ export default function DashboardPage() {
                 const isExpanded = expandedRepos.has(repo.name);
 
                 return (
-                  <React.Fragment key={repo.id}>
+                  <Fragment key={repo.id}>
                     <tr className="hover:bg-slate-800/30 transition-colors">
                       <td className="px-6 py-4">
                         <button
@@ -255,7 +255,7 @@ export default function DashboardPage() {
                         </td>
                       </tr>
                     )}
-                  </React.Fragment>
+                  </Fragment>
                 );
               })}
             </tbody>

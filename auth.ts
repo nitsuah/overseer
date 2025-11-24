@@ -21,8 +21,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return token;
         },
         async session({ session, token }) {
-            // @ts-ignore
-            session.accessToken = token.accessToken;
+            // Extend session with accessToken (type augmentation)
+            (session as any).accessToken = token.accessToken;
             return session;
         },
     },

@@ -1,3 +1,4 @@
+// lib/doc-health.ts
 export interface DocHealthInfo {
     score: number; // 0-100
     present: number;
@@ -25,12 +26,12 @@ export function calculateDocHealth(
     docStatuses: Array<{ doc_type: string; exists: boolean }>,
     repoType: string
 ): DocHealthInfo {
-    const expectedDocs = getExpectedDocs(repoType);
-    const presentDocs = docStatuses.filter((d) => d.exists).map((d) => d.doc_type);
+    const expectedDocs = getExpectedDocs(repoType).map((doc) => doc.toLowerCase().replace('.md', ''));
+    const presentDocs = docStatuses
+        .filter((d) => d.exists)
+        .map((d) => d.doc_type.toLowerCase().replace('.md', ''));
 
-    const missing = expectedDocs.filter(
-        (doc) => !presentDocs.includes(doc.toLowerCase().replace('.md', ''))
-    );
+    const missing = expectedDocs.filter((doc) => !presentDocs.includes(doc));
 
     const score = expectedDocs.length > 0
         ? Math.round(((expectedDocs.length - missing.length) / expectedDocs.length) * 100)
@@ -46,7 +47,6 @@ export function calculateDocHealth(
 
 function getExpectedDocs(repoType: string): string[] {
     const base = ['README.md', 'LICENSE'];
-
     switch (repoType) {
         case 'web-app':
             return [...base, 'ROADMAP.md', 'TASKS.md', 'CONTRIBUTING.md', 'ROUTES.md'];

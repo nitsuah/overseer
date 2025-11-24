@@ -1,157 +1,119 @@
-// Upsert repo
-const { data: repoData, error: repoError } = await supabase
-    .from('repos')
-    .upsert(
-        {
-            name: repo.name,
-            full_name: repo.fullName,
-            description: repo.description,
-            language: repo.language,
-            stars: repo.stars,
-            forks: repo.forks,
-            open_issues: repo.openIssues,
-            url: repo.url,
-            homepage: repo.homepage,
-            topics: repo.topics,
-            last_synced: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'name' }
-    )
-    .select()
-    .single();
+// netlify/functions/sync-repos.ts
+import type { Handler } from '@netlify/functions';
+import { GitHubClient } from '../../lib/github';
+import { getNeonClient } from '../../lib/db';
+import { parseRoadmap } from '../../lib/parsers/roadmap';
+import { parseTasks } from '../../lib/parsers/tasks';
+import { parseMetrics } from '../../lib/parsers/metrics';
 
-if (repoError) {
-    console.error(`Error upserting repo ${repo.name}:`, repoError);
-    continue;
-}
-
-const repoId = repoData.id;
-
-// Fetch branches count
-const branches = await github.getBranches(repo.name);
-await supabase
-    .from('repos')
-    .update({ branches_count: branches.length })
-    .eq('id', repoId);
-
-// Parse ROADMAP.md
-const roadmapContent = await github.getFileContent(repo.name, 'ROADMAP.md');
-if (roadmapContent) {
-    const roadmapData = parseRoadmap(roadmapContent);
-
-    // Delete existing roadmap items
-    await supabase.from('roadmap_items').delete().eq('repo_id', repoId);
-
-    // Insert new roadmap items
-    for (const item of roadmapData.items) {
-        await supabase.from('roadmap_items').insert({
-            repo_id: repoId,
-            title: item.title,
-            quarter: item.quarter,
-            status: item.status,
-            priority: roadmapData.frontmatter.priority || null,
-        });
+export const handler: Handler = async (event) => {
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
 
-    // Update doc status
-    await supabase.from('doc_status').upsert(
-        {
-            repo_id: repoId,
-            doc_type: 'roadmap',
-            exists: true,
-            last_checked: new Date().toISOString(),
-        },
-        { onConflict: 'repo_id,doc_type' }
-    );
-}
+    try {
+        const githubToken = process.env.GITHUB_TOKEN;
+        if (!githubToken) throw new Error('GITHUB_TOKEN not configured');
+        const github = new GitHubClient(githubToken, 'nitsuah');
+        const db = getNeonClient();
 
-// Parse TASKS.md
-const tasksContent = await github.getFileContent(repo.name, 'TASKS.md');
-if (tasksContent) {
-    const tasksData = parseTasks(tasksContent);
+        const repos = await github.listRepos();
 
-    // Delete existing tasks
-    await supabase.from('tasks').delete().eq('repo_id', repoId);
+        for (const repo of repos) {
+            // Upsert repo
+            const { rows: repoRows } = await db`
+        INSERT INTO repos (name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, last_synced, updated_at)
+        VALUES (${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, NOW(), NOW())
+        ON CONFLICT (name) DO UPDATE SET
+          description = EXCLUDED.description,
+          language = EXCLUDED.language,
+          stars = EXCLUDED.stars,
+          forks = EXCLUDED.forks,
+          open_issues = EXCLUDED.open_issues,
+          url = EXCLUDED.url,
+          homepage = EXCLUDED.homepage,
+          topics = EXCLUDED.topics,
+          last_synced = NOW(),
+          updated_at = NOW()
+        RETURNING id;
+      `;
+            const repoId = repoRows[0].id;
 
-    // Insert new tasks
-    for (const task of tasksData.tasks) {
-        await supabase.from('tasks').insert({
-            repo_id: repoId,
-            task_id: task.id,
-            title: task.title,
-            status: task.status,
-            section: task.section,
-        });
-    }
+            // Branches count
+            const branches = await github.getBranches(repo.name);
+            await db`
+        UPDATE repos SET branches_count = ${branches.length} WHERE id = ${repoId}
+      `;
 
-    // Update doc status
-    await supabase.from('doc_status').upsert(
-        {
-            repo_id: repoId,
-            doc_type: 'tasks',
-            exists: true,
-            last_checked: new Date().toISOString(),
-        },
-        { onConflict: 'repo_id,doc_type' }
-    );
-}
+            // ROADMAP.md
+            const roadmapContent = await github.getFileContent(repo.name, 'ROADMAP.md');
+            if (roadmapContent) {
+                const roadmapData = parseRoadmap(roadmapContent);
+                await db`DELETE FROM roadmap_items WHERE repo_id = ${repoId}`;
+                for (const item of roadmapData.items) {
+                    await db`
+            INSERT INTO roadmap_items (repo_id, title, quarter, status, priority)
+            VALUES (${repoId}, ${item.title}, ${item.quarter}, ${item.status}, ${roadmapData.frontmatter.priority || null})
+          `;
+                }
+                await db`
+          INSERT INTO doc_status (repo_id, doc_type, exists, last_checked)
+          VALUES (${repoId}, 'roadmap', true, NOW())
+          ON CONFLICT (repo_id, doc_type) DO UPDATE SET exists = EXCLUDED.exists, last_checked = EXCLUDED.last_checked
+        `;
+            }
 
-// Parse METRICS.md
-const metricsContent = await github.getFileContent(repo.name, 'METRICS.md');
-if (metricsContent) {
-    const metricsData = parseMetrics(metricsContent);
+            // TASKS.md
+            const tasksContent = await github.getFileContent(repo.name, 'TASKS.md');
+            if (tasksContent) {
+                const tasksData = parseTasks(tasksContent);
+                await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
+                for (const task of tasksData.tasks) {
+                    await db`
+            INSERT INTO tasks (repo_id, task_id, title, status, section)
+            VALUES (${repoId}, ${task.id}, ${task.title}, ${task.status}, ${task.section})
+          `;
+                }
+                await db`
+          INSERT INTO doc_status (repo_id, doc_type, exists, last_checked)
+          VALUES (${repoId}, 'tasks', true, NOW())
+          ON CONFLICT (repo_id, doc_type) DO UPDATE SET exists = EXCLUDED.exists, last_checked = EXCLUDED.last_checked
+        `;
+            }
 
-    // Insert metrics (keep historical data)
-    for (const metric of metricsData.metrics) {
-        await supabase.from('metrics').insert({
-            repo_id: repoId,
-            metric_name: metric.name,
-            value: metric.value,
-            unit: metric.unit,
-            timestamp: new Date().toISOString(),
-        });
-    }
+            // METRICS.md
+            const metricsContent = await github.getFileContent(repo.name, 'METRICS.md');
+            if (metricsContent) {
+                const metricsData = parseMetrics(metricsContent);
+                for (const metric of metricsData.metrics) {
+                    await db`
+            INSERT INTO metrics (repo_id, metric_name, value, unit, timestamp)
+            VALUES (${repoId}, ${metric.name}, ${metric.value}, ${metric.unit}, NOW())
+          `;
+                }
+                await db`
+          INSERT INTO doc_status (repo_id, doc_type, exists, last_checked)
+          VALUES (${repoId}, 'metrics', true, NOW())
+          ON CONFLICT (repo_id, doc_type) DO UPDATE SET exists = EXCLUDED.exists, last_checked = EXCLUDED.last_checked
+        `;
+            }
 
-    // Update doc status
-    await supabase.from('doc_status').upsert(
-        {
-            repo_id: repoId,
-            doc_type: 'metrics',
-            exists: true,
-            last_checked: new Date().toISOString(),
-        },
-        { onConflict: 'repo_id,doc_type' }
-    );
-}
-
-// Check for other docs
-const docTypes = ['README.md', 'CHANGELOG.md', 'CONTRIBUTING.md'];
-for (const docFile of docTypes) {
-    const content = await github.getFileContent(repo.name, docFile);
-    const docType = docFile.replace('.md', '').toLowerCase() as 'readme' | 'changelog' | 'contributing';
-
-    await supabase.from('doc_status').upsert(
-        {
-            repo_id: repoId,
-            doc_type: docType,
-            exists: content !== null,
-            last_checked: new Date().toISOString(),
-        },
-        { onConflict: 'repo_id,doc_type' }
-    );
-}
+            // Other docs
+            const docTypes = ['README.md', 'CHANGELOG.md', 'CONTRIBUTING.md'];
+            for (const docFile of docTypes) {
+                const content = await github.getFileContent(repo.name, docFile);
+                const docType = docFile.replace('.md', '').toLowerCase();
+                await db`
+          INSERT INTO doc_status (repo_id, doc_type, exists, last_checked)
+          VALUES (${repoId}, ${docType}, ${content !== null}, NOW())
+          ON CONFLICT (repo_id, doc_type) DO UPDATE SET exists = EXCLUDED.exists, last_checked = EXCLUDED.last_checked
+        `;
+            }
         }
 
-return {
-    statusCode: 200,
-    body: JSON.stringify({ success: true, count: repos.length }),
-};
+        return { statusCode: 200, body: JSON.stringify({ success: true, count: repos.length }) };
     } catch (error: any) {
-    console.error('Sync error:', error);
-    return {
-        statusCode: 500,
-        body: JSON.stringify({ error: error.message }),
-    };
-}
+        console.error('Sync error:', error);
+        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+    }
 };

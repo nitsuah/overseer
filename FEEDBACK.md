@@ -1,3 +1,21 @@
+
+1. build out the docs section of the app/column
+2. x - still doesnt work/hide the repo
+3. attributes for repos (dont need to figure them all out just think on it and expand around it) - testing, code coverage, precommit hooks, best practices, evaluation score (a,b,c,d,f), lines of code (avg, max, total), other metrics around the a codebase and its health,
+4. Once we get docs expand the description section. because these are repos that change we'll need to find a good way to consolidate the data from all the docs/repo/readme into a single blurb (probably a good place to start using AI as it will need ot be dynamic and update but can source from those "Best pracitce" MD files we will start to source from each repo)
+5. at smaller resolution hide the description field. make it so records can expand when clicked to show the description and other "hidden details"
+
+
+
+
+
+
+
+
+
+
+Build failures:
+
 12:06:32 AM: Netlify Build                                                 
 12:06:32 AM: ────────────────────────────────────────────────────────────────
 12:06:32 AM: ​

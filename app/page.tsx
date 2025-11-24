@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, useEffect, useState } from 'react';
-import { RefreshCw, X, Filter } from 'lucide-react';
+import { RefreshCw, X, Filter, FileText, Map, ListTodo, Activity, ChevronDown, ChevronUp, Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { ExpandableRow } from '@/components/ExpandableRow';
 import { detectRepoType, getTypeColor, RepoType } from '@/lib/repo-type';
 import { calculateDocHealth, getDocHealthColor } from '@/lib/doc-health';
@@ -20,6 +20,9 @@ interface Repo {
   last_synced: string;
   is_fork?: boolean;
   repo_type?: string;
+  health_score?: number;
+  testing_status?: string;
+  coverage_score?: number;
 }
 
 interface RepoDetails {
@@ -41,13 +44,22 @@ interface RepoDetails {
   }>;
 }
 
+function getHealthGrade(score: number = 0): { grade: string; color: string } {
+  if (score >= 90) return { grade: 'A', color: 'text-green-400' };
+  if (score >= 80) return { grade: 'B', color: 'text-blue-400' };
+  if (score >= 70) return { grade: 'C', color: 'text-yellow-400' };
+  if (score >= 60) return { grade: 'D', color: 'text-orange-400' };
+  return { grade: 'F', color: 'text-red-400' };
+}
+
 export default function DashboardPage() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [repoDetails, setRepoDetails] = useState<Record<string, RepoDetails>>({});
   const [expandedRepos, setExpandedRepos] = useState<Set<string>>(new Set());
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  
+
   // Filter state
   const [filterType, setFilterType] = useState<RepoType | 'all'>('all');
   const [filterLanguage, setFilterLanguage] = useState<string>('all');
@@ -122,6 +134,16 @@ export default function DashboardPage() {
     setExpandedRepos(newExpanded);
   }
 
+  function toggleDescription(repoName: string) {
+    const newExpanded = new Set(expandedDescriptions);
+    if (newExpanded.has(repoName)) {
+      newExpanded.delete(repoName);
+    } else {
+      newExpanded.add(repoName);
+    }
+    setExpandedDescriptions(newExpanded);
+  }
+
   async function handleRemoveRepo(repoName: string) {
     if (!confirm(`Hide "${repoName}" from the list? You can re-sync to bring it back.`)) {
       return;
@@ -152,12 +174,12 @@ export default function DashboardPage() {
   const filteredRepos = repos.filter(repo => {
     // Use stored repo_type if available, otherwise detect it
     const repoType = (repo.repo_type as RepoType) || detectRepoType(repo.name, repo.description, repo.language, repo.topics).type;
-    
+
     if (filterType !== 'all' && repoType !== filterType) return false;
     if (filterLanguage !== 'all' && repo.language !== filterLanguage) return false;
     if (filterFork === 'no-forks' && repo.is_fork) return false;
     if (filterFork === 'forks-only' && !repo.is_fork) return false;
-    
+
     return true;
   });
 
@@ -182,11 +204,10 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                showFilters 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                  : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${showFilters
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                }`}
             >
               <Filter className="h-4 w-4" />
               Filters
@@ -275,9 +296,9 @@ export default function DashboardPage() {
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Repository</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Type</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Description</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300 hidden md:table-cell">Description</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Language</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Stars</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Health</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Docs</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Links</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
@@ -297,6 +318,8 @@ export default function DashboardPage() {
                   ? calculateDocHealth(details.docStatuses, typeInfo.type)
                   : null;
                 const isExpanded = expandedRepos.has(repo.name);
+                const isDescExpanded = expandedDescriptions.has(repo.name);
+                const health = getHealthGrade(repo.health_score || 0);
 
                 return (
                   <Fragment key={repo.id}>
@@ -304,8 +327,9 @@ export default function DashboardPage() {
                       <td className="px-6 py-4">
                         <button
                           onClick={() => toggleExpanded(repo.name)}
-                          className="font-medium text-blue-400 hover:text-blue-300 transition-colors text-left"
+                          className="font-medium text-blue-400 hover:text-blue-300 transition-colors text-left flex items-center gap-2"
                         >
+                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                           {repo.name}
                         </button>
                       </td>
@@ -315,8 +339,14 @@ export default function DashboardPage() {
                           <span className="capitalize">{typeInfo.type.replace('-', ' ')}</span>
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-400 max-w-md truncate">
-                        {repo.description || '—'}
+                      <td className="px-6 py-4 text-sm text-slate-400 hidden md:table-cell">
+                        <div
+                          className={`cursor-pointer hover:text-slate-300 transition-colors ${isDescExpanded ? '' : 'truncate max-w-md'}`}
+                          onClick={() => toggleDescription(repo.name)}
+                          title="Click to expand/collapse"
+                        >
+                          {repo.description || '—'}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         {repo.language ? (
@@ -327,15 +357,30 @@ export default function DashboardPage() {
                           <span className="text-slate-500">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-300">{repo.stars}</td>
                       <td className="px-6 py-4">
-                        {docHealth ? (
+                        <div className="flex items-center gap-2">
+                          <span className={`text-lg font-bold ${health.color}`}>{health.grade}</span>
+                          {repo.testing_status === 'passing' && <ShieldCheck className="h-4 w-4 text-green-400" />}
+                          {repo.testing_status === 'failing' && <ShieldAlert className="h-4 w-4 text-red-400" />}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {details ? (
                           <div className="flex items-center gap-2">
-                            <span className={`text-sm font-medium ${getDocHealthColor(docHealth.score)}`}>
-                              {docHealth.score}%
-                            </span>
-                            <span className="text-xs text-slate-500">
-                              ({docHealth.present}/{docHealth.expected})
+                            {details.docStatuses.find(d => d.doc_type === 'readme' && d.exists) && (
+                              <span title="README"><FileText className="h-4 w-4 text-slate-400" /></span>
+                            )}
+                            {details.docStatuses.find(d => d.doc_type === 'roadmap' && d.exists) && (
+                              <span title="ROADMAP"><Map className="h-4 w-4 text-blue-400" /></span>
+                            )}
+                            {details.docStatuses.find(d => d.doc_type === 'tasks' && d.exists) && (
+                              <span title="TASKS"><ListTodo className="h-4 w-4 text-purple-400" /></span>
+                            )}
+                            {details.docStatuses.find(d => d.doc_type === 'metrics' && d.exists) && (
+                              <span title="METRICS"><Activity className="h-4 w-4 text-green-400" /></span>
+                            )}
+                            <span className={`text-xs font-medium ml-1 ${getDocHealthColor(docHealth?.score || 0)}`}>
+                              {docHealth?.score}%
                             </span>
                           </div>
                         ) : (

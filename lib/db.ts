@@ -26,6 +26,10 @@ export interface Repo {
     last_synced: string;
     created_at: string;
     updated_at: string;
+    is_hidden: boolean;
+    health_score: number;
+    testing_status: string | null;
+    coverage_score: number | null;
 }
 
 export interface Task {

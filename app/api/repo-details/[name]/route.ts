@@ -3,8 +3,9 @@ import { getNeonClient } from '@/lib/db';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { name: string } }
+    props: { params: Promise<{ name: string }> }
 ) {
+    const params = await props.params;
     try {
         const repoName = params.name;
 

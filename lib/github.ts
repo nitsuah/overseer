@@ -61,9 +61,9 @@ export class GitHubClient {
       url: repo.html_url,
       homepage: repo.homepage,
       topics: repo.topics || [],
-      createdAt: repo.created_at || '',
-      updatedAt: repo.updated_at || '',
-      pushedAt: repo.pushed_at || '',
+      createdAt: repo.created_at || new Date().toISOString(),
+      updatedAt: repo.updated_at || new Date().toISOString(),
+      pushedAt: repo.pushed_at || new Date().toISOString(),
       isFork: repo.fork || false,
     }));
   }

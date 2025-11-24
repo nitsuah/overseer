@@ -4,11 +4,12 @@ import { getNeonClient } from '@/lib/db';
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { name: string } }
+    props: { params: Promise<{ name: string }> }
 ) {
+    const params = await props.params;
     try {
         const session = await auth();
-        
+
         if (!session?.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }

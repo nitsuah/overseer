@@ -34,6 +34,7 @@ export interface Repo {
     last_commit_date: string | null;
     open_prs: number;
     open_issues_count: number;
+    readme_last_updated: string | null;
 }
 
 export interface Task {

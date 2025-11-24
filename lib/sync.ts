@@ -26,16 +26,23 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Failed to fetch PRs for ${repo.fullName}`, e);
     }
 
+    let readmeLastUpdated = null;
+    try {
+        readmeLastUpdated = await github.getFileLastModified(repo.name, 'README.md', owner);
+    } catch (e) {
+        console.warn(`Failed to fetch README date for ${repo.fullName}`, e);
+    }
+
     // Upsert repo with new metrics
     const repoRows = await db`
         INSERT INTO repos (
             name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, 
-            last_synced, updated_at, last_commit_date, open_prs, open_issues_count
+            last_synced, updated_at, last_commit_date, open_prs, open_issues_count, readme_last_updated
         )
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
             ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
-            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${repo.openIssues}
+            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${repo.openIssues}, ${readmeLastUpdated}
         )
         ON CONFLICT (name) DO UPDATE SET
           description = EXCLUDED.description,
@@ -50,7 +57,8 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           updated_at = NOW(),
           last_commit_date = EXCLUDED.last_commit_date,
           open_prs = EXCLUDED.open_prs,
-          open_issues_count = EXCLUDED.open_issues_count
+          open_issues_count = EXCLUDED.open_issues_count,
+          readme_last_updated = EXCLUDED.readme_last_updated
         RETURNING id;
     `;
     const repoId = repoRows[0].id;

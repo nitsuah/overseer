@@ -37,7 +37,7 @@ cd overseer
 # Install dependencies
 npm install
 
-# Set up environment variables
+# Set up environment variables (see SETUP.md for details)
 cp .env.example .env.local
 # Edit .env.local with your credentials
 
@@ -45,16 +45,21 @@ cp .env.example .env.local
 npm run dev
 ```
 
+**For detailed setup instructions, see [SETUP.md](./SETUP.md)**
+
 ### Environment Variables
 
 ```env
-# GitHub
-GITHUB_TOKEN=your_github_personal_access_token
+# GitHub OAuth
+GITHUB_ID=your_github_oauth_client_id
+GITHUB_SECRET=your_github_oauth_client_secret
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+# NextAuth
+NEXTAUTH_SECRET=your_random_secret
+NEXTAUTH_URL=http://localhost:3000
+
+# Netlify DB (Neon) - Auto-configured by Netlify on deploy
+DATABASE_URL=your_neon_database_url
 ```
 
 ## Project Structure

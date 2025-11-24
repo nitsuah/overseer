@@ -1,25 +1,25 @@
----
-status: in-progress
-priority: high
-owner: nitsuah
----
-
 # Roadmap
 
-## Q1 2025
+## Q1
+- [ ] Core features
+- [ ] Initial release
 
-- [ ] Feature: Core MVP functionality
-- [ ] Feature: GitHub integration
-- [/] Feature: Dashboard UI
+## Q2
+- [ ] User feedback integration
+- [ ] Performance improvements
 
-## Q2 2025
+## Q3
+- [ ] Advanced features
+- [ ] Mobile support
 
-- [ ] Feature: AI agent APIs
-- [ ] Feature: Advanced metrics tracking
-- [ ] Feature: Multi-user support
+## Q4
+- [ ] Enterprise features
 
-## Future
-
-- [ ] Feature: Custom workflows
-- [ ] Feature: Notifications and alerts
-- [ ] Feature: Integration with CI/CD pipelines
+<!--
+AGENT INSTRUCTIONS:
+This file tracks the project's high-level goals.
+1. Organize items by Quarter (Q1, Q2, etc.) or Milestone.
+2. Mark items as [x] when completed.
+3. Add new strategic goals as they emerge.
+4. Ensure items are high-level features or milestones, not individual bug fixes.
+-->

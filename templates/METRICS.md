@@ -1,37 +1,27 @@
----
-repo: your-repo-name
-updated: 2025-11-23
-metrics:
-  - name: Test Coverage
-    value: 87
-    unit: '%'
-  - name: Build Time
-    value: 45
-    unit: 's'
----
-
 # Metrics
 
-## Code Quality
+| Metric         | Value  |
+| -------------- | ------ |
+| Code Coverage  | 0%     |
+| Build Time     | 0s     |
+| Bundle Size    | 0KB    |
 
-| Metric | Value | Unit |
-|--------|-------|------|
-| Test Coverage | 87 | % |
-| Code Complexity | 12 | avg |
-| Technical Debt | 3 | days |
+## Health
 
-## Performance
+| Metric         | Value    |
+| -------------- | -------- |
+| Open Issues    | 0        |
+| PR Turnaround  | 0 days   |
+| Skipped Tests  | 0        |
 
-| Metric | Value | Unit |
-|--------|-------|------|
-| Build Time | 45 | s |
-| Bundle Size | 234 | KB |
-| Lighthouse Score | 95 | /100 |
 
-## Activity
-
-| Metric | Value | Unit |
-|--------|-------|------|
-| Commits (30d) | 42 | count |
-| Contributors | 3 | count |
-| Open Issues | 5 | count |
+<!--
+AGENT INSTRUCTIONS:
+This file tracks project health metrics.
+1. Update values based on the latest code analysis or CI/CD outputs.
+2. "Code Coverage": Percentage of code covered by tests.
+3. "Build Time": Time taken for the build process.
+4. "Bundle Size": Size of production assets.
+5. "Health": General health indicators like open issues count.
+6. Ensure values are accurate and reflect the current state of the codebase.
+-->

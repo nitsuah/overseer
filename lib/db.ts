@@ -1,14 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
+import { neon } from '@neondatabase/serverless';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Server-side client with service role key (for Netlify Functions)
-export function getServerSupabase() {
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    return createClient(supabaseUrl, serviceRoleKey);
+// Neon serverless Postgres client
+export function getNeonClient() {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+        throw new Error('DATABASE_URL not configured');
+    }
+    return neon(databaseUrl);
 }
 
 // Database types
@@ -28,6 +26,11 @@ export interface Repo {
     last_synced: string;
     created_at: string;
     updated_at: string;
+    is_hidden: boolean;
+    health_score: number;
+    testing_status: string | null;
+    coverage_score: number | null;
+    ai_summary: string | null;
 }
 
 export interface Task {

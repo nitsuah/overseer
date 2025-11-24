@@ -6,26 +6,31 @@ A dashboard that gives you and your AI agents a unified view across all your Git
 
 ## Features
 
-- 📊 **Unified Dashboard** - See all your repos at a glance
-- 📝 **Standardized Documentation** - ROADMAP.md, TASKS.md, METRICS.md parsing
-- 🤖 **AI Agent APIs** - Programmatic access for automated workflows
-- 🔗 **GitHub Integration** - Sync repo metadata, PRs, and deployment status
-- 📈 **Metrics Tracking** - Test coverage, deployment status, documentation health
+- 📊 **Unified Dashboard** - See all your repos at a glance with health scores and filtering
+- 📝 **Standardized Documentation** - ROADMAP.md, TASKS.md, METRICS.md parsing and tracking
+- 🤖 **AI-Powered Summaries** - Generate repository descriptions using Google Gemini
+- 🔧 **Automated Doc Fixes** - One-click PR creation for missing documentation
+- 🔗 **GitHub Integration** - OAuth authentication and full repo metadata sync
+- 📈 **Health Metrics** - Documentation coverage, testing status, and composite health scores
+- ➕ **Custom Repos** - Track any public GitHub repository, not just your own
 
 ## Tech Stack
 
-- **Frontend:** Next.js 15 + TypeScript + Tailwind CSS
+- **Frontend:** Next.js 16 + React 19 + TypeScript + Tailwind CSS 4
 - **Backend:** Netlify Functions (serverless)
-- **Database:** Supabase (PostgreSQL)
-- **APIs:** GitHub REST API via Octokit
+- **Database:** Neon Postgres (serverless)
+- **Auth:** NextAuth v5 with GitHub OAuth
+- **APIs:** GitHub REST API via Octokit, Google Gemini AI
+- **Testing:** Vitest + Testing Library
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- GitHub Personal Access Token
-- Supabase account (free tier)
+- GitHub OAuth App (for authentication)
+- Neon Postgres database (free tier)
+- Google Gemini API key (optional, for AI summaries)
 
 ### Installation
 
@@ -37,24 +42,35 @@ cd overseer
 # Install dependencies
 npm install
 
-# Set up environment variables
+# Set up environment variables (see SETUP.md for details)
 cp .env.example .env.local
 # Edit .env.local with your credentials
+
+# Setup database
+npm run setup-db
 
 # Run development server
 npm run dev
 ```
 
+**For detailed setup instructions, see [SETUP.md](./SETUP.md)**
+
 ### Environment Variables
 
 ```env
-# GitHub
-GITHUB_TOKEN=your_github_personal_access_token
+# GitHub OAuth
+GITHUB_ID=your_github_oauth_client_id
+GITHUB_SECRET=your_github_oauth_client_secret
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+# NextAuth
+NEXTAUTH_SECRET=your_random_secret
+NEXTAUTH_URL=http://localhost:3000
+
+# Neon Database (get from Neon console or Netlify)
+DATABASE_URL=postgresql://user:pass@host/db
+
+# Google Gemini (optional - for AI summaries)
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 ## Project Structure
@@ -62,49 +78,69 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 overseer/
 ├── app/                    # Next.js app directory
-│   ├── page.tsx           # Dashboard
-│   └── repos/[name]/      # Repo detail pages
+│   ├── page.tsx           # Main dashboard
+│   ├── api/               # API routes
+│   │   ├── repos/         # Repo management endpoints
+│   │   └── sync-repos/    # Sync trigger endpoint
+│   └── login/             # Auth pages
 ├── components/            # React components
 ├── lib/                   # Shared utilities
-│   ├── parsers/          # MD file parsers
+│   ├── parsers/          # MD file parsers (roadmap, tasks, metrics)
 │   ├── github.ts         # GitHub API client
-│   └── supabase.ts       # Supabase client
+│   ├── db.ts             # Neon database client
+│   ├── ai.ts             # Google Gemini integration
+│   └── sync.ts           # Repository sync logic
 ├── netlify/functions/    # Serverless API endpoints
+│   └── sync-repos.ts     # Background sync job
 ├── templates/            # MD file templates
-└── supabase/            # Database schema
+└── database/            # Database schema & migrations
 ```
 
 ## Standardized MD Files
 
 Overseer expects repos to have these files for full functionality:
 
+- **README.md** - Project overview and setup instructions
 - **ROADMAP.md** - High-level objectives and quarterly plans
 - **TASKS.md** - Granular task tracking with status
 - **METRICS.md** - Test coverage and performance metrics
 
-See `/templates` for examples.
+See `/templates` for examples with AI agent instructions.
 
 ## API Endpoints
 
-### For AI Agents
+### Repository Management
 
 ```bash
-# Get tasks for a repo
-GET /api/tasks?repo=games
+# Get all repositories
+GET /api/repos
 
-# Create a new task
-POST /api/tasks
+# Get repository details
+GET /api/repo-details/[name]
+
+# Add a custom repository
+POST /api/repos/add
 {
-  "repo": "games",
-  "title": "Fix bug in Asteroid",
-  "status": "in-progress"
+  "url": "owner/repo" or "https://github.com/owner/repo"
 }
 
-# Update task status
-PATCH /api/tasks/:id
+# Hide a repository
+POST /api/repos/[name]/hide
+
+# Fix missing documentation (single file)
+POST /api/repos/[name]/fix-doc
 {
-  "status": "done"
+  "docType": "readme" | "roadmap" | "tasks" | "metrics"
 }
+
+# Fix all missing documentation
+POST /api/repos/[name]/fix-all-docs
+
+# Generate AI summary
+POST /api/repos/[name]/generate-summary
+
+# Sync all repositories
+POST /api/sync-repos
 ```
 
 ## Deployment
@@ -121,8 +157,18 @@ netlify deploy --prod
 
 ## License
 
-Apache 2.0 - See LICENSE file
+See `LICENSE.md` file
 
 ## Author
 
 Austin J. Hardy ([@nitsuah](https://github.com/nitsuah))
+
+
+<!--
+AGENT INSTRUCTIONS:
+This file is the face of the project.
+1. Analyze the codebase to understand its purpose, tech stack, and setup requirements.
+2. Update the "Project Name" and "Description".
+3. Fill in the "Getting Started", "Installation", and "Usage" sections with accurate commands.
+4. Keep the tone professional and helpful.
+-->

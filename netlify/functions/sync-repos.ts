@@ -1,185 +1,45 @@
-import type { Handler, HandlerEvent } from '@netlify/functions';
+// netlify/functions/sync-repos.ts
+import type { Handler } from '@netlify/functions';
 import { GitHubClient } from '../../lib/github';
-import { getServerSupabase } from '../../lib/supabase';
-import { parseRoadmap } from '../../lib/parsers/roadmap';
-import { parseTasks } from '../../lib/parsers/tasks';
-import { parseMetrics } from '../../lib/parsers/metrics';
+import { getNeonClient } from '../../lib/db';
+import { syncRepo } from '../../lib/sync';
 
-export const handler: Handler = async (event: HandlerEvent) => {
+export const handler: Handler = async (event) => {
     if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            body: JSON.stringify({ error: 'Method not allowed' }),
-        };
+        return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
 
     try {
         const githubToken = process.env.GITHUB_TOKEN;
-        if (!githubToken) {
-            throw new Error('GITHUB_TOKEN not configured');
-        }
-
+        if (!githubToken) throw new Error('GITHUB_TOKEN not configured');
         const github = new GitHubClient(githubToken, 'nitsuah');
-        const supabase = getServerSupabase();
+        const db = getNeonClient();
 
-        // Fetch all repos from GitHub
-        const repos = await github.listRepos();
+        const githubRepos = await github.listRepos();
+        const githubRepoNames = new Set(githubRepos.map(r => r.name));
 
-        for (const repo of repos) {
-            // Upsert repo
-            const { data: repoData, error: repoError } = await supabase
-                .from('repos')
-                .upsert(
-                    {
-                        name: repo.name,
-                        full_name: repo.fullName,
-                        description: repo.description,
-                        language: repo.language,
-                        stars: repo.stars,
-                        forks: repo.forks,
-                        open_issues: repo.openIssues,
-                        url: repo.url,
-                        homepage: repo.homepage,
-                        topics: repo.topics,
-                        last_synced: new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
-                    },
-                    { onConflict: 'name' }
-                )
-                .select()
-                .single();
+        // Sync user repos
+        for (const repo of githubRepos) {
+            await syncRepo(repo, github, db);
+        }
 
-            if (repoError) {
-                console.error(`Error upserting repo ${repo.name}:`, repoError);
-                continue;
-            }
+        // Sync custom repos (those in DB but not in GitHub list)
+        const dbRepos = await db`SELECT name, full_name FROM repos`;
+        const customRepos = dbRepos.filter((r: any) => !githubRepoNames.has(r.name));
 
-            const repoId = repoData.id;
-
-            // Fetch branches count
-            const branches = await github.getBranches(repo.name);
-            await supabase
-                .from('repos')
-                .update({ branches_count: branches.length })
-                .eq('id', repoId);
-
-            // Parse ROADMAP.md
-            const roadmapContent = await github.getFileContent(repo.name, 'ROADMAP.md');
-            if (roadmapContent) {
-                const roadmapData = parseRoadmap(roadmapContent);
-
-                // Delete existing roadmap items
-                await supabase.from('roadmap_items').delete().eq('repo_id', repoId);
-
-                // Insert new roadmap items
-                for (const item of roadmapData.items) {
-                    await supabase.from('roadmap_items').insert({
-                        repo_id: repoId,
-                        title: item.title,
-                        quarter: item.quarter,
-                        status: item.status,
-                        priority: roadmapData.frontmatter.priority || null,
-                    });
-                }
-
-                // Update doc status
-                await supabase.from('doc_status').upsert(
-                    {
-                        repo_id: repoId,
-                        doc_type: 'roadmap',
-                        exists: true,
-                        last_checked: new Date().toISOString(),
-                    },
-                    { onConflict: 'repo_id,doc_type' }
-                );
-            }
-
-            // Parse TASKS.md
-            const tasksContent = await github.getFileContent(repo.name, 'TASKS.md');
-            if (tasksContent) {
-                const tasksData = parseTasks(tasksContent);
-
-                // Delete existing tasks
-                await supabase.from('tasks').delete().eq('repo_id', repoId);
-
-                // Insert new tasks
-                for (const task of tasksData.tasks) {
-                    await supabase.from('tasks').insert({
-                        repo_id: repoId,
-                        task_id: task.id,
-                        title: task.title,
-                        status: task.status,
-                        section: task.section,
-                    });
-                }
-
-                // Update doc status
-                await supabase.from('doc_status').upsert(
-                    {
-                        repo_id: repoId,
-                        doc_type: 'tasks',
-                        exists: true,
-                        last_checked: new Date().toISOString(),
-                    },
-                    { onConflict: 'repo_id,doc_type' }
-                );
-            }
-
-            // Parse METRICS.md
-            const metricsContent = await github.getFileContent(repo.name, 'METRICS.md');
-            if (metricsContent) {
-                const metricsData = parseMetrics(metricsContent);
-
-                // Insert metrics (keep historical data)
-                for (const metric of metricsData.metrics) {
-                    await supabase.from('metrics').insert({
-                        repo_id: repoId,
-                        metric_name: metric.name,
-                        value: metric.value,
-                        unit: metric.unit,
-                        timestamp: new Date().toISOString(),
-                    });
-                }
-
-                // Update doc status
-                await supabase.from('doc_status').upsert(
-                    {
-                        repo_id: repoId,
-                        doc_type: 'metrics',
-                        exists: true,
-                        last_checked: new Date().toISOString(),
-                    },
-                    { onConflict: 'repo_id,doc_type' }
-                );
-            }
-
-            // Check for other docs
-            const docTypes = ['README.md', 'CHANGELOG.md', 'CONTRIBUTING.md'];
-            for (const docFile of docTypes) {
-                const content = await github.getFileContent(repo.name, docFile);
-                const docType = docFile.replace('.md', '').toLowerCase() as 'readme' | 'changelog' | 'contributing';
-
-                await supabase.from('doc_status').upsert(
-                    {
-                        repo_id: repoId,
-                        doc_type: docType,
-                        exists: content !== null,
-                        last_checked: new Date().toISOString(),
-                    },
-                    { onConflict: 'repo_id,doc_type' }
-                );
+        for (const dbRepo of customRepos) {
+            try {
+                const [owner, name] = dbRepo.full_name.split('/');
+                const repoMeta = await github.getRepo(owner, name);
+                await syncRepo(repoMeta, github, db);
+            } catch (e) {
+                console.error(`Failed to sync custom repo ${dbRepo.full_name}:`, e);
             }
         }
 
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ success: true, count: repos.length }),
-        };
+        return { statusCode: 200, body: JSON.stringify({ success: true, count: githubRepos.length + customRepos.length }) };
     } catch (error: any) {
         console.error('Sync error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: error.message }),
-        };
+        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
     }
 };

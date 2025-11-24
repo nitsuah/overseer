@@ -1,22 +1,20 @@
----
-repo: your-repo-name
-updated: 2025-11-23
----
-
 # Tasks
 
+## Todo
+- [ ] Task 1
+- [ ] Task 2
+
 ## In Progress
-
-- [/] Implement core feature <!-- id: core-001 -->
-- [/] Write documentation <!-- id: docs-001 -->
-
-## Backlog
-
-- [ ] Add unit tests <!-- id: test-001 -->
-- [ ] Improve error handling <!-- id: error-001 -->
-- [ ] Optimize performance <!-- id: perf-001 -->
+- [ ] Current task
 
 ## Done
+- [x] Completed task
 
-- [x] Set up project structure <!-- id: setup-001 -->
-- [x] Configure build pipeline <!-- id: build-001 -->
+<!--
+AGENT INSTRUCTIONS:
+This file tracks specific actionable tasks.
+1. Categorize tasks into "Todo", "In Progress", and "Done".
+2. Add new tasks identified during code analysis or planning.
+3. Mark tasks as [x] when verified as complete.
+4. Keep task descriptions concise but actionable.
+-->

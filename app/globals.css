@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+* {
+  border-color: rgb(30 41 59);
+}
+
+body {
+  background-color: rgb(2 6 23);
+  color: rgb(241 245 249);
+}
+
+.glass {
+  background-color: rgb(15 23 42 / 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgb(30 41 59);
+}
+
+.glass-hover {
+  transition: all 0.2s;
+}
+
+.glass-hover:hover {
+  background-color: rgb(30 41 59 / 0.5);
+  border-color: rgb(51 65 85);
+}

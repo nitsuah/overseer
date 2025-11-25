@@ -11,10 +11,5 @@ export const DEFAULT_REPOS = [
         owner: 'Nitsuah-Labs',
         name: 'nitsuah-io',
         fullName: 'Nitsuah-Labs/nitsuah-io'
-    },
-    {
-        owner: 'nitsuah',
-        name: 'pverseer',
-        fullName: 'nitsuah/pverseer'
     }
 ];

@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, XCircle, Clock, Circle, GitPullRequest, AlertCircle, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
 
 interface Task {
     id: string;
@@ -40,6 +41,18 @@ interface ExpandableRowProps {
 }
 
 export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metrics = [], aiSummary, repoName, stars, forks, branches }: ExpandableRowProps) {
+    const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+
+    const toggleSection = (section: string) => {
+        const newExpanded = new Set(expandedSections);
+        if (newExpanded.has(section)) {
+            newExpanded.delete(section);
+        } else {
+            newExpanded.add(section);
+        }
+        setExpandedSections(newExpanded);
+    };
+
     const tasksByStatus = {
         'in-progress': tasks.filter((t) => t.status === 'in-progress'),
         todo: tasks.filter((t) => t.status === 'todo'),
@@ -108,14 +121,21 @@ export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metric
                                             <span className="text-xs font-medium text-slate-400">Backlog ({tasksByStatus.todo.length})</span>
                                         </div>
                                         <div className="space-y-1">
-                                            {tasksByStatus.todo.slice(0, 5).map((task) => (
+                                            {(expandedSections.has('backlog') ? tasksByStatus.todo : tasksByStatus.todo.slice(0, 5)).map((task) => (
                                                 <div key={task.id} className="text-xs text-slate-400 flex items-start gap-2">
                                                     <span className="mt-0.5">•</span>
                                                     <span className="line-clamp-1 flex-1">{task.title}</span>
                                                 </div>
                                             ))}
                                             {tasksByStatus.todo.length > 5 && (
-                                                <div className="text-xs text-slate-600 pl-3">+{tasksByStatus.todo.length - 5} more</div>
+                                                <button
+                                                    onClick={() => toggleSection('backlog')}
+                                                    className="text-xs text-blue-400 hover:text-blue-300 pl-3 transition-colors"
+                                                >
+                                                    {expandedSections.has('backlog')
+                                                        ? 'Show less'
+                                                        : `+${tasksByStatus.todo.length - 5} more`}
+                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -128,14 +148,21 @@ export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metric
                                             <span className="text-xs font-medium text-green-400">Done ({tasksByStatus.done.length})</span>
                                         </div>
                                         <div className="space-y-1">
-                                            {tasksByStatus.done.slice(0, 3).map((task) => (
+                                            {(expandedSections.has('done') ? tasksByStatus.done : tasksByStatus.done.slice(0, 3)).map((task) => (
                                                 <div key={task.id} className="text-xs text-slate-500 flex items-start gap-2 line-through">
                                                     <span className="mt-0.5">•</span>
                                                     <span className="line-clamp-1 flex-1">{task.title}</span>
                                                 </div>
                                             ))}
                                             {tasksByStatus.done.length > 3 && (
-                                                <div className="text-xs text-slate-600 pl-3">+{tasksByStatus.done.length - 3} more</div>
+                                                <button
+                                                    onClick={() => toggleSection('done')}
+                                                    className="text-xs text-blue-400 hover:text-blue-300 pl-3 transition-colors"
+                                                >
+                                                    {expandedSections.has('done')
+                                                        ? 'Show less'
+                                                        : `+${tasksByStatus.done.length - 3} more`}
+                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -185,7 +212,7 @@ export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metric
                                             <span className="text-xs font-medium text-slate-400">Planned ({roadmapByStatus.planned.length})</span>
                                         </div>
                                         <div className="space-y-2">
-                                            {roadmapByStatus.planned.slice(0, 5).map((item) => (
+                                            {(expandedSections.has('planned') ? roadmapByStatus.planned : roadmapByStatus.planned.slice(0, 5)).map((item) => (
                                                 <div key={item.id} className="text-xs">
                                                     <div className="text-slate-400 flex items-start gap-2">
                                                         <span className="mt-0.5">•</span>
@@ -197,7 +224,14 @@ export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metric
                                                 </div>
                                             ))}
                                             {roadmapByStatus.planned.length > 5 && (
-                                                <div className="text-xs text-slate-600 pl-3">+{roadmapByStatus.planned.length - 5} more</div>
+                                                <button
+                                                    onClick={() => toggleSection('planned')}
+                                                    className="text-xs text-blue-400 hover:text-blue-300 pl-3 transition-colors"
+                                                >
+                                                    {expandedSections.has('planned')
+                                                        ? 'Show less'
+                                                        : `+${roadmapByStatus.planned.length - 5} more`}
+                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -210,7 +244,7 @@ export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metric
                                             <span className="text-xs font-medium text-green-400">Completed ({roadmapByStatus.completed.length})</span>
                                         </div>
                                         <div className="space-y-2">
-                                            {roadmapByStatus.completed.slice(0, 3).map((item) => (
+                                            {(expandedSections.has('completed') ? roadmapByStatus.completed : roadmapByStatus.completed.slice(0, 3)).map((item) => (
                                                 <div key={item.id} className="text-xs text-slate-500 line-through">
                                                     <div className="flex items-start gap-2">
                                                         <span className="mt-0.5">•</span>
@@ -219,7 +253,14 @@ export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metric
                                                 </div>
                                             ))}
                                             {roadmapByStatus.completed.length > 3 && (
-                                                <div className="text-xs text-slate-600 pl-3">+{roadmapByStatus.completed.length - 3} more</div>
+                                                <button
+                                                    onClick={() => toggleSection('completed')}
+                                                    className="text-xs text-blue-400 hover:text-blue-300 pl-3 transition-colors"
+                                                >
+                                                    {expandedSections.has('completed')
+                                                        ? 'Show less'
+                                                        : `+${roadmapByStatus.completed.length - 3} more`}
+                                                </button>
                                             )}
                                         </div>
                                     </div>

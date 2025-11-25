@@ -20,13 +20,14 @@
 - [x] Move Stats to detail panel to save column space
 - [x] Add LICENSE.md as tracked document type
 - [x] Create comprehensive FEATURES.md
+- [x] Update DEFAULT_REPOS (removed pverseer)
+- [x] Make "+X more" expandable in task/roadmap lists
+- [x] Create CHANGELOG.md and CONTRIBUTING.md
+- [x] Consolidate documentation
 
 ## In Progress
 - [ ] Test AI Summary generation with corrected Gemini API
-- [ ] Sync default repos to database
 - [ ] Deploy to Netlify and verify OAuth flow
-- [ ] Debug Activity column data population
-- [ ] Debug Metrics display in detail panel
 
 ## Todo
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, XCircle, Clock, Circle, TrendingUp, Shield, Map, ListTodo } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Circle, TrendingUp, Shield, ShieldCheck, Map, ListTodo } from 'lucide-react';
 import { useState } from 'react';
 
 interface Task {
@@ -29,18 +29,53 @@ interface Metric {
     unit: string | null;
 }
 
+interface Feature {
+    id: string;
+    category: string;
+    title: string;
+    description: string;
+    items: string[];
+}
+
+interface BestPractice {
+    practice_type: string;
+    status: string;
+    details: Record<string, unknown>;
+}
+
+interface CommunityStandard {
+    standard_type: string;
+    status: string;
+    details: Record<string, unknown>;
+}
+
 interface ExpandableRowProps {
     tasks: Task[];
     roadmapItems: RoadmapItem[];
     docStatuses: DocStatus[];
     metrics?: Metric[];
+    features?: Feature[];
+    bestPractices?: BestPractice[];
+    communityStandards?: CommunityStandard[];
     aiSummary?: string;
     stars?: number;
     forks?: number;
     branches?: number;
 }
 
-export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metrics = [], aiSummary, stars, forks, branches }: ExpandableRowProps) {
+export default function ExpandableRow({ 
+    tasks, 
+    roadmapItems, 
+    docStatuses, 
+    metrics = [], 
+    features = [],
+    bestPractices = [],
+    communityStandards = [],
+    aiSummary, 
+    stars, 
+    forks, 
+    branches 
+}: ExpandableRowProps) {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
     const toggleSection = (section: string) => {
@@ -279,23 +314,54 @@ export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metric
                             )}
                         </div>
 
-                        {/* Features (Placeholder) */}
+                        {/* Features */}
                         <div className="space-y-4">
                             <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                                 <span className="text-lg">✨</span>
                                 <span>Features</span>
+                                <span className="text-xs text-slate-500 font-normal">({features.length} categories)</span>
                             </h4>
-                            <div className="bg-slate-800/30 rounded-lg p-4 h-full min-h-[200px]">
-                                <p className="text-xs text-slate-500 italic mb-4">
-                                    Feature tracking coming soon. This section will parse FEATURES.md.
-                                </p>
-                                <div className="space-y-3 opacity-30">
-                                    <div className="h-2 bg-slate-600 rounded w-3/4"></div>
-                                    <div className="h-2 bg-slate-600 rounded w-1/2"></div>
-                                    <div className="h-2 bg-slate-600 rounded w-5/6"></div>
-                                    <div className="h-2 bg-slate-600 rounded w-2/3"></div>
+                            {features.length === 0 ? (
+                                <div className="bg-slate-800/30 rounded-lg p-4">
+                                    <p className="text-xs text-slate-500 italic">No features documented</p>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {getDisplayedItems(features, 'features', 5).map((feature, i) => (
+                                        <div key={i} className="bg-slate-800/30 rounded-lg p-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-xs font-medium text-blue-400">{feature.category}</span>
+                                            </div>
+                                            {feature.description && (
+                                                <p className="text-[10px] text-slate-400 mb-2">{feature.description}</p>
+                                            )}
+                                            <ul className="space-y-1">
+                                                {feature.items.slice(0, 3).map((item, j) => (
+                                                    <li key={j} className="text-xs text-slate-300 flex items-start gap-2">
+                                                        <span className="mt-1.5 w-1 h-1 rounded-full bg-blue-500 shrink-0" />
+                                                        <span>{item}</span>
+                                                    </li>
+                                                ))}
+                                                {feature.items.length > 3 && (
+                                                    <li className="text-[10px] text-slate-500 pl-3">
+                                                        +{feature.items.length - 3} more items
+                                                    </li>
+                                                )}
+                                            </ul>
+                                        </div>
+                                    ))}
+                                    {features.length > 5 && (
+                                        <button
+                                            onClick={() => toggleSection('features')}
+                                            className="text-[10px] text-blue-400 hover:text-blue-300 pl-3"
+                                        >
+                                            {expandedSections.has('features')
+                                                ? 'Show less'
+                                                : `+${features.length - 5} more categories`}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -403,26 +469,98 @@ export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metric
                         </div>
                     </div>
 
-                    {/* Best Practices (Placeholder for now) */}
+                    {/* Best Practices */}
                     <div className="bg-slate-800/30 rounded-lg p-4">
                         <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
                             <Shield className="h-4 w-4 text-purple-400" />
                             <span>Best Practices</span>
+                            <span className="text-xs text-slate-500 font-normal">({bestPractices.length})</span>
                         </h4>
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between text-xs opacity-50">
-                                <span className="text-slate-400">Branch Protection</span>
-                                <span className="text-slate-500">Pending</span>
+                        {bestPractices.length === 0 ? (
+                            <p className="text-xs text-slate-500 italic">No data available</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {bestPractices.map((practice, i) => {
+                                    const getStatusIcon = (status: string) => {
+                                        switch (status) {
+                                            case 'healthy': return <CheckCircle2 className="h-3 w-3 text-green-400" />;
+                                            case 'dormant': return <Circle className="h-3 w-3 text-yellow-400" />;
+                                            case 'malformed': return <XCircle className="h-3 w-3 text-orange-400" />;
+                                            case 'missing': return <XCircle className="h-3 w-3 text-red-400" />;
+                                            default: return <Circle className="h-3 w-3 text-slate-500" />;
+                                        }
+                                    };
+                                    
+                                    const getStatusColor = (status: string) => {
+                                        switch (status) {
+                                            case 'healthy': return 'text-green-400';
+                                            case 'dormant': return 'text-yellow-400';
+                                            case 'malformed': return 'text-orange-400';
+                                            case 'missing': return 'text-red-400';
+                                            default: return 'text-slate-500';
+                                        }
+                                    };
+                                    
+                                    const getLabel = (type: string) => {
+                                        return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                                    };
+
+                                    return (
+                                        <div key={i} className="flex items-center justify-between text-xs">
+                                            <div className="flex items-center gap-2">
+                                                {getStatusIcon(practice.status)}
+                                                <span className={getStatusColor(practice.status)}>{getLabel(practice.practice_type)}</span>
+                                            </div>
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded capitalize ${getStatusColor(practice.status)}`}>
+                                                {practice.status}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                            <div className="flex items-center justify-between text-xs opacity-50">
-                                <span className="text-slate-400">CI/CD Status</span>
-                                <span className="text-slate-500">Pending</span>
+                        )}
+                    </div>
+
+                    {/* Community Standards */}
+                    <div className="bg-slate-800/30 rounded-lg p-4">
+                        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
+                            <ShieldCheck className="h-4 w-4 text-green-400" />
+                            <span>Community Standards</span>
+                            <span className="text-xs text-slate-500 font-normal">({communityStandards.length})</span>
+                        </h4>
+                        {communityStandards.length === 0 ? (
+                            <p className="text-xs text-slate-500 italic">No data available</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {communityStandards.map((standard, i) => {
+                                    const getStatusIcon = (status: string) => {
+                                        switch (status) {
+                                            case 'healthy': return <CheckCircle2 className="h-3 w-3 text-green-400" />;
+                                            case 'missing': return <XCircle className="h-3 w-3 text-red-400" />;
+                                            default: return <Circle className="h-3 w-3 text-slate-500" />;
+                                        }
+                                    };
+                                    
+                                    const getLabel = (type: string) => {
+                                        return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                                    };
+
+                                    return (
+                                        <div key={i} className="flex items-center justify-between text-xs">
+                                            <div className="flex items-center gap-2">
+                                                {getStatusIcon(standard.status)}
+                                                <span className={standard.status === 'healthy' ? 'text-slate-300' : 'text-slate-500'}>
+                                                    {getLabel(standard.standard_type)}
+                                                </span>
+                                            </div>
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${standard.status === 'healthy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                {standard.status === 'healthy' ? 'Present' : 'Missing'}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                            <div className="flex items-center justify-between text-xs opacity-50">
-                                <span className="text-slate-400">Git Hygiene</span>
-                                <span className="text-slate-500">Pending</span>
-                            </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Metrics */}

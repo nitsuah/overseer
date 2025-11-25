@@ -48,8 +48,11 @@ interface Repo {
 interface RepoDetails {
   tasks: Array<{ id: string; title: string; status: "todo" | "in-progress" | "done"; section: string | null }>;
   roadmapItems: Array<{ id: string; title: string; quarter: string | null; status: "planned" | "in-progress" | "completed" }>;
-  docStatuses: Array<{ doc_type: string; exists: boolean }>;
+  docStatuses: Array<{ doc_type: string; exists: boolean; health_state?: string }>;
   metrics: Array<{ name: string; value: number; unit: string | null }>;
+  features: Array<{ id: string; category: string; title: string; description: string; items: string[] }>;
+  bestPractices: Array<{ practice_type: string; status: string; details: Record<string, unknown> }>;
+  communityStandards: Array<{ standard_type: string; status: string; details: Record<string, unknown> }>;
 }
 
 function getHealthGrade(score: number = 0): { grade: string; color: string } {
@@ -70,6 +73,7 @@ export default function DashboardPage() {
   const [generatingSummary, setGeneratingSummary] = useState<string | null>(null);
   const [showAddRepo, setShowAddRepo] = useState(false);
   const [addRepoUrl, setAddRepoUrl] = useState("");
+  const [addRepoType, setAddRepoType] = useState<RepoType>("unknown");
   const [addingRepo, setAddingRepo] = useState(false);
   const [filterType, setFilterType] = useState<RepoType | "all">("all");
   const [filterLanguage, setFilterLanguage] = useState("all");
@@ -104,10 +108,13 @@ export default function DashboardPage() {
         setRepoDetails(prev => ({
           ...prev,
           [repoName]: {
-            tasks: data.tasks,
-            roadmapItems: data.roadmapItems,
-            docStatuses: data.docStatuses,
-            metrics: data.metrics,
+            tasks: data.tasks || [],
+            roadmapItems: data.roadmapItems || [],
+            docStatuses: data.docStatuses || [],
+            metrics: data.metrics || [],
+            features: data.features || [],
+            bestPractices: data.bestPractices || [],
+            communityStandards: data.communityStandards || [],
           },
         }));
       }
@@ -124,12 +131,13 @@ export default function DashboardPage() {
       const res = await fetch("/api/repos/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: addRepoUrl }),
+        body: JSON.stringify({ url: addRepoUrl, type: addRepoType }),
       });
       if (res.ok) {
         const data = await res.json();
         alert(`Successfully added ${data.repo.fullName}`);
         setAddRepoUrl("");
+        setAddRepoType("unknown");
         setShowAddRepo(false);
         await fetchRepos();
       } else {
@@ -302,6 +310,19 @@ export default function DashboardPage() {
                   className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64"
                   autoFocus
                 />
+                <select
+                  value={addRepoType}
+                  onChange={e => setAddRepoType(e.target.value as RepoType)}
+                  className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value="unknown">Unknown</option>
+                  <option value="web-app">Web App</option>
+                  <option value="game">Game</option>
+                  <option value="tool">Tool</option>
+                  <option value="library">Library</option>
+                  <option value="bot">Bot</option>
+                  <option value="research">Research</option>
+                </select>
                 <button
                   type="submit"
                   disabled={addingRepo}
@@ -566,8 +587,10 @@ export default function DashboardPage() {
                             roadmapItems={details.roadmapItems}
                             docStatuses={details.docStatuses}
                             metrics={details.metrics}
+                            features={details.features}
+                            bestPractices={details.bestPractices}
+                            communityStandards={details.communityStandards}
                             aiSummary={repo.ai_summary}
-                            repoName={repo.name}
                             stars={repo.stars}
                             forks={repo.forks}
                             branches={repo.branches_count}

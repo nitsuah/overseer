@@ -1,4 +1,4 @@
-import { Octokit } from 'octokit';
+import { Octokit } from '@octokit/rest';
 
 export type HealthState = 'missing' | 'dormant' | 'malformed' | 'healthy';
 

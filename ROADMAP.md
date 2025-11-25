@@ -21,12 +21,16 @@
 - [x] AI Summary Display: Prominent display in expandable rows
 - [x] UX/Flow: Sync Status Clarity (Timestamp) and Type Column Tag Refinement
 - [x] LICENSE.md Tracking: Added as tracked document type
-- [ ] Detail Panel 2.0: Grouped Docs, Features Section, Best Practices Section
-- [ ] Meta-Features: Best Practices & Community Standards Detection
-- [ ] Basic Health Metrics: README Freshness, Issue/PR Template Presence, Stale Branch Count
-- [ ] Compliance Checks: Pre-commit Hook Presence and Node/Language Version Tags
+- [x] Detail Panel 2.0: Features Section with parsed FEATURES.md
+- [x] Meta-Features: Best Practices (10 checks) & Community Standards (7 checks) Detection
+- [x] Basic Health Metrics: Testing framework, CI/CD, Linting, Pre-commit hooks
+- [x] Compliance Checks: Gitignore, PR/Issue Templates, Environment Templates
+- [x] Health Score 2.0: Comprehensive weighted calculation (Doc 30%, Testing 20%, Best Practices 20%, Community 15%, Activity 15%)
+- [x] Document Health States: Missing, Dormant, Malformed, Healthy
+- [x] Repo Type Selector: Added to custom repo form
 - [ ] Foundation: Dark/Light Mode Toggle
 - [ ] Foundation: Full E2E Tests and Pre-commit Hooks
+- [ ] README Freshness: Calculate and display days since last update
 
 ## Q2 2025: Advanced Agents & Velocity Tracking 🧠
 - [ ] Velocity Tracking: Average PR Merge Time (Cycle Time), Open PR/Issue Ratio, Commit Cadence

@@ -24,33 +24,37 @@
 - [x] Make "+X more" expandable in task/roadmap lists
 - [x] Create CHANGELOG.md and CONTRIBUTING.md
 - [x] Consolidate documentation
+- [x] Update database schema with features, best_practices, community_standards tables
+- [x] Create FEATURES.md parser with category and description support
+- [x] Implement Best Practices detection (10 checks including CI/CD, hooks, linting)
+- [x] Implement Community Standards detection (7 checks)
+- [x] Add document health states (missing, dormant, malformed, healthy)
+- [x] Integrate new parsers and detection into sync workflow
+- [x] Update API endpoints to return features, best practices, community standards
+- [x] Display Features section in UI with real data
+- [x] Display Best Practices section with status indicators
+- [x] Display Community Standards section with status indicators
+- [x] Implement comprehensive health score calculation (weighted)
+- [x] Add repo type selector to Add Custom Repo form
 
 ## In Progress
-- [ ] Test AI Summary generation with corrected Gemini API
-- [ ] Deploy to Netlify and verify OAuth flow
+- [ ] Run database migration script
+- [ ] Test all new features end-to-end
 
 ## Todo
 
 ### High Priority
-- [ ] Fix Metrics Display in Detail Panel (Immediate Bug)
-- [ ] Restructure Detail Panel (Group Docs, Add Features/Best Practices sections)
-- [ ] Fix PR/File links to open in new tab
-- [ ] Add repo type selection to "Add Custom Repo" form
-- [ ] Make "+X more" expandable in task/roadmap lists
+- [ ] Fix Metrics Display in Detail Panel (verify data is showing)
 - [ ] Add README Freshness metric calculation
-- [ ] Validate Health Score Meter visualization
-
-### Best Practices & Community Standards (Meta-Features)
-- [ ] Implement Best Practices Detection (Branch protection, CI/CD, Git hygiene)
-- [ ] Implement Community Standards Detection (Code of Conduct, Security Policy, Templates)
-- [ ] Add Best Practices/Standards section to Detail Panel
-- [ ] Update Health Score to include Best Practices adherence
+- [ ] Validate Health Score Meter visualization with new calculation
 
 ### Future Enhancements
 - [ ] Add pre-commit hooks to Overseer project
 - [ ] Implement full E2E tests with Playwright
 - [ ] Implement Dark/Light Mode Toggle
 - [ ] Add webhook integration for real-time updates
+- [ ] Template health checking (dormant/malformed detection with hashing)
+- [ ] Add "Fix" buttons for missing best practices and community standards
 
 <!--
 AGENT INSTRUCTIONS:

@@ -35,7 +35,7 @@ export interface PullRequestInfo {
 }
 
 export class GitHubClient {
-  private octokit: Octokit;
+  public octokit: Octokit;
   private owner: string;
 
   constructor(token: string, owner: string) {
@@ -272,6 +272,34 @@ export class GitHubClient {
     } catch {
       // If file doesn't exist or other error, return null
       return null;
+    }
+  }
+
+  async getRepoFileList(repo: string, owner?: string, path = ''): Promise<string[]> {
+    try {
+      const { data } = await this.octokit.repos.getContent({
+        owner: owner || this.owner,
+        repo,
+        path,
+      });
+
+      const files: string[] = [];
+      
+      if (Array.isArray(data)) {
+        for (const item of data) {
+          if (item.type === 'file') {
+            files.push(item.path);
+          } else if (item.type === 'dir') {
+            // Recursively get files from subdirectories
+            const subFiles = await this.getRepoFileList(repo, owner || this.owner, item.path);
+            files.push(...subFiles);
+          }
+        }
+      }
+      
+      return files;
+    } catch {
+      return [];
     }
   }
 }

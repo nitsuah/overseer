@@ -45,7 +45,6 @@ export async function GET(
             SELECT * FROM metrics
             WHERE repo_id = ${repo.id}
             ORDER BY created_at DESC
-            LIMIT 1
         `;
 
         // Get features
@@ -55,12 +54,33 @@ export async function GET(
             ORDER BY created_at DESC
         `;
 
+        // Get doc statuses
+        const docStatuses = await db`
+            SELECT * FROM doc_status
+            WHERE repo_id = ${repo.id}
+        `;
+
+        // Get best practices
+        const bestPractices = await db`
+            SELECT * FROM best_practices
+            WHERE repo_id = ${repo.id}
+        `;
+
+        // Get community standards
+        const communityStandards = await db`
+            SELECT * FROM community_standards
+            WHERE repo_id = ${repo.id}
+        `;
+
         return NextResponse.json({
             repo,
             tasks,
             roadmapItems,
-            metrics: metrics[0] || null,
-            features
+            metrics,
+            features,
+            docStatuses,
+            bestPractices,
+            communityStandards
         });
     } catch (error: unknown) {
         console.error('Error fetching repo details:', error);

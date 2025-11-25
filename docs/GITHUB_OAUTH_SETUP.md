@@ -1,5 +1,45 @@
 # GitHub OAuth Setup
 
+## Github Auth issues
+
+Solving GitHub Auth (NextAuth v5)Since you are using NextAuth v5, the setup is slightly stricter than v4. You likely have issues with callback URLs or scopes (since Overseer needs to write to your repos to open PRs).The "Two-App" StrategyGitHub does not allow localhost and production URLs in the same OAuth App. You need two separate OAuth Apps in your GitHub Developer Settings.SettingLocal Development AppProduction AppHomepage URLhttp://localhost:3000https://your-overseer.netlify.appCallback URLhttp://localhost:3000/api/auth/callback/githubhttps://your-overseer.netlify.app/api/auth/callback/githubThe Code Fix (auth.ts)Create or update your auth.ts (or app/api/auth/[...nextauth]/route.ts depending on your routing). Crucially, you must request the repo scope so Overseer can read your code and open PRs.
+
+```ts
+import NextAuth from "next-auth"
+import GitHub from "next-auth/providers/github"
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  providers: [
+    GitHub({
+      clientId: process.env.GITHUB_ID,
+      clientSecret: process.env.GITHUB_SECRET,
+      authorization: {
+        params: {
+          // 'repo' scope is REQUIRED for Overseer to read private repos
+          // and create PRs (write access).
+          scope: "read:user user:email repo",
+        },
+      },
+    }),
+  ],
+  callbacks: {
+    // This passes the GitHub Access Token to your session
+    // so you can use it in Octokit to make API calls later.
+    async session({ session, token }) {
+      if (token?.accessToken) {
+        session.accessToken = token.accessToken;
+      }
+      return session;
+    },
+    async jwt({ token, account }) {
+      if (account) {
+        token.accessToken = account.access_token;
+      }
+      return token;
+    },
+  },
+})
+```
+
 ## Quick Setup
 
 ### 1. Create GitHub OAuth App

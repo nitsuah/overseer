@@ -12,10 +12,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { url } = await request.json();
+        const { url, type } = await request.json();
         if (!url) {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
         }
+
+        const repoType = type || 'unknown';
 
         // Parse owner/repo from URL
         // Supports:
@@ -64,6 +66,15 @@ export async function POST(request: NextRequest) {
         // Sync repo (inserts into DB and fetches docs)
         const db = getNeonClient();
         await syncRepo(repoMeta, github, db);
+
+        // Update repo type if provided
+        if (repoType && repoType !== 'unknown') {
+            await db`
+                UPDATE repos 
+                SET repo_type = ${repoType}
+                WHERE name = ${repo}
+            `;
+        }
 
         return NextResponse.json({ success: true, repo: repoMeta });
     } catch (error: unknown) {

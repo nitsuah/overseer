@@ -3,6 +3,7 @@ import { GitHubClient, RepoMetadata } from './github';
 import { parseRoadmap } from './parsers/roadmap';
 import { parseTasks } from './parsers/tasks';
 import { parseMetrics } from './parsers/metrics';
+import { parseFeatures } from './parsers/features';
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -128,8 +129,30 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         `;
     }
 
+    // FEATURES.md
+    const featuresContent = await github.getFileContent(repo.name, 'FEATURES.md', owner);
+    if (featuresContent) {
+        const featuresData = parseFeatures(featuresContent);
+        await db`DELETE FROM features WHERE repo_id = ${repoId}`;
+        for (const category of featuresData.categories) {
+            for (const item of category.items) {
+                await db`
+                    INSERT INTO features (repo_id, category, item)
+                    VALUES (${repoId}, ${category.name}, ${item})
+                `;
+            }
+        }
+        await db`
+            INSERT INTO doc_status (repo_id, doc_type, exists, last_checked)
+            VALUES (${repoId}, 'features', true, NOW())
+            ON CONFLICT (repo_id, doc_type) DO UPDATE SET exists = EXCLUDED.exists, last_checked = EXCLUDED.last_checked
+        `;
+    }
+
     // Other docs
-    const docTypes = ['README.md', 'LICENSE.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'FEATURES.md'];
+
+    // Other docs
+    const docTypes = ['README.md', 'LICENSE.md', 'CHANGELOG.md', 'CONTRIBUTING.md'];
     for (const docFile of docTypes) {
         const content = await github.getFileContent(repo.name, docFile, owner);
         const docType = docFile.replace('.md', '').toLowerCase();

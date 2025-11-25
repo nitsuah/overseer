@@ -32,25 +32,19 @@
 ## Todo
 
 ### High Priority
+- [ ] Fix Metrics Display in Detail Panel (Immediate Bug)
+- [ ] Restructure Detail Panel (Group Docs, Add Features/Best Practices sections)
+- [ ] Fix PR/File links to open in new tab
 - [ ] Add repo type selection to "Add Custom Repo" form
 - [ ] Make "+X more" expandable in task/roadmap lists
 - [ ] Add README Freshness metric calculation
 - [ ] Validate Health Score Meter visualization
 
-### Best Practices Detection System
-- [ ] Create `lib/best-practices.ts` detection framework
-- [ ] Detect pre-commit hooks (`.husky/`, `.git/hooks/`)
-- [ ] Detect CI/CD configuration (`.github/workflows/`, `.gitlab-ci.yml`, `netlify.toml`)
-- [ ] Detect testing frameworks (`vitest.config`, `jest.config`, `playwright.config`)
-- [ ] Detect linting configuration (`.eslintrc`, `.prettierrc`, `biome.json`)
-- [ ] Detect security files (`SECURITY.md`, `.github/dependabot.yml`)
-- [ ] Detect issue/PR templates (`.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`)
-- [ ] Detect package manager lock files (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`)
-- [ ] Detect Docker configuration (`Dockerfile`, `docker-compose.yml`)
-- [ ] Detect environment example files (`.env.example`)
-- [ ] Add database schema for best practices tracking
-- [ ] Integrate best practices into health score calculation
-- [ ] Display best practices in dashboard
+### Best Practices & Community Standards (Meta-Features)
+- [ ] Implement Best Practices Detection (Branch protection, CI/CD, Git hygiene)
+- [ ] Implement Community Standards Detection (Code of Conduct, Security Policy, Templates)
+- [ ] Add Best Practices/Standards section to Detail Panel
+- [ ] Update Health Score to include Best Practices adherence
 
 ### Future Enhancements
 - [ ] Add pre-commit hooks to Overseer project

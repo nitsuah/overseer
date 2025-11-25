@@ -40,24 +40,27 @@ export async function GET(
             ORDER BY created_at DESC
         `;
 
-        // Get doc statuses
-        const docStatuses = await db`
-            SELECT * FROM doc_status
-            WHERE repo_id = ${repo.id}
-        `;
-
         // Get metrics
         const metrics = await db`
             SELECT * FROM metrics
             WHERE repo_id = ${repo.id}
-            ORDER BY timestamp DESC
+            ORDER BY created_at DESC
+            LIMIT 1
+        `;
+
+        // Get features
+        const features = await db`
+            SELECT * FROM features
+            WHERE repo_id = ${repo.id}
+            ORDER BY created_at DESC
         `;
 
         return NextResponse.json({
-            tasks: tasks || [],
-            roadmapItems: roadmapItems || [],
-            docStatuses: docStatuses || [],
-            metrics: metrics || [],
+            repo,
+            tasks,
+            roadmapItems,
+            metrics: metrics[0] || null,
+            features
         });
     } catch (error: unknown) {
         console.error('Error fetching repo details:', error);

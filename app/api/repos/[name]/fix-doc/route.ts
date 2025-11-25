@@ -60,7 +60,7 @@ export async function POST(
         // Wait, I should modify lib/github.ts first.
         // But for now I'll write this and then update lib/github.ts
 
-        await github.createPrForFile(
+        const prUrl = await github.createPrForFile(
             repoName,
             branchName,
             `${docType.toUpperCase()}.md`,
@@ -68,7 +68,7 @@ export async function POST(
             `docs: add ${docType.toUpperCase()}.md`
         );
 
-        return NextResponse.json({ success: true, branch: branchName });
+        return NextResponse.json({ success: true, branch: branchName, prUrl });
     } catch (error: unknown) {
         console.error('Error creating PR:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';

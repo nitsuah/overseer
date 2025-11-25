@@ -199,6 +199,10 @@ export default function DashboardPage() {
         body: JSON.stringify({ docType }),
       });
       if (res.ok) {
+        const data = await res.json();
+        if (data.prUrl) {
+          window.open(data.prUrl, '_blank');
+        }
         alert("PR created successfully!");
       } else {
         const err = await res.json();
@@ -219,6 +223,9 @@ export default function DashboardPage() {
       const res = await fetch(`/api/repos/${repoName}/fix-all-docs`, { method: "POST" });
       if (res.ok) {
         const data = await res.json();
+        if (data.prUrl) {
+          window.open(data.prUrl, '_blank');
+        }
         alert(`PR created! Added ${data.count} files.`);
       } else {
         const err = await res.json();

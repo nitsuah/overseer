@@ -2,7 +2,23 @@
 
 **Meta-Repository Intelligence Layer**
 
-A dashboard that gives you and your AI agents a unified view across all your GitHub repositories.
+> A dashboard that gives you and your AI agents a unified view across all your GitHub repositories.
+
+## Mission Statement
+
+🛡️ Overseer Mission: The "Meta-Repository" Standard
+
+We believe that a healthy codebase is self-documenting, standardized, and AI-ready.
+
+Overseer is not just a dashboard; it is an intelligence layer that sits above your Git repositories. Its mission is to bridge the gap between human developer intent and AI agent execution. By enforcing a strict documentation standard (ROADMAP, TASKS, METRICS) and visualizing the flow from "Strategy" to "Shipped Code," Overseer eliminates the context-switching tax of modern development.
+
+We aim to:
+
+- Standardize Context: Ensure every repo provides the necessary context windows for both humans and AI agents to contribute immediately.
+- Visualize Momentum: Move beyond "commits" and track the true velocity of ideas turning into features.
+- Automate Governance: Use AI to act as a gentle guardian, ensuring roadmap items are defined and documentation is never stale, without interfering with the granular code workflow.
+
+Overseer gives you the input/output controls of a project manager, committed directly to the git history you already own.
 
 ## Features
 

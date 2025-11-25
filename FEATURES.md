@@ -42,6 +42,13 @@
 - **Default Repositories**: Always-visible demo repositories
 - **Custom Repository Support**: Add any public GitHub repository
 
+#### Default Repositories
+Overseer includes default repositories that are always synced and displayed:
+- `nitsuah/overseer` - The Overseer dashboard itself
+- `Nitsuah-Labs/nitsuah-io` - The Nitsuah.io website
+
+These ensure the dashboard always has content, even for non-authenticated visitors. Configure in `lib/default-repos.ts`.
+
 ## Tracked Documentation
 
 Overseer monitors the following documentation files in each repository:
@@ -59,35 +66,23 @@ Overseer monitors the following documentation files in each repository:
 - **SETUP.md** - Setup instructions
 - **FEATURES.md** - Feature documentation
 
-## Best Practices Detection
+## Best Practices & Community Standards
 
-### Currently Implemented
-- ✅ **Documentation Presence**: Tracks existence of key markdown files
-- ✅ **Repository Type**: Detects project type from name, description, language, topics
-- ✅ **Code Coverage**: Displays test coverage when available
-- ✅ **Testing Status**: Shows passing/failing test status
+Overseer tracks adherence to development and community standards:
 
-### Planned
-- 🔄 **Pre-commit Hooks**: Detect `.husky/`, `.git/hooks/`
-- 🔄 **CI/CD Configuration**: Detect `.github/workflows/`, `.gitlab-ci.yml`, `netlify.toml`
-- 🔄 **Testing Frameworks**: Detect `vitest.config`, `jest.config`, `playwright.config`
-- 🔄 **Linting**: Detect `.eslintrc`, `.prettierrc`, `biome.json`
-- 🔄 **Security Files**: Detect `SECURITY.md`, `.github/dependabot.yml`, `https://github.com/Nitsuah-Labs/nitsuah-io/security/dependabot` - dependabot results, codescanning, secret scanning results from GH
-- 🔄 **Issue/PR Templates**: Detect `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`
-- 🔄 **Package Managers**: Detect lock files (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`)
-- 🔄 **Docker**: Detect `Dockerfile`, `docker-compose.yml`
-- 🔄 **Environment Files**: Detect `.env.example`
-- Community Standards as a section in detail panel but if they are a core doc can track that way instead of checklist - Checklist - 
- README (leave under docs detail section)
- Code of conduct (leave under docs detail section)
- Contributing (leave under docs section)
- License (leave under docs section)
- Security policy (leave under docs section)
-Set up a security policy (leave under docs section)
- Issue templates (checklist)
- Pull request template (leave under docs section)
- Repository admins accept content reports (checklist)
-- 
+### 🛡️ Community Standards
+- **Core Documentation**: README, FEATURES
+- **Legal & History**: LICENSE, CHANGELOG
+- **Contribution**: CONTRIBUTING, CODE_OF_CONDUCT
+- **Security**: SECURITY.md, Security Policy
+- **Templates**: Issue Templates, Pull Request Templates
+
+### ✅ Best Practices Checklist
+- **Branch Protection**: Main branch protected, require status checks
+- **CI/CD**: Tests passing, build success
+- **Git Hygiene**: `.gitignore` exists, no large files
+- **Automation**: Pre-commit hooks, Dependabot
+- **Deployment**: Netlify badges, Deployment status
 
 ## Technology Stack
 

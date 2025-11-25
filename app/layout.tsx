@@ -24,7 +24,7 @@ export default async function RootLayout({
       <body className={`${inter.className} bg-slate-950 text-white antialiased`}>
         <SessionProvider session={session}>
           <Header />
-          <main className="container mx-auto px-6 py-8">{children}</main>
+          <main className="w-full max-w-[1800px] mx-auto px-6 py-8">{children}</main>
         </SessionProvider>
       </body>
     </html>

@@ -21,7 +21,8 @@
 - [x] AI Summary Display: Prominent display in expandable rows
 - [x] UX/Flow: Sync Status Clarity (Timestamp) and Type Column Tag Refinement
 - [x] LICENSE.md Tracking: Added as tracked document type
-- [ ] Best Practices Detection Framework: Detect pre-commit hooks, CI/CD, testing, linting
+- [ ] Detail Panel 2.0: Grouped Docs, Features Section, Best Practices Section
+- [ ] Meta-Features: Best Practices & Community Standards Detection
 - [ ] Basic Health Metrics: README Freshness, Issue/PR Template Presence, Stale Branch Count
 - [ ] Compliance Checks: Pre-commit Hook Presence and Node/Language Version Tags
 - [ ] Foundation: Dark/Light Mode Toggle

@@ -33,6 +33,7 @@
 - [ ] README Freshness: Calculate and display days since last update
 
 ## Q2 2025: Advanced Agents & Velocity Tracking 🧠
+
 - [ ] Velocity Tracking: Average PR Merge Time (Cycle Time), Open PR/Issue Ratio, Commit Cadence
 - [ ] Advanced Health Metrics Integration: Vulnerability Alerts Count, Failing CI/CD Build Ratio
 - [ ] Technical Debt Scoring: Dependency Age Score and Lines of Code (LoC) Metrics
@@ -48,11 +49,12 @@
 - [ ] Custom AI Model Fine-tuning
 
 ## Q4 2025: Autonomous Agents & Conversational UI 🤖
-* [ ] **Agent Task Queue:** API endpoint for autonomous AI agents to submit tasks
-* [ ] **Workflow Visualization:** Screen showing branching/execution paths for complex actions
-* [ ] **Unified PR & Task Manager:** Central dashboard for all PRs and TASKS.md entries
-* [ ] **Roadmap Simulation:** AI-powered schedule impact analysis
-* [ ] **Conversational Interface Foundation:** Natural language, chat-driven interface
+
+- [ ] **Agent Task Queue:** API endpoint for autonomous AI agents to submit tasks
+- [ ] **Workflow Visualization:** Screen showing branching/execution paths for complex actions
+- [ ] **Unified PR & Task Manager:** Central dashboard for all PRs and TASKS.md entries
+- [ ] **Roadmap Simulation:** AI-powered schedule impact analysis
+- [ ] **Conversational Interface Foundation:** Natural language, chat-driven interface
 
 ---
 
@@ -64,8 +66,8 @@ The core efficiency is the **lightweight architecture**: by relying on **GitHub 
 
 The ultimate goal is to evolve the dashboard into a **Conversational Interface** where users can delegate complex, multi-step governance tasks through natural language, such as:
 
-* *"Overseer, run a full hygiene check on the core payment service, fix any stale documentation, and assign the highest priority vulnerability fix to Alice."*
-* *"What is the impact on Q3's deadline if we delay the Mobile App feature by one month?"*
+- *"Overseer, run a full hygiene check on the core payment service, fix any stale documentation, and assign the highest priority vulnerability fix to Alice."*
+- *"What is the impact on Q3's deadline if we delay the Mobile App feature by one month?"*
 
 This transition establishes Overseer as the central **Workflow Orchestrator** and **Intelligence Layer** for engineering health.
 

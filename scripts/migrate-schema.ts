@@ -1,6 +1,10 @@
+import { config } from 'dotenv';
 import { getNeonClient } from '../lib/db';
 import fs from 'fs';
 import path from 'path';
+
+// Load environment variables
+config({ path: '.env.local' });
 
 async function migrateSchema() {
     const db = getNeonClient();

@@ -12,7 +12,7 @@
 - [x] Default Repositories Feature
 - [x] Dynamic OAuth URL Support (Netlify)
 
-## Q1 2025: Baseline Metrics & UI Polish ✨
+## Q1 2025: Baseline Metrics & UI Polish (COMPLETED) ✨
 
 - [x] Baseline Indicator Integration: Last Commit Date, Open PR/Issue Counts
 - [x] Dashboard Polish: Stats column (Stars, Forks, Branches)
@@ -28,11 +28,21 @@
 - [x] Health Score 2.0: Comprehensive weighted calculation (Doc 30%, Testing 20%, Best Practices 20%, Community 15%, Activity 15%)
 - [x] Document Health States: Missing, Dormant, Malformed, Healthy
 - [x] Repo Type Selector: Added to custom repo form
+
+## Q2 2025: Polish & Integrations 🧠
+
 - [ ] Foundation: Dark/Light Mode Toggle
 - [ ] Foundation: Full E2E Tests and Pre-commit Hooks
 - [ ] README Freshness: Calculate and display days since last update
+- [ ] GitHub OAuth Production Fix (callback URL, token handling)
+- [ ] Gemini API Integration Fix (model version compatibility)
+- [ ] Testing Metrics Display (test count, coverage %, framework)
+- [ ] Health State Icons in main table row view
+- [ ] PR Creation opens in new tab
+- [ ] Fix buttons for Best Practices & Community Standards
+- [ ] Template File Hashing (detect stale templates)
 
-## Q2 2025: Advanced Agents & Velocity Tracking 🧠
+## Q3 2025: Advanced Agents & Velocity Tracking 🚀
 
 - [ ] Velocity Tracking: Average PR Merge Time (Cycle Time), Open PR/Issue Ratio, Commit Cadence
 - [ ] Advanced Health Metrics Integration: Vulnerability Alerts Count, Failing CI/CD Build Ratio

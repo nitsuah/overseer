@@ -15,6 +15,7 @@
     "migrate:add-is-hidden": "tsx scripts/add-is-hidden.ts",
     "check-schema": "tsx scripts/check-schema.ts",
     "test-query": "tsx scripts/test-query.ts",
+    "create-new-tables": "tsx scripts/create-new-tables.ts",
     "test": "vitest",
     "prepare": "husky"
   },

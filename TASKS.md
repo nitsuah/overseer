@@ -45,15 +45,23 @@
 
 - [ ] Test all new features end-to-end after migration
 - [ ] Verify Features/Best Practices/Community Standards display in UI
-- [ ] Verify GitHub OAuth works in all environments (local, preview, production)
+- [ ] Fix GitHub OAuth in production environment (token/callback issues)
+- [ ] Fix Gemini API integration (404 errors - model version mismatch)
 
 ## Todo
 
 ### High Priority
 
-- [ ] Fix Metrics Display in Detail Panel (verify data is showing)
+- [ ] Add Testing Metrics Display (test count, coverage %, framework detection)
+- [ ] Add Health State Icons to main table row for each section
+- [ ] Fix PR creation to open in new tab
 - [ ] Add README Freshness metric calculation
 - [ ] Validate Health Score Meter visualization with new calculation
+
+### Medium Priority
+
+- [ ] Metrics Display Enhancement (ensure all METRICS.md data shows in panels)
+- [ ] Verify GitHub OAuth works in all environments (local, preview, production)
 
 ### Future Enhancements
 
@@ -63,6 +71,11 @@
 - [ ] Add webhook integration for real-time updates
 - [ ] Template health checking (dormant/malformed detection with hashing)
 - [ ] Add "Fix" buttons for missing best practices and community standards
+- [ ] Token Density Metric (LOC per logical unit with AI-assisted parsing)
+- [ ] Bus Factor Analysis (contributor concentration risk)
+- [ ] Zombie Branch Detection (stale branches past merge)
+- [ ] Maintenance Mode Detection (activity patterns suggesting abandonment)
+- [ ] Comment-to-Code Ratio Analysis (documentation density)
 
 <!--
 AGENT INSTRUCTIONS:

@@ -32,9 +32,11 @@ interface ExpandableRowProps {
     roadmapItems: RoadmapItem[];
     docStatuses: DocStatus[];
     metrics?: Metric[];
+    aiSummary?: string;
+    repoName?: string;
 }
 
-export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metrics = [] }: ExpandableRowProps) {
+export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metrics = [], aiSummary, repoName }: ExpandableRowProps) {
     const tasksByStatus = {
         'in-progress': tasks.filter((t) => t.status === 'in-progress'),
         todo: tasks.filter((t) => t.status === 'todo'),
@@ -53,6 +55,17 @@ export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metric
 
     return (
         <div className="px-6 py-6 bg-slate-900/50 border-t border-slate-800">
+            {/* AI Summary Section */}
+            {aiSummary && (
+                <div className="mb-6 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-purple-300 mb-2 flex items-center gap-2">
+                        <span className="text-lg">🤖</span>
+                        <span>AI Summary</span>
+                    </h4>
+                    <p className="text-sm text-slate-300 leading-relaxed">{aiSummary}</p>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left Column: Tasks & Roadmap (8 cols) */}
                 <div className="lg:col-span-8 space-y-6">

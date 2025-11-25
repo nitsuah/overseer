@@ -26,51 +26,74 @@ export async function GET(
 
         const repo = repoRows[0];
 
-        // Get tasks
+        // Get tasks - handle tables that might not have created_at yet
         const tasks = await db`
-            SELECT * FROM tasks
+            SELECT id, repo_id, task_id, title, description, status, section
+            FROM tasks
             WHERE repo_id = ${repo.id}
-            ORDER BY created_at DESC
+            ORDER BY id DESC
         `;
 
         // Get roadmap items
         const roadmapItems = await db`
-            SELECT * FROM roadmap_items
+            SELECT id, repo_id, title, quarter, status
+            FROM roadmap_items
             WHERE repo_id = ${repo.id}
-            ORDER BY created_at DESC
+            ORDER BY id DESC
         `;
 
         // Get metrics
         const metrics = await db`
-            SELECT * FROM metrics
+            SELECT id, repo_id, name, value, unit
+            FROM metrics
             WHERE repo_id = ${repo.id}
-            ORDER BY created_at DESC
+            ORDER BY id DESC
         `;
 
-        // Get features
-        const features = await db`
-            SELECT * FROM features
-            WHERE repo_id = ${repo.id}
-            ORDER BY created_at DESC
-        `;
+        // Get features - may not exist yet
+        let features: unknown[] = [];
+        try {
+            features = await db`
+                SELECT * FROM features
+                WHERE repo_id = ${repo.id}
+                ORDER BY id DESC
+            `;
+        } catch (e) {
+            console.log('Features table not queried:', e);
+        }
 
         // Get doc statuses
-        const docStatuses = await db`
-            SELECT * FROM doc_status
-            WHERE repo_id = ${repo.id}
-        `;
+        let docStatuses: unknown[] = [];
+        try {
+            docStatuses = await db`
+                SELECT * FROM doc_status
+                WHERE repo_id = ${repo.id}
+            `;
+        } catch (e) {
+            console.log('Doc status table not queried:', e);
+        }
 
-        // Get best practices
-        const bestPractices = await db`
-            SELECT * FROM best_practices
-            WHERE repo_id = ${repo.id}
-        `;
+        // Get best practices - may not exist yet
+        let bestPractices: unknown[] = [];
+        try {
+            bestPractices = await db`
+                SELECT * FROM best_practices
+                WHERE repo_id = ${repo.id}
+            `;
+        } catch (e) {
+            console.log('Best practices table not queried:', e);
+        }
 
-        // Get community standards
-        const communityStandards = await db`
-            SELECT * FROM community_standards
-            WHERE repo_id = ${repo.id}
-        `;
+        // Get community standards - may not exist yet
+        let communityStandards: unknown[] = [];
+        try {
+            communityStandards = await db`
+                SELECT * FROM community_standards
+                WHERE repo_id = ${repo.id}
+            `;
+        } catch (e) {
+            console.log('Community standards table not queried:', e);
+        }
 
         return NextResponse.json({
             repo,

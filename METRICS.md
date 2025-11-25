@@ -50,7 +50,7 @@
 
 <!--
 AGENT INSTRUCTIONS:
-1. Update these metrics regularly (e.g., weekly or after major releases).
+1. Update these metrics regularly (e.g., before a merge/last commit weekly or after major releases).
 2. Use automated tools to fetch values where possible.
 3. "Health Score" is a composite metric derived from the dashboard.
 -->

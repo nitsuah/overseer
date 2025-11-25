@@ -72,11 +72,22 @@ Overseer monitors the following documentation files in each repository:
 - 🔄 **CI/CD Configuration**: Detect `.github/workflows/`, `.gitlab-ci.yml`, `netlify.toml`
 - 🔄 **Testing Frameworks**: Detect `vitest.config`, `jest.config`, `playwright.config`
 - 🔄 **Linting**: Detect `.eslintrc`, `.prettierrc`, `biome.json`
-- 🔄 **Security Files**: Detect `SECURITY.md`, `.github/dependabot.yml`
+- 🔄 **Security Files**: Detect `SECURITY.md`, `.github/dependabot.yml`, `https://github.com/Nitsuah-Labs/nitsuah-io/security/dependabot` - dependabot results, codescanning, secret scanning results from GH
 - 🔄 **Issue/PR Templates**: Detect `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`
 - 🔄 **Package Managers**: Detect lock files (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`)
 - 🔄 **Docker**: Detect `Dockerfile`, `docker-compose.yml`
 - 🔄 **Environment Files**: Detect `.env.example`
+- Community Standards as a section in detail panel but if they are a core doc can track that way instead of checklist - Checklist - 
+ README (leave under docs detail section)
+ Code of conduct (leave under docs detail section)
+ Contributing (leave under docs section)
+ License (leave under docs section)
+ Security policy (leave under docs section)
+Set up a security policy (leave under docs section)
+ Issue templates (checklist)
+ Pull request template (leave under docs section)
+ Repository admins accept content reports (checklist)
+- 
 
 ## Technology Stack
 

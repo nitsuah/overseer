@@ -20,6 +20,8 @@
 - [x] Reorganized Detail Panel: 2-column layout with card-based design
 - [x] AI Summary Display: Prominent display in expandable rows
 - [x] UX/Flow: Sync Status Clarity (Timestamp) and Type Column Tag Refinement
+- [x] LICENSE.md Tracking: Added as tracked document type
+- [ ] Best Practices Detection Framework: Detect pre-commit hooks, CI/CD, testing, linting
 - [ ] Basic Health Metrics: README Freshness, Issue/PR Template Presence, Stale Branch Count
 - [ ] Compliance Checks: Pre-commit Hook Presence and Node/Language Version Tags
 - [ ] Foundation: Dark/Light Mode Toggle

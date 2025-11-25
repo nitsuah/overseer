@@ -34,9 +34,12 @@ interface ExpandableRowProps {
     metrics?: Metric[];
     aiSummary?: string;
     repoName?: string;
+    stars?: number;
+    forks?: number;
+    branches?: number;
 }
 
-export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metrics = [], aiSummary, repoName }: ExpandableRowProps) {
+export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metrics = [], aiSummary, repoName, stars, forks, branches }: ExpandableRowProps) {
     const tasksByStatus = {
         'in-progress': tasks.filter((t) => t.status === 'in-progress'),
         todo: tasks.filter((t) => t.status === 'todo'),
@@ -228,6 +231,45 @@ export default function ExpandableRow({ tasks, roadmapItems, docStatuses, metric
 
                 {/* Right Column: Docs & Metrics (4 cols) */}
                 <div className="lg:col-span-4 space-y-6">
+                    {/* Repository Stats */}
+                    {(stars !== undefined || forks !== undefined || branches !== undefined) && (
+                        <div className="bg-slate-800/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
+                                <span className="text-lg">📊</span>
+                                <span>Repository Stats</span>
+                            </h4>
+                            <div className="space-y-2">
+                                {stars !== undefined && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-yellow-500">⭐</span>
+                                            <span className="text-slate-400">Stars</span>
+                                        </div>
+                                        <span className="text-slate-200 font-medium">{stars}</span>
+                                    </div>
+                                )}
+                                {forks !== undefined && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-slate-400">🔀</span>
+                                            <span className="text-slate-400">Forks</span>
+                                        </div>
+                                        <span className="text-slate-200 font-medium">{forks}</span>
+                                    </div>
+                                )}
+                                {branches !== undefined && branches > 0 && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-slate-400">🌿</span>
+                                            <span className="text-slate-400">Branches</span>
+                                        </div>
+                                        <span className="text-slate-200 font-medium">{branches}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Documentation Status */}
                     <div className="bg-slate-800/30 rounded-lg p-4">
                         <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">

@@ -4,7 +4,6 @@ This project includes three default repositories that are always synced and disp
 
 1. **nitsuah/overseer** - This repository (the Overseer dashboard itself)
 2. **Nitsuah-Labs/nitsuah-io** - The Nitsuah.io website
-3. **nitsuah/pverseer** - The pverseer project
 
 ## How It Works
 

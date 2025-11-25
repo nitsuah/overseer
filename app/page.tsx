@@ -14,9 +14,6 @@ import {
   ShieldAlert,
   Map,
   ListTodo,
-  Star,
-  GitFork,
-  GitBranch,
 } from "lucide-react";
 import ExpandableRow from "@/components/ExpandableRow";
 import { detectRepoType, getTypeColor, RepoType } from "@/lib/repo-type";
@@ -396,8 +393,7 @@ export default function DashboardPage() {
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Repository</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Type</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300 hidden lg:table-cell">Stats</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300 hidden md:table-cell">Description</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300 hidden xl:table-cell">Description</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Language</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Health</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Activity</th>
@@ -434,25 +430,7 @@ export default function DashboardPage() {
                           <span className="capitalize">{repoType.replace("-", " ")}</span>
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden lg:table-cell">
-                        <div className="flex flex-col gap-1 text-xs">
-                          <div className="flex items-center gap-1.5 text-slate-400">
-                            <Star className="h-3 w-3 text-yellow-500" />
-                            <span>{repo.stars || 0}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-slate-400">
-                            <GitFork className="h-3 w-3" />
-                            <span>{repo.forks || 0}</span>
-                          </div>
-                          {repo.branches_count != null && repo.branches_count > 0 && (
-                            <div className="flex items-center gap-1.5 text-slate-400">
-                              <GitBranch className="h-3 w-3" />
-                              <span>{repo.branches_count}</span>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-400 hidden md:table-cell">
+                      <td className="px-6 py-4 text-sm text-slate-400 hidden xl:table-cell">
                         <div className="truncate max-w-md" title={repo.description || ""}>
                           {repo.description || "—"}
                         </div>
@@ -575,7 +553,7 @@ export default function DashboardPage() {
                     </tr>
                     {isExpanded && details && (
                       <tr>
-                        <td colSpan={11} className="p-0">
+                        <td colSpan={10} className="p-0">
                           <ExpandableRow
                             tasks={details.tasks}
                             roadmapItems={details.roadmapItems}
@@ -583,6 +561,9 @@ export default function DashboardPage() {
                             metrics={details.metrics}
                             aiSummary={repo.ai_summary}
                             repoName={repo.name}
+                            stars={repo.stars}
+                            forks={repo.forks}
+                            branches={repo.branches_count}
                           />
                         </td>
                       </tr>

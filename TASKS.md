@@ -17,18 +17,43 @@
 - [x] Fix Gemini API model name (gemini-pro)
 - [x] Implement default repositories feature
 - [x] Add dynamic NEXTAUTH_URL for Netlify deployments
+- [x] Move Stats to detail panel to save column space
+- [x] Add LICENSE.md as tracked document type
+- [x] Create comprehensive FEATURES.md
 
 ## In Progress
 - [ ] Test AI Summary generation with corrected Gemini API
 - [ ] Sync default repos to database
 - [ ] Deploy to Netlify and verify OAuth flow
+- [ ] Debug Activity column data population
+- [ ] Debug Metrics display in detail panel
 
 ## Todo
+
+### High Priority
+- [ ] Add repo type selection to "Add Custom Repo" form
+- [ ] Make "+X more" expandable in task/roadmap lists
 - [ ] Add README Freshness metric calculation
 - [ ] Validate Health Score Meter visualization
-- [ ] Add pre-commit hooks to project
+
+### Best Practices Detection System
+- [ ] Create `lib/best-practices.ts` detection framework
+- [ ] Detect pre-commit hooks (`.husky/`, `.git/hooks/`)
+- [ ] Detect CI/CD configuration (`.github/workflows/`, `.gitlab-ci.yml`, `netlify.toml`)
+- [ ] Detect testing frameworks (`vitest.config`, `jest.config`, `playwright.config`)
+- [ ] Detect linting configuration (`.eslintrc`, `.prettierrc`, `biome.json`)
+- [ ] Detect security files (`SECURITY.md`, `.github/dependabot.yml`)
+- [ ] Detect issue/PR templates (`.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`)
+- [ ] Detect package manager lock files (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`)
+- [ ] Detect Docker configuration (`Dockerfile`, `docker-compose.yml`)
+- [ ] Detect environment example files (`.env.example`)
+- [ ] Add database schema for best practices tracking
+- [ ] Integrate best practices into health score calculation
+- [ ] Display best practices in dashboard
+
+### Future Enhancements
+- [ ] Add pre-commit hooks to Overseer project
 - [ ] Implement full E2E tests with Playwright
-- [ ] Add metrics to track pre-commit, e2e, playwright (either by file detection or metric inclusion/flags in METRICS.md)
 - [ ] Implement Dark/Light Mode Toggle
 - [ ] Add webhook integration for real-time updates
 

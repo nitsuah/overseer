@@ -39,11 +39,13 @@
 - [x] Add repo type selector to Add Custom Repo form
 - [x] Run database migration script (created migrate-schema.ts with dotenv support)
 - [x] Execute migration successfully (all new tables and columns created)
+- [x] Update Gemini AI integration (gemini-1.5-flash, improved prompts, error handling)
 
 ## In Progress
 
 - [ ] Test all new features end-to-end after migration
 - [ ] Verify Features/Best Practices/Community Standards display in UI
+- [ ] Verify GitHub OAuth works in all environments (local, preview, production)
 
 ## Todo
 

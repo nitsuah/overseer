@@ -4,10 +4,13 @@
 
 ### 📊 Repository Intelligence
 
-- **Health Scoring**: Composite health grades (A-F) based on documentation, testing, and activity
-- **Documentation Tracking**: Monitors presence and status of key docs (README, ROADMAP, TASKS, METRICS, LICENSE, etc.)
+- **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, and activity
+- **Documentation Tracking**: Monitors presence and status of key docs with 4-state health model (Missing, Dormant, Malformed, Healthy)
 - **Code Coverage Visualization**: Progress bars showing test coverage at a glance
 - **Activity Monitoring**: Last commit dates, open PRs, open issues with color-coded freshness indicators
+- **Features Parser**: Extracts and displays features from FEATURES.md by category
+- **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, templates, testing, etc.)
+- **Community Standards**: 7 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, templates
 
 ### 🤖 AI-Powered Features
 
@@ -64,6 +67,7 @@ Overseer monitors the following documentation files in each repository:
 
 ### Core Docs (Parsed & Displayed)
 
+- **FEATURES.md** - Features organized by category with descriptions
 - **ROADMAP.md** - Quarterly planning and milestones
 - **TASKS.md** - Task tracking by status
 - **METRICS.md** - Custom repository metrics
@@ -79,23 +83,30 @@ Overseer monitors the following documentation files in each repository:
 
 ## Best Practices & Community Standards
 
-Overseer tracks adherence to development and community standards:
+Overseer tracks adherence to development and community standards with 4-state health tracking (Missing, Dormant, Malformed, Healthy):
 
-### 🛡️ Community Standards
+### 🛡️ Community Standards (7 Checks)
 
-- **Core Documentation**: README, FEATURES
-- **Legal & History**: LICENSE, CHANGELOG
-- **Contribution**: CONTRIBUTING, CODE_OF_CONDUCT
-- **Security**: SECURITY.md, Security Policy
-- **Templates**: Issue Templates, Pull Request Templates
+- **CODE_OF_CONDUCT.md** - Community behavior guidelines
+- **CONTRIBUTING.md** - Contribution guidelines
+- **SECURITY.md** - Security policy and vulnerability reporting
+- **LICENSE** - Project license
+- **CHANGELOG.md** - Version history
+- **Issue Templates** - Standardized issue creation
+- **Pull Request Templates** - PR guidelines
 
-### ✅ Best Practices Checklist
+### ✅ Best Practices (10 Checks)
 
-- **Branch Protection**: Main branch protected, require status checks
-- **CI/CD**: Tests passing, build success
-- **Git Hygiene**: `.gitignore` exists, no large files
-- **Automation**: Pre-commit hooks, Dependabot
-- **Deployment**: Netlify badges, Deployment status
+- **CI/CD Integration** - GitHub Actions workflows
+- **Pre-commit Hooks** - `.pre-commit-config.yaml` present
+- **Linting Configuration** - ESLint, Prettier, or similar
+- **Branch Protection** - Main branch protection with review requirements
+- **PR Templates** - Pull request templates
+- **Testing Framework** - Test files and framework detection
+- **`.gitignore`** - Proper git ignore configuration
+- **Netlify Badge** - Deployment status badge
+- **`.env.example`** - Environment variable template
+- **Dependabot** - Automated dependency updates
 
 ## Technology Stack
 
@@ -129,27 +140,31 @@ Overseer tracks adherence to development and community standards:
 
 See [ROADMAP.md](./ROADMAP.md) for detailed quarterly plans.
 
-### Q1 2025
+### Q2 2025
 
 - Dark/Light mode toggle
 - README Freshness metric
-- Pre-commit hooks detection
 - Full E2E tests
+- GitHub OAuth production fix
+- Gemini API integration fix
+- Testing metrics display
+- Health state icons in main row
+- Fix buttons for best practices
 
-### Q2 2025
+### Q3 2025
 
 - Velocity tracking (PR merge time, commit cadence)
 - Advanced health metrics (vulnerability alerts, failing CI/CD ratio)
 - Technical debt scoring
 - Plugin system for custom parsers
 
-### Q3 2025
+### Q4 2025
 
 - Team collaboration features
 - Enterprise SSO
 - Mobile app
 - Custom AI model fine-tuning
 
----
+## Last Updated
 
-*Last updated: 2025-11-25*
+November 25, 2025

@@ -65,7 +65,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [fixingDoc, setFixingDoc] = useState(false);
-  // const [generatingSummary, setGeneratingSummary] = useState<string | null>(null);
+  const [generatingSummary, setGeneratingSummary] = useState<string | null>(null);
   const [showAddRepo, setShowAddRepo] = useState(false);
   const [addRepoUrl, setAddRepoUrl] = useState("");
   const [addingRepo, setAddingRepo] = useState(false);
@@ -229,26 +229,26 @@ export default function DashboardPage() {
     }
   }
 
-  // async function handleGenerateSummary(repoName: string) {
-  //   try {
-  //     setGeneratingSummary(repoName);
-  //     const res = await fetch(`/api/repos/${repoName}/generate-summary`, { method: "POST" });
-  //     if (res.ok) {
-  //       const data = await res.json();
-  //       setRepos(prev =>
-  //         prev.map(r => (r.name === repoName ? { ...r, ai_summary: data.summary } : r))
-  //       );
-  //     } else {
-  //       const err = await res.json();
-  //       alert(`Failed to generate summary: ${err.error}`);
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to generate summary:", error);
-  //     alert("Failed to generate summary");
-  //   } finally {
-  //     setGeneratingSummary(null);
-  //   }
-  // }
+  async function handleGenerateSummary(repoName: string) {
+    try {
+      setGeneratingSummary(repoName);
+      const res = await fetch(`/api/repos/${repoName}/generate-summary`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setRepos(prev =>
+          prev.map(r => (r.name === repoName ? { ...r, ai_summary: data.summary } : r))
+        );
+      } else {
+        const err = await res.json();
+        alert(`Failed to generate summary: ${err.error}`);
+      }
+    } catch (error) {
+      console.error("Failed to generate summary:", error);
+      alert("Failed to generate summary");
+    } finally {
+      setGeneratingSummary(null);
+    }
+  }
 
   const languages = Array.from(new Set(repos.map(r => r.language).filter(Boolean))) as string[];
   const repoTypes: RepoType[] = ["web-app", "game", "tool", "library", "bot", "research", "unknown"];
@@ -517,9 +517,22 @@ export default function DashboardPage() {
                         <div className="text-xs text-slate-400">{formatTimeAgo(repo.last_synced)}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <button onClick={() => handleRemoveRepo(repo.name)} className="text-slate-400 hover:text-red-400 transition-colors" title="Hide this repository">
-                          <X className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleGenerateSummary(repo.name);
+                            }}
+                            className="text-xs px-2 py-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors disabled:opacity-50"
+                            title="Generate AI summary"
+                            disabled={generatingSummary === repo.name}
+                          >
+                            {generatingSummary === repo.name ? "Generating..." : "AI Summary"}
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); handleRemoveRepo(repo.name); }} className="text-slate-400 hover:text-red-400 transition-colors" title="Hide this repository">
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     {isExpanded && details && (

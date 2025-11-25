@@ -13,7 +13,7 @@ export async function generateRepoSummary(
         return null;
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     let prompt = `You are a technical documentation expert. Analyze the following files from the repository "${repoName}" and provide a concise, high-level summary of what this project does, its tech stack, and its current status.
   

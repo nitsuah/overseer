@@ -442,12 +442,25 @@ export default function DashboardPage() {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-lg font-bold ${health.color}`}>{health.grade}</span>
-                          {repo.testing_status === "passing" && <span title="Tests Passing"><ShieldCheck className="h-4 w-4 text-green-400" /></span>}
-                          {repo.testing_status === "failing" && <span title="Tests Failing"><ShieldAlert className="h-4 w-4 text-red-400" /></span>}
-                          {!repo.testing_status && <span title="No Test Status"><Shield className="h-4 w-4 text-slate-600" /></span>}
-                          {repo.coverage_score != null && <span className="text-xs text-slate-400">{repo.coverage_score}%</span>}
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-lg font-bold ${health.color}`}>{health.grade}</span>
+                            {repo.testing_status === "passing" && <span title="Tests Passing"><ShieldCheck className="h-4 w-4 text-green-400" /></span>}
+                            {repo.testing_status === "failing" && <span title="Tests Failing"><ShieldAlert className="h-4 w-4 text-red-400" /></span>}
+                            {!repo.testing_status && <span title="No Test Status"><Shield className="h-4 w-4 text-slate-600" /></span>}
+                          </div>
+                          {repo.coverage_score != null && (
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-slate-700 rounded-full h-1.5 w-16">
+                                <div
+                                  className="bg-gradient-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all"
+                                  style={{ width: `${Math.min(repo.coverage_score, 100)}%` }}
+                                  title={`${repo.coverage_score}% coverage`}
+                                />
+                              </div>
+                              <span className="text-[10px] text-slate-400 w-8">{repo.coverage_score}%</span>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">

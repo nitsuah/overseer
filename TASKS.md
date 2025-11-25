@@ -1,6 +1,7 @@
 # Tasks
 
 ## Done
+
 - [x] Build main dashboard table with sorting and filtering
 - [x] Implement "Fix Missing Docs" feature
 - [x] Integrate Google Gemini for AI summaries
@@ -36,19 +37,24 @@
 - [x] Display Community Standards section with status indicators
 - [x] Implement comprehensive health score calculation (weighted)
 - [x] Add repo type selector to Add Custom Repo form
+- [x] Run database migration script (created migrate-schema.ts with dotenv support)
+- [x] Execute migration successfully (all new tables and columns created)
 
 ## In Progress
-- [ ] Run database migration script
-- [ ] Test all new features end-to-end
+
+- [ ] Test all new features end-to-end after migration
+- [ ] Verify Features/Best Practices/Community Standards display in UI
 
 ## Todo
 
 ### High Priority
+
 - [ ] Fix Metrics Display in Detail Panel (verify data is showing)
 - [ ] Add README Freshness metric calculation
 - [ ] Validate Health Score Meter visualization with new calculation
 
 ### Future Enhancements
+
 - [ ] Add pre-commit hooks to Overseer project
 - [ ] Implement full E2E tests with Playwright
 - [ ] Implement Dark/Light Mode Toggle

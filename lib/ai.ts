@@ -13,14 +13,17 @@ export async function generateRepoSummary(
         return null;
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    // Use gemini-1.5-flash per GEMINI.md recommendations
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    let prompt = `You are a technical documentation expert. Analyze the following files from the repository "${repoName}" and provide a concise, high-level summary of what this project does, its tech stack, and its current status.
-  
-  Format the output as a single paragraph, max 200 words. Focus on the "What" and "Why".
-  
-  Files provided:
-  `;
+    let prompt = `You are an expert Technical Product Manager.
+Analyze the following files from the repository "${repoName}".
+
+Output a concise, 2-sentence summary of what this project does and who it is for.
+Do not use marketing fluff. Be technical and precise.
+
+Files provided:
+`;
 
     for (const [filename, content] of Object.entries(files)) {
         prompt += `\n\n--- ${filename} ---\n${content.slice(0, 5000)}`; // Truncate to avoid huge context
@@ -31,7 +34,35 @@ export async function generateRepoSummary(
         const response = await result.response;
         return response.text();
     } catch (error) {
-        console.error('Error generating summary:', error);
-        return null;
+        console.error('Gemini API Error:', error);
+        return 'Summary unavailable (AI Service Error)';
+    }
+}
+
+export async function generateMissingDoc(
+    docType: 'roadmap' | 'tasks',
+    contextFiles: string
+): Promise<string> {
+    if (!genAI) {
+        throw new Error('GEMINI_API_KEY not configured');
+    }
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const prompts = {
+        roadmap: "Based on the code structure, draft a high-level ROADMAP.md with 3 quarterly goals.",
+        tasks: "Based on the TODOs in the code, draft a TASKS.md checklist."
+    };
+
+    const prompt = `${prompts[docType]}
+Context: ${contextFiles}`;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+    } catch (error) {
+        console.error('Gemini API Error:', error);
+        throw new Error('Failed to generate documentation');
     }
 }

@@ -51,9 +51,9 @@ export async function GET(
             roadmapItems: roadmapItems || [],
             docStatuses: docStatuses || [],
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error fetching repo details:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to fetch repo details' }, { status: 500 });
     }
 }
 

@@ -1,5 +1,4 @@
 import { signIn } from "@/auth"
-import { redirect } from "next/navigation"
 
 export default async function LoginPage() {
     return (
@@ -34,7 +33,7 @@ export default async function LoginPage() {
                 </form>
 
                 <p className="text-xs text-slate-500">
-                    We'll request access to your repositories to sync metadata and documentation
+                    We&apos;ll request access to your repositories to sync metadata and documentation
                 </p>
             </div>
         </div>

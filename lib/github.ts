@@ -105,6 +105,7 @@ export class GitHubClient {
         return Buffer.from(data.content, 'base64').toString('utf-8');
       }
       return null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.status === 404) {
         return null;
@@ -220,7 +221,7 @@ export class GitHubClient {
       repo,
       ref: `heads/${defaultBranch}`,
     });
-    let sha = refData.object.sha;
+    const sha = refData.object.sha;
 
     // 2. Create new branch
     await this.octokit.git.createRef({
@@ -268,7 +269,7 @@ export class GitHubClient {
         return data[0].commit.committer.date;
       }
       return null;
-    } catch (error) {
+    } catch {
       // If file doesn't exist or other error, return null
       return null;
     }

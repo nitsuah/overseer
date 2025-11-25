@@ -29,7 +29,7 @@ interface ExpandableRowProps {
     docStatuses: DocStatus[];
 }
 
-export function ExpandableRow({ repoName, tasks, roadmapItems, docStatuses }: ExpandableRowProps) {
+export function ExpandableRow({ tasks, roadmapItems, docStatuses }: Omit<ExpandableRowProps, 'repoName'>) {
     const [isExpanded, setIsExpanded] = useState(false);
 
     const tasksByStatus = {

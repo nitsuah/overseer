@@ -23,7 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
         async session({ session, token }) {
             // Extend session with accessToken (type augmentation)
-            (session as any).accessToken = token.accessToken;
+            (session as typeof session & { accessToken?: string }).accessToken = token.accessToken as string;
             return session;
         },
     },

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GitHubClient } from './github';
@@ -9,13 +10,11 @@ const mockGetContent = vi.fn();
 
 vi.mock('@octokit/rest', () => {
     return {
-        Octokit: vi.fn().mockImplementation(() => {
-            return {
-                repos: {
-                    listForAuthenticatedUser: mockListForAuthenticatedUser,
-                    get: mockGetRepo,
-                    getContent: mockGetContent,
-                },
+        Octokit: vi.fn(function (this: any) {
+            this.repos = {
+                listForAuthenticatedUser: mockListForAuthenticatedUser,
+                get: mockGetRepo,
+                getContent: mockGetContent,
             };
         }),
     };

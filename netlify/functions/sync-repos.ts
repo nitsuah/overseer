@@ -25,6 +25,7 @@ export const handler: Handler = async (event) => {
 
         // Sync custom repos (those in DB but not in GitHub list)
         const dbRepos = await db`SELECT name, full_name FROM repos`;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const customRepos = dbRepos.filter((r: any) => !githubRepoNames.has(r.name));
 
         for (const dbRepo of customRepos) {
@@ -38,6 +39,7 @@ export const handler: Handler = async (event) => {
         }
 
         return { statusCode: 200, body: JSON.stringify({ success: true, count: githubRepos.length + customRepos.length }) };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         console.error('Sync error:', error);
         return { statusCode: 500, body: JSON.stringify({ error: error.message }) };

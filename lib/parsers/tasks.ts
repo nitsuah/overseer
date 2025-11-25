@@ -4,6 +4,7 @@ export interface TaskData {
     frontmatter: {
         repo?: string;
         updated?: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [key: string]: any;
     };
     tasks: TaskItemData[];

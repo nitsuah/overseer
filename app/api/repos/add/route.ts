@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
         repo = repo.replace('.git', '');
 
         // Initialize GitHub client
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const githubToken = (session as any).accessToken;
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
@@ -53,8 +54,8 @@ export async function POST(request: NextRequest) {
         let repoMeta;
         try {
             repoMeta = await github.getRepo(owner, repo);
-        } catch (e: any) {
-            if (e.status === 404) {
+        } catch (e: unknown) {
+            if (typeof e === 'object' && e !== null && 'status' in e && (e as { status: number }).status === 404) {
                 return NextResponse.json({ error: 'Repository not found on GitHub' }, { status: 404 });
             }
             throw e;
@@ -65,8 +66,9 @@ export async function POST(request: NextRequest) {
         await syncRepo(repoMeta, github, db);
 
         return NextResponse.json({ success: true, repo: repoMeta });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error adding repo:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 }

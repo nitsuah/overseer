@@ -4,6 +4,8 @@ import { parseRoadmap } from './parsers/roadmap';
 import { parseTasks } from './parsers/tasks';
 import { parseMetrics } from './parsers/metrics';
 
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any) {
     const owner = repo.fullName.split('/')[0];
 

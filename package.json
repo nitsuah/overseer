@@ -13,6 +13,8 @@
     "migrate:add-is-fork": "tsx scripts/add-is-fork.ts",
     "migrate:add-repo-type": "tsx scripts/add-repo-type.ts",
     "migrate:add-is-hidden": "tsx scripts/add-is-hidden.ts",
+    "check-schema": "tsx scripts/check-schema.ts",
+    "test-query": "tsx scripts/test-query.ts",
     "test": "vitest",
     "prepare": "husky"
   },

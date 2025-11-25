@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { neon } from '@neondatabase/serverless';
 import { config } from 'dotenv';
 import { join } from 'path';
@@ -27,4 +28,5 @@ async function addIsForkColumn() {
 }
 
 addIsForkColumn();
+
 

@@ -4,7 +4,7 @@ export interface MetricsData {
     frontmatter: {
         repo?: string;
         updated?: string;
-        [key: string]: any;
+        [key: string]: unknown;
     };
     metrics: MetricItemData[];
 }

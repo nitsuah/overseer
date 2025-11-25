@@ -28,7 +28,7 @@ export async function POST(
         let content = '';
         try {
             content = await fs.readFile(templatePath, 'utf-8');
-        } catch (e) {
+        } catch {
             return NextResponse.json({ error: 'Template not found' }, { status: 404 });
         }
 
@@ -42,13 +42,13 @@ export async function POST(
         const owner = fullName.split('/')[0];
 
         // Initialize GitHub client with session token
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const githubToken = (session as any).accessToken;
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
 
         // Create a new branch
         const branchName = `docs/add-${docType.toLowerCase()}-${Date.now()}`;
-        const defaultBranch = 'main'; // TODO: Get actual default branch
 
         // Get SHA of default branch
         // Note: We need to extend GitHubClient to support these operations
@@ -69,8 +69,9 @@ export async function POST(
         );
 
         return NextResponse.json({ success: true, branch: branchName });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error creating PR:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 }

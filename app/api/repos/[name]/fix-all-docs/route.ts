@@ -21,7 +21,9 @@ export async function POST(
         const db = getNeonClient();
 
         // Get missing docs
-        const docStatuses = await db`
+        // Get missing docs
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const _docStatuses = await db`
             SELECT doc_type FROM doc_status 
             WHERE repo_id = (SELECT id FROM repos WHERE name = ${repoName}) 
             AND exists = false
@@ -51,7 +53,7 @@ export async function POST(
                     path: `${docType.toUpperCase()}.md`,
                     content
                 });
-            } catch (e) {
+            } catch {
                 console.warn(`Template for ${docType} not found`);
             }
         }
@@ -69,6 +71,7 @@ export async function POST(
         const owner = fullName.split('/')[0];
 
         // Initialize GitHub client
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const githubToken = (session as any).accessToken;
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
@@ -83,8 +86,9 @@ export async function POST(
         );
 
         return NextResponse.json({ success: true, prUrl, count: filesToCreate.length });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error fixing all docs:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 }

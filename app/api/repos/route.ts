@@ -25,9 +25,10 @@ export async function GET() {
         `;
 
         return NextResponse.json(repos);
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error fetching repos:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 }
 

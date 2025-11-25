@@ -11,7 +11,8 @@
     "migrate:add-is-fork": "tsx scripts/add-is-fork.ts",
     "migrate:add-repo-type": "tsx scripts/add-repo-type.ts",
     "migrate:add-is-hidden": "tsx scripts/add-is-hidden.ts",
-    "test": "vitest"
+    "test": "vitest",
+    "prepare": "husky"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@netlify/functions": "^5.1.0",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.0",
@@ -37,6 +39,7 @@
     "dotenv": "^16.6.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
+    "husky": "^9.1.7",
     "jsdom": "^27.2.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",

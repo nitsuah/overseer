@@ -49,3 +49,4 @@ export function getLanguageColor(language: string | null): string {
     return colors[language] || 'bg-slate-900/30 text-slate-300 border-slate-800';
 }
 
+

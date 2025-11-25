@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { neon } from '@neondatabase/serverless';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -25,17 +26,17 @@ async function setupDatabase() {
 
         // Remove comments
         schema = schema.replace(/--.*$/gm, '');
-        
+
         // Split by semicolons, but keep multi-line statements together
         const statements: string[] = [];
         let currentStatement = '';
-        
+
         for (const line of schema.split('\n')) {
             const trimmed = line.trim();
             if (!trimmed || trimmed.startsWith('--')) continue;
-            
+
             currentStatement += ' ' + trimmed;
-            
+
             if (trimmed.endsWith(';')) {
                 const statement = currentStatement.trim().replace(/;$/, '').trim();
                 if (statement.length > 0) {
@@ -44,7 +45,7 @@ async function setupDatabase() {
                 currentStatement = '';
             }
         }
-        
+
         // Add any remaining statement
         if (currentStatement.trim().length > 0) {
             statements.push(currentStatement.trim());

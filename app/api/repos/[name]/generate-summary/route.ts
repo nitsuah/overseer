@@ -28,6 +28,7 @@ export async function POST(
         const owner = fullName.split('/')[0];
 
         // Initialize GitHub client
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const githubToken = (session as any).accessToken;
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
@@ -62,8 +63,9 @@ export async function POST(
         `;
 
         return NextResponse.json({ success: true, summary });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error generating summary:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 }

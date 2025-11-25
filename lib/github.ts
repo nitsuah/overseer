@@ -105,6 +105,7 @@ export class GitHubClient {
         return Buffer.from(data.content, 'base64').toString('utf-8');
       }
       return null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.status === 404) {
         return null;
@@ -220,7 +221,7 @@ export class GitHubClient {
       repo,
       ref: `heads/${defaultBranch}`,
     });
-    let sha = refData.object.sha;
+    const sha = refData.object.sha;
 
     // 2. Create new branch
     await this.octokit.git.createRef({
@@ -253,5 +254,24 @@ export class GitHubClient {
     });
 
     return prData.html_url;
+  }
+
+  async getFileLastModified(repo: string, path: string, owner?: string): Promise<string | null> {
+    try {
+      const { data } = await this.octokit.repos.listCommits({
+        owner: owner || this.owner,
+        repo,
+        path,
+        per_page: 1,
+      });
+
+      if (data.length > 0 && data[0].commit.committer?.date) {
+        return data[0].commit.committer.date;
+      }
+      return null;
+    } catch {
+      // If file doesn't exist or other error, return null
+      return null;
+    }
   }
 }

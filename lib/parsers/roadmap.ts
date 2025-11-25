@@ -5,6 +5,7 @@ export interface RoadmapData {
         status?: string;
         priority?: 'low' | 'medium' | 'high';
         owner?: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [key: string]: any;
     };
     items: RoadmapItemData[];

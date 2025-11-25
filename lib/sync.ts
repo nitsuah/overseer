@@ -129,7 +129,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     }
 
     // Other docs
-    const docTypes = ['README.md', 'CHANGELOG.md', 'CONTRIBUTING.md'];
+    const docTypes = ['README.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'SETUP.md', 'FEATURES.md'];
     for (const docFile of docTypes) {
         const content = await github.getFileContent(repo.name, docFile, owner);
         const docType = docFile.replace('.md', '').toLowerCase();

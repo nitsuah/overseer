@@ -48,6 +48,7 @@ interface RepoDetails {
   tasks: Array<{ id: string; title: string; status: "todo" | "in-progress" | "done"; section: string | null }>;
   roadmapItems: Array<{ id: string; title: string; quarter: string | null; status: "planned" | "in-progress" | "completed" }>;
   docStatuses: Array<{ doc_type: string; exists: boolean }>;
+  metrics: Array<{ name: string; value: number; unit: string | null }>;
 }
 
 function getHealthGrade(score: number = 0): { grade: string; color: string } {
@@ -105,6 +106,7 @@ export default function DashboardPage() {
             tasks: data.tasks,
             roadmapItems: data.roadmapItems,
             docStatuses: data.docStatuses,
+            metrics: data.metrics,
           },
         }));
       }
@@ -538,7 +540,7 @@ export default function DashboardPage() {
                     {isExpanded && details && (
                       <tr>
                         <td colSpan={10} className="p-0">
-                          <ExpandableRow tasks={details.tasks} roadmapItems={details.roadmapItems} docStatuses={details.docStatuses} />
+                          <ExpandableRow tasks={details.tasks} roadmapItems={details.roadmapItems} docStatuses={details.docStatuses} metrics={details.metrics} />
                         </td>
                       </tr>
                     )}

@@ -21,13 +21,20 @@ interface DocStatus {
     exists: boolean;
 }
 
+interface Metric {
+    name: string;
+    value: number;
+    unit: string | null;
+}
+
 interface ExpandableRowProps {
     tasks: Task[];
     roadmapItems: RoadmapItem[];
     docStatuses: DocStatus[];
+    metrics?: Metric[];
 }
 
-export function ExpandableRow({ tasks, roadmapItems, docStatuses }: ExpandableRowProps) {
+export function ExpandableRow({ tasks, roadmapItems, docStatuses, metrics = [] }: ExpandableRowProps) {
     const tasksByStatus = {
         'in-progress': tasks.filter((t) => t.status === 'in-progress'),
         todo: tasks.filter((t) => t.status === 'todo'),
@@ -205,28 +212,59 @@ export function ExpandableRow({ tasks, roadmapItems, docStatuses }: ExpandableRo
                     )}
                 </div>
 
-                {/* Documentation Section */}
-                <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-4">
-                        <span className="text-lg">📄</span>
-                        <span>Documentation</span>
-                        <span className="text-xs text-slate-500 font-normal">
-                            ({docStatuses.filter((d) => d.exists).length}/{docStatuses.length})
-                        </span>
-                    </h4>
-                    <div className="space-y-2">
-                        {docStatuses.map((doc) => (
-                            <div key={doc.doc_type} className="flex items-center gap-2 text-xs">
-                                {doc.exists ? (
-                                    <CheckCircle2 className="h-3 w-3 text-green-400 flex-shrink-0" />
-                                ) : (
-                                    <XCircle className="h-3 w-3 text-slate-600 flex-shrink-0" />
-                                )}
-                                <span className={doc.exists ? 'text-slate-300' : 'text-slate-600'}>
-                                    {doc.doc_type.toUpperCase()}.md
-                                </span>
+                {/* Documentation & Metrics Section */}
+                <div className="space-y-6">
+                    {/* Documentation */}
+                    <div className="space-y-3">
+                        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-4">
+                            <span className="text-lg">📄</span>
+                            <span>Documentation</span>
+                            <span className="text-xs text-slate-500 font-normal">
+                                ({docStatuses.filter((d) => d.exists).length}/{docStatuses.length})
+                            </span>
+                        </h4>
+                        <div className="space-y-2">
+                            {docStatuses.map((doc) => (
+                                <div key={doc.doc_type} className="flex items-center gap-2 text-xs">
+                                    {doc.exists ? (
+                                        <CheckCircle2 className="h-3 w-3 text-green-400 flex-shrink-0" />
+                                    ) : (
+                                        <XCircle className="h-3 w-3 text-slate-600 flex-shrink-0" />
+                                    )}
+                                    <span className={doc.exists ? 'text-slate-300' : 'text-slate-600'}>
+                                        {doc.doc_type.toUpperCase()}.md
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Metrics */}
+                    <div className="space-y-3">
+                        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-4">
+                            <span className="text-lg">📊</span>
+                            <span>Metrics</span>
+                            <span className="text-xs text-slate-500 font-normal">
+                                ({metrics.length} tracked)
+                            </span>
+                        </h4>
+                        {metrics.length === 0 ? (
+                            <p className="text-xs text-slate-500 italic">No metrics tracked</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {metrics.map((metric) => (
+                                    <div key={metric.name} className="flex items-center justify-between text-xs">
+                                        <span className="text-slate-400">{metric.name}</span>
+                                        <span className={`font-mono ${metric.name.toLowerCase().includes('coverage')
+                                            ? (metric.value >= 80 ? 'text-green-400' : metric.value >= 50 ? 'text-yellow-400' : 'text-red-400')
+                                            : 'text-slate-200'
+                                            }`}>
+                                            {metric.value}{metric.unit}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             </div>

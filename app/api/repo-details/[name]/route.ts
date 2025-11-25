@@ -46,10 +46,18 @@ export async function GET(
             WHERE repo_id = ${repo.id}
         `;
 
+        // Get metrics
+        const metrics = await db`
+            SELECT * FROM metrics
+            WHERE repo_id = ${repo.id}
+            ORDER BY timestamp DESC
+        `;
+
         return NextResponse.json({
             tasks: tasks || [],
             roadmapItems: roadmapItems || [],
             docStatuses: docStatuses || [],
+            metrics: metrics || [],
         });
     } catch (error: unknown) {
         console.error('Error fetching repo details:', error);

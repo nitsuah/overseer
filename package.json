@@ -9,6 +9,7 @@
     "lint": "eslint",
     "setup-db": "tsx scripts/setup-db.ts",
     "migrate-schema": "tsx scripts/migrate-schema.ts",
+    "migrate:add-columns": "tsx scripts/add-missing-columns.ts",
     "migrate:add-is-fork": "tsx scripts/add-is-fork.ts",
     "migrate:add-repo-type": "tsx scripts/add-repo-type.ts",
     "migrate:add-is-hidden": "tsx scripts/add-is-hidden.ts",

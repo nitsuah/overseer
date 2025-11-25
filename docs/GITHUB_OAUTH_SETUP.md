@@ -1,71 +1,100 @@
-# GitHub OAuth Setup for Netlify Previews
+# GitHub OAuth Setup for Overseer
 
-## The Problem
-GitHub OAuth does not support wildcard callback URLs, so Netlify preview deployments (with URLs like `deploy-preview-123--ghoverseer.netlify.app`) cannot authenticate unless their specific URL is added to the GitHub OAuth app.
+## Overview
+Overseer uses NextAuth v5 with GitHub OAuth for authentication. The system now supports dynamic URLs for Netlify deployments.
 
-## Solution: Two GitHub OAuth Apps
+## Authentication Configuration
 
-### 1. Create Two GitHub OAuth Apps
+### Dynamic URL Detection
+The `auth.ts` file automatically detects the deployment URL:
+```typescript
+// Priority: NEXTAUTH_URL > DEPLOY_URL (Netlify) > URL (Netlify) > localhost
+const getBaseUrl = () => {
+    if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
+    if (process.env.DEPLOY_URL) return process.env.DEPLOY_URL;
+    if (process.env.URL) return process.env.URL;
+    return 'http://localhost:3000';
+};
+```
 
-#### Production OAuth App
+### Key Settings
+- `trustHost: true` - Required for Netlify and dynamic URLs
+- `basePath: '/api/auth'` - Consistent routing across environments
+
+## GitHub OAuth App Setup
+
+### Important: Callback URL Format
+The callback URL must use `/callback/` not `/signin/`:
+```
+https://your-domain.com/api/auth/callback/github
+```
+
+### Setup Steps
+
+#### 1. Create GitHub OAuth App
 1. Go to https://github.com/settings/developers
 2. Click "New OAuth App"
-3. Fill in:
-   - **Application name**: `Overseer (Production)`
-   - **Homepage URL**: `https://ghoverseer.netlify.app`
-   - **Authorization callback URL**: `https://ghoverseer.netlify.app/api/auth/callback/github`
-4. Save the **Client ID** and **Client Secret**
+3. Fill in the details:
+   - **Application name**: `Overseer (Production)` or `Overseer (Development)`
+   - **Homepage URL**: Your deployment URL
+   - **Authorization callback URL**: `https://your-domain.com/api/auth/callback/github`
 
-#### Development OAuth App
-1. Create another OAuth App
-2. Fill in:
-   - **Application name**: `Overseer (Development)`
-   - **Homepage URL**: `http://localhost:3000`
-   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
-3. Save the **Client ID** and **Client Secret**
+#### 2. For Production (Netlify)
+**Callback URL**:
+```
+https://ghoverseer.netlify.app/api/auth/callback/github
+```
 
-### 2. Configure Netlify Environment Variables
+**Environment Variables** (Netlify Dashboard → Site Settings → Environment Variables):
+```
+GITHUB_ID=<your_production_client_id>
+GITHUB_SECRET=<your_production_client_secret>
+NEXTAUTH_SECRET=<your_random_secret>
+```
 
-#### For Production Site
-1. Go to Netlify Dashboard → Your Site → Site Settings → Environment Variables
-2. Set **Production** scope variables:
-   ```
-   GITHUB_ID=<production_client_id>
-   GITHUB_SECRET=<production_client_secret>
-   NEXTAUTH_SECRET=<your_secret>
-   ```
+#### 3. For Local Development
+**Callback URL** (add to same OAuth app or create separate):
+```
+http://localhost:3000/api/auth/callback/github
+```
 
-#### For Deploy Previews
-1. In the same Environment Variables section
-2. Set **Deploy Preview** scope variables:
-   ```
-   GITHUB_ID=<development_client_id>
-   GITHUB_SECRET=<development_client_secret>
-   NEXTAUTH_SECRET=<your_secret>
-   ```
-
-### 3. Local Development (.env.local)
-
-Create a `.env.local` file in your project root:
-```env
-GITHUB_ID=<development_client_id>
-GITHUB_SECRET=<development_client_secret>
-NEXTAUTH_SECRET=<your_secret>
+**Environment Variables** (`.env.local`):
+```
+GITHUB_ID=<your_dev_client_id>
+GITHUB_SECRET=<your_dev_client_secret>
+NEXTAUTH_SECRET=<your_random_secret>
 NEXTAUTH_URL=http://localhost:3000
 ```
 
-## How It Works
+## Netlify Preview Deployments
 
-The updated `auth.ts` file now:
-1. Sets `trustHost: true` to allow dynamic URLs
-2. Uses `basePath: '/api/auth'` for consistent routing
-3. Automatically detects the deployment URL from environment variables
+### The Challenge
+GitHub OAuth **does not support wildcard callback URLs**. Preview deployments have dynamic URLs like:
+```
+https://deploy-preview-123--ghoverseer.netlify.app
+```
 
-Netlify automatically provides:
-- `DEPLOY_URL` - The URL of the current deploy
-- `URL` - The main site URL
+### Solutions
 
-The auth system will use these to construct the correct callback URL.
+#### Option 1: Separate OAuth Apps (Recommended)
+Create two GitHub OAuth Apps:
+1. **Production** - For main Netlify site
+2. **Development** - For localhost and previews
+
+Configure Netlify environment variables with different scopes:
+- **Production scope**: Use production OAuth credentials
+- **Deploy Preview scope**: Use development OAuth credentials
+
+#### Option 2: Manual URL Addition
+For each preview deployment, manually add its callback URL to your GitHub OAuth app. **Not recommended** for frequent deployments.
+
+#### Option 3: Skip Auth in Previews
+Add logic to bypass authentication for preview deployments:
+```typescript
+if (process.env.CONTEXT === 'deploy-preview') {
+  // Skip auth or use mock data
+}
+```
 
 ## Testing
 
@@ -76,18 +105,36 @@ npm run dev
 Visit http://localhost:3000 and test GitHub login
 
 ### Production
-Deploy to Netlify and test at https://ghoverseer.netlify.app
+Deploy to Netlify and test at your production URL
 
-### Preview Deployments
-**Important**: Preview deployments will still fail unless you:
-1. Use the development OAuth app credentials for preview deployments (configured in Netlify)
-2. Manually add each preview URL to the development OAuth app's callback URLs
+### Troubleshooting
 
-## Recommended Approach
+**Error: "redirect_uri is not associated with this application"**
+- Check that your callback URL is exactly: `https://your-domain.com/api/auth/callback/github`
+- Verify the URL in GitHub OAuth app settings matches your deployment
+- Make sure you're using `/callback/` not `/signin/`
 
-For preview deployments, the most practical solution is:
-1. **Skip authentication in preview deployments** - Add a check to bypass auth for preview URLs
-2. **Use a development OAuth app** - Configure it with a generic callback that you update as needed
-3. **Test authentication only in production** - Focus preview deployments on UI/functionality testing
+**Error: "NEXTAUTH_URL not configured"**
+- The system should auto-detect from Netlify environment variables
+- If needed, manually set `NEXTAUTH_URL` in Netlify environment variables
 
-Would you like me to implement option 1 (skip auth in previews) for easier testing?
+## Environment Variables Reference
+
+### Required
+- `GITHUB_ID` - OAuth App Client ID
+- `GITHUB_SECRET` - OAuth App Client Secret
+- `NEXTAUTH_SECRET` - Random secret for session encryption
+
+### Optional
+- `NEXTAUTH_URL` - Override auto-detection (useful for debugging)
+
+### Auto-Detected (Netlify)
+- `DEPLOY_URL` - Current deployment URL
+- `URL` - Main site URL
+- `CONTEXT` - Deployment context (production, deploy-preview, branch-deploy)
+
+## Security Notes
+- Never commit `.env.local` to git
+- Use different OAuth apps for production and development
+- Rotate secrets regularly
+- Use Netlify's environment variable scoping for security

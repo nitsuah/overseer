@@ -15,7 +15,7 @@ import {
   Map,
   ListTodo,
 } from "lucide-react";
-import { ExpandableRow } from "@/components/ExpandableRow";
+import ExpandableRow from "@/components/ExpandableRow";
 import { detectRepoType, getTypeColor, RepoType } from "@/lib/repo-type";
 import { calculateDocHealth, getDocHealthColor } from "@/lib/doc-health";
 import { getLanguageColor } from "@/lib/language-colors";

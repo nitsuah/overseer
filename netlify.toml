@@ -3,6 +3,11 @@
   publish = ".next"
 
 [[redirects]]
+  from = "/api/auth/*"
+  to = "/api/auth/:splat"
+  status = 200
+
+[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200

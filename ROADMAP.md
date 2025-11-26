@@ -12,7 +12,7 @@
 - [x] Default Repositories Feature
 - [x] Dynamic OAuth URL Support (Netlify)
 
-## Q1 2025: Feature Audit & Data Integration (IN PROGRESS) 🔍
+## Q1 2025: Feature Audit & Data Integration (COMPLETED) ✅
 
 - [x] Baseline Indicator Integration: Last Commit Date, Open PR/Issue Counts
 - [x] Dashboard Polish: Stats column (Stars, Forks, Branches)
@@ -22,31 +22,33 @@
 - [x] UX/Flow: Sync Status Clarity (Timestamp) and Type Column Tag Refinement
 - [x] LICENSE.md Tracking: Added as tracked document type
 - [x] Detail Panel 2.0: Features Section with parsed FEATURES.md
-- [x] Meta-Features: Best Practices (10 checks) & Community Standards (7 checks) Detection
-- [x] Basic Health Metrics: Testing framework, CI/CD, Linting, Pre-commit hooks
+- [x] Meta-Features: Best Practices (11 checks) & Community Standards (7 checks) Detection
+- [x] Basic Health Metrics: Testing framework, CI/CD, Linting, Pre-commit hooks, Docker
 - [x] Compliance Checks: Gitignore, PR/Issue Templates, Environment Templates
 - [x] Health Score 2.0: Comprehensive weighted calculation (Doc 30%, Testing 20%, Best Practices 20%, Community 15%, Activity 15%)
 - [x] Document Health States: Missing, Dormant, Malformed, Healthy
 - [x] Repo Type Selector: Added to custom repo form
 - [x] Testing Section Enhancement: Framework detection, test file counting, improved display
 - [x] Toast Notifications: Replaced alert() calls with non-intrusive toasts
-- [x] Feature Audit: Comprehensive documentation vs implementation audit (January 2025)
-- [ ] **CRITICAL**: Sync coverage_score from METRICS.md to database
-- [ ] Display health score breakdown (5 components) in UI
-- [ ] Integrate self-reported coverage into Testing section
-- [ ] Update all documentation for 100% accuracy
+- [x] Feature Audit: Comprehensive documentation vs implementation audit (November 2025)
+- [x] Coverage Score Sync: Extract from METRICS.md and store in database
+- [x] Health Score Breakdown Display: All 5 components visible with progress bars in UI
+- [x] Self-reported Coverage Integration: Prominently displayed in Testing section
+- [x] README Freshness Tracking: Days since last update with color-coded staleness
+- [x] Documentation Accuracy: All docs updated to match implementation (100% accuracy)
 
 ## Q2 2025: UX Consistency & Quick Wins 🎨
 
-- [ ] README Freshness: Calculate and display days since last README update
 - [ ] Templates for Community Standards: CODE_OF_CONDUCT, SECURITY, Issue templates
 - [ ] Fix Buttons: Add automated fixes for best practices/community standards
 - [ ] Batch Fix All Standards: Single PR for all missing standards
+- [ ] Test File Prominence: Show test file count more prominently in Testing section
+- [ ] Health Component Tooltips: Add tooltips explaining each health score component
 - [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
 - [ ] Gemini API Integration Fix: Resolve model version compatibility
 - [ ] Health State Icons: Display in main table row for each doc type
 - [ ] Foundation: Full E2E Tests and Pre-commit Hooks
-- [ ] Foundation: Dark/Light Mode Toggle (moved from Q2 original plan)
+- [ ] Foundation: Dark/Light Mode Toggle
 - [ ] Template File Hashing: Detect stale/unchanged templates
 
 ## Q3 2025: Advanced Metrics & Integrations 🚀

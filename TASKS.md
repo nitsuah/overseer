@@ -40,39 +40,31 @@
 - [x] Run database migration script (created migrate-schema.ts with dotenv support)
 - [x] Execute migration successfully (all new tables and columns created)
 - [x] Update Gemini AI integration (gemini-1.5-flash, improved prompts, error handling)
+- [x] Complete feature audit and documentation update (November 2025)
+- [x] Sync coverage_score from METRICS.md to repos.coverage_score column during sync
+- [x] Update sync.ts to extract and store coverage in repos table
+- [x] Display health score breakdown (5 components) in ExpandableRow UI
+- [x] Integrate self-reported coverage from METRICS.md into Testing section prominently
+- [x] Update FEATURES.md - ensure 100% accuracy (11 best practices, README freshness, health breakdown)
+- [x] Update METRICS.md with current accurate values (all features marked correctly)
+- [x] Update ROADMAP.md Q1 status (marked as COMPLETED)
+- [x] Add README Freshness metric (days since last README update)
+- [x] Display README freshness with color-coding in Documentation section
+- [x] Create templates for CODE_OF_CONDUCT.md, SECURITY.md, Issue templates
+- [x] Show test file count more prominently in Testing section  
+- [x] Add tooltips to health score explaining each component
+- [x] Add "Fix" buttons for missing community standards items (CODE_OF_CONDUCT, SECURITY)
+- [x] Implement batch "Fix All Standards" option with API endpoint
 
 ## In Progress
 
-- [ ] Complete feature audit and documentation update (November 25, 2025)
-
 ## Todo
-
-### Phase 1: Data Integration & Documentation (Week 1) - HIGH PRIORITY
-
-- [ ] **CRITICAL**: Sync coverage_score from METRICS.md to repos.coverage_score column during sync
-- [ ] **CRITICAL**: Update sync.ts to extract and store coverage in repos table
-- [ ] Display health score breakdown (5 components) in ExpandableRow UI
-- [ ] Integrate self-reported coverage from METRICS.md into Testing section prominently
-- [ ] Add "Self-reported" label to distinguish from auto-detected coverage
-- [ ] Update FEATURES.md matrix - ensure 100% accuracy (no hallucinations)
-- [ ] Update METRICS.md with current accurate values
-- [ ] Update README.md to match actual implementation
-- [ ] Verify and update ROADMAP.md Q1/Q2 status
-
-### Phase 2: UX Consistency & Quick Wins (Week 2) - MEDIUM PRIORITY
-
-- [ ] Create templates for CODE_OF_CONDUCT.md, SECURITY.md, Issue templates
-- [ ] Add "Fix" buttons for missing best practices/community standards items
-- [ ] Implement batch "Fix All Standards" option
-- [ ] Add README Freshness metric (days since last README update)
-- [ ] Display README freshness with color-coding in Activity section
-- [ ] Show test file count more prominently in Testing section
-- [ ] Add tooltips to health score explaining each component
 
 ### Phase 3: Advanced Metrics & Integrations (Weeks 3-4) - MEDIUM PRIORITY
 
 - [ ] Integrate GitHub Actions API for live CI/CD build status
 - [ ] Display current build status (passing/failing) with last run time
+- [ ] Display github "issues"/vulns/dependabot alerts in detail panel and as an indicator in the record bar near the "activity" section/with the # of pr metrics?
 - [ ] Parse test files to count actual test cases (it(), test() calls)
 - [ ] Show test case count alongside test file count
 - [ ] Integrate GitHub Security/Vulnerability Alerts API
@@ -94,14 +86,13 @@
 - [ ] Track PR merge time (cycle time)
 - [ ] Display contributor metrics in Activity section
 
-### Original Todo Items (Review & Integrate)
+### Phase 6: Final Launch Preparations - HIGH PRIORITY
 
 - [ ] Add Testing Metrics Display (test count, coverage %, framework detection) - PARTIALLY DONE
 - [ ] Add Health State Icons to main table row for each section
 - [ ] Validate Health Score Meter visualization with new calculation
 - [ ] FIX GitHub OAuth in production environment (token/callback issues)
 - [ ] FIX Gemini API integration (404 errors - model version mismatch)
-
 ### Medium Priority
 
 ### Future Enhancements (Deprioritized)

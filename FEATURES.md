@@ -4,12 +4,13 @@
 
 ### 📊 Repository Intelligence
 
-- **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, and activity
+- **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, and activity with component breakdown display
 - **Documentation Tracking**: Monitors presence and status of key docs with 4-state health model (Missing, Dormant, Malformed, Healthy)
-- **Code Coverage Visualization**: Progress bars showing test coverage at a glance
+- **Code Coverage Visualization**: Progress bars showing test coverage synced from METRICS.md
+- **README Freshness Tracking**: Days since README last updated with color-coded staleness (Fresh/Recent/Aging/Stale)
 - **Activity Monitoring**: Last commit dates, open PRs, open issues with color-coded freshness indicators
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
-- **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, templates, testing, etc.)
+- **Best Practices Detection**: 11 automated checks (CI/CD, pre-commit, linting, branch protection, templates, testing, Docker, etc.)
 - **Community Standards**: 7 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, templates
 
 ### 🤖 AI-Powered Features
@@ -95,7 +96,7 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **Issue Templates** - Standardized issue creation
 - **Pull Request Templates** - PR guidelines
 
-### ✅ Best Practices (10 Checks)
+### ✅ Best Practices (11 Checks)
 
 - **CI/CD Integration** - GitHub Actions workflows
 - **Pre-commit Hooks** - `.pre-commit-config.yaml` present
@@ -107,6 +108,21 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **Netlify Badge** - Deployment status badge
 - **`.env.example`** - Environment variable template
 - **Dependabot** - Automated dependency updates
+- **Docker** - Dockerfile, docker-compose files, .dockerignore
+
+## Health Score System
+
+Overseer calculates comprehensive health scores (0-100) based on 5 weighted components:
+
+| Component              | Weight | What It Measures |
+| ---------------------- | ------ | ---------------- |
+| Documentation Health   | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md |
+| Testing & Quality      | 20%    | Test coverage, framework detection, CI/CD status |
+| Best Practices         | 20%    | 11 checks: CI/CD, pre-commit, linting, branch protection, PR templates, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker |
+| Community Standards    | 15%    | 7 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates |
+| Activity & Engagement  | 15%    | Commit frequency, PR/Issue counts, contributor activity |
+
+Health scores are displayed as letter grades (A-F) with detailed component breakdowns available in the expandable detail panel.
 
 ## Technology Stack
 
@@ -138,4 +154,4 @@ Overseer tracks adherence to development and community standards with 4-state he
 
 ## Last Updated
 
-November 25, 2025
+November 26, 2025

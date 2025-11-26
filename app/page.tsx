@@ -228,6 +228,56 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleFixStandard(repoName: string, standardType: string) {
+    try {
+      setFixingDoc(true);
+      const res = await fetch(`/api/repos/${repoName}/fix-doc`, { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ docType: standardType })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.prUrl) {
+          window.open(data.prUrl, '_blank');
+        }
+        setToastMessage(`PR created for ${standardType.toUpperCase()}.md!`);
+      } else {
+        const err = await res.json();
+        setToastMessage(err.error || "Failed to create PR");
+      }
+    } catch (error) {
+      console.error("Failed to fix standard:", error);
+      setToastMessage("Failed to create PR");
+    } finally {
+      setFixingDoc(false);
+    }
+  }
+
+  async function handleFixAllStandards(repoName: string) {
+    try {
+      setFixingDoc(true);
+      const res = await fetch(`/api/repos/${repoName}/fix-all-standards`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.message) {
+          setToastMessage(data.message);
+        } else if (data.prUrl) {
+          window.open(data.prUrl, '_blank');
+          setToastMessage(`PR created! Added ${data.count} community standards.`);
+        }
+      } else {
+        const err = await res.json();
+        setToastMessage(err.error || "Failed to create PR");
+      }
+    } catch (error) {
+      console.error("Failed to fix all standards:", error);
+      setToastMessage("Failed to create PR");
+    } finally {
+      setFixingDoc(false);
+    }
+  }
+
   async function handleGenerateSummary(repoName: string) {
     try {
       setGeneratingSummary(repoName);
@@ -720,6 +770,9 @@ export default function DashboardPage() {
                   testingStatus={repo.testing_status}
                   coverageScore={repo.coverage_score}
                   readmeLastUpdated={repo.readme_last_updated}
+                  repoName={repo.name}
+                  onFixStandard={handleFixStandard}
+                  onFixAllStandards={handleFixAllStandards}
                 />
               </td>
             </tr>

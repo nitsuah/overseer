@@ -182,7 +182,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
                     testCaseCount += stats.tests;
                     testDescribeCount += stats.describes;
                 }
-            } catch (e) {
+            } catch {
                 // Skip files that can't be fetched
                 console.warn(`Failed to fetch test file ${testFile} for ${repo.fullName}`);
             }
@@ -412,7 +412,6 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
 }
 
 // Wrapper function to sync a single repo by name
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncSingleRepo(github: GitHubClient, repoName: string) {
     const { getNeonClient } = await import('./db');
     const db = getNeonClient();

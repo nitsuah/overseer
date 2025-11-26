@@ -125,13 +125,13 @@ export function RepositoryStatsSection({
             <span className="text-slate-200 font-medium">{contributorCount}</span>
           </div>
         )}
-        {commitFrequency !== undefined && commitFrequency > 0 && (
+        {commitFrequency !== undefined && commitFrequency !== null && typeof commitFrequency === 'number' && commitFrequency > 0 && (
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <span className="text-cyan-500">📈</span>
               <span className="text-slate-400">Commits/Week</span>
             </div>
-            <span className="text-slate-200 font-medium">{commitFrequency.toFixed(1)}</span>
+            <span className="text-slate-200 font-medium">{Number(commitFrequency).toFixed(1)}</span>
           </div>
         )}
         {busFactor !== undefined && busFactor > 0 && (
@@ -143,7 +143,7 @@ export function RepositoryStatsSection({
             <span className="text-slate-200 font-medium">{busFactor}</span>
           </div>
         )}
-        {avgPrMergeTimeHours !== undefined && avgPrMergeTimeHours > 0 && (
+        {avgPrMergeTimeHours !== undefined && avgPrMergeTimeHours !== null && typeof avgPrMergeTimeHours === 'number' && avgPrMergeTimeHours > 0 && (
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <span className="text-emerald-500">⏱️</span>
@@ -151,8 +151,8 @@ export function RepositoryStatsSection({
             </div>
             <span className="text-slate-200 font-medium">
               {avgPrMergeTimeHours < 24
-                ? `${avgPrMergeTimeHours.toFixed(1)}h`
-                : `${(avgPrMergeTimeHours / 24).toFixed(1)}d`}
+                ? `${Number(avgPrMergeTimeHours).toFixed(1)}h`
+                : `${(Number(avgPrMergeTimeHours) / 24).toFixed(1)}d`}
             </span>
           </div>
         )}

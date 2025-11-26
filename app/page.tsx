@@ -534,10 +534,61 @@ export default function DashboardPage() {
             </td>
             <td className="px-6 py-4">
               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 relative group">
                   <span className={`text-lg font-bold ${health.color}`}>{health.grade}</span>
                   {details && (
                     <>
+                      {/* Health Breakdown Popup on Hover */}
+                      <div className="absolute left-0 top-8 z-50 hidden group-hover:block w-72 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-4">
+                        <h4 className="text-sm font-semibold text-slate-200 mb-3">Health Breakdown</h4>
+                        <div className="space-y-3">
+                          {(() => {
+                            const coreDocs = ['roadmap', 'tasks', 'metrics', 'features'];
+                            const coreDocsPresent = details.docStatuses.filter(d => coreDocs.includes(d.doc_type) && d.exists).length;
+                            const docScore = Math.round((coreDocsPresent / coreDocs.length) * 100);
+
+                            const hasTests = details.bestPractices.some(bp => bp.practice_type === 'testing_framework' && bp.status === 'healthy');
+                            let testScore = hasTests ? 40 : 0;
+                            if (repo.coverage_score !== undefined && hasTests) {
+                              testScore += Math.min(repo.coverage_score * 0.6, 60);
+                            }
+                            testScore = Math.round(testScore);
+
+                            const bpHealthy = details.bestPractices.filter(bp => bp.status === 'healthy').length;
+                            const bpTotal = details.bestPractices.length;
+                            const bpScore = bpTotal > 0 ? Math.round((bpHealthy / bpTotal) * 100) : 0;
+
+                            const csHealthy = details.communityStandards.filter(cs => cs.status === 'healthy').length;
+                            const csTotal = details.communityStandards.length;
+                            const csScore = csTotal > 0 ? Math.round((csHealthy / csTotal) * 100) : 0;
+
+                            const scores = [
+                              { label: 'Documentation', score: docScore, color: 'blue', weight: '30%' },
+                              { label: 'Testing', score: testScore, color: 'purple', weight: '20%' },
+                              { label: 'Best Practices', score: bpScore, color: 'indigo', weight: '20%' },
+                              { label: 'Community', score: csScore, color: 'green', weight: '15%' },
+                            ];
+
+                            return scores.map(({ label, score, color, weight }) => (
+                              <div key={label} className="space-y-1">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-slate-400">{label}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-${color}-400 font-medium`}>{score}%</span>
+                                    <span className="text-slate-500 text-[10px]">({weight})</span>
+                                  </div>
+                                </div>
+                                <div className="bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                  <div
+                                    className={`h-full bg-${color}-500 transition-all`}
+                                    style={{ width: `${score}%` }}
+                                  />
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </div>
                       {/* Testing Shield - Blue */}
                       {(() => {
                         const testingPractice = details.bestPractices.find(p => p.practice_type === 'testing_framework');

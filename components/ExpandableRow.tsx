@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, XCircle, Clock, Circle, TrendingUp, Shield, ShieldCheck, ShieldAlert, Map, ListTodo, X } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Circle, TrendingUp, Shield, ShieldCheck, Map, ListTodo, X } from 'lucide-react';
 import { useState } from 'react';
 
 interface Task {
@@ -140,10 +140,6 @@ export default function ExpandableRow({
         return grouped;
     };
 
-    // Extract specific metrics for display
-    const coverageMetric = metrics.find(m => m.name?.toLowerCase().includes('coverage'));
-    const otherMetrics = metrics.filter(m => m.name && !m.name.toLowerCase().includes('coverage'));
-
     // Helper to limit items unless expanded
     const getDisplayedItems = <T,>(items: T[], section: string, limit: number = 5): T[] => {
         return expandedSections.has(section) ? items : items.slice(0, limit);
@@ -169,6 +165,7 @@ export default function ExpandableRow({
                 </div>
             )}
 
+            {/* First Row: Tasks, Roadmap, Features + Repo Stats */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left Column: Tasks, Roadmap, Features (9 cols) */}
                 <div className="lg:col-span-9 space-y-6">
@@ -381,7 +378,7 @@ export default function ExpandableRow({
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    {getDisplayedItems(features, 'features', 5).map((feature, i) => (
+                                    {getDisplayedItems(features, 'features', 3).map((feature, i) => (
                                         <div key={i} className="bg-slate-800/30 rounded-lg p-4">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <span className="text-xs font-medium text-blue-400">{feature.category}</span>
@@ -409,14 +406,14 @@ export default function ExpandableRow({
                                             </ul>
                                         </div>
                                     ))}
-                                    {features.length > 5 && (
+                                    {features.length > 3 && (
                                         <button
                                             onClick={() => toggleSection('features')}
                                             className="text-[10px] text-blue-400 hover:text-blue-300 pl-3"
                                         >
                                             {expandedSections.has('features')
                                                 ? 'Show less'
-                                                : `+${features.length - 5} more categories`}
+                                                : `+${features.length - 3} more categories`}
                                         </button>
                                     )}
                                 </div>
@@ -425,94 +422,8 @@ export default function ExpandableRow({
                     </div>
                 </div>
 
-                {/* Right Column: Docs & Metrics (3 cols) */}
+                {/* Right Column: Repository Stats & Testing/Metrics (3 cols) */}
                 <div className="lg:col-span-3 space-y-6">
-                    {/* Health Score Breakdown */}
-                    <div className="bg-slate-800/30 rounded-lg p-4">
-                        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                            <TrendingUp className="h-4 w-4 text-green-400" />
-                            <span>Health Breakdown</span>
-                        </h4>
-                        <div className="space-y-3">
-                            {(() => {
-                                // Calculate Documentation Score (30%)
-                                const coreDocs = ['roadmap', 'tasks', 'metrics', 'features'];
-                                const coreDocsPresent = docStatuses.filter(d => coreDocs.includes(d.doc_type) && d.exists).length;
-                                const docScore = Math.round((coreDocsPresent / coreDocs.length) * 100);
-
-                                // Calculate Testing Score (20%)
-                                const hasTests = bestPractices.some(bp => bp.practice_type === 'testing_framework' && bp.status === 'healthy');
-                                let testScore = hasTests ? 40 : 0;
-                                if (coverageScore !== undefined && hasTests) {
-                                    testScore += Math.min(coverageScore * 0.6, 60);
-                                }
-                                testScore = Math.round(testScore);
-
-                                // Calculate Best Practices Score (20%)
-                                const bpHealthy = bestPractices.filter(bp => bp.status === 'healthy').length;
-                                const bpTotal = bestPractices.length;
-                                const bpScore = bpTotal > 0 ? Math.round((bpHealthy / bpTotal) * 100) : 0;
-
-                                // Calculate Community Score (15%)
-                                const csHealthy = communityStandards.filter(cs => cs.status === 'healthy').length;
-                                const csTotal = communityStandards.length;
-                                const csScore = csTotal > 0 ? Math.round((csHealthy / csTotal) * 100) : 0;
-
-                                const scores = [
-                                    { 
-                                        label: 'Documentation', 
-                                        score: docScore, 
-                                        color: 'blue', 
-                                        weight: '30%',
-                                        tooltip: 'Based on presence of key documentation files (README, ROADMAP, TASKS, METRICS, etc.)'
-                                    },
-                                    { 
-                                        label: 'Testing', 
-                                        score: testScore, 
-                                        color: 'purple', 
-                                        weight: '20%',
-                                        tooltip: 'Based on testing framework detection and code coverage metrics'
-                                    },
-                                    { 
-                                        label: 'Best Practices', 
-                                        score: bpScore, 
-                                        color: 'indigo', 
-                                        weight: '20%',
-                                        tooltip: 'Based on 11 checks: CI/CD, linting, Docker, branch protection, templates, etc.'
-                                    },
-                                    { 
-                                        label: 'Community', 
-                                        score: csScore, 
-                                        color: 'green', 
-                                        weight: '15%',
-                                        tooltip: 'Based on 7 checks: CODE_OF_CONDUCT, SECURITY, LICENSE, CONTRIBUTING, etc.'
-                                    },
-                                ];
-
-                                return scores.map(({ label, score, color, weight, tooltip }) => (
-                                    <div key={label} className="space-y-1">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-400 flex items-center gap-1" title={tooltip}>
-                                                {label}
-                                                <span className="text-slate-600 cursor-help">ⓘ</span>
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                <span className={`text-${color}-400 font-medium`}>{score}%</span>
-                                                <span className="text-slate-500 text-[10px]">({weight})</span>
-                                            </div>
-                                        </div>
-                                        <div className="bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                                            <div
-                                                className={`h-full bg-${color}-500 transition-all`}
-                                                style={{ width: `${score}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                ));
-                            })()}
-                        </div>
-                    </div>
-
                     {/* Repository Stats */}
                     {(stars !== undefined || forks !== undefined || branches !== undefined) && (
                         <div className="bg-slate-800/30 rounded-lg p-4">
@@ -533,16 +444,16 @@ export default function ExpandableRow({
                                 {forks !== undefined && (
                                     <div className="flex items-center justify-between text-xs">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-slate-400">🔀</span>
+                                            <span className="text-blue-500">🔱</span>
                                             <span className="text-slate-400">Forks</span>
                                         </div>
                                         <span className="text-slate-200 font-medium">{forks}</span>
                                     </div>
                                 )}
-                                {branches !== undefined && branches > 0 && (
+                                {branches !== undefined && (
                                     <div className="flex items-center justify-between text-xs">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-slate-400">🌿</span>
+                                            <span className="text-green-500">🌿</span>
                                             <span className="text-slate-400">Branches</span>
                                         </div>
                                         <span className="text-slate-200 font-medium">{branches}</span>
@@ -552,96 +463,6 @@ export default function ExpandableRow({
                         </div>
                     )}
 
-                    {/* Documentation Status */}
-                    <div className="bg-slate-800/30 rounded-lg p-4">
-                        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                            <span className="text-lg">📄</span>
-                            <span>Documentation</span>
-                        </h4>
-
-                        {/* Core Docs */}
-                        <div className="mb-4">
-                            <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Core</h5>
-                            <div className="space-y-2">
-                                {docStatuses.filter(d => ['roadmap', 'tasks', 'metrics', 'features'].includes(d.doc_type)).map((d) => (
-                                    <div key={d.doc_type} className="flex items-center justify-between text-xs">
-                                        <div className="flex items-center gap-2">
-                                            {d.exists ? <CheckCircle2 className="h-3 w-3 text-green-400" /> : <XCircle className="h-3 w-3 text-red-400" />}
-                                            <span className={d.exists ? 'text-slate-300' : 'text-slate-500'}>{d.doc_type.toUpperCase()}</span>
-                                        </div>
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${d.exists ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                            {d.exists ? 'Present' : 'Missing'}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Standard Docs */}
-                        <div className="mb-4">
-                            <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Standard</h5>
-                            <div className="space-y-2">
-                                {docStatuses.filter(d => ['readme', 'contributing'].includes(d.doc_type)).map((d) => (
-                                    <div key={d.doc_type} className="flex items-center justify-between text-xs">
-                                        <div className="flex items-center gap-2">
-                                            {d.exists ? <CheckCircle2 className="h-3 w-3 text-green-400" /> : <XCircle className="h-3 w-3 text-red-400" />}
-                                            <span className={d.exists ? 'text-slate-300' : 'text-slate-500'}>{d.doc_type.toUpperCase()}</span>
-                                        </div>
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${d.exists ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                            {d.exists ? 'Present' : 'Missing'}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Other Docs */}
-                        <div>
-                            <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Other</h5>
-                            <div className="space-y-2">
-                                {docStatuses.filter(d => !['roadmap', 'tasks', 'metrics', 'readme', 'features', 'contributing'].includes(d.doc_type)).map((d) => (
-                                    <div key={d.doc_type} className="flex items-center justify-between text-xs">
-                                        <div className="flex items-center gap-2">
-                                            {d.exists ? <CheckCircle2 className="h-3 w-3 text-green-400" /> : <XCircle className="h-3 w-3 text-red-400" />}
-                                            <span className={d.exists ? 'text-slate-300' : 'text-slate-500'}>{d.doc_type.toUpperCase()}</span>
-                                        </div>
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${d.exists ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                            {d.exists ? 'Present' : 'Missing'}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* README Freshness */}
-                        {readmeLastUpdated && (() => {
-                            const daysSinceUpdate = Math.floor(
-                                (new Date().getTime() - new Date(readmeLastUpdated).getTime()) / (1000 * 60 * 60 * 24)
-                            );
-                            const freshnessColor = 
-                                daysSinceUpdate < 30 ? 'text-green-400' :
-                                daysSinceUpdate < 90 ? 'text-yellow-400' :
-                                daysSinceUpdate < 180 ? 'text-orange-400' :
-                                'text-red-400';
-                            const freshnessLabel = 
-                                daysSinceUpdate < 30 ? 'Fresh' :
-                                daysSinceUpdate < 90 ? 'Recent' :
-                                daysSinceUpdate < 180 ? 'Aging' :
-                                'Stale';
-                            return (
-                                <div className="mt-4 pt-4 border-t border-slate-700/50">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="text-slate-400">README Updated</span>
-                                        <span className={`${freshnessColor} font-medium flex items-center gap-1`}>
-                                            <Clock className="h-3 w-3" />
-                                            {daysSinceUpdate}d ago ({freshnessLabel})
-                                        </span>
-                                    </div>
-                                </div>
-                            );
-                        })()}
-                    </div>
-
                     {/* Testing */}
                     <div className="bg-slate-800/30 rounded-lg p-4">
                         <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
@@ -649,249 +470,282 @@ export default function ExpandableRow({
                             <span>Testing</span>
                         </h4>
                         <div className="space-y-3">
-                            {(() => {
-                                const testingFramework = bestPractices.find(bp => bp.practice_type === 'testing_framework');
-                                const hasFramework = testingFramework?.status === 'healthy';
-                                const detectedFrameworks = hasFramework && testingFramework.details?.detected 
-                                    ? (testingFramework.details.detected as string[])
-                                    : [];
-                                const testFileCount = testingFramework?.details?.testFileCount as number | undefined;
-                                
-                                return (
-                                    <>
-                                        {/* Framework Detection */}
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-400">Framework</span>
-                                            {hasFramework ? (
-                                                <div className="flex flex-wrap gap-1 justify-end">
-                                                    {detectedFrameworks.map((fw, idx) => {
-                                                        const frameworkName = fw.split('.')[0].split('/').pop() || fw;
-                                                        return (
-                                                            <span key={idx} className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-[10px] font-medium">
-                                                                {frameworkName}
-                                                            </span>
-                                                        );
-                                                    })}
-                                                </div>
-                                            ) : (
-                                                <span className="text-slate-500 italic">No framework detected</span>
-                                            )}
-                                        </div>
-
-                                        {/* Test File Count - Prominent Display */}
-                                        {hasFramework && testFileCount != null && testFileCount > 0 && (
-                                            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                            {testingStatus && (
+                                <>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-slate-400">Status</span>
+                                        <span className="text-slate-200 font-medium capitalize">{testingStatus}</span>
+                                    </div>
+                                    {/* Show test file count prominently */}
+                                    {(() => {
+                                        const testingPractice = bestPractices.find(p => p.practice_type === 'testing_framework');
+                                        const testFileCount = testingPractice?.details?.test_file_count as number | undefined;
+                                        
+                                        return typeof testFileCount === 'number' && (
+                                            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mt-3">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-slate-300 font-medium">Test Files</span>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-2xl font-bold text-blue-400">{testFileCount}</span>
-                                                        <span className="text-slate-400 text-sm">{testFileCount === 1 ? 'file' : 'files'}</span>
-                                                    </div>
+                                                    <span className="text-sm font-semibold text-blue-300">Test Files</span>
+                                                    <span className="text-2xl font-bold text-blue-400">{testFileCount}</span>
                                                 </div>
                                             </div>
-                                        )}
-
-                                        {/* Test Status */}
-                                        {hasFramework && (
-                                            <div className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-400">Status</span>
-                                                {testingStatus === 'passing' ? (
-                                                    <span className="flex items-center gap-1 text-green-400">
-                                                        <ShieldCheck className="h-3 w-3" /> Passing
-                                                    </span>
-                                                ) : testingStatus === 'failing' ? (
-                                                    <span className="flex items-center gap-1 text-red-400">
-                                                        <ShieldAlert className="h-3 w-3" /> Failing
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-slate-500 italic">Not run yet</span>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Coverage */}
-                                        {coverageScore != null && (
-                                            <div>
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-xs text-slate-400">Coverage</span>
-                                                    <span className="text-sm font-bold text-blue-400">{coverageScore}%</span>
-                                                </div>
-                                                <div className="w-full bg-slate-700 rounded-full h-2">
-                                                    <div
-                                                        className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all"
-                                                        style={{ width: `${Math.min(coverageScore, 100)}%` }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* No Testing Setup Message */}
-                                        {!hasFramework && !coverageScore && (
-                                            <p className="text-xs text-slate-500 italic mt-2">
-                                                No testing framework detected. Consider adding Vitest, Jest, Playwright, or Cypress.
-                                            </p>
-                                        )}
-                                    </>
-                                );
-                            })()}
+                                        );
+                                    })()}
+                                </>
+                            )}
+                            {coverageScore !== undefined && (
+                                <div>
+                                    <div className="flex items-center justify-between mb-2 text-xs">
+                                        <span className="text-slate-400">Coverage</span>
+                                        <span className="text-sm font-bold text-blue-400">{coverageScore}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-700 rounded-full h-2">
+                                        <div
+                                            className="bg-linear-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all"
+                                            style={{ width: `${Math.min(coverageScore, 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
-
-                    {/* Best Practices */}
-                    <div className="bg-slate-800/30 rounded-lg p-4">
-                        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                            <Shield className="h-4 w-4 text-purple-400" />
-                            <span>Best Practices</span>
-                            <span className="text-xs text-slate-500 font-normal">({bestPractices.length})</span>
-                        </h4>
-                        {bestPractices.length === 0 ? (
-                            <p className="text-xs text-slate-500 italic">No data available</p>
-                        ) : (
-                            <div className="space-y-2">
-                                {bestPractices.map((practice, i) => {
-                                    const getStatusIcon = (status: string) => {
-                                        switch (status) {
-                                            case 'healthy': return <CheckCircle2 className="h-3 w-3 text-green-400" />;
-                                            case 'dormant': return <Circle className="h-3 w-3 text-yellow-400" />;
-                                            case 'malformed': return <XCircle className="h-3 w-3 text-orange-400" />;
-                                            case 'missing': return <XCircle className="h-3 w-3 text-red-400" />;
-                                            default: return <Circle className="h-3 w-3 text-slate-500" />;
-                                        }
-                                    };
-
-                                    const getStatusColor = (status: string) => {
-                                        switch (status) {
-                                            case 'healthy': return 'text-green-400';
-                                            case 'dormant': return 'text-yellow-400';
-                                            case 'malformed': return 'text-orange-400';
-                                            case 'missing': return 'text-red-400';
-                                            default: return 'text-slate-500';
-                                        }
-                                    };
-
-                                    const getLabel = (type: string) => {
-                                        return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                                    };
-
-                                    return (
-                                        <div key={i} className="flex items-center justify-between text-xs">
-                                            <div className="flex items-center gap-2">
-                                                {getStatusIcon(practice.status)}
-                                                <span className={getStatusColor(practice.status)}>{getLabel(practice.practice_type)}</span>
-                                            </div>
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded capitalize ${getStatusColor(practice.status)}`}>
-                                                {practice.status}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Community Standards */}
-                    <div className="bg-slate-800/30 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                                <ShieldCheck className="h-4 w-4 text-green-400" />
-                                <span>Community Standards</span>
-                                <span className="text-xs text-slate-500 font-normal">({communityStandards.length})</span>
-                            </h4>
-                            {(() => {
-                                const missingWithTemplates = communityStandards.filter(s => 
-                                    s.status === 'missing' && ['code_of_conduct', 'security'].includes(s.standard_type)
-                                );
-                                return missingWithTemplates.length > 0 && onFixAllStandards && repoName && (
-                                    <button
-                                        onClick={() => onFixAllStandards(repoName)}
-                                        className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
-                                        title="Create PR for all missing community standards"
-                                    >
-                                        Fix All ({missingWithTemplates.length})
-                                    </button>
-                                );
-                            })()}
-                        </div>
-                        {communityStandards.length === 0 ? (
-                            <p className="text-xs text-slate-500 italic">No data available</p>
-                        ) : (
-                            <div className="space-y-2">{communityStandards.map((standard, i) => {
-                                    const getStatusIcon = (status: string) => {
-                                        switch (status) {
-                                            case 'healthy': return <CheckCircle2 className="h-3 w-3 text-green-400" />;
-                                            case 'missing': return <XCircle className="h-3 w-3 text-red-400" />;
-                                            default: return <Circle className="h-3 w-3 text-slate-500" />;
-                                        }
-                                    };
-
-                                    const getLabel = (type: string) => {
-                                        return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                                    };
-
-                                    // Check if this standard has a template available
-                                    const hasTemplate = ['code_of_conduct', 'security'].includes(standard.standard_type);
-                                    const isMissing = standard.status === 'missing';
-
-                                    return (
-                                        <div key={i} className="flex items-center justify-between text-xs gap-2">
-                                            <div className="flex items-center gap-2 flex-1">
-                                                {getStatusIcon(standard.status)}
-                                                <span className={standard.status === 'healthy' ? 'text-slate-300' : 'text-slate-500'}>
-                                                    {getLabel(standard.standard_type)}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${standard.status === 'healthy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                                    {standard.status === 'healthy' ? 'Present' : 'Missing'}
-                                                </span>
-                                                {hasTemplate && isMissing && onFixStandard && repoName && (
-                                                    <button
-                                                        onClick={() => onFixStandard(repoName, standard.standard_type)}
-                                                        className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
-                                                        title={`Create PR for ${getLabel(standard.standard_type)}`}
-                                                    >
-                                                        Fix
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
                     </div>
 
                     {/* Metrics */}
-                    {metrics.length > 0 && (
-                        <div className="bg-slate-800/30 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                                <TrendingUp className="h-4 w-4" />
-                                <span>Metrics</span>
-                            </h4>
-                            <div className="space-y-3">
-                                {/* Code Coverage - Featured */}
-                                {coverageMetric && (
-                                    <div className="pb-3 border-b border-slate-700">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs text-slate-400">Code Coverage</span>
-                                            <span className="text-sm font-bold text-blue-400">{coverageMetric.value}{coverageMetric.unit ?? '%'}</span>
+                    {metrics.length > 0 && (() => {
+                        const otherMetrics = metrics.filter(m => !m.name.toLowerCase().includes('coverage'));
+                        
+                        return otherMetrics.length > 0 && (
+                            <div className="bg-slate-800/30 rounded-lg p-4">
+                                <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
+                                    <TrendingUp className="h-4 w-4" />
+                                    <span>Metrics</span>
+                                </h4>
+                                <div className="space-y-2">
+                                    {otherMetrics.map((metric, index) => (
+                                        <div key={`${metric.name}-${index}`} className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-400">{metric.name}</span>
+                                            <span className="text-slate-200 font-medium">{metric.value}{metric.unit ?? ''}</span>
                                         </div>
-                                        <div className="w-full bg-slate-700 rounded-full h-2">
-                                            <div
-                                                className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all"
-                                                style={{ width: `${Math.min(coverageMetric.value, 100)}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                                {/* Other Metrics */}
-                                {otherMetrics.map((metric, index) => (
-                                    <div key={`${metric.name}-${index}`} className="flex items-center justify-between text-xs">
-                                        <span className="text-slate-400">{metric.name}</span>
-                                        <span className="text-slate-200 font-medium">{metric.value}{metric.unit ?? ''}</span>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
+                        );
+                    })()}
+                </div>
+            </div>
+
+            {/* Second Row: Documentation, Best Practices, Community Standards (3 equal columns) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                {/* Documentation Status */}
+                <div className="bg-slate-800/30 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
+                        <span className="text-lg">📄</span>
+                        <span>Documentation</span>
+                    </h4>
+
+                    {/* Core Docs */}
+                    <div className="mb-4">
+                        <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Core</h5>
+                        <div className="space-y-2">
+                            {docStatuses.filter(d => ['roadmap', 'tasks', 'metrics', 'features'].includes(d.doc_type)).map((d) => (
+                                <div key={d.doc_type} className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-2">
+                                        {d.exists ? <CheckCircle2 className="h-3 w-3 text-green-400" /> : <XCircle className="h-3 w-3 text-red-400" />}
+                                        <span className={d.exists ? 'text-slate-300' : 'text-slate-500'}>{d.doc_type.toUpperCase()}</span>
+                                    </div>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${d.exists ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                        {d.exists ? 'Present' : 'Missing'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Standard Docs */}
+                    <div className="mb-4">
+                        <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Standard</h5>
+                        <div className="space-y-2">
+                            {docStatuses.filter(d => ['readme', 'contributing'].includes(d.doc_type)).map((d) => (
+                                <div key={d.doc_type} className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-2">
+                                        {d.exists ? <CheckCircle2 className="h-3 w-3 text-green-400" /> : <XCircle className="h-3 w-3 text-red-400" />}
+                                        <span className={d.exists ? 'text-slate-300' : 'text-slate-500'}>{d.doc_type.toUpperCase()}</span>
+                                    </div>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${d.exists ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                        {d.exists ? 'Present' : 'Missing'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Other Docs */}
+                    <div>
+                        <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Other</h5>
+                        <div className="space-y-2">
+                            {docStatuses.filter(d => !['roadmap', 'tasks', 'metrics', 'readme', 'features', 'contributing'].includes(d.doc_type)).map((d) => (
+                                <div key={d.doc_type} className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-2">
+                                        {d.exists ? <CheckCircle2 className="h-3 w-3 text-green-400" /> : <XCircle className="h-3 w-3 text-red-400" />}
+                                        <span className={d.exists ? 'text-slate-300' : 'text-slate-500'}>{d.doc_type.toUpperCase()}</span>
+                                    </div>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${d.exists ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                        {d.exists ? 'Present' : 'Missing'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* README Freshness */}
+                    {readmeLastUpdated && (() => {
+                        const daysSinceUpdate = Math.floor(
+                            (new Date().getTime() - new Date(readmeLastUpdated).getTime()) / (1000 * 60 * 60 * 24)
+                        );
+                        const freshnessColor = 
+                            daysSinceUpdate < 30 ? 'text-green-400' :
+                            daysSinceUpdate < 90 ? 'text-yellow-400' :
+                            daysSinceUpdate < 180 ? 'text-orange-400' :
+                            'text-red-400';
+                        const freshnessLabel = 
+                            daysSinceUpdate < 30 ? 'Fresh' :
+                            daysSinceUpdate < 90 ? 'Recent' :
+                            daysSinceUpdate < 180 ? 'Aging' :
+                            'Stale';
+                        return (
+                            <div className="mt-4 pt-4 border-t border-slate-700/50">
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="text-slate-400">README Updated</span>
+                                    <span className={`${freshnessColor} font-medium flex items-center gap-1`}>
+                                        <Clock className="h-3 w-3" />
+                                        {daysSinceUpdate}d ago ({freshnessLabel})
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })()}
+                </div>
+
+                {/* Best Practices */}
+                <div className="bg-slate-800/30 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
+                        <Shield className="h-4 w-4 text-purple-400" />
+                        <span>Best Practices</span>
+                        <span className="text-xs text-slate-500 font-normal">({bestPractices.length})</span>
+                    </h4>
+                    {bestPractices.length === 0 ? (
+                        <p className="text-xs text-slate-500 italic">No data available</p>
+                    ) : (
+                        <div className="space-y-2">
+                            {bestPractices.map((practice, i) => {
+                                const getStatusIcon = (status: string) => {
+                                    switch (status) {
+                                        case 'healthy': return <CheckCircle2 className="h-3 w-3 text-green-400" />;
+                                        case 'dormant': return <Circle className="h-3 w-3 text-yellow-400" />;
+                                        case 'malformed': return <XCircle className="h-3 w-3 text-orange-400" />;
+                                        case 'missing': return <XCircle className="h-3 w-3 text-red-400" />;
+                                        default: return <Circle className="h-3 w-3 text-slate-500" />;
+                                    }
+                                };
+
+                                const getStatusColor = (status: string) => {
+                                    switch (status) {
+                                        case 'healthy': return 'text-green-400';
+                                        case 'dormant': return 'text-yellow-400';
+                                        case 'malformed': return 'text-orange-400';
+                                        case 'missing': return 'text-red-400';
+                                        default: return 'text-slate-500';
+                                    }
+                                };
+
+                                const getLabel = (type: string) => {
+                                    return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                                };
+
+                                return (
+                                    <div key={i} className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            {getStatusIcon(practice.status)}
+                                            <span className={getStatusColor(practice.status)}>{getLabel(practice.practice_type)}</span>
+                                        </div>
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded capitalize ${getStatusColor(practice.status)}`}>
+                                            {practice.status}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                {/* Community Standards */}
+                <div className="bg-slate-800/30 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <ShieldCheck className="h-4 w-4 text-green-400" />
+                            <span>Community Standards</span>
+                            <span className="text-xs text-slate-500 font-normal">({communityStandards.length})</span>
+                        </h4>
+                        {(() => {
+                            const missingWithTemplates = communityStandards.filter(s => 
+                                s.status === 'missing' && ['code_of_conduct', 'security'].includes(s.standard_type)
+                            );
+                            return missingWithTemplates.length > 0 && onFixAllStandards && repoName && (
+                                <button
+                                    onClick={() => onFixAllStandards(repoName)}
+                                    className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
+                                    title="Create PR for all missing community standards"
+                                >
+                                    Fix All ({missingWithTemplates.length})
+                                </button>
+                            );
+                        })()}
+                    </div>
+                    {communityStandards.length === 0 ? (
+                        <p className="text-xs text-slate-500 italic">No data available</p>
+                    ) : (
+                        <div className="space-y-2">
+                            {communityStandards.map((standard, i) => {
+                                const getStatusIcon = (status: string) => {
+                                    switch (status) {
+                                        case 'healthy': return <CheckCircle2 className="h-3 w-3 text-green-400" />;
+                                        case 'missing': return <XCircle className="h-3 w-3 text-red-400" />;
+                                        default: return <Circle className="h-3 w-3 text-slate-500" />;
+                                    }
+                                };
+
+                                const getLabel = (type: string) => {
+                                    return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                                };
+
+                                // Check if this standard has a template available
+                                const hasTemplate = ['code_of_conduct', 'security'].includes(standard.standard_type);
+                                const isMissing = standard.status === 'missing';
+
+                                return (
+                                    <div key={i} className="flex items-center justify-between text-xs gap-2">
+                                        <div className="flex items-center gap-2 flex-1">
+                                            {getStatusIcon(standard.status)}
+                                            <span className={standard.status === 'healthy' ? 'text-slate-300' : 'text-slate-500'}>
+                                                {getLabel(standard.standard_type)}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${standard.status === 'healthy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                {standard.status === 'healthy' ? 'Present' : 'Missing'}
+                                            </span>
+                                            {hasTemplate && isMissing && onFixStandard && repoName && (
+                                                <button
+                                                    onClick={() => onFixStandard(repoName, standard.standard_type)}
+                                                    className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
+                                                    title={`Create PR for ${getLabel(standard.standard_type)}`}
+                                                >
+                                                    Fix
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>

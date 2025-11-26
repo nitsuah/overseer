@@ -10,8 +10,8 @@
 - **README Freshness Tracking**: Days since README last updated with color-coded staleness (Fresh/Recent/Aging/Stale)
 - **Activity Monitoring**: Last commit dates, open PRs, open issues with color-coded freshness indicators
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
-- **Best Practices Detection**: 11 automated checks (CI/CD, pre-commit, linting, branch protection, templates, testing, Docker, etc.)
-- **Community Standards**: 7 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, templates
+- **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
+- **Community Standards**: 8 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates
 
 ### 🤖 AI-Powered Features
 
@@ -86,7 +86,7 @@ Overseer monitors the following documentation files in each repository:
 
 Overseer tracks adherence to development and community standards with 4-state health tracking (Missing, Dormant, Malformed, Healthy):
 
-### 🛡️ Community Standards (7 Checks)
+### 🛡️ Community Standards (8 Checks)
 
 - **CODE_OF_CONDUCT.md** - Community behavior guidelines
 - **CONTRIBUTING.md** - Contribution guidelines
@@ -96,13 +96,12 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **Issue Templates** - Standardized issue creation
 - **Pull Request Templates** - PR guidelines
 
-### ✅ Best Practices (11 Checks)
+### ✅ Best Practices (10 Checks)
 
 - **CI/CD Integration** - GitHub Actions workflows
 - **Pre-commit Hooks** - `.pre-commit-config.yaml` present
 - **Linting Configuration** - ESLint, Prettier, or similar
 - **Branch Protection** - Main branch protection with review requirements
-- **PR Templates** - Pull request templates
 - **Testing Framework** - Test files and framework detection
 - **`.gitignore`** - Proper git ignore configuration
 - **Netlify Badge** - Deployment status badge
@@ -118,8 +117,8 @@ Overseer calculates comprehensive health scores (0-100) based on 5 weighted comp
 | ---------------------- | ------ | ---------------- |
 | Documentation Health   | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md |
 | Testing & Quality      | 20%    | Test coverage, framework detection, CI/CD status |
-| Best Practices         | 20%    | 11 checks: CI/CD, pre-commit, linting, branch protection, PR templates, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker |
-| Community Standards    | 15%    | 7 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates |
+| Best Practices         | 20%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker |
+| Community Standards    | 15%    | 8 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates |
 | Activity & Engagement  | 15%    | Commit frequency, PR/Issue counts, contributor activity |
 
 Health scores are displayed as letter grades (A-F) with detailed component breakdowns available in the expandable detail panel.

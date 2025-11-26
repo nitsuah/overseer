@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Health score component breakdown display with progress bars (Documentation 30%, Testing 20%, Best Practices 20%, Community 15%)
 - README freshness tracking with color-coded staleness indicators (Fresh/Recent/Aging/Stale)
 - Coverage score sync from METRICS.md to database during repository sync
-- Docker as 11th best practice check (detects Dockerfile, docker-compose files, .dockerignore)
+- Docker as 10th best practice check (detects Dockerfile, docker-compose files, .dockerignore)
+- PR Template correctly categorized under Community Standards (now 8 checks total, was in Best Practices)
 - Toast notification system replacing browser alerts
 - Testing section enhancement with framework detection and test file counting
 - Comprehensive feature audit and documentation accuracy review (November 2025)

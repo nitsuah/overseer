@@ -9,7 +9,8 @@
 - ✅ **Coverage Score Sync** - Extracted from METRICS.md, stored in DB, displayed in Health column
 - ✅ **Health Score Breakdown** - Visual panel showing Documentation (30%), Testing (20%), Best Practices (20%), Community (15%) with progress bars
 - ✅ **README Freshness** - Tracked via GitHub API with color-coded staleness (Fresh/Recent/Aging/Stale)
-- ✅ **Docker Detection** - Added as 11th best practice check (Dockerfile, docker-compose, .dockerignore)
+- ✅ **Docker Detection** - Added as 10th best practice check (Dockerfile, docker-compose, .dockerignore)
+- ✅ **PR Template Moved** - Now correctly categorized under Community Standards (8 checks total)
 - ✅ **UI/UX Polish** - Login redirect fixed, purple GitHub icon, green homepage icon, red X hide button with toast, column reorder
 
 **Result**: 100% of parsed metrics now utilized in UI. All docs accurate and cross-pollination eliminated.
@@ -35,25 +36,25 @@ This matrix shows what Overseer tracks, how we detect it, health indicators, and
 | Test Status | CI/CD integration | ⚠️ NOT IMPLEMENTED | Pass/Fail/Unknown | ❌ No | ⚠️ Column exists, not populated |
 | Code Coverage | METRICS.md parsing | Self-reported | Percentage + bar | ❌ No | ✅ Complete |
 | Code Coverage (DB) | METRICS.md → repos.coverage_score | Self-reported | Percentage + bar | ❌ No | ✅ Complete |
-| **Best Practices (11 checks)** | | | | | |
+| **Best Practices (10 checks)** | | | | | |
 | CI/CD | .github/workflows, .gitlab-ci.yml, netlify.toml | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
 | Pre-commit Hooks | .husky/, .git/hooks/ | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
 | Linting | .eslintrc, .prettierrc, biome.json | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
 | Branch Protection | GitHub Branch Protection API | GitHub API | 3-state (Healthy/Dormant/Missing) | ❌ No | ✅ Displayed |
-| PR Template | .github/pull_request_template.md | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
+| Testing Framework | Config files (vitest, jest, playwright, etc.) | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
 | .gitignore | File existence | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
 | Netlify Badge | Badge URL in README | README content | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
 | .env.example | File existence | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
 | Dependabot | .github/dependabot.yml | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
 | Docker | Dockerfile, docker-compose.yml | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
-| **Community Standards (7 checks)** | | | | | |
-| CODE_OF_CONDUCT.md | File existence | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
+| **Community Standards (8 checks)** | | | | | |
+| CODE_OF_CONDUCT.md | File existence | File list scan | Binary (Healthy/Missing) | ✅ Template PR | ✅ Displayed |
 | CONTRIBUTING.md | File existence | File list scan | Binary (Healthy/Missing) | ✅ Template PR | ✅ Displayed |
-| SECURITY.md | File existence | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
+| SECURITY.md | File existence | File list scan | Binary (Healthy/Missing) | ✅ Template PR | ✅ Displayed |
 | LICENSE | File existence | File list scan | Binary (Healthy/Missing) | ✅ Template PR | ✅ Displayed |
 | CHANGELOG.md | File existence | File list scan | Binary (Healthy/Missing) | ✅ Template PR | ✅ Displayed |
-| Issue Templates | .github/ISSUE_TEMPLATE/ | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
-| PR Templates | .github/pull_request_template.md | File list scan | Binary (Healthy/Missing) | ❌ No | ✅ Displayed |
+| Issue Templates | .github/ISSUE_TEMPLATE/ | File list scan | Binary (Healthy/Missing) | ✅ Template PR | ✅ Displayed |
+| PR Templates | .github/pull_request_template.md | File list scan | Binary (Healthy/Missing) | ✅ Template PR | ✅ Displayed |
 | **Activity Metrics** | | | | | |
 | Last Commit Date | GitHub repo.pushed_at | GitHub API | Color-coded freshness | N/A | ✅ Complete |
 | Open PRs Count | GitHub PR API | GitHub API | Count display | N/A | ✅ Complete |

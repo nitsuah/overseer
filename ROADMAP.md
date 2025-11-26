@@ -22,7 +22,7 @@
 - [x] UX/Flow: Sync Status Clarity (Timestamp) and Type Column Tag Refinement
 - [x] LICENSE.md Tracking: Added as tracked document type
 - [x] Detail Panel 2.0: Features Section with parsed FEATURES.md
-- [x] Meta-Features: Best Practices (11 checks) & Community Standards (7 checks) Detection
+- [x] Meta-Features: Best Practices (10 checks) & Community Standards (8 checks) Detection
 - [x] Basic Health Metrics: Testing framework, CI/CD, Linting, Pre-commit hooks, Docker
 - [x] Compliance Checks: Gitignore, PR/Issue Templates, Environment Templates
 - [x] Health Score 2.0: Comprehensive weighted calculation (Doc 30%, Testing 20%, Best Practices 20%, Community 15%, Activity 15%)

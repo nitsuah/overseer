@@ -45,7 +45,7 @@
 - [x] Update sync.ts to extract and store coverage in repos table
 - [x] Display health score breakdown (5 components) in ExpandableRow UI
 - [x] Integrate self-reported coverage from METRICS.md into Testing section prominently
-- [x] Update FEATURES.md - ensure 100% accuracy (11 best practices, README freshness, health breakdown)
+- [x] Update FEATURES.md - ensure 100% accuracy (10 best practices, 8 community standards, README freshness, health breakdown)
 - [x] Update METRICS.md with current accurate values (all features marked correctly)
 - [x] Update ROADMAP.md Q1 status (marked as COMPLETED)
 - [x] Add README Freshness metric (days since last README update)
@@ -70,6 +70,8 @@
 - [ ] Integrate GitHub Security/Vulnerability Alerts API
 - [ ] Display vulnerability count and severity in dashboard
 - [ ] Add vulnerability metrics to health score calculation
+- [ ] Add Lines of Code (LOC) metrics: total LOC, average LOC per file, max file size
+- [ ] Calculate and display LOC-based statistics in Repository Stats section
 
 ### Phase 4: Template Health & Advanced Detection (Future) - LOW PRIORITY
 
@@ -89,17 +91,15 @@
 ### Phase 6: Final Launch Preparations - HIGH PRIORITY
 
 - [ ] Add Testing Metrics Display (test count, coverage %, framework detection) - PARTIALLY DONE
-- [ ] Add Health State Icons to main table row for each section
+- [ ] Add Health State Icons to main table row for each major detail section
 - [ ] Validate Health Score Meter visualization with new calculation
 - [ ] FIX GitHub OAuth in production environment (token/callback issues)
 - [ ] FIX Gemini API integration (404 errors - model version mismatch)
-### Medium Priority
 
 ### Future Enhancements (Deprioritized)
 
 - [ ] Add pre-commit hooks to Overseer project
 - [ ] Implement full E2E tests with Playwright
-- [ ] Implement Dark/Light Mode Toggle
 - [ ] Add webhook integration for real-time updates
 - [ ] Template health checking (dormant/malformed detection with hashing)
 - [ ] Add "Fix" buttons for missing best practices and community standards
@@ -108,6 +108,7 @@
 - [ ] Zombie Branch Detection (stale branches past merge)
 - [ ] Maintenance Mode Detection (activity patterns suggesting abandonment)
 - [ ] Comment-to-Code Ratio Analysis (documentation density)
+- [ ] Implement Dark/Light Mode Toggle
 
 <!--
 AGENT INSTRUCTIONS:

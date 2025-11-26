@@ -93,23 +93,7 @@ export async function checkBestPractices(
         details: { exists: hasHooks }
     });
 
-    // 5. PR Template
-    const prTemplateFiles = [
-        'pull_request_template.md',
-        '.github/pull_request_template.md',
-        'docs/pull_request_template.md',
-        '.github/PULL_REQUEST_TEMPLATE.md'
-    ];
-    const hasPRTemplate = fileList.some(f => 
-        prTemplateFiles.some(template => f.toLowerCase().includes(template.toLowerCase()))
-    );
-    practices.push({
-        type: 'pr_template',
-        status: hasPRTemplate ? 'healthy' : 'missing',
-        details: { exists: hasPRTemplate }
-    });
-
-    // 6. Testing Framework Detection
+    // 5. Testing Framework Detection
     const testingFiles = [
         'vitest.config',
         'jest.config',
@@ -144,7 +128,7 @@ export async function checkBestPractices(
         }
     });
 
-    // 7. Linting
+    // 6. Linting
     const lintingFiles = [
         '.eslintrc',
         'eslint.config',
@@ -161,7 +145,7 @@ export async function checkBestPractices(
         }
     });
 
-    // 8. Netlify Badge (if README provided)
+    // 7. Netlify Badge (if README provided)
     if (readmeContent) {
         const hasNetlifyBadge = readmeContent.includes('api.netlify.com/api/v1/badges');
         practices.push({
@@ -171,7 +155,7 @@ export async function checkBestPractices(
         });
     }
 
-    // 9. Environment Template
+    // 8. Environment Template
     const hasEnvExample = fileList.some(f => f.includes('.env.example') || f.includes('.env.template'));
     practices.push({
         type: 'env_template',
@@ -179,7 +163,7 @@ export async function checkBestPractices(
         details: { exists: hasEnvExample }
     });
 
-    // 10. Dependabot
+    // 9. Dependabot
     const hasDependabot = fileList.some(f => f.includes('.github/dependabot.yml'));
     practices.push({
         type: 'dependabot',
@@ -187,7 +171,7 @@ export async function checkBestPractices(
         details: { exists: hasDependabot }
     });
 
-    // 11. Docker
+    // 10. Docker
     const dockerFiles = ['Dockerfile', 'docker-compose.yml', 'docker-compose.yaml', '.dockerignore'];
     const detectedDockerFiles = fileList.filter(f => 
         dockerFiles.some(docker => f.toLowerCase().endsWith(docker.toLowerCase()) || f.toLowerCase().includes(`/${docker.toLowerCase()}`))

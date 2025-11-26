@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, XCircle, Clock, Circle, TrendingUp, Shield, ShieldCheck, ShieldAlert, Map, ListTodo } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Circle, TrendingUp, Shield, ShieldCheck, ShieldAlert, Map, ListTodo, X } from 'lucide-react';
 import { useState } from 'react';
 
 interface Task {
@@ -9,6 +9,7 @@ interface Task {
     description?: string;
     status: 'todo' | 'in-progress' | 'done';
     section: string | null;
+    subsection?: string | null;
 }
 
 interface RoadmapItem {
@@ -81,6 +82,7 @@ export default function ExpandableRow({
     coverageScore
 }: ExpandableRowProps) {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+    const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
 
     const toggleSection = (section: string) => {
         const newExpanded = new Set(expandedSections);
@@ -104,6 +106,32 @@ export default function ExpandableRow({
         completed: roadmapItems.filter((r) => r.status === 'completed'),
     };
 
+    // Group roadmap items by quarter within each status
+    const groupByQuarter = (items: RoadmapItem[]) => {
+        const grouped: Record<string, RoadmapItem[]> = {};
+        items.forEach((item) => {
+            const quarter = item.quarter || 'Other';
+            if (!grouped[quarter]) {
+                grouped[quarter] = [];
+            }
+            grouped[quarter].push(item);
+        });
+        return grouped;
+    };
+
+    // Group tasks by subsection
+    const groupBySubsection = (items: Task[]) => {
+        const grouped: Record<string, Task[]> = {};
+        items.forEach((item) => {
+            const subsection = item.subsection || 'Other';
+            if (!grouped[subsection]) {
+                grouped[subsection] = [];
+            }
+            grouped[subsection].push(item);
+        });
+        return grouped;
+    };
+
     // Extract specific metrics for display
     const coverageMetric = metrics.find(m => m.name?.toLowerCase().includes('coverage'));
     const otherMetrics = metrics.filter(m => m.name && !m.name.toLowerCase().includes('coverage'));
@@ -116,13 +144,20 @@ export default function ExpandableRow({
     return (
         <div className="px-6 py-6 bg-slate-900/50 border-t border-slate-800">
             {/* AI Summary Section */}
-            {aiSummary && (
-                <div className="mb-6 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4">
+            {aiSummary && !aiSummaryDismissed && (
+                <div className="mb-6 bg-linear-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4 relative">
+                    <button
+                        onClick={() => setAiSummaryDismissed(true)}
+                        className="absolute top-2 right-2 text-slate-400 hover:text-slate-200 transition-colors"
+                        title="Dismiss AI summary"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
                     <h4 className="text-sm font-semibold text-purple-300 mb-2 flex items-center gap-2">
                         <span className="text-lg">🤖</span>
                         <span>AI Summary</span>
                     </h4>
-                    <p className="text-sm text-slate-300 leading-relaxed">{aiSummary}</p>
+                    <p className="text-sm text-slate-300 leading-relaxed pr-6">{aiSummary}</p>
                 </div>
             )}
 
@@ -148,21 +183,21 @@ export default function ExpandableRow({
                                                 <Clock className="h-3 w-3 text-blue-400" />
                                                 <h5 className="text-xs font-medium text-blue-400">In Progress ({roadmapByStatus['in-progress'].length})</h5>
                                             </div>
-                                            <ul className="space-y-2">
-                                                {roadmapByStatus['in-progress'].map((item, i) => (
-                                                    <li key={i} className="text-xs text-slate-300">
-                                                        <div className="flex items-start gap-2">
-                                                            <span className="mt-1.5 w-1 h-1 rounded-full bg-blue-500 shrink-0" />
-                                                            <span className="font-medium">{item.title}</span>
-                                                        </div>
-                                                        {item.quarter && (
-                                                            <div className="ml-3 text-[10px] text-slate-500 mt-0.5">
-                                                                {item.quarter}
-                                                            </div>
-                                                        )}
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                            {Object.entries(groupByQuarter(roadmapByStatus['in-progress'])).map(([quarter, items]) => (
+                                                <div key={quarter} className="mb-4 last:mb-0">
+                                                    <h6 className="text-[10px] font-semibold text-slate-400 uppercase mb-2">{quarter}</h6>
+                                                    <ul className="space-y-2">
+                                                        {items.map((item, i) => (
+                                                            <li key={i} className="text-xs text-slate-300">
+                                                                <div className="flex items-start gap-2">
+                                                                    <span className="mt-1.5 w-1 h-1 rounded-full bg-blue-500 shrink-0" />
+                                                                    <span className="font-medium">{item.title}</span>
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
 
@@ -172,21 +207,21 @@ export default function ExpandableRow({
                                             <Circle className="h-3 w-3 text-slate-500" />
                                             <h5 className="text-xs font-medium text-slate-300">Planned ({roadmapByStatus.planned.length})</h5>
                                         </div>
-                                        <ul className="space-y-2">
-                                            {getDisplayedItems(roadmapByStatus.planned, 'planned').map((item, i) => (
-                                                <li key={i} className="text-xs text-slate-400">
-                                                    <div className="flex items-start gap-2">
-                                                        <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-600 shrink-0" />
-                                                        <span className="font-medium">{item.title}</span>
-                                                    </div>
-                                                    {item.quarter && (
-                                                        <div className="ml-3 text-[10px] text-slate-500 mt-0.5">
-                                                            {item.quarter}
-                                                        </div>
-                                                    )}
-                                                </li>
-                                            ))}
-                                        </ul>
+                                        {Object.entries(groupByQuarter(getDisplayedItems(roadmapByStatus.planned, 'planned'))).map(([quarter, items]) => (
+                                            <div key={quarter} className="mb-4 last:mb-0">
+                                                <h6 className="text-[10px] font-semibold text-slate-400 uppercase mb-2">{quarter}</h6>
+                                                <ul className="space-y-2">
+                                                    {items.map((item, i) => (
+                                                        <li key={i} className="text-xs text-slate-400">
+                                                            <div className="flex items-start gap-2">
+                                                                <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-600 shrink-0" />
+                                                                <span className="font-medium">{item.title}</span>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ))}
                                         {roadmapByStatus.planned.length > 5 && (
                                             <button
                                                 onClick={() => toggleSection('planned')}
@@ -267,14 +302,21 @@ export default function ExpandableRow({
                                             <Circle className="h-3 w-3 text-slate-500" />
                                             <h5 className="text-xs font-medium text-slate-300">Backlog ({tasksByStatus.todo.length})</h5>
                                         </div>
-                                        <ul className="space-y-2">
-                                            {getDisplayedItems(tasksByStatus.todo, 'backlog').map((task, i) => (
-                                                <li key={i} className="text-xs text-slate-400 flex items-start gap-2">
-                                                    <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-600 shrink-0" />
-                                                    <span>{task.title}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                        {Object.entries(groupBySubsection(getDisplayedItems(tasksByStatus.todo, 'backlog'))).map(([subsection, items]) => (
+                                            <div key={subsection} className="mb-4 last:mb-0">
+                                                {subsection !== 'Other' && (
+                                                    <h6 className="text-[10px] font-semibold text-slate-400 uppercase mb-2">{subsection}</h6>
+                                                )}
+                                                <ul className="space-y-2">
+                                                    {items.map((task, i) => (
+                                                        <li key={i} className="text-xs text-slate-400 flex items-start gap-2">
+                                                            <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-600 shrink-0" />
+                                                            <span>{task.title}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ))}
                                         {tasksByStatus.todo.length > 5 && (
                                             <button
                                                 onClick={() => toggleSection('backlog')}
@@ -340,16 +382,21 @@ export default function ExpandableRow({
                                                 <p className="text-[10px] text-slate-400 mb-2">{feature.description}</p>
                                             )}
                                             <ul className="space-y-1">
-                                                {feature.items.slice(0, 3).map((item, j) => (
+                                                {(expandedSections.has(`feature-${i}`) ? feature.items : feature.items.slice(0, 3)).map((item, j) => (
                                                     <li key={j} className="text-xs text-slate-300 flex items-start gap-2">
                                                         <span className="mt-1.5 w-1 h-1 rounded-full bg-blue-500 shrink-0" />
                                                         <span>{item}</span>
                                                     </li>
                                                 ))}
                                                 {feature.items.length > 3 && (
-                                                    <li className="text-[10px] text-slate-500 pl-3">
-                                                        +{feature.items.length - 3} more items
-                                                    </li>
+                                                    <button
+                                                        onClick={() => toggleSection(`feature-${i}`)}
+                                                        className="text-[10px] text-blue-400 hover:text-blue-300 pl-3"
+                                                    >
+                                                        {expandedSections.has(`feature-${i}`)
+                                                            ? 'Show less'
+                                                            : `+${feature.items.length - 3} more items`}
+                                                    </button>
                                                 )}
                                             </ul>
                                         </div>

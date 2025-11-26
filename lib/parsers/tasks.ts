@@ -15,6 +15,7 @@ export interface TaskItemData {
     title: string;
     status: 'todo' | 'in-progress' | 'done';
     section: string | null;
+    subsection: string | null;
 }
 
 export function parseTasks(content: string): TaskData {
@@ -23,12 +24,21 @@ export function parseTasks(content: string): TaskData {
     const tasks: TaskItemData[] = [];
     const lines = markdown.split('\n');
     let currentSection = '';
+    let currentSubsection = '';
 
     for (const line of lines) {
-        // Detect section headers (## Backlog, ## In Progress, etc.) - also accept # as fallback
-        const sectionMatch = line.match(/^(#{1,2})\s+(.+)$/);
+        // Detect main section headers (## Done, ## In Progress, ## Todo)
+        const sectionMatch = line.match(/^##\s+(.+)$/);
         if (sectionMatch) {
-            currentSection = sectionMatch[2].trim();
+            currentSection = sectionMatch[1].trim();
+            currentSubsection = ''; // Reset subsection when entering new section
+            continue;
+        }
+
+        // Detect subsection headers (### Phase 1, ### Phase 2, etc.)
+        const subsectionMatch = line.match(/^###\s+(.+)$/);
+        if (subsectionMatch) {
+            currentSubsection = subsectionMatch[1].trim();
             continue;
         }
 
@@ -46,6 +56,7 @@ export function parseTasks(content: string): TaskData {
                 title: title.trim(),
                 status,
                 section: currentSection || null,
+                subsection: currentSubsection || null,
             });
         }
     }

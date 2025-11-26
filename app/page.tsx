@@ -49,6 +49,13 @@ interface Repo {
   loc_language_breakdown?: Record<string, number>;
   test_case_count?: number;
   test_describe_count?: number;
+  ci_status?: string;
+  ci_last_run?: string | null;
+  ci_workflow_name?: string | null;
+  vuln_alert_count?: number;
+  vuln_critical_count?: number;
+  vuln_high_count?: number;
+  vuln_last_checked?: string | null;
 }
 
 interface RepoDetails {
@@ -850,6 +857,12 @@ export default function DashboardPage() {
                   locLanguageBreakdown={repo.loc_language_breakdown}
                   testCaseCount={repo.test_case_count}
                   testDescribeCount={repo.test_describe_count}
+                  ciStatus={repo.ci_status}
+                  ciLastRun={repo.ci_last_run}
+                  ciWorkflowName={repo.ci_workflow_name}
+                  vulnAlertCount={repo.vuln_alert_count}
+                  vulnCriticalCount={repo.vuln_critical_count}
+                  vulnHighCount={repo.vuln_high_count}
                 />
               </td>
             </tr>

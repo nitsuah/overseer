@@ -13,6 +13,13 @@
 - ✅ **PR Template Moved** - Now correctly categorized under Community Standards (8 checks total)
 - ✅ **UI/UX Polish** - Login redirect fixed, purple GitHub icon, green homepage icon, red X hide button with toast, column reorder
 
+**Phase 3 Complete** - Advanced Metrics & Integrations implemented:
+
+- ✅ **Lines of Code (LOC)** - Fetched from GitHub language stats API, calculated as bytes/50, displayed with K suffix
+- ✅ **Test Case Counting** - Parser detects and counts it(), test(), describe() calls in test files
+- ✅ **CI/CD Status** - Live build status from GitHub Actions API (passing/failing with workflow name and last run)
+- ✅ **Vulnerability Alerts** - Dependabot alerts tracked via GitHub Security API with severity counts
+
 **Result**: 100% of parsed metrics now utilized in UI. All docs accurate and cross-pollination eliminated.
 
 ## Feature Detection & Display Matrix
@@ -118,37 +125,12 @@ This matrix shows what Overseer tracks, how we detect it, health indicators, and
 
 ## 🔴 Remaining Gaps
 
-### 3. No Fix Buttons for Best Practices/Community Standards
-
-Missing templates and automated fixes for CODE_OF_CONDUCT, SECURITY.md, issue templates.
-**Priority**: MEDIUM
-
-### 4. Template Health Detection Not Implemented
+### 1. Template Health Detection Not Implemented
 
 Can't detect if docs are stale/unchanged templates (Dormant/Malformed states theoretical).
 **Priority**: LOW
 
-### 5. Coverage Only in Metrics Panel
-
-Self-reported coverage not prominently in Testing section.
-**Priority**: MEDIUM
-
-### 6. No Real-time CI/CD Status Integration
-
-Detect workflows but don't show current build status.
-**Opportunity**: Integrate GitHub Actions API
-
-### 7. Test Case Count Missing
-
-Count test files but not actual test cases (`it()`, `test()` calls).
-**Opportunity**: Parse test files for assertions
-
-### 9. No Vulnerability Tracking
-
-No GitHub Security/Dependabot alerts integration.
-**Opportunity**: Critical for production repos
-
-### 10. No Contributor Metrics
+### 2. Contributor Metrics
 
 Missing: contributor count, commit cadence, bus factor, PR merge time.
 **Opportunity**: Rich activity analytics
@@ -163,13 +145,16 @@ Missing: contributor count, commit cadence, bus factor, PR merge time.
 
 **Phase 2 - UX Consistency**:
 
-- Add fix buttons for community standards
-- Implement missing standard templates
-- Integrate coverage into Testing section prominently
+- Add fix buttons for best practices (some standards already implemented)
+- Implement missing standard templates where applicable
+- Continue polishing Testing metrics presentation
 
-**Phase 3 - Advanced Metrics**:
+**Phase 3 - Advanced Metrics**: (Completed)
 
-- CI/CD build status integration
-- Test case counting
-- Vulnerability tracking
-- Contributor analytics
+- CI/CD build status integration ✅
+- Test case counting ✅
+- Vulnerability tracking ✅
+
+**Contributor Analytics**:
+
+- Plan and implement contributor metrics collection and display

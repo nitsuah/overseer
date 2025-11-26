@@ -63,18 +63,46 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Could not get language stats for ${repo.name}:`, (e as Error).message);
     }
 
+    // Fetch CI/CD status from GitHub Actions
+    let ciStatus = 'unknown';
+    let ciLastRun: string | null = null;
+    let ciWorkflowName: string | null = null;
+    try {
+        const workflowData = await github.getWorkflowRuns(repo.name, owner);
+        ciStatus = workflowData.status;
+        ciLastRun = workflowData.lastRun;
+        ciWorkflowName = workflowData.workflowName;
+    } catch (e) {
+        console.warn(`Could not get workflow runs for ${repo.name}:`, (e as Error).message);
+    }
+
+    // Fetch vulnerability alerts
+    let vulnAlertCount = 0;
+    let vulnCriticalCount = 0;
+    let vulnHighCount = 0;
+    try {
+        const vulnData = await github.getVulnerabilityAlerts(repo.name, owner);
+        vulnAlertCount = vulnData.total;
+        vulnCriticalCount = vulnData.critical;
+        vulnHighCount = vulnData.high;
+    } catch (e) {
+        console.warn(`Could not get vulnerability alerts for ${repo.name}:`, (e as Error).message);
+    }
+
     // Upsert repo with new metrics
     const repoRows = await db`
         INSERT INTO repos (
             name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, 
             last_synced, updated_at, last_commit_date, open_prs, branches_count, readme_last_updated,
-            total_loc, loc_language_breakdown
+            total_loc, loc_language_breakdown, ci_status, ci_last_run, ci_workflow_name,
+            vuln_alert_count, vuln_critical_count, vuln_high_count, vuln_last_checked
         )
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
             ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
             NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}, ${readmeLastUpdated},
-            ${totalLoc}, ${JSON.stringify(locLanguageBreakdown)}
+            ${totalLoc}, ${JSON.stringify(locLanguageBreakdown)}, ${ciStatus}, ${ciLastRun}, ${ciWorkflowName},
+            ${vulnAlertCount}, ${vulnCriticalCount}, ${vulnHighCount}, NOW()
         )
         ON CONFLICT (name) DO UPDATE SET
           description = EXCLUDED.description,
@@ -92,7 +120,14 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           branches_count = EXCLUDED.branches_count,
           readme_last_updated = EXCLUDED.readme_last_updated,
           total_loc = EXCLUDED.total_loc,
-          loc_language_breakdown = EXCLUDED.loc_language_breakdown
+          loc_language_breakdown = EXCLUDED.loc_language_breakdown,
+          ci_status = EXCLUDED.ci_status,
+          ci_last_run = EXCLUDED.ci_last_run,
+          ci_workflow_name = EXCLUDED.ci_workflow_name,
+          vuln_alert_count = EXCLUDED.vuln_alert_count,
+          vuln_critical_count = EXCLUDED.vuln_critical_count,
+          vuln_high_count = EXCLUDED.vuln_high_count,
+          vuln_last_checked = EXCLUDED.vuln_last_checked
         RETURNING id;
     `;
     const repoId = repoRows[0].id;

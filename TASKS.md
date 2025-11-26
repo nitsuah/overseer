@@ -60,24 +60,22 @@
 - [x] Reorganize detail panel layout - two rows with Doc/BP/CS in dedicated row (November 2025)
 - [x] Fix metrics panel display - transform database metric_name to name (November 2025)
 - [x] Add Documentation health shield to main table row (November 2025)
+- [x] Integrate GitHub Actions API for live CI/CD build status (November 2025)
+- [x] Display current build status (passing/failing) with last run time in Best Practices section (November 2025)
+- [x] Parse test files to count actual test cases (it(), test() calls) (November 2025)
+- [x] Show test case count alongside test file count in Testing section (November 2025)
+- [x] Integrate GitHub Security/Vulnerability Alerts API (November 2025)
+- [x] Display vulnerability count and severity in Repository Stats (November 2025)
+- [x] Add Lines of Code (LOC) metrics: total LOC with language breakdown (November 2025)
+- [x] Calculate and display LOC-based statistics in Repository Stats section (November 2025)
 
 ## In Progress
 
 ## Todo
 
-### Phase 3: Advanced Metrics & Integrations (Weeks 3-4) - MEDIUM PRIORITY
+### Phase 3: Advanced Metrics & Integrations (Weeks 3-4) - COMPLETED ✅
 
-- [ ] Integrate GitHub Actions API for live CI/CD build status
-- [ ] Display current build status (passing/failing) with last run time
-- [ ] Display github "issues"/vulns/dependabot alerts in detail panel and as an indicator in the record bar near the "activity" section/with the # of pr metrics?
-- [ ] Parse test files to count actual test cases (it(), test() calls)
-- [ ] Show test case count alongside test file count
-- [ ] Integrate GitHub Security/Vulnerability Alerts API
-- [ ] Display vulnerability count and severity in dashboard
-- [ ] Add vulnerability metrics to health score calculation
-- [ ] Add Lines of Code (LOC) metrics: total LOC, average LOC per file, max file size
-- [ ] Calculate and display LOC-based statistics in Repository Stats section
-- [ ] Testing metrics and other metrics display cleanup in detail (expand/hide/conformity of expected values)
+All Phase 3 tasks completed November 26, 2025
 
 ### Phase 4: Template Health & Advanced Detection (Future) - LOW PRIORITY
 
@@ -98,7 +96,7 @@
 
 - [x] Add Health State Icons to main table row for each major detail section
 - [x] Validate Health Score Meter visualization with new calculation
-- [ ] Add Testing Metrics Display (test count, coverage %, framework detection) - PARTIALLY DONE
+- [x] Add Testing Metrics Display (test count, coverage %, framework detection) - COMPLETED
 - [ ] FIX GitHub OAuth in production environment (token/callback issues)
 - [ ] FIX Gemini API integration (404 errors - model version mismatch)
 

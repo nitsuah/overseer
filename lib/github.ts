@@ -314,4 +314,61 @@ export class GitHubClient {
       return {};
     }
   }
+
+  async getWorkflowRuns(repo: string, owner?: string): Promise<{ status: string; lastRun: string | null; workflowName: string | null }> {
+    try {
+      const { data } = await this.octokit.actions.listWorkflowRunsForRepo({
+        owner: owner || this.owner,
+        repo,
+        per_page: 1,
+        status: 'completed',
+      });
+
+      if (data.workflow_runs.length === 0) {
+        return { status: 'unknown', lastRun: null, workflowName: null };
+      }
+
+      const latestRun = data.workflow_runs[0];
+      const status = latestRun.conclusion === 'success' ? 'passing' : 'failing';
+      
+      return {
+        status,
+        lastRun: latestRun.updated_at || latestRun.created_at,
+        workflowName: latestRun.name || null,
+      };
+    } catch {
+      return { status: 'unknown', lastRun: null, workflowName: null };
+    }
+  }
+
+  async getVulnerabilityAlerts(repo: string, owner?: string): Promise<{ 
+    total: number; 
+    critical: number; 
+    high: number; 
+  }> {
+    try {
+      // Note: This requires special permissions (security_events scope)
+      // If not available, returns zeros silently
+      const { data } = await this.octokit.request('GET /repos/{owner}/{repo}/dependabot/alerts', {
+        owner: owner || this.owner,
+        repo,
+        state: 'open',
+        per_page: 100,
+      });
+
+      const alerts = data as Array<{ security_advisory?: { severity?: string } }>;
+      
+      const critical = alerts.filter(a => a.security_advisory?.severity === 'critical').length;
+      const high = alerts.filter(a => a.security_advisory?.severity === 'high').length;
+
+      return {
+        total: alerts.length,
+        critical,
+        high,
+      };
+    } catch {
+      // If API call fails (lack of permissions, etc.), return zeros
+      return { total: 0, critical: 0, high: 0 };
+    }
+  }
 }

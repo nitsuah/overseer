@@ -72,6 +72,12 @@ interface ExpandableRowProps {
     locLanguageBreakdown?: Record<string, number>;
     testCaseCount?: number;
     testDescribeCount?: number;
+    ciStatus?: string;
+    ciLastRun?: string | null;
+    ciWorkflowName?: string | null;
+    vulnAlertCount?: number;
+    vulnCriticalCount?: number;
+    vulnHighCount?: number;
 }
 
 export default function ExpandableRow({
@@ -96,6 +102,12 @@ export default function ExpandableRow({
     locLanguageBreakdown,
     testCaseCount,
     testDescribeCount,
+    ciStatus,
+    ciLastRun,
+    ciWorkflowName,
+    vulnAlertCount,
+    vulnCriticalCount,
+    vulnHighCount,
 }: ExpandableRowProps) {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
     const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
@@ -478,6 +490,21 @@ export default function ExpandableRow({
                                         </span>
                                     </div>
                                 )}
+                                {vulnAlertCount !== undefined && vulnAlertCount > 0 && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-red-500">⚠️</span>
+                                            <span className="text-slate-400">Vulnerabilities</span>
+                                        </div>
+                                        <span className={`font-medium ${
+                                            vulnCriticalCount && vulnCriticalCount > 0 ? 'text-red-400' :
+                                            vulnHighCount && vulnHighCount > 0 ? 'text-orange-400' : 'text-yellow-400'
+                                        }`}>
+                                            {vulnAlertCount}
+                                            {vulnCriticalCount && vulnCriticalCount > 0 && ` (${vulnCriticalCount} critical)`}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -660,11 +687,43 @@ export default function ExpandableRow({
                         <span>Best Practices</span>
                         <span className="text-xs text-slate-500 font-normal">({bestPractices.length})</span>
                     </h4>
+                    
+                    {/* CI/CD Status Badge */}
+                    {ciStatus && ciStatus !== 'unknown' && (
+                        <div className={`mb-3 p-3 rounded-lg border ${
+                            ciStatus === 'passing' 
+                                ? 'bg-green-500/10 border-green-500/30' 
+                                : 'bg-red-500/10 border-red-500/30'
+                        }`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-lg ${ciStatus === 'passing' ? '✓' : '✗'}`}>
+                                        {ciStatus === 'passing' ? '✓' : '✗'}
+                                    </span>
+                                    <div>
+                                        <div className={`text-sm font-semibold ${
+                                            ciStatus === 'passing' ? 'text-green-300' : 'text-red-300'
+                                        }`}>
+                                            CI/CD {ciStatus === 'passing' ? 'Passing' : 'Failing'}
+                                        </div>
+                                        {ciWorkflowName && (
+                                            <div className="text-xs text-slate-400 mt-0.5">{ciWorkflowName}</div>
+                                        )}
+                                    </div>
+                                </div>
+                                {ciLastRun && (
+                                    <div className="text-xs text-slate-400">
+                                        {new Date(ciLastRun).toLocaleDateString()}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {bestPractices.length === 0 ? (
                         <p className="text-xs text-slate-500 italic">No data available</p>
                     ) : (
-                        <div className="space-y-2">
-                            {bestPractices.map((practice, i) => {
+                        <div className="space-y-2">{bestPractices.map((practice, i) => {
                                 const getStatusIcon = (status: string) => {
                                     switch (status) {
                                         case 'healthy': return <CheckCircle2 className="h-3 w-3 text-green-400" />;

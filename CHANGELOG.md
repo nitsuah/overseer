@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Lines of Code (LOC) metrics with language breakdown from GitHub API
+- LOC display in Repository Stats section with K suffix formatting (e.g., "12.5K")
+- Test case counting parser (detects it(), test(), describe() calls in test files)
+- Test case count display in Testing section with prominent badge
+- CI/CD build status integration via GitHub Actions API
+- CI/CD status badge in Best Practices section (passing/failing with workflow name and last run date)
+- Vulnerability alerts integration via GitHub Security/Dependabot API
+- Vulnerability count display in Repository Stats with severity-based color coding
+- Critical vulnerability count highlighted in parentheses
+- Database migrations: 002_add_loc_metrics.sql, 003_add_test_counts.sql, 004_add_ci_status.sql, 005_add_vulnerability_alerts.sql
 - Health score component breakdown display with progress bars (Documentation 30%, Testing 20%, Best Practices 20%, Community 15%)
 - README freshness tracking with color-coded staleness indicators (Fresh/Recent/Aging/Stale)
 - Coverage score sync from METRICS.md to database during repository sync

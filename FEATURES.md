@@ -9,6 +9,10 @@
 - **Code Coverage Visualization**: Progress bars showing test coverage synced from METRICS.md
 - **README Freshness Tracking**: Days since README last updated with color-coded staleness (Fresh/Recent/Aging/Stale)
 - **Activity Monitoring**: Last commit dates, open PRs, open issues with color-coded freshness indicators
+- **Lines of Code (LOC)**: Total LOC calculated from GitHub language stats with K suffix formatting (e.g., "12.5K")
+- **Test Case Counting**: Automatic parsing of test files to count it(), test(), describe() calls
+- **CI/CD Status**: Live build status from GitHub Actions (passing/failing with workflow name and last run)
+- **Vulnerability Tracking**: Open Dependabot alerts with count and severity (critical/high) color-coded display
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
 - **Community Standards**: 8 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates
@@ -30,6 +34,9 @@
 - **Task Management**: Parse and display tasks by status (Todo, In Progress, Done)
 - **Roadmap Visualization**: Quarterly planning with status tracking (Planned, In Progress, Completed)
 - **Metrics Tracking**: Custom metrics per repository
+- **Testing Metrics**: Test file count and test case count prominently displayed
+- **CI/CD Monitoring**: Live workflow status with last run timestamp
+- **Vulnerability Alerts**: Real-time security alert tracking
 - **Expandable Details**: Rich detail panels with organized information
 
 ### 🔐 Authentication & Security
@@ -44,7 +51,10 @@
 - **Responsive Design**: Adapts to different screen sizes
 - **Filtering & Sorting**: Filter by type, language, fork status
 - **Visual Indicators**: Icons, badges, and color-coding for quick scanning
-- **Repository Stats**: Stars, forks, branches displayed in detail panels
+- **Repository Stats**: Stars, forks, branches, LOC, vulnerabilities displayed in detail panels
+- **CI/CD Badges**: Prominent passing/failing status indicators in Best Practices section
+- **Test Metrics**: Test file and test case counts with highlighted badges in Testing section
+- **Vulnerability Warnings**: Color-coded severity indicators (red for critical, orange for high)
 
 ### 🔄 Synchronization
 
@@ -153,4 +163,4 @@ Health scores are displayed as letter grades (A-F) with detailed component break
 
 ## Last Updated
 
-November 26, 2025
+November 26, 2025 - Phase 3 Advanced Metrics Complete

@@ -2,7 +2,23 @@
 
 **Meta-Repository Intelligence Layer**
 
-A dashboard that gives you and your AI agents a unified view across all your GitHub repositories.
+> A dashboard that gives you and your AI agents a unified view across all your GitHub repositories.
+
+## Mission Statement
+
+🛡️ Overseer Mission: The "Meta-Repository" Standard
+
+We believe that a healthy codebase is self-documenting, standardized, and AI-ready.
+
+Overseer is not just a dashboard; it is an intelligence layer that sits above your Git repositories. Its mission is to bridge the gap between human developer intent and AI agent execution. By enforcing a strict documentation standard (ROADMAP, TASKS, METRICS) and visualizing the flow from "Strategy" to "Shipped Code," Overseer eliminates the context-switching tax of modern development.
+
+We aim to:
+
+- Standardize Context: Ensure every repo provides the necessary context windows for both humans and AI agents to contribute immediately.
+- Visualize Momentum: Move beyond "commits" and track the true velocity of ideas turning into features.
+- Automate Governance: Use AI to act as a gentle guardian, ensuring roadmap items are defined and documentation is never stale, without interfering with the granular code workflow.
+
+Overseer gives you the input/output controls of a project manager, committed directly to the git history you already own.
 
 ## Features
 
@@ -166,9 +182,22 @@ Austin J. Hardy ([@nitsuah](https://github.com/nitsuah))
 
 <!--
 AGENT INSTRUCTIONS:
-This file is the face of the project.
-1. Analyze the codebase to understand its purpose, tech stack, and setup requirements.
-2. Update the "Project Name" and "Description".
-3. Fill in the "Getting Started", "Installation", and "Usage" sections with accurate commands.
-4. Keep the tone professional and helpful.
+This is the primary project documentation file.
+
+CRITICAL FORMAT REQUIREMENTS:
+1. Keep introduction clear and concise (project name, tagline, mission)
+2. Features section should list key capabilities
+3. Tech stack should be current and accurate
+4. Getting Started must have working installation steps
+5. Environment variables section must be complete
+6. API endpoints should document all available routes
+
+When updating:
+1. Test all installation commands before committing
+2. Update version numbers when dependencies change
+3. Verify all linked files (SETUP.md, LICENSE.md) exist
+4. Keep feature list in sync with FEATURES.md
+5. Update tech stack when adding/removing major dependencies
+6. Ensure API endpoint documentation matches actual routes
+7. Add screenshots or diagrams for major UI changes
 -->

@@ -1,4 +1,8 @@
 // lib/doc-health.ts
+import crypto from 'crypto';
+
+export type HealthState = 'missing' | 'dormant' | 'malformed' | 'healthy';
+
 export interface DocHealthInfo {
     score: number; // 0-100
     present: number;
@@ -13,6 +17,7 @@ export const STANDARD_DOCS = [
     'CHANGELOG.md',
     'CONTRIBUTING.md',
     'METRICS.md',
+    'FEATURES.md',
     'LICENSE',
 ] as const;
 
@@ -21,6 +26,56 @@ export const OPTIONAL_DOCS = [
     'ROUTES.md',
     'CODE_OF_CONDUCT.md',
 ] as const;
+
+export function calculateDocHealthState(
+    exists: boolean,
+    content: string | null,
+    templateContent: string | null
+): HealthState {
+    if (!exists || !content) {
+        return 'missing';
+    }
+
+    // If we have a template, check if it matches exactly (dormant)
+    if (templateContent) {
+        const contentHash = hashContent(content);
+        const templateHash = hashContent(templateContent);
+        
+        if (contentHash === templateHash) {
+            return 'dormant';
+        }
+    }
+
+    // Check for malformed (missing key markers)
+    // For now, we'll consider very short content as potentially malformed
+    const trimmedContent = content.trim();
+    if (trimmedContent.length < 50) {
+        return 'malformed';
+    }
+
+    // Check for common template markers that shouldn't be in final docs
+    const templateMarkers = [
+        'AGENT INSTRUCTIONS',
+        'TODO:',
+        '[Your content here]',
+        '[Add your',
+        'Replace this',
+    ];
+
+    const hasTemplateMarkers = templateMarkers.some(marker => 
+        content.includes(marker)
+    );
+
+    if (hasTemplateMarkers) {
+        return 'dormant';
+    }
+
+    return 'healthy';
+}
+
+export function hashContent(content: string): string {
+    return crypto.createHash('md5').update(content.trim()).digest('hex');
+}
 
 export function calculateDocHealth(
     docStatuses: Array<{ doc_type: string; exists: boolean }>,
@@ -46,7 +101,7 @@ export function calculateDocHealth(
 }
 
 function getExpectedDocs(repoType: string): string[] {
-    const base = ['README.md', 'LICENSE'];
+    const base = ['README.md', 'LICENSE', 'FEATURES.md'];
     switch (repoType) {
         case 'web-app':
             return [...base, 'ROADMAP.md', 'TASKS.md', 'CONTRIBUTING.md', 'ROUTES.md'];

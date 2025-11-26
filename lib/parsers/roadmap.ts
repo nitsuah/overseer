@@ -26,15 +26,15 @@ export function parseRoadmap(content: string): RoadmapData {
     let currentSection = '';
 
     for (const line of lines) {
-        // Detect section headers (## Q1 2025, ## Phase 1, etc.)
-        const sectionMatch = line.match(/^##\s+(.+)$/);
+        // Detect section headers (## Q1 2025, ## Phase 1, etc.) - also accept # as fallback
+        const sectionMatch = line.match(/^(#{1,2})\s+(.+)$/);
         if (sectionMatch) {
-            currentSection = sectionMatch[1].trim();
+            currentSection = sectionMatch[2].trim();
             continue;
         }
 
-        // Parse task list items
-        const taskMatch = line.match(/^-\s+\[([ x/])\]\s+(.+)$/);
+        // Parse task list items - handle both - and * bullets
+        const taskMatch = line.match(/^[-*]\s+\[([ x/])\]\s+(.+)$/);
         if (taskMatch) {
             const [, statusChar, title] = taskMatch;
             const status = statusChar === 'x' ? 'completed' : statusChar === '/' ? 'in-progress' : 'planned';

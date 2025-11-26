@@ -80,23 +80,21 @@
 - [x] Refactor large files: ExpandableRow.tsx (892 → 175 lines) and page.tsx (890 → 198 lines) (November 2025)
 - [x] Extract reusable hooks: useDashboard, useRepoActions, useRepoFilters (November 2025)
 - [x] Create modular components: DashboardHeader, FilterPanel, RepoTableRow (November 2025)
-
-## In Progress
-
-## Todo
-
-### Phase 6: Final Launch Preparations - HIGH PRIORITY
-
 - [x] Add Health State Icons to main table row for each major detail section
 - [x] Validate Health Score Meter visualization with new calculation
 - [x] Add Testing Metrics Display (test count, coverage %, framework detection) - COMPLETED
 - [x] Add pre-commit hooks to Overseer project (husky + lint-staged + prettier)
 - [x] Implement full E2E tests with Playwright (comprehensive test suite)
 - [x] Default repos should appear when not logged in yet (preview screen)
+
+## In Progress
+
 - [ ] FIX GitHub OAuth in production environment (token/callback issues)
 - [ ] FIX Gemini API integration (404 errors - model version mismatch)
 
-### Future Enhancements (Deprioritized)
+## Todo
+
+### Phase 7: Future Enhancements
 
 - [ ] Add webhook integration for real-time updates
 - [ ] Template health checking (dormant/malformed detection with hashing)

@@ -9,7 +9,7 @@ export default function Header() {
     if (status === "loading") return null;
 
     return (
-        <header className="flex items-center justify-between bg-gradient-to-r from-indigo-600 to-purple-600 p-4 text-white shadow-lg">
+        <header className="flex items-center justify-between bg-linear-to-r from-indigo-600 to-purple-600 p-4 text-white shadow-lg">
             <h1 className="text-2xl font-bold tracking-wider">Overseer Dashboard</h1>
             <div className="flex items-center gap-4">
                 {session ? (

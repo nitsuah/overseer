@@ -417,7 +417,7 @@ export async function syncSingleRepo(github: GitHubClient, repoName: string) {
     const db = getNeonClient();
 
     // Get the repo metadata from GitHub
-    const repos = await github.getUserRepos();
+    const repos = await github.listRepos();
     const repo = repos.find((r: RepoMetadata) => r.name === repoName);
 
     if (!repo) {

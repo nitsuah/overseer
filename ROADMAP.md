@@ -37,19 +37,19 @@
 - [x] README Freshness Tracking: Days since last update with color-coded staleness
 - [x] Documentation Accuracy: All docs updated to match implementation (100% accuracy)
 
-## Q2 2025: UX Consistency & Quick Wins 🎨
+## Q2 2025: UX Consistency & Quick Wins (IN PROGRESS) 🎨
 
-- [ ] Templates for Community Standards: CODE_OF_CONDUCT, SECURITY, Issue templates
-- [ ] Fix Buttons: Add automated fixes for best practices/community standards
-- [ ] Batch Fix All Standards: Single PR for all missing standards
-- [ ] Test File Prominence: Show test file count more prominently in Testing section
-- [ ] Health Component Tooltips: Add tooltips explaining each health score component
+- [x] Templates for Community Standards: CODE_OF_CONDUCT, SECURITY, Issue templates (November 2025)
+- [x] Fix Buttons: Add automated fixes for best practices/community standards (November 2025)
+- [x] Batch Fix All Standards: Single PR for all missing standards (November 2025)
+- [x] Test File Prominence: Show test file count more prominently in Testing section (November 2025)
+- [x] Health Component Tooltips: Add tooltips explaining each health score component (November 2025)
 - [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
 - [ ] Gemini API Integration Fix: Resolve model version compatibility
-- [ ] Health State Icons: Display in main table row for each doc type
-- [ ] Foundation: Full E2E Tests and Pre-commit Hooks
+- [x] Health State Icons: Display in main table row for each doc type (November 2025)
+- [x] Foundation: Full E2E Tests and Pre-commit Hooks (November 2025)
 - [ ] Foundation: Dark/Light Mode Toggle
-- [ ] Template File Hashing: Detect stale/unchanged templates
+- [x] Template File Hashing: Detect stale/unchanged templates (November 2025)
 
 ## Q3 2025: Advanced Metrics & Integrations (COMPLETED) 🚀
 
@@ -103,8 +103,8 @@ The core efficiency is the **lightweight architecture**: by relying on **GitHub 
 
 The ultimate goal is to evolve the dashboard into a **Conversational Interface** where users can delegate complex, multi-step governance tasks through natural language, such as:
 
-- *"Overseer, run a full hygiene check on the core payment service, fix any stale documentation, and assign the highest priority vulnerability fix to Alice."*
-- *"What is the impact on Q3's deadline if we delay the Mobile App feature by one month?"*
+- _"Overseer, run a full hygiene check on the core payment service, fix any stale documentation, and assign the highest priority vulnerability fix to Alice."_
+- _"What is the impact on Q3's deadline if we delay the Mobile App feature by one month?"_
 
 This transition establishes Overseer as the central **Workflow Orchestrator** and **Intelligence Layer** for engineering health.
 

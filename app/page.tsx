@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   Map,
   ListTodo,
+  Sparkles,
 } from "lucide-react";
 import ExpandableRow from "@/components/ExpandableRow";
 import { detectRepoType, getTypeColor, RepoType } from "@/lib/repo-type";
@@ -69,6 +70,7 @@ export default function DashboardPage() {
   const [expandedRepos, setExpandedRepos] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [syncingRepo, setSyncingRepo] = useState<string | null>(null);
   const [fixingDoc, setFixingDoc] = useState(false);
   const [generatingSummary, setGeneratingSummary] = useState<string | null>(null);
   const [showAddRepo, setShowAddRepo] = useState(false);
@@ -265,6 +267,34 @@ export default function DashboardPage() {
       alert("Failed to generate summary");
     } finally {
       setGeneratingSummary(null);
+    }
+  }
+
+  async function handleSyncSingleRepo(repoName: string) {
+    try {
+      setSyncingRepo(repoName);
+      const res = await fetch(`/api/repos/${repoName}/sync`, { method: "POST" });
+      if (res.ok) {
+        await fetchRepos();
+        // Refresh details if expanded
+        if (expandedRepos.has(repoName)) {
+          setRepoDetails(prev => {
+            const newDetails = { ...prev };
+            delete newDetails[repoName];
+            return newDetails;
+          });
+          await fetchRepoDetails(repoName);
+        }
+        alert(`Successfully synced ${repoName}!`);
+      } else {
+        const err = await res.json();
+        alert(`Failed to sync: ${err.error}`);
+      }
+    } catch (error) {
+      console.error("Failed to sync repo:", error);
+      alert("Failed to sync repo");
+    } finally {
+      setSyncingRepo(null);
     }
   }
 
@@ -515,31 +545,62 @@ export default function DashboardPage() {
                       <td className="px-6 py-4">
                         {details ? (
                           <div className="flex items-center gap-2">
-                            {details.docStatuses.find(d => d.doc_type === "roadmap" && d.exists) ? (
-                              <span title="ROADMAP"><Map className="h-4 w-4 text-blue-400" /></span>
-                            ) : (
-                              <button onClick={() => handleFixDoc(repo.name, "roadmap")} title="Add ROADMAP" className="opacity-20 hover:opacity-100 transition-opacity" disabled={fixingDoc}>
-                                <Map className={`h-4 w-4 ${fixingDoc ? "animate-pulse text-blue-400" : "text-blue-400"}`} />
-                              </button>
-                            )}
-                            {details.docStatuses.find(d => d.doc_type === "tasks" && d.exists) ? (
-                              <span title="TASKS"><ListTodo className="h-4 w-4 text-purple-400" /></span>
-                            ) : (
-                              <button onClick={() => handleFixDoc(repo.name, "tasks")} title="Add TASKS" className="opacity-20 hover:opacity-100 transition-opacity" disabled={fixingDoc}>
-                                <ListTodo className={`h-4 w-4 ${fixingDoc ? "animate-pulse text-blue-400" : "text-purple-400"}`} />
-                              </button>
-                            )}
-                            {details.docStatuses.find(d => d.doc_type === "metrics" && d.exists) ? (
-                              <span title="METRICS"><Activity className="h-4 w-4 text-green-400" /></span>
-                            ) : (
-                              <button onClick={() => handleFixDoc(repo.name, "metrics")} title="Add METRICS" className="opacity-20 hover:opacity-100 transition-opacity" disabled={fixingDoc}>
-                                <Activity className={`h-4 w-4 ${fixingDoc ? "animate-pulse text-blue-400" : "text-green-400"}`} />
-                              </button>
-                            )}
+                            {/* Roadmap */}
+                            {(() => {
+                              const doc = details.docStatuses.find(d => d.doc_type === "roadmap");
+                              const exists = doc && doc.exists;
+                              const healthState = doc?.health_state || (exists ? 'healthy' : 'missing');
+                              const iconColor = healthState === 'healthy' ? 'text-blue-400' : healthState === 'dormant' ? 'text-yellow-400' : healthState === 'malformed' ? 'text-orange-400' : 'text-slate-600';
+                              return exists ? (
+                                <span title="ROADMAP"><Map className={`h-4 w-4 ${iconColor}`} /></span>
+                              ) : (
+                                <span title="ROADMAP missing"><Map className="h-4 w-4 opacity-20" /></span>
+                              );
+                            })()}
+                            {/* Tasks */}
+                            {(() => {
+                              const doc = details.docStatuses.find(d => d.doc_type === "tasks");
+                              const exists = doc && doc.exists;
+                              const healthState = doc?.health_state || (exists ? 'healthy' : 'missing');
+                              const iconColor = healthState === 'healthy' ? 'text-purple-400' : healthState === 'dormant' ? 'text-yellow-400' : healthState === 'malformed' ? 'text-orange-400' : 'text-slate-600';
+                              return exists ? (
+                                <span title="TASKS"><ListTodo className={`h-4 w-4 ${iconColor}`} /></span>
+                              ) : (
+                                <span title="TASKS missing"><ListTodo className="h-4 w-4 opacity-20" /></span>
+                              );
+                            })()}
+                            {/* Metrics */}
+                            {(() => {
+                              const doc = details.docStatuses.find(d => d.doc_type === "metrics");
+                              const exists = doc && doc.exists;
+                              const healthState = doc?.health_state || (exists ? 'healthy' : 'missing');
+                              const iconColor = healthState === 'healthy' ? 'text-green-400' : healthState === 'dormant' ? 'text-yellow-400' : healthState === 'malformed' ? 'text-orange-400' : 'text-slate-600';
+                              return exists ? (
+                                <span title="METRICS"><Activity className={`h-4 w-4 ${iconColor}`} /></span>
+                              ) : (
+                                <span title="METRICS missing"><Activity className="h-4 w-4 opacity-20" /></span>
+                              );
+                            })()}
+                            {/* Features */}
+                            {(() => {
+                              const doc = details.docStatuses.find(d => d.doc_type === "features");
+                              const exists = doc && doc.exists;
+                              const healthState = doc?.health_state || (exists ? 'healthy' : 'missing');
+                              const iconColor = healthState === 'healthy' ? 'text-indigo-400' : healthState === 'dormant' ? 'text-yellow-400' : healthState === 'malformed' ? 'text-orange-400' : 'text-slate-600';
+                              return exists ? (
+                                <span title="FEATURES"><Sparkles className={`h-4 w-4 ${iconColor}`} /></span>
+                              ) : (
+                                <span title="FEATURES missing"><Sparkles className="h-4 w-4 opacity-20" /></span>
+                              );
+                            })()}
                             <span className={`text-xs font-medium ml-1 ${getDocHealthColor(docHealth?.score || 0)}`}>{docHealth?.score}%</span>
-                            {docHealth && docHealth.score < 100 && (
-                              <button onClick={() => handleFixAllDocs(repo.name)} className="ml-2 text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors" title="Fix all missing docs" disabled={fixingDoc}>Fix All</button>
-                            )}
+                            {(() => {
+                              const coreDocs = ['roadmap', 'tasks', 'metrics', 'features'];
+                              const allDocsPresent = coreDocs.every(docType => details.docStatuses.find(d => d.doc_type === docType && d.exists));
+                              return !allDocsPresent && docHealth && docHealth.score < 100 && (
+                                <button onClick={() => handleFixAllDocs(repo.name)} className="ml-2 text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors" title="Fix all missing docs" disabled={fixingDoc}>Fix All</button>
+                              );
+                            })()}
                           </div>
                         ) : (
                           <span className="text-slate-500 text-sm">—</span>
@@ -558,7 +619,18 @@ export default function DashboardPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 hidden lg:table-cell">
-                        <div className="text-xs text-slate-400">{formatTimeAgo(repo.last_synced)}</div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSyncSingleRepo(repo.name);
+                          }}
+                          disabled={syncingRepo === repo.name}
+                          className="text-xs text-slate-400 hover:text-blue-400 transition-colors flex items-center gap-1 disabled:opacity-50"
+                          title="Click to sync this repo"
+                        >
+                          <RefreshCw className={`h-3 w-3 ${syncingRepo === repo.name ? 'animate-spin' : ''}`} />
+                          {syncingRepo === repo.name ? 'Syncing...' : formatTimeAgo(repo.last_synced)}
+                        </button>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -594,6 +666,8 @@ export default function DashboardPage() {
                             stars={repo.stars}
                             forks={repo.forks}
                             branches={repo.branches_count}
+                            testingStatus={repo.testing_status}
+                            coverageScore={repo.coverage_score}
                           />
                         </td>
                       </tr>

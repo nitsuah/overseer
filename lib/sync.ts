@@ -265,3 +265,21 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Failed to calculate health score for ${repo.fullName}`, e);
     }
 }
+
+// Wrapper function to sync a single repo by name
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function syncSingleRepo(github: GitHubClient, repoName: string) {
+    const { getNeonClient } = await import('./db');
+    const db = getNeonClient();
+
+    // Get the repo metadata from GitHub
+    const repos = await github.getUserRepos();
+    const repo = repos.find((r: RepoMetadata) => r.name === repoName);
+    
+    if (!repo) {
+        throw new Error(`Repository ${repoName} not found in user's repos`);
+    }
+
+    await syncRepo(repo, github, db);
+    console.log(`✓ Synced ${repoName}`);
+}

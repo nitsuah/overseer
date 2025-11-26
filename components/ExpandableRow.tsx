@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, XCircle, Clock, Circle, TrendingUp, Shield, ShieldCheck, Map, ListTodo } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Circle, TrendingUp, Shield, ShieldCheck, ShieldAlert, Map, ListTodo } from 'lucide-react';
 import { useState } from 'react';
 
 interface Task {
@@ -61,20 +61,24 @@ interface ExpandableRowProps {
     stars?: number;
     forks?: number;
     branches?: number;
+    testingStatus?: string;
+    coverageScore?: number;
 }
 
-export default function ExpandableRow({ 
-    tasks, 
-    roadmapItems, 
-    docStatuses, 
-    metrics = [], 
+export default function ExpandableRow({
+    tasks,
+    roadmapItems,
+    docStatuses,
+    metrics = [],
     features = [],
     bestPractices = [],
     communityStandards = [],
-    aiSummary, 
-    stars, 
-    forks, 
-    branches 
+    aiSummary,
+    stars,
+    forks,
+    branches,
+    testingStatus,
+    coverageScore
 }: ExpandableRowProps) {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
@@ -126,92 +130,6 @@ export default function ExpandableRow({
                 {/* Left Column: Tasks, Roadmap, Features (9 cols) */}
                 <div className="lg:col-span-9 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Tasks */}
-                        <div className="space-y-4">
-                            <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                                <ListTodo className="h-4 w-4 text-purple-400" />
-                                <span>Tasks</span>
-                                <span className="text-xs text-slate-500 font-normal">({tasks.length} total)</span>
-                            </h4>
-                            {tasks.length === 0 ? (
-                                <p className="text-sm text-slate-500 italic">No tasks defined</p>
-                            ) : (
-                                <div className="space-y-4">
-                                    {/* In Progress */}
-                                    {tasksByStatus['in-progress'].length > 0 && (
-                                        <div className="bg-slate-800/30 rounded-lg p-4">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <Clock className="h-3 w-3 text-yellow-500" />
-                                                <h5 className="text-xs font-medium text-yellow-500">In Progress ({tasksByStatus['in-progress'].length})</h5>
-                                            </div>
-                                            <ul className="space-y-2">
-                                                {tasksByStatus['in-progress'].map((task, i) => (
-                                                    <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
-                                                        <span className="mt-1.5 w-1 h-1 rounded-full bg-yellow-500 shrink-0" />
-                                                        <span>{task.title}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-
-                                    {/* Backlog */}
-                                    <div className="bg-slate-800/30 rounded-lg p-4">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Circle className="h-3 w-3 text-slate-500" />
-                                            <h5 className="text-xs font-medium text-slate-300">Backlog ({tasksByStatus.todo.length})</h5>
-                                        </div>
-                                        <ul className="space-y-2">
-                                            {getDisplayedItems(tasksByStatus.todo, 'backlog').map((task, i) => (
-                                                <li key={i} className="text-xs text-slate-400 flex items-start gap-2">
-                                                    <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-600 shrink-0" />
-                                                    <span>{task.title}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        {tasksByStatus.todo.length > 5 && (
-                                            <button
-                                                onClick={() => toggleSection('backlog')}
-                                                className="text-[10px] text-blue-400 hover:text-blue-300 mt-2 pl-3"
-                                            >
-                                                {expandedSections.has('backlog')
-                                                    ? 'Show less'
-                                                    : `+${tasksByStatus.todo.length - 5} more`}
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Done */}
-                                    {tasksByStatus.done.length > 0 && (
-                                        <div className="bg-slate-800/30 rounded-lg p-4">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <CheckCircle2 className="h-3 w-3 text-green-500" />
-                                                <h5 className="text-xs font-medium text-slate-300">Done ({tasksByStatus.done.length})</h5>
-                                            </div>
-                                            <ul className="space-y-2">
-                                                {getDisplayedItems(tasksByStatus.done, 'done', 3).map((task, i) => (
-                                                    <li key={i} className="text-xs text-slate-500 line-through flex items-start gap-2">
-                                                        <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-700 shrink-0" />
-                                                        <span>{task.title}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                            {tasksByStatus.done.length > 3 && (
-                                                <button
-                                                    onClick={() => toggleSection('done')}
-                                                    className="text-[10px] text-blue-400 hover:text-blue-300 mt-2 pl-3"
-                                                >
-                                                    {expandedSections.has('done')
-                                                        ? 'Show less'
-                                                        : `+${tasksByStatus.done.length - 3} more`}
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
                         {/* Roadmap */}
                         <div className="space-y-4">
                             <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
@@ -306,6 +224,92 @@ export default function ExpandableRow({
                                                     {expandedSections.has('completed')
                                                         ? 'Show less'
                                                         : `+${roadmapByStatus.completed.length - 3} more`}
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Tasks */}
+                        <div className="space-y-4">
+                            <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                                <ListTodo className="h-4 w-4 text-purple-400" />
+                                <span>Tasks</span>
+                                <span className="text-xs text-slate-500 font-normal">({tasks.length} total)</span>
+                            </h4>
+                            {tasks.length === 0 ? (
+                                <p className="text-sm text-slate-500 italic">No tasks defined</p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {/* In Progress */}
+                                    {tasksByStatus['in-progress'].length > 0 && (
+                                        <div className="bg-slate-800/30 rounded-lg p-4">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <Clock className="h-3 w-3 text-yellow-500" />
+                                                <h5 className="text-xs font-medium text-yellow-500">In Progress ({tasksByStatus['in-progress'].length})</h5>
+                                            </div>
+                                            <ul className="space-y-2">
+                                                {tasksByStatus['in-progress'].map((task, i) => (
+                                                    <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
+                                                        <span className="mt-1.5 w-1 h-1 rounded-full bg-yellow-500 shrink-0" />
+                                                        <span>{task.title}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {/* Backlog */}
+                                    <div className="bg-slate-800/30 rounded-lg p-4">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Circle className="h-3 w-3 text-slate-500" />
+                                            <h5 className="text-xs font-medium text-slate-300">Backlog ({tasksByStatus.todo.length})</h5>
+                                        </div>
+                                        <ul className="space-y-2">
+                                            {getDisplayedItems(tasksByStatus.todo, 'backlog').map((task, i) => (
+                                                <li key={i} className="text-xs text-slate-400 flex items-start gap-2">
+                                                    <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-600 shrink-0" />
+                                                    <span>{task.title}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        {tasksByStatus.todo.length > 5 && (
+                                            <button
+                                                onClick={() => toggleSection('backlog')}
+                                                className="text-[10px] text-blue-400 hover:text-blue-300 mt-2 pl-3"
+                                            >
+                                                {expandedSections.has('backlog')
+                                                    ? 'Show less'
+                                                    : `+${tasksByStatus.todo.length - 5} more`}
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Done */}
+                                    {tasksByStatus.done.length > 0 && (
+                                        <div className="bg-slate-800/30 rounded-lg p-4">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <CheckCircle2 className="h-3 w-3 text-green-500" />
+                                                <h5 className="text-xs font-medium text-slate-300">Done ({tasksByStatus.done.length})</h5>
+                                            </div>
+                                            <ul className="space-y-2">
+                                                {getDisplayedItems(tasksByStatus.done, 'done', 3).map((task, i) => (
+                                                    <li key={i} className="text-xs text-slate-500 line-through flex items-start gap-2">
+                                                        <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-700 shrink-0" />
+                                                        <span>{task.title}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            {tasksByStatus.done.length > 3 && (
+                                                <button
+                                                    onClick={() => toggleSection('done')}
+                                                    className="text-[10px] text-blue-400 hover:text-blue-300 mt-2 pl-3"
+                                                >
+                                                    {expandedSections.has('done')
+                                                        ? 'Show less'
+                                                        : `+${tasksByStatus.done.length - 3} more`}
                                                 </button>
                                             )}
                                         </div>
@@ -418,7 +422,7 @@ export default function ExpandableRow({
                         <div className="mb-4">
                             <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Core</h5>
                             <div className="space-y-2">
-                                {docStatuses.filter(d => ['roadmap', 'tasks', 'metrics'].includes(d.doc_type)).map((d) => (
+                                {docStatuses.filter(d => ['roadmap', 'tasks', 'metrics', 'features'].includes(d.doc_type)).map((d) => (
                                     <div key={d.doc_type} className="flex items-center justify-between text-xs">
                                         <div className="flex items-center gap-2">
                                             {d.exists ? <CheckCircle2 className="h-3 w-3 text-green-400" /> : <XCircle className="h-3 w-3 text-red-400" />}
@@ -436,7 +440,7 @@ export default function ExpandableRow({
                         <div className="mb-4">
                             <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Standard</h5>
                             <div className="space-y-2">
-                                {docStatuses.filter(d => ['readme', 'features'].includes(d.doc_type)).map((d) => (
+                                {docStatuses.filter(d => ['readme', 'contributing'].includes(d.doc_type)).map((d) => (
                                     <div key={d.doc_type} className="flex items-center justify-between text-xs">
                                         <div className="flex items-center gap-2">
                                             {d.exists ? <CheckCircle2 className="h-3 w-3 text-green-400" /> : <XCircle className="h-3 w-3 text-red-400" />}
@@ -454,7 +458,7 @@ export default function ExpandableRow({
                         <div>
                             <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Other</h5>
                             <div className="space-y-2">
-                                {docStatuses.filter(d => !['roadmap', 'tasks', 'metrics', 'readme', 'features'].includes(d.doc_type)).map((d) => (
+                                {docStatuses.filter(d => !['roadmap', 'tasks', 'metrics', 'readme', 'features', 'contributing'].includes(d.doc_type)).map((d) => (
                                     <div key={d.doc_type} className="flex items-center justify-between text-xs">
                                         <div className="flex items-center gap-2">
                                             {d.exists ? <CheckCircle2 className="h-3 w-3 text-green-400" /> : <XCircle className="h-3 w-3 text-red-400" />}
@@ -466,6 +470,46 @@ export default function ExpandableRow({
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Testing */}
+                    <div className="bg-slate-800/30 rounded-lg p-4">
+                        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
+                            <Shield className="h-4 w-4 text-blue-400" />
+                            <span>Testing</span>
+                        </h4>
+                        <div className="space-y-3">
+                            {/* Test Status */}
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-400">Status</span>
+                                {testingStatus === 'passing' ? (
+                                    <span className="flex items-center gap-1 text-green-400">
+                                        <ShieldCheck className="h-3 w-3" /> Passing
+                                    </span>
+                                ) : testingStatus === 'failing' ? (
+                                    <span className="flex items-center gap-1 text-red-400">
+                                        <ShieldAlert className="h-3 w-3" /> Failing
+                                    </span>
+                                ) : (
+                                    <span className="text-slate-500 italic">No tests</span>
+                                )}
+                            </div>
+                            {/* Coverage */}
+                            {coverageScore != null && (
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs text-slate-400">Coverage</span>
+                                        <span className="text-sm font-bold text-blue-400">{coverageScore}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-700 rounded-full h-2">
+                                        <div
+                                            className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all"
+                                            style={{ width: `${Math.min(coverageScore, 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -490,7 +534,7 @@ export default function ExpandableRow({
                                             default: return <Circle className="h-3 w-3 text-slate-500" />;
                                         }
                                     };
-                                    
+
                                     const getStatusColor = (status: string) => {
                                         switch (status) {
                                             case 'healthy': return 'text-green-400';
@@ -500,7 +544,7 @@ export default function ExpandableRow({
                                             default: return 'text-slate-500';
                                         }
                                     };
-                                    
+
                                     const getLabel = (type: string) => {
                                         return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                                     };
@@ -540,7 +584,7 @@ export default function ExpandableRow({
                                             default: return <Circle className="h-3 w-3 text-slate-500" />;
                                         }
                                     };
-                                    
+
                                     const getLabel = (type: string) => {
                                         return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                                     };

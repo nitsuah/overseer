@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow access to login page and API routes without authentication
-  if (pathname.startsWith('/api/auth') || pathname === '/login') {
+  if (pathname.startsWith('/api/auth') || pathname === '/login' || pathname === '/api/migrate' || pathname === '/api/seed-defaults' || pathname === '/api/check-schema') {
     return NextResponse.next();
   }
 

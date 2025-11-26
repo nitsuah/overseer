@@ -64,6 +64,7 @@ interface ExpandableRowProps {
     branches?: number;
     testingStatus?: string;
     coverageScore?: number;
+    readmeLastUpdated?: string | null;
 }
 
 export default function ExpandableRow({
@@ -79,7 +80,8 @@ export default function ExpandableRow({
     forks,
     branches,
     testingStatus,
-    coverageScore
+    coverageScore,
+    readmeLastUpdated
 }: ExpandableRowProps) {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
     const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
@@ -419,6 +421,65 @@ export default function ExpandableRow({
 
                 {/* Right Column: Docs & Metrics (3 cols) */}
                 <div className="lg:col-span-3 space-y-6">
+                    {/* Health Score Breakdown */}
+                    <div className="bg-slate-800/30 rounded-lg p-4">
+                        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
+                            <TrendingUp className="h-4 w-4 text-green-400" />
+                            <span>Health Breakdown</span>
+                        </h4>
+                        <div className="space-y-3">
+                            {(() => {
+                                // Calculate Documentation Score (30%)
+                                const coreDocs = ['roadmap', 'tasks', 'metrics', 'features'];
+                                const coreDocsPresent = docStatuses.filter(d => coreDocs.includes(d.doc_type) && d.exists).length;
+                                const docScore = Math.round((coreDocsPresent / coreDocs.length) * 100);
+
+                                // Calculate Testing Score (20%)
+                                const hasTests = bestPractices.some(bp => bp.practice_type === 'testing_framework' && bp.status === 'healthy');
+                                let testScore = hasTests ? 40 : 0;
+                                if (coverageScore !== undefined && hasTests) {
+                                    testScore += Math.min(coverageScore * 0.6, 60);
+                                }
+                                testScore = Math.round(testScore);
+
+                                // Calculate Best Practices Score (20%)
+                                const bpHealthy = bestPractices.filter(bp => bp.status === 'healthy').length;
+                                const bpTotal = bestPractices.length;
+                                const bpScore = bpTotal > 0 ? Math.round((bpHealthy / bpTotal) * 100) : 0;
+
+                                // Calculate Community Score (15%)
+                                const csHealthy = communityStandards.filter(cs => cs.status === 'healthy').length;
+                                const csTotal = communityStandards.length;
+                                const csScore = csTotal > 0 ? Math.round((csHealthy / csTotal) * 100) : 0;
+
+                                const scores = [
+                                    { label: 'Documentation', score: docScore, color: 'blue', weight: '30%' },
+                                    { label: 'Testing', score: testScore, color: 'purple', weight: '20%' },
+                                    { label: 'Best Practices', score: bpScore, color: 'indigo', weight: '20%' },
+                                    { label: 'Community', score: csScore, color: 'green', weight: '15%' },
+                                ];
+
+                                return scores.map(({ label, score, color, weight }) => (
+                                    <div key={label} className="space-y-1">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-400">{label}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-${color}-400 font-medium`}>{score}%</span>
+                                                <span className="text-slate-500 text-[10px]">({weight})</span>
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                            <div
+                                                className={`h-full bg-${color}-500 transition-all`}
+                                                style={{ width: `${score}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
+                        </div>
+                    </div>
+
                     {/* Repository Stats */}
                     {(stars !== undefined || forks !== undefined || branches !== undefined) && (
                         <div className="bg-slate-800/30 rounded-lg p-4">
@@ -518,6 +579,34 @@ export default function ExpandableRow({
                                 ))}
                             </div>
                         </div>
+
+                        {/* README Freshness */}
+                        {readmeLastUpdated && (() => {
+                            const daysSinceUpdate = Math.floor(
+                                (new Date().getTime() - new Date(readmeLastUpdated).getTime()) / (1000 * 60 * 60 * 24)
+                            );
+                            const freshnessColor = 
+                                daysSinceUpdate < 30 ? 'text-green-400' :
+                                daysSinceUpdate < 90 ? 'text-yellow-400' :
+                                daysSinceUpdate < 180 ? 'text-orange-400' :
+                                'text-red-400';
+                            const freshnessLabel = 
+                                daysSinceUpdate < 30 ? 'Fresh' :
+                                daysSinceUpdate < 90 ? 'Recent' :
+                                daysSinceUpdate < 180 ? 'Aging' :
+                                'Stale';
+                            return (
+                                <div className="mt-4 pt-4 border-t border-slate-700/50">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-slate-400">README Updated</span>
+                                        <span className={`${freshnessColor} font-medium flex items-center gap-1`}>
+                                            <Clock className="h-3 w-3" />
+                                            {daysSinceUpdate}d ago ({freshnessLabel})
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
 
                     {/* Testing */}

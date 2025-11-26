@@ -187,5 +187,20 @@ export async function checkBestPractices(
         details: { exists: hasDependabot }
     });
 
+    // 11. Docker
+    const dockerFiles = ['Dockerfile', 'docker-compose.yml', 'docker-compose.yaml', '.dockerignore'];
+    const detectedDockerFiles = fileList.filter(f => 
+        dockerFiles.some(docker => f.toLowerCase().endsWith(docker.toLowerCase()) || f.toLowerCase().includes(`/${docker.toLowerCase()}`))
+    );
+    const hasDocker = detectedDockerFiles.length > 0;
+    practices.push({
+        type: 'docker',
+        status: hasDocker ? 'healthy' : 'missing',
+        details: { 
+            exists: hasDocker,
+            detected: detectedDockerFiles
+        }
+    });
+
     return { practices };
 }

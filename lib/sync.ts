@@ -42,16 +42,24 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Could not get branches for ${repo.name}:`, (e as Error).message);
     }
 
+    // Fetch README last updated
+    let readmeLastUpdated: string | null = null;
+    try {
+        readmeLastUpdated = await github.getFileLastModified(repo.name, 'README.md', owner);
+    } catch (e) {
+        console.warn(`Could not get README last modified for ${repo.name}:`, (e as Error).message);
+    }
+
     // Upsert repo with new metrics
     const repoRows = await db`
         INSERT INTO repos (
             name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, 
-            last_synced, updated_at, last_commit_date, open_prs, branches_count
+            last_synced, updated_at, last_commit_date, open_prs, branches_count, readme_last_updated
         )
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
             ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
-            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}
+            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}, ${readmeLastUpdated}
         )
         ON CONFLICT (name) DO UPDATE SET
           description = EXCLUDED.description,
@@ -66,7 +74,8 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           updated_at = NOW(),
           last_commit_date = EXCLUDED.last_commit_date,
           open_prs = EXCLUDED.open_prs,
-          branches_count = EXCLUDED.branches_count
+          branches_count = EXCLUDED.branches_count,
+          readme_last_updated = EXCLUDED.readme_last_updated
         RETURNING id;
     `;
     const repoId = repoRows[0].id;
@@ -131,6 +140,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     // METRICS.md
     const metricsContent = await github.getFileContent(repo.name, 'METRICS.md', owner);
     const metricsHealthState = calculateDocHealthState(!!metricsContent, metricsContent, null);
+    let coverageScore: number | null = null;
     if (metricsContent) {
         const metricsData = parseMetrics(metricsContent);
         await db`DELETE FROM metrics WHERE repo_id = ${repoId}`;
@@ -138,6 +148,19 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             await db`
                 INSERT INTO metrics (repo_id, metric_name, value, unit, timestamp)
                 VALUES (${repoId}, ${metric.name}, ${metric.value}, ${metric.unit}, NOW())
+            `;
+            // Extract coverage metric for repos table
+            if (metric.name.toLowerCase().includes('coverage') && metric.unit === '%') {
+                coverageScore = metric.value;
+            }
+        }
+        
+        // Update repos table with coverage if found
+        if (coverageScore !== null) {
+            await db`
+                UPDATE repos 
+                SET coverage_score = ${coverageScore}
+                WHERE id = ${repoId}
             `;
         }
     }

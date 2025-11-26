@@ -24,7 +24,7 @@ export default function Header() {
                     </>
                 ) : (
                     <button
-                        onClick={() => signIn("github")}
+                        onClick={() => signIn("github", { callbackUrl: "/" })}
                         className="flex items-center gap-2 rounded-md bg-white/10 px-4 py-2 text-sm hover:bg-white/20"
                     >
                         <Github className="h-5 w-5" />

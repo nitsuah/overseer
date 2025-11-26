@@ -10,13 +10,12 @@ import {
   GitPullRequest,
   AlertCircle,
   Activity,
-  Shield,
-  ShieldCheck,
-  ShieldAlert,
   Map,
   ListTodo,
   Sparkles,
   Play,
+  Github,
+  ExternalLink,
 } from "lucide-react";
 import ExpandableRow from "@/components/ExpandableRow";
 import { detectRepoType, getTypeColor, RepoType } from "@/lib/repo-type";
@@ -185,7 +184,6 @@ export default function DashboardPage() {
   }
 
   async function handleRemoveRepo(repoName: string) {
-    if (!confirm(`Hide "${repoName}" from the list? You can re-sync to bring it back.`)) return;
     try {
       const res = await fetch(`/api/repos/${repoName}/hide`, { method: "POST" });
       if (res.ok) {
@@ -196,41 +194,14 @@ export default function DashboardPage() {
         const newDetails = { ...repoDetails };
         delete newDetails[repoName];
         setRepoDetails(newDetails);
-        setToastMessage(`Successfully hid ${repoName}.`);
+        setToastMessage(`Successfully hid ${repoName}`);
       } else {
         const err = await res.json();
         setToastMessage(`Failed to hide repo: ${err.error}`);
       }
     } catch (error) {
       console.error("Failed to hide repo:", error);
-      setToastMessage(`Failed to hide repo.`);
-    }
-  }
-
-  async function handleFixDoc(repoName: string, docType: string) {
-    if (!confirm(`Create a PR to add ${docType.toUpperCase()}.md to ${repoName}?`)) return;
-    try {
-      setFixingDoc(true);
-      const res = await fetch(`/api/repos/${repoName}/fix-doc`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ docType }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.prUrl) {
-          window.open(data.prUrl, '_blank');
-        }
-        setToastMessage(`PR created successfully!`);
-      } else {
-        const err = await res.json();
-        setToastMessage(`Failed to create PR: ${err.error}`);
-      }
-    } catch (error) {
-      console.error("Failed to fix doc:", error);
-      setToastMessage("Failed to create PR");
-    } finally {
-      setFixingDoc(false);
+      setToastMessage(`Failed to hide repo`);
     }
   }
 
@@ -467,10 +438,10 @@ export default function DashboardPage() {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Language</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Health</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Activity</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Links</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
                     <div className="flex items-center gap-2">Docs</div>
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Links</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
                 </tr>
               </thead>
@@ -612,6 +583,18 @@ export default function DashboardPage() {
               </div>
             </td>
             <td className="px-6 py-4">
+              <div className="flex items-center gap-2">
+                <a href={repo.url} target="_blank" rel="noopener noreferrer" className="p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors" title="View on GitHub">
+                  <Github className="h-4 w-4" />
+                </a>
+                {repo.homepage && (
+                  <a href={repo.homepage} target="_blank" rel="noopener noreferrer" className="p-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded transition-colors" title="Visit Homepage">
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
+            </td>
+            <td className="px-6 py-4">
               {details ? (
                 <div className="flex items-center gap-2">
                   {/* Roadmap */}
@@ -695,18 +678,6 @@ export default function DashboardPage() {
             </td>
             <td className="px-6 py-4">
               <div className="flex items-center gap-2">
-                <a href={repo.url} target="_blank" rel="noopener noreferrer" className="p-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded transition-colors" title="View on GitHub">
-                  <Play className="h-4 w-4 fill-current" />
-                </a>
-                {repo.homepage && (
-                  <a href={repo.homepage} target="_blank" rel="noopener noreferrer" className="p-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded transition-colors" title="Visit Homepage">
-                    <Play className="h-4 w-4 fill-current" />
-                  </a>
-                )}
-              </div>
-            </td>
-            <td className="px-6 py-4">
-              <div className="flex items-center gap-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -718,7 +689,14 @@ export default function DashboardPage() {
                 >
                   <Sparkles className={`h-4 w-4 ${generatingSummary === repo.name ? 'animate-pulse' : ''}`} />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); handleRemoveRepo(repo.name); }} className="text-slate-400 hover:text-red-400 transition-colors" title="Hide this repository">
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    handleRemoveRepo(repo.name); 
+                  }} 
+                  className="p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors" 
+                  title="Hide this repository"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -741,6 +719,7 @@ export default function DashboardPage() {
                   branches={repo.branches_count}
                   testingStatus={repo.testing_status}
                   coverageScore={repo.coverage_score}
+                  readmeLastUpdated={repo.readme_last_updated}
                 />
               </td>
             </tr>

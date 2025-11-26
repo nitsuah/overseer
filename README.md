@@ -90,7 +90,7 @@ GEMINI_API_KEY=your_gemini_api_key
 
 ## Project Structure
 
-```
+```bash
 overseer/
 ├── app/                    # Next.js app directory
 │   ├── page.tsx           # Main dashboard
@@ -177,7 +177,6 @@ See `LICENSE.md` file
 ## Author
 
 Austin J. Hardy ([@nitsuah](https://github.com/nitsuah))
-
 
 <!--
 AGENT INSTRUCTIONS:

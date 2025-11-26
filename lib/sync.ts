@@ -8,6 +8,7 @@ import { calculateDocHealthState, hashContent, calculateDocHealth } from './doc-
 import { checkBestPractices } from './best-practices';
 import { checkCommunityStandards } from './community-standards';
 import { calculateHealthScore } from './health-score';
+import { isTestFile, parseTestFile } from './parsers/test-cases';
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,16 +51,30 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Could not get README last modified for ${repo.name}:`, (e as Error).message);
     }
 
+    // Fetch LOC (Lines of Code) metrics
+    let totalLoc = 0;
+    let locLanguageBreakdown: Record<string, number> = {};
+    try {
+        const languageStats = await github.getLanguageStats(repo.name, owner);
+        locLanguageBreakdown = languageStats;
+        // GitHub returns bytes, rough estimate: 1 LOC ~= 50 bytes (average line length)
+        totalLoc = Math.round(Object.values(languageStats).reduce((sum, bytes) => sum + bytes, 0) / 50);
+    } catch (e) {
+        console.warn(`Could not get language stats for ${repo.name}:`, (e as Error).message);
+    }
+
     // Upsert repo with new metrics
     const repoRows = await db`
         INSERT INTO repos (
             name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, 
-            last_synced, updated_at, last_commit_date, open_prs, branches_count, readme_last_updated
+            last_synced, updated_at, last_commit_date, open_prs, branches_count, readme_last_updated,
+            total_loc, loc_language_breakdown
         )
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
             ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
-            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}, ${readmeLastUpdated}
+            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}, ${readmeLastUpdated},
+            ${totalLoc}, ${JSON.stringify(locLanguageBreakdown)}
         )
         ON CONFLICT (name) DO UPDATE SET
           description = EXCLUDED.description,
@@ -75,7 +90,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           last_commit_date = EXCLUDED.last_commit_date,
           open_prs = EXCLUDED.open_prs,
           branches_count = EXCLUDED.branches_count,
-          readme_last_updated = EXCLUDED.readme_last_updated
+          readme_last_updated = EXCLUDED.readme_last_updated,
+          total_loc = EXCLUDED.total_loc,
+          loc_language_breakdown = EXCLUDED.loc_language_breakdown
         RETURNING id;
     `;
     const repoId = repoRows[0].id;
@@ -87,6 +104,35 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     } catch (e) {
         console.warn(`Failed to fetch file list for ${repo.fullName}`, e);
     }
+
+    // Count test cases from test files
+    let testCaseCount = 0;
+    let testDescribeCount = 0;
+    try {
+        const testFiles = fileList.filter(isTestFile);
+        for (const testFile of testFiles) {
+            try {
+                const content = await github.getFileContent(repo.name, testFile, owner);
+                if (content) {
+                    const stats = parseTestFile(content);
+                    testCaseCount += stats.tests;
+                    testDescribeCount += stats.describes;
+                }
+            } catch (e) {
+                // Skip files that can't be fetched
+                console.warn(`Failed to fetch test file ${testFile} for ${repo.fullName}`);
+            }
+        }
+    } catch (e) {
+        console.warn(`Failed to count test cases for ${repo.fullName}`, e);
+    }
+
+    // Update repo with test case counts
+    await db`
+        UPDATE repos 
+        SET test_case_count = ${testCaseCount}, test_describe_count = ${testDescribeCount}
+        WHERE id = ${repoId}
+    `;
 
     // ROADMAP.md (try uppercase then lowercase)
     let roadmapContent = await github.getFileContent(repo.name, 'ROADMAP.md', owner).catch(() => null);

@@ -55,6 +55,11 @@
 - [x] Add tooltips to health score explaining each component
 - [x] Add "Fix" buttons for missing community standards items (CODE_OF_CONDUCT, SECURITY)
 - [x] Implement batch "Fix All Standards" option with API endpoint
+- [x] Health Breakdown as hover popup (November 2025)
+- [x] Limit Features display to 3 category cards (November 2025)
+- [x] Reorganize detail panel layout - two rows with Doc/BP/CS in dedicated row (November 2025)
+- [x] Fix metrics panel display - transform database metric_name to name (November 2025)
+- [x] Add Documentation health shield to main table row (November 2025)
 
 ## In Progress
 
@@ -72,6 +77,7 @@
 - [ ] Add vulnerability metrics to health score calculation
 - [ ] Add Lines of Code (LOC) metrics: total LOC, average LOC per file, max file size
 - [ ] Calculate and display LOC-based statistics in Repository Stats section
+- [ ] Testing metrics and other metrics display cleanup in detail (expand/hide/conformity of expected values)
 
 ### Phase 4: Template Health & Advanced Detection (Future) - LOW PRIORITY
 
@@ -90,9 +96,9 @@
 
 ### Phase 6: Final Launch Preparations - HIGH PRIORITY
 
+- [x] Add Health State Icons to main table row for each major detail section
+- [x] Validate Health Score Meter visualization with new calculation
 - [ ] Add Testing Metrics Display (test count, coverage %, framework detection) - PARTIALLY DONE
-- [ ] Add Health State Icons to main table row for each major detail section
-- [ ] Validate Health Score Meter visualization with new calculation
 - [ ] FIX GitHub OAuth in production environment (token/callback issues)
 - [ ] FIX Gemini API integration (404 errors - model version mismatch)
 
@@ -116,4 +122,5 @@ AGENT INSTRUCTIONS:
 2. Move tasks to "In Progress" when you start working on them.
 3. Move tasks to "Done" when completed.
 4. Keep task descriptions concise.
+5. Wait for PM to add new Tasks if completed all current tasks.
 -->

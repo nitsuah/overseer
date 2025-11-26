@@ -31,7 +31,14 @@ export async function GET(
         const roadmapItems = await db`SELECT * FROM roadmap_items WHERE repo_id = ${repo.id} ORDER BY created_at DESC`;
 
         // Get metrics - note: metrics table uses 'timestamp' not 'created_at'
-        const metrics = await db`SELECT * FROM metrics WHERE repo_id = ${repo.id} ORDER BY timestamp DESC`;
+        const metricsRows = await db`SELECT * FROM metrics WHERE repo_id = ${repo.id} ORDER BY timestamp DESC`;
+        // Transform metric_name to name for frontend compatibility
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const metrics = metricsRows.map((m: any) => ({
+            name: m.metric_name,
+            value: m.value,
+            unit: m.unit
+        }));
 
         // Get features - may not exist yet
         let features: unknown[] = [];

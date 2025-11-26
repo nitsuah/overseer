@@ -45,6 +45,10 @@ interface Repo {
   open_prs?: number;
   open_issues_count?: number;
   readme_last_updated?: string | null;
+  total_loc?: number;
+  loc_language_breakdown?: Record<string, number>;
+  test_case_count?: number;
+  test_describe_count?: number;
 }
 
 interface RepoDetails {
@@ -589,6 +593,24 @@ export default function DashboardPage() {
                           })()}
                         </div>
                       </div>
+                      {/* Documentation Shield - Slate/Blue */}
+                      {(() => {
+                        const coreDocs = ['roadmap', 'tasks', 'metrics', 'features', 'readme'];
+                        const coreDocsPresent = details.docStatuses.filter(d => coreDocs.includes(d.doc_type) && d.exists).length;
+                        const percentage = Math.round((coreDocsPresent / coreDocs.length) * 100);
+                        return (
+                          <span 
+                            title={`Documentation: ${coreDocsPresent}/${coreDocs.length} core docs (${percentage}%)`}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              percentage >= 80 ? 'bg-slate-500/20 text-slate-300' : 
+                              percentage >= 50 ? 'bg-yellow-500/20 text-yellow-400' : 
+                              'bg-red-500/20 text-red-400'
+                            }`}
+                          >
+                            {coreDocsPresent}/{coreDocs.length}
+                          </span>
+                        );
+                      })()}
                       {/* Testing Shield - Blue */}
                       {(() => {
                         const testingPractice = details.bestPractices.find(p => p.practice_type === 'testing_framework');
@@ -824,6 +846,10 @@ export default function DashboardPage() {
                   repoName={repo.name}
                   onFixStandard={handleFixStandard}
                   onFixAllStandards={handleFixAllStandards}
+                  totalLoc={repo.total_loc}
+                  locLanguageBreakdown={repo.loc_language_breakdown}
+                  testCaseCount={repo.test_case_count}
+                  testDescribeCount={repo.test_describe_count}
                 />
               </td>
             </tr>

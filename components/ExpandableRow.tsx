@@ -68,6 +68,10 @@ interface ExpandableRowProps {
     repoName?: string;
     onFixStandard?: (repoName: string, standardType: string) => void;
     onFixAllStandards?: (repoName: string) => void;
+    totalLoc?: number;
+    locLanguageBreakdown?: Record<string, number>;
+    testCaseCount?: number;
+    testDescribeCount?: number;
 }
 
 export default function ExpandableRow({
@@ -88,6 +92,10 @@ export default function ExpandableRow({
     repoName,
     onFixStandard,
     onFixAllStandards,
+    totalLoc,
+    locLanguageBreakdown,
+    testCaseCount,
+    testDescribeCount,
 }: ExpandableRowProps) {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
     const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
@@ -425,7 +433,7 @@ export default function ExpandableRow({
                 {/* Right Column: Repository Stats & Testing/Metrics (3 cols) */}
                 <div className="lg:col-span-3 space-y-6">
                     {/* Repository Stats */}
-                    {(stars !== undefined || forks !== undefined || branches !== undefined) && (
+                    {(stars !== undefined || forks !== undefined || branches !== undefined || totalLoc !== undefined) && (
                         <div className="bg-slate-800/30 rounded-lg p-4">
                             <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
                                 <span className="text-lg">📊</span>
@@ -459,6 +467,17 @@ export default function ExpandableRow({
                                         <span className="text-slate-200 font-medium">{branches}</span>
                                     </div>
                                 )}
+                                {totalLoc !== undefined && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-purple-500">📝</span>
+                                            <span className="text-slate-400">Lines of Code</span>
+                                        </div>
+                                        <span className="text-slate-200 font-medium">
+                                            {totalLoc >= 1000 ? `${(totalLoc / 1000).toFixed(1)}K` : totalLoc}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -490,6 +509,15 @@ export default function ExpandableRow({
                                             </div>
                                         );
                                     })()}
+                                    {/* Show test case count if available */}
+                                    {testCaseCount !== undefined && testCaseCount > 0 && (
+                                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-semibold text-blue-300">Test Cases</span>
+                                                <span className="text-2xl font-bold text-blue-400">{testCaseCount}</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </>
                             )}
                             {coverageScore !== undefined && (

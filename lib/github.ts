@@ -302,4 +302,16 @@ export class GitHubClient {
       return [];
     }
   }
+
+  async getLanguageStats(repo: string, owner?: string): Promise<Record<string, number>> {
+    try {
+      const { data } = await this.octokit.repos.listLanguages({
+        owner: owner || this.owner,
+        repo,
+      });
+      return data;
+    } catch {
+      return {};
+    }
+  }
 }

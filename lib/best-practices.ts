@@ -117,13 +117,30 @@ export async function checkBestPractices(
         'cypress.config',
         '.mocharc'
     ];
-    const hasTesting = fileList.some(f => testingFiles.some(test => f.includes(test)));
+    const detectedTestingConfigs = fileList.filter(f => testingFiles.some(test => f.includes(test)));
+    const hasTesting = detectedTestingConfigs.length > 0;
+    
+    // Count test files
+    const testFilePatterns = [
+        '.test.', 
+        '.spec.', 
+        '__tests__/',
+        '/tests/',
+        '/test/',
+        'e2e/'
+    ];
+    const testFiles = fileList.filter(f => 
+        testFilePatterns.some(pattern => f.toLowerCase().includes(pattern))
+    );
+    
     practices.push({
         type: 'testing_framework',
         status: hasTesting ? 'healthy' : 'missing',
         details: { 
             exists: hasTesting,
-            detected: fileList.filter(f => testingFiles.some(test => f.includes(test)))
+            detected: detectedTestingConfigs,
+            testFileCount: testFiles.length,
+            testFiles: testFiles.slice(0, 10) // Limit to first 10 for details
         }
     });
 

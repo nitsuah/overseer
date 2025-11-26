@@ -480,36 +480,86 @@ export default function ExpandableRow({
                             <span>Testing</span>
                         </h4>
                         <div className="space-y-3">
-                            {/* Test Status */}
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-400">Status</span>
-                                {testingStatus === 'passing' ? (
-                                    <span className="flex items-center gap-1 text-green-400">
-                                        <ShieldCheck className="h-3 w-3" /> Passing
-                                    </span>
-                                ) : testingStatus === 'failing' ? (
-                                    <span className="flex items-center gap-1 text-red-400">
-                                        <ShieldAlert className="h-3 w-3" /> Failing
-                                    </span>
-                                ) : (
-                                    <span className="text-slate-500 italic">No tests</span>
-                                )}
-                            </div>
-                            {/* Coverage */}
-                            {coverageScore != null && (
-                                <div>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-xs text-slate-400">Coverage</span>
-                                        <span className="text-sm font-bold text-blue-400">{coverageScore}%</span>
-                                    </div>
-                                    <div className="w-full bg-slate-700 rounded-full h-2">
-                                        <div
-                                            className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all"
-                                            style={{ width: `${Math.min(coverageScore, 100)}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
+                            {(() => {
+                                const testingFramework = bestPractices.find(bp => bp.practice_type === 'testing_framework');
+                                const hasFramework = testingFramework?.status === 'healthy';
+                                const detectedFrameworks = hasFramework && testingFramework.details?.detected 
+                                    ? (testingFramework.details.detected as string[])
+                                    : [];
+                                const testFileCount = testingFramework?.details?.testFileCount as number | undefined;
+                                
+                                return (
+                                    <>
+                                        {/* Framework Detection */}
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-400">Framework</span>
+                                            {hasFramework ? (
+                                                <div className="flex flex-wrap gap-1 justify-end">
+                                                    {detectedFrameworks.map((fw, idx) => {
+                                                        const frameworkName = fw.split('.')[0].split('/').pop() || fw;
+                                                        return (
+                                                            <span key={idx} className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-[10px] font-medium">
+                                                                {frameworkName}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-500 italic">No framework detected</span>
+                                            )}
+                                        </div>
+
+                                        {/* Test File Count */}
+                                        {hasFramework && testFileCount != null && testFileCount > 0 && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-400">Test Files</span>
+                                                <span className="text-blue-400 font-medium">{testFileCount} {testFileCount === 1 ? 'file' : 'files'}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Test Status */}
+                                        {hasFramework && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-400">Status</span>
+                                                {testingStatus === 'passing' ? (
+                                                    <span className="flex items-center gap-1 text-green-400">
+                                                        <ShieldCheck className="h-3 w-3" /> Passing
+                                                    </span>
+                                                ) : testingStatus === 'failing' ? (
+                                                    <span className="flex items-center gap-1 text-red-400">
+                                                        <ShieldAlert className="h-3 w-3" /> Failing
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-slate-500 italic">Not run yet</span>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Coverage */}
+                                        {coverageScore != null && (
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-xs text-slate-400">Coverage</span>
+                                                    <span className="text-sm font-bold text-blue-400">{coverageScore}%</span>
+                                                </div>
+                                                <div className="w-full bg-slate-700 rounded-full h-2">
+                                                    <div
+                                                        className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all"
+                                                        style={{ width: `${Math.min(coverageScore, 100)}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* No Testing Setup Message */}
+                                        {!hasFramework && !coverageScore && (
+                                            <p className="text-xs text-slate-500 italic mt-2">
+                                                No testing framework detected. Consider adding Vitest, Jest, Playwright, or Cypress.
+                                            </p>
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
                     </div>
 

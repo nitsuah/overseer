@@ -59,7 +59,7 @@ Be respectful, constructive, and professional in all interactions.
 
 ## Development Setup
 
-See [SETUP.md](./SETUP.md) for detailed setup instructions.
+This section provides detailed setup instructions.
 
 ### Quick Start
 
@@ -179,6 +179,6 @@ When updating:
 2. Update development setup steps as dependencies change
 3. Maintain coding standards section as patterns evolve
 4. Add examples for common contribution scenarios
-5. Ensure all referenced files (SETUP.md, README.md) exist and are current
+5. Ensure all referenced files (README.md, LICENSE.md) exist and are current
 6. Test setup instructions to verify accuracy
 -->

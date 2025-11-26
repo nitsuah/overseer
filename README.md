@@ -1,6 +1,6 @@
 # Overseer
 
->**Meta-Repository Intelligence Layer**
+> **Meta-Repository Intelligence Layer**
 > A dashboard that gives you and your AI agents a unified view across all your GitHub repositories.
 
 ## Mission Statement
@@ -57,7 +57,7 @@ cd overseer
 # Install dependencies
 npm install
 
-# Set up environment variables (see SETUP.md for details)
+# Set up environment variables (see CONTRIBUTING.md for details)
 cp .env.example .env.local
 # Edit .env.local with your credentials
 
@@ -68,7 +68,7 @@ npm run setup-db
 npm run dev
 ```
 
-**For detailed setup instructions, see [SETUP.md](./SETUP.md)**
+**For detailed setup instructions, see [CONTRIBUTING.md](./CONTRIBUTING.md)**
 
 ### Environment Variables
 
@@ -193,7 +193,7 @@ CRITICAL FORMAT REQUIREMENTS:
 When updating:
 1. Test all installation commands before committing
 2. Update version numbers when dependencies change
-3. Verify all linked files (SETUP.md, LICENSE.md) exist
+3. Verify all linked files (CONTRIBUTING.md, LICENSE.md) exist
 4. Keep feature list in sync with FEATURES.md
 5. Update tech stack when adding/removing major dependencies
 6. Ensure API endpoint documentation matches actual routes

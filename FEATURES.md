@@ -96,8 +96,6 @@ Overseer monitors the following documentation files in each repository:
 - **LICENSE.md** - Project license
 - **CHANGELOG.md** - Version history
 - **CONTRIBUTING.md** - Contribution guidelines
-- **SETUP.md** - Setup instructions
-- **FEATURES.md** - Feature documentation
 
 ## Best Practices & Community Standards
 
@@ -130,13 +128,13 @@ Overseer tracks adherence to development and community standards with 4-state he
 
 Overseer calculates comprehensive health scores (0-100) based on 5 weighted components:
 
-| Component              | Weight | What It Measures |
-| ---------------------- | ------ | ---------------- |
-| Documentation Health   | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md |
-| Testing & Quality      | 20%    | Test coverage, framework detection, CI/CD status |
-| Best Practices         | 20%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker |
-| Community Standards    | 15%    | 8 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates |
-| Activity & Engagement  | 15%    | Commit frequency, PR/Issue counts, contributor activity |
+| Component             | Weight | What It Measures                                                                                                               |
+| --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Documentation Health  | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md     |
+| Testing & Quality     | 20%    | Test coverage, framework detection, CI/CD status                                                                               |
+| Best Practices        | 20%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker |
+| Community Standards   | 15%    | 8 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates                           |
+| Activity & Engagement | 15%    | Commit frequency, PR/Issue counts, contributor activity                                                                        |
 
 Health scores are displayed as letter grades (A-F) with detailed component breakdowns available in the expandable detail panel.
 

@@ -79,8 +79,11 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Failed to fetch file list for ${repo.fullName}`, e);
     }
 
-    // ROADMAP.md
-    const roadmapContent = await github.getFileContent(repo.name, 'ROADMAP.md', owner);
+    // ROADMAP.md (try uppercase then lowercase)
+    let roadmapContent = await github.getFileContent(repo.name, 'ROADMAP.md', owner).catch(() => null);
+    if (!roadmapContent) {
+        roadmapContent = await github.getFileContent(repo.name, 'roadmap.md', owner).catch(() => null);
+    }
     const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, null);
     if (roadmapContent) {
         const roadmapData = parseRoadmap(roadmapContent);
@@ -192,7 +195,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     try {
         const readmeContent = await github.getFileContent(repo.name, 'README.md', owner);
         const bestPracticesResult = await checkBestPractices(owner, repo.name, github.octokit, fileList, readmeContent || undefined);
-        
+
         await db`DELETE FROM best_practices WHERE repo_id = ${repoId}`;
         for (const practice of bestPracticesResult.practices) {
             await db`
@@ -207,7 +210,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     // Community Standards Detection
     try {
         const communityStandardsResult = checkCommunityStandards(fileList);
-        
+
         await db`DELETE FROM community_standards WHERE repo_id = ${repoId}`;
         for (const standard of communityStandardsResult.standards) {
             await db`
@@ -226,20 +229,20 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         const bestPractices = await db`SELECT * FROM best_practices WHERE repo_id = ${repoId}`;
         const communityStandards = await db`SELECT * FROM community_standards WHERE repo_id = ${repoId}`;
         const metrics = await db`SELECT * FROM metrics WHERE repo_id = ${repoId}`;
-        
+
         const docHealth = calculateDocHealth(docStatuses, 'other');
         const coverage = metrics.find((m: { metric_name: string }) => m.metric_name?.toLowerCase().includes('coverage'));
-        const hasTests = bestPractices.some((bp: { practice_type: string; status: string }) => 
+        const hasTests = bestPractices.some((bp: { practice_type: string; status: string }) =>
             bp.practice_type === 'testing_framework' && bp.status === 'healthy'
         );
-        const hasCI = bestPractices.some((bp: { practice_type: string; status: string }) => 
+        const hasCI = bestPractices.some((bp: { practice_type: string; status: string }) =>
             bp.practice_type === 'cicd' && bp.status === 'healthy'
         );
-        
-        const daysSinceCommit = lastCommitDate 
+
+        const daysSinceCommit = lastCommitDate
             ? Math.floor((Date.now() - new Date(lastCommitDate).getTime()) / (1000 * 60 * 60 * 24))
             : 365;
-        
+
         const healthScore = calculateHealthScore({
             docHealth: docHealth.score,
             hasTests,
@@ -253,13 +256,13 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             openIssuesCount: repo.openIssues,
             openPRsCount: openPrs,
         });
-        
+
         await db`
             UPDATE repos 
             SET health_score = ${healthScore.total}
             WHERE id = ${repoId}
         `;
-        
+
         console.log(`✓ Health score for ${repo.name}: ${healthScore.total}/100`);
     } catch (e) {
         console.warn(`Failed to calculate health score for ${repo.fullName}`, e);
@@ -275,7 +278,7 @@ export async function syncSingleRepo(github: GitHubClient, repoName: string) {
     // Get the repo metadata from GitHub
     const repos = await github.getUserRepos();
     const repo = repos.find((r: RepoMetadata) => r.name === repoName);
-    
+
     if (!repo) {
         throw new Error(`Repository ${repoName} not found in user's repos`);
     }

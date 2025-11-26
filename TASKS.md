@@ -45,8 +45,7 @@
 
 - [ ] Test all new features end-to-end after migration
 - [ ] Verify Features/Best Practices/Community Standards display in UI
-- [ ] Fix GitHub OAuth in production environment (token/callback issues)
-- [ ] Fix Gemini API integration (404 errors - model version mismatch)
+
 
 ## Todo
 
@@ -54,9 +53,10 @@
 
 - [ ] Add Testing Metrics Display (test count, coverage %, framework detection)
 - [ ] Add Health State Icons to main table row for each section
-- [ ] Fix PR creation to open in new tab
 - [ ] Add README Freshness metric calculation
 - [ ] Validate Health Score Meter visualization with new calculation
+- [ ] FIX GitHub OAuth in production environment (token/callback issues)
+- [ ] FIX Gemini API integration (404 errors - model version mismatch)
 
 ### Medium Priority
 

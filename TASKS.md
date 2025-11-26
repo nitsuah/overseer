@@ -51,7 +51,7 @@
 - [x] Add README Freshness metric (days since last README update)
 - [x] Display README freshness with color-coding in Documentation section
 - [x] Create templates for CODE_OF_CONDUCT.md, SECURITY.md, Issue templates
-- [x] Show test file count more prominently in Testing section  
+- [x] Show test file count more prominently in Testing section
 - [x] Add tooltips to health score explaining each component
 - [x] Add "Fix" buttons for missing community standards items (CODE_OF_CONDUCT, SECURITY)
 - [x] Implement batch "Fix All Standards" option with API endpoint
@@ -77,6 +77,9 @@
 - [x] Implement bus factor analysis (contributor concentration) (Phase 5, November 2025)
 - [x] Track PR merge time (cycle time) (Phase 5, November 2025)
 - [x] Display contributor metrics in Repository Stats section (Phase 5, November 2025)
+- [x] Refactor large files: ExpandableRow.tsx (892 → 175 lines) and page.tsx (890 → 198 lines) (November 2025)
+- [x] Extract reusable hooks: useDashboard, useRepoActions, useRepoFilters (November 2025)
+- [x] Create modular components: DashboardHeader, FilterPanel, RepoTableRow (November 2025)
 
 ## In Progress
 
@@ -87,23 +90,23 @@
 - [x] Add Health State Icons to main table row for each major detail section
 - [x] Validate Health Score Meter visualization with new calculation
 - [x] Add Testing Metrics Display (test count, coverage %, framework detection) - COMPLETED
-- [ ] Default repos should appear when not logged in yet (preview screen)
+- [x] Add pre-commit hooks to Overseer project (husky + lint-staged + prettier)
+- [x] Implement full E2E tests with Playwright (comprehensive test suite)
+- [x] Default repos should appear when not logged in yet (preview screen)
 - [ ] FIX GitHub OAuth in production environment (token/callback issues)
 - [ ] FIX Gemini API integration (404 errors - model version mismatch)
 
 ### Future Enhancements (Deprioritized)
 
-- [ ] Add pre-commit hooks to Overseer project
-- [ ] Implement full E2E tests with Playwright
 - [ ] Add webhook integration for real-time updates
 - [ ] Template health checking (dormant/malformed detection with hashing)
-- [ ] Add "Fix" buttons for missing best practices and community standards
+- [ ] Add "Fix" buttons for missing best practices and community standards items (template, action)
 - [ ] Token Density Metric (LOC per logical unit with AI-assisted parsing)
 - [ ] Bus Factor Analysis (contributor concentration risk)
 - [ ] Zombie Branch Detection (stale branches past merge)
 - [ ] Maintenance Mode Detection (activity patterns suggesting abandonment)
 - [ ] Comment-to-Code Ratio Analysis (documentation density)
-- [ ] Implement Dark/Light Mode Toggle
+- [ ] Implement Dark/Light Mode Toggle and other UI enhancements
 
 <!--
 AGENT INSTRUCTIONS:

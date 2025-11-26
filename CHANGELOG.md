@@ -9,10 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Toast notification system replacing browser alerts
+- Testing section enhancement with framework detection and test file counting
+- Comprehensive feature audit and documentation accuracy review (November 2025)
+- Feature detection matrix tracking 50+ items with detection/health/fix status
+- AUDIT.md documenting critical gaps, strengths, and opportunities
 - Repository stats (stars, forks, branches) in detail panel
 - LICENSE.md tracking as a document type
 - Comprehensive FEATURES.md documentation
-- Best practices detection framework planning
 - Code coverage visualization with progress bars
 - AI summary display in expandable rows
 - Activity tracking (last commit, PRs, issues)
@@ -25,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Moved Stats column from main table to detail panel
 - Description column now hidden on smaller screens (xl+ only)
-- Updated Gemini API model to `gemini-pro`
+- Updated Gemini API model to `gemini-1.5-flash`
 - Reorganized ExpandableRow component for better space utilization
 
 ### Fixed

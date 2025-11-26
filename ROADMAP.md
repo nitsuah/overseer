@@ -12,7 +12,7 @@
 - [x] Default Repositories Feature
 - [x] Dynamic OAuth URL Support (Netlify)
 
-## Q1 2025: Baseline Metrics & UI Polish (COMPLETED) ✨
+## Q1 2025: Feature Audit & Data Integration (IN PROGRESS) 🔍
 
 - [x] Baseline Indicator Integration: Last Commit Date, Open PR/Issue Counts
 - [x] Dashboard Polish: Stats column (Stars, Forks, Branches)
@@ -28,37 +28,51 @@
 - [x] Health Score 2.0: Comprehensive weighted calculation (Doc 30%, Testing 20%, Best Practices 20%, Community 15%, Activity 15%)
 - [x] Document Health States: Missing, Dormant, Malformed, Healthy
 - [x] Repo Type Selector: Added to custom repo form
+- [x] Testing Section Enhancement: Framework detection, test file counting, improved display
+- [x] Toast Notifications: Replaced alert() calls with non-intrusive toasts
+- [x] Feature Audit: Comprehensive documentation vs implementation audit (January 2025)
+- [ ] **CRITICAL**: Sync coverage_score from METRICS.md to database
+- [ ] Display health score breakdown (5 components) in UI
+- [ ] Integrate self-reported coverage into Testing section
+- [ ] Update all documentation for 100% accuracy
 
-## Q2 2025: Polish & Integrations 🧠
+## Q2 2025: UX Consistency & Quick Wins 🎨
 
-- [ ] Foundation: Dark/Light Mode Toggle
+- [ ] README Freshness: Calculate and display days since last README update
+- [ ] Templates for Community Standards: CODE_OF_CONDUCT, SECURITY, Issue templates
+- [ ] Fix Buttons: Add automated fixes for best practices/community standards
+- [ ] Batch Fix All Standards: Single PR for all missing standards
+- [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
+- [ ] Gemini API Integration Fix: Resolve model version compatibility
+- [ ] Health State Icons: Display in main table row for each doc type
 - [ ] Foundation: Full E2E Tests and Pre-commit Hooks
-- [ ] README Freshness: Calculate and display days since last update
-- [ ] GitHub OAuth Production Fix (callback URL, token handling)
-- [ ] Gemini API Integration Fix (model version compatibility)
-- [ ] Testing Metrics Display (test count, coverage %, framework)
-- [ ] Health State Icons in main table row view
-- [ ] PR Creation opens in new tab
-- [ ] Fix buttons for Best Practices & Community Standards
-- [ ] Template File Hashing (detect stale templates)
+- [ ] Foundation: Dark/Light Mode Toggle (moved from Q2 original plan)
+- [ ] Template File Hashing: Detect stale/unchanged templates
 
-## Q3 2025: Advanced Agents & Velocity Tracking 🚀
+## Q3 2025: Advanced Metrics & Integrations 🚀
 
-- [ ] Velocity Tracking: Average PR Merge Time (Cycle Time), Open PR/Issue Ratio, Commit Cadence
-- [ ] Advanced Health Metrics Integration: Vulnerability Alerts Count, Failing CI/CD Build Ratio
-- [ ] Technical Debt Scoring: Dependency Age Score and Lines of Code (LoC) Metrics
+- [ ] CI/CD Build Status: Integrate GitHub Actions API for live build status
+- [ ] Test Case Counting: Parse test files for actual test case counts
+- [ ] Vulnerability Tracking: Integrate GitHub Security/Dependabot alerts API
+- [ ] Vulnerability Metrics: Display count and severity in dashboard
+- [ ] Security in Health Score: Add vulnerability metrics to calculation
+- [ ] Velocity Tracking: Average PR Merge Time (Cycle Time), Commit Cadence
+- [ ] Technical Debt Scoring: Dependency Age Score and LoC Metrics
 - [ ] Agent APIs: AI-driven actions like "Suggest Roadmap" and "Propose Code Review Assignment"
 - [ ] Extensibility: Plugin System for Custom Parsers
 - [ ] Real-time: Webhook Integration for Real-time Updates
 
-## Q3 2025: Scale & Enterprise 🏗️
+## Q4 2025: Contributor Analytics & Enterprise Features 🏗️
 
+- [ ] Contributor Metrics: Count, diversity, commit frequency
+- [ ] Bus Factor Analysis: Contributor concentration risk assessment
+- [ ] PR Merge Time Tracking: Cycle time and velocity metrics
 - [ ] Team Collaboration Features (Comments, Assignments)
 - [ ] Enterprise SSO Integration
 - [ ] Mobile App (React Native)
 - [ ] Custom AI Model Fine-tuning
 
-## Q4 2025: Autonomous Agents & Conversational UI 🤖
+## Q1 2026: Autonomous Agents & Conversational UI 🤖
 
 - [ ] **Agent Task Queue:** API endpoint for autonomous AI agents to submit tasks
 - [ ] **Workflow Visualization:** Screen showing branching/execution paths for complex actions

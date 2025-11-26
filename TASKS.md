@@ -43,27 +43,68 @@
 
 ## In Progress
 
-- [ ] Test all new features end-to-end after migration
-- [ ] Verify Features/Best Practices/Community Standards display in UI
-
+- [ ] Complete feature audit and documentation update (November 25, 2025)
 
 ## Todo
 
-### High Priority
+### Phase 1: Data Integration & Documentation (Week 1) - HIGH PRIORITY
 
-- [ ] Add Testing Metrics Display (test count, coverage %, framework detection)
+- [ ] **CRITICAL**: Sync coverage_score from METRICS.md to repos.coverage_score column during sync
+- [ ] **CRITICAL**: Update sync.ts to extract and store coverage in repos table
+- [ ] Display health score breakdown (5 components) in ExpandableRow UI
+- [ ] Integrate self-reported coverage from METRICS.md into Testing section prominently
+- [ ] Add "Self-reported" label to distinguish from auto-detected coverage
+- [ ] Update FEATURES.md matrix - ensure 100% accuracy (no hallucinations)
+- [ ] Update METRICS.md with current accurate values
+- [ ] Update README.md to match actual implementation
+- [ ] Verify and update ROADMAP.md Q1/Q2 status
+
+### Phase 2: UX Consistency & Quick Wins (Week 2) - MEDIUM PRIORITY
+
+- [ ] Create templates for CODE_OF_CONDUCT.md, SECURITY.md, Issue templates
+- [ ] Add "Fix" buttons for missing best practices/community standards items
+- [ ] Implement batch "Fix All Standards" option
+- [ ] Add README Freshness metric (days since last README update)
+- [ ] Display README freshness with color-coding in Activity section
+- [ ] Show test file count more prominently in Testing section
+- [ ] Add tooltips to health score explaining each component
+
+### Phase 3: Advanced Metrics & Integrations (Weeks 3-4) - MEDIUM PRIORITY
+
+- [ ] Integrate GitHub Actions API for live CI/CD build status
+- [ ] Display current build status (passing/failing) with last run time
+- [ ] Parse test files to count actual test cases (it(), test() calls)
+- [ ] Show test case count alongside test file count
+- [ ] Integrate GitHub Security/Vulnerability Alerts API
+- [ ] Display vulnerability count and severity in dashboard
+- [ ] Add vulnerability metrics to health score calculation
+
+### Phase 4: Template Health & Advanced Detection (Future) - LOW PRIORITY
+
+- [ ] Implement content hashing for documentation templates
+- [ ] Detect unchanged/stale templates (mark as "Dormant")
+- [ ] Detect malformed document structure (mark as "Malformed")
+- [ ] Add template version tracking
+
+### Phase 5: Contributor Analytics (Future) - LOW PRIORITY
+
+- [ ] Track contributor count and diversity
+- [ ] Calculate commit frequency (commits/week)
+- [ ] Implement bus factor analysis (contributor concentration)
+- [ ] Track PR merge time (cycle time)
+- [ ] Display contributor metrics in Activity section
+
+### Original Todo Items (Review & Integrate)
+
+- [ ] Add Testing Metrics Display (test count, coverage %, framework detection) - PARTIALLY DONE
 - [ ] Add Health State Icons to main table row for each section
-- [ ] Add README Freshness metric calculation
 - [ ] Validate Health Score Meter visualization with new calculation
 - [ ] FIX GitHub OAuth in production environment (token/callback issues)
 - [ ] FIX Gemini API integration (404 errors - model version mismatch)
 
 ### Medium Priority
 
-- [ ] Metrics Display Enhancement (ensure all METRICS.md data shows in panels)
-- [ ] Verify GitHub OAuth works in all environments (local, preview, production)
-
-### Future Enhancements
+### Future Enhancements (Deprioritized)
 
 - [ ] Add pre-commit hooks to Overseer project
 - [ ] Implement full E2E tests with Playwright

@@ -136,35 +136,6 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **Functions**: Netlify serverless functions
 - **Scheduled Jobs**: Netlify scheduled functions for auto-sync
 
-## Future Enhancements
-
-See [ROADMAP.md](./ROADMAP.md) for detailed quarterly plans.
-
-### Q2 2025
-
-- Dark/Light mode toggle
-- README Freshness metric
-- Full E2E tests
-- GitHub OAuth production fix
-- Gemini API integration fix
-- Testing metrics display
-- Health state icons in main row
-- Fix buttons for best practices
-
-### Q3 2025
-
-- Velocity tracking (PR merge time, commit cadence)
-- Advanced health metrics (vulnerability alerts, failing CI/CD ratio)
-- Technical debt scoring
-- Plugin system for custom parsers
-
-### Q4 2025
-
-- Team collaboration features
-- Enterprise SSO
-- Mobile app
-- Custom AI model fine-tuning
-
 ## Last Updated
 
 November 25, 2025

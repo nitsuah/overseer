@@ -1,7 +1,6 @@
 # Overseer
 
-**Meta-Repository Intelligence Layer**
-
+>**Meta-Repository Intelligence Layer**
 > A dashboard that gives you and your AI agents a unified view across all your GitHub repositories.
 
 ## Mission Statement

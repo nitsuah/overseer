@@ -2,25 +2,25 @@
 
 ## Core Metrics
 
-| Metric         | Value  |
-| -------------- | ------ |
-| Code Coverage  | 87.5% (branch) / 100% (statements) |
-| Build Time     | ~6s    |
-| Bundle Size    | TBD    |
-| Test Files     | 4      |
-| Test Cases     | 8      |
-| Database Tables| 8      |
-| API Routes     | 10     |
+| Metric         | Value  | Notes |
+| -------------- | ------ | ----- |
+| Code Coverage  | 87.5% (branch) / 100% (statements) | Parser tests (vitest) |
+| Build Time     | ~6s    | Local dev build |
+| Bundle Size    | TBD    | Not measured yet |
+| Test Files     | 4      | Manual count - auto-detection available |
+| Test Cases     | 8      | Manual count - auto-detection not implemented |
+| Database Tables| 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards |
+| API Routes     | 15     | Including sub-routes for repos |
 
 ## Health
 
-| Metric         | Value    |
-| -------------- | -------- |
-| Open Issues    | 0        |
-| PR Turnaround  | < 1 day  |
-| Skipped Tests  | 0        |
-| Health Score   | 95/100   |
-| Last Updated   | 2025-01-06 |
+| Metric         | Value    | Notes |
+| -------------- | -------- | ----- |
+| Open Issues    | 0        | GitHub issues |
+| PR Turnaround  | < 1 day  | Typical merge time |
+| Skipped Tests  | 0        | All tests enabled |
+| Health Score   | 95/100   | Overseer's own score |
+| Last Updated   | 2025-11-25 | Last audit date |
 
 ## Health Score Components
 
@@ -34,19 +34,26 @@
 
 ## Dashboard Features
 
-| Feature                    | Status |
-| -------------------------- | ------ |
-| Repository Stats Display   | ✅     |
-| Code Coverage Visualization| ✅     |
-| AI Summary Generation      | ✅     |
-| Default Repos              | ✅     |
-| Activity Tracking          | ✅     |
-| Documentation Health       | ✅     |
-| OAuth Integration          | ✅     |
-| Features Parser            | ✅     |
-| Best Practices Detection   | ✅     |
-| Community Standards Check  | ✅     |
-| Document Health States     | ✅     |
+| Feature                    | Status | Notes |
+| -------------------------- | ------ | ----- |
+| Repository Stats Display   | ✅     | Stars, forks, branches |
+| Code Coverage Visualization| ✅     | Progress bars in table + detail |
+| AI Summary Generation      | ✅     | Google Gemini integration |
+| Default Repos              | ✅     | Always-visible demos |
+| Activity Tracking          | ✅     | Last commit, PRs, issues |
+| Documentation Health       | ✅     | 4-state model |
+| OAuth Integration          | ✅     | GitHub OAuth (local/staging) |
+| Features Parser            | ✅     | FEATURES.md parsing |
+| Best Practices Detection   | ✅     | 10 automated checks |
+| Community Standards Check  | ✅     | 7 automated checks |
+| Document Health States     | ✅     | Missing/Dormant/Malformed/Healthy |
+| Testing Framework Detection| ✅     | Config files + test file count |
+| Health Score Calculation   | ✅     | 5-component weighted score |
+| Health Score Breakdown Display | ⚠️ | Calculated but not displayed |
+| Self-reported Coverage Sync| ⚠️    | Parsed but not stored in DB |
+| Template Health Detection  | ❌     | Not implemented |
+| CI/CD Build Status         | ❌     | Detection only, no live status |
+| Vulnerability Tracking     | ❌     | Not integrated |
 
 <!--
 AGENT INSTRUCTIONS:

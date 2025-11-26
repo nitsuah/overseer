@@ -97,21 +97,25 @@ overseer/
 ## Coding Standards
 
 ### TypeScript
+
 - Use strict type checking
 - Avoid `any` types when possible
 - Define interfaces for complex objects
 
 ### React Components
+
 - Use functional components with hooks
 - Keep components focused and reusable
 - Use descriptive prop names
 
 ### Styling
+
 - Use Tailwind CSS utility classes
 - Follow existing color scheme
 - Ensure responsive design
 
 ### Database
+
 - Use parameterized queries
 - Handle errors gracefully
 - Add migrations for schema changes
@@ -121,35 +125,36 @@ overseer/
 All root-level documentation files should follow these formats:
 
 ### ROADMAP.md
+
 - Organized by quarters
 - Use checkboxes for completion status
 - Include brief descriptions
 
 ### TASKS.md
+
 - Sections: Done, In Progress, Todo
 - Use checkboxes
 - Keep descriptions concise
 
 ### METRICS.md
+
 - Table format for metrics
 - Include units and timestamps
 - Update regularly
 
 ### FEATURES.md
+
 - Categorized by feature type
 - Include implementation status
 - Document tech stack
 
 ## Testing
 
-Currently, we have:
-- Parser tests (87.5% coverage)
-- Manual testing procedures
+- Run tests: `npm test`
+- Check coverage: `npm run coverage`
+- Parser tests achieve 87.5% branch coverage (vitest)
 
-Future additions:
-- E2E tests with Playwright
-- Component tests
-- Integration tests
+See [ROADMAP.md](./ROADMAP.md) for planned testing improvements.
 
 ## Questions?
 
@@ -177,4 +182,3 @@ When updating:
 5. Ensure all referenced files (SETUP.md, README.md) exist and are current
 6. Test setup instructions to verify accuracy
 -->
-

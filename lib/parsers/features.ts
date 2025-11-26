@@ -23,7 +23,7 @@ export function parseFeatures(content: string): FeaturesData {
     let pendingDescription: string[] = [];
 
     for (const line of lines) {
-        // Detect category headers (## Core Capabilities, ### 📊 Repository Intelligence, etc.)
+        // Detect category headers - prioritize ### (h3), but accept ## (h2) as fallback
         const categoryMatch = line.match(/^(#{2,3})\s+(.+)$/);
         if (categoryMatch) {
             // Save previous category
@@ -40,8 +40,8 @@ export function parseFeatures(content: string): FeaturesData {
             continue;
         }
 
-        // Parse list items (features)
-        const itemMatch = line.match(/^-\s+(.+)$/);
+        // Parse list items (features) - handle both - and * bullets
+        const itemMatch = line.match(/^[-*]\s+(.+)$/);
         if (itemMatch && currentCategory) {
             // If we had pending description lines, join them
             if (pendingDescription.length > 0 && !currentCategory.description) {
@@ -53,8 +53,8 @@ export function parseFeatures(content: string): FeaturesData {
             // Remove bolding if present at start (e.g. **Feature Name**: Description)
             const cleanItem = itemText.replace(/^\*\*(.+?)\*\*[:\s-]+/, '$1: ');
             currentCategory.items.push(cleanItem);
-        } else if (currentCategory && line.trim() && !line.startsWith('#')) {
-            // Collect description lines (non-empty, non-header, non-list)
+        } else if (currentCategory && line.trim() && !line.startsWith('#') && !line.startsWith('<!--')) {
+            // Collect description lines (non-empty, non-header, non-list, non-comment)
             if (currentCategory.items.length === 0) {
                 pendingDescription.push(line.trim());
             }

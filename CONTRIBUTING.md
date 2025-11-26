@@ -164,3 +164,17 @@ By contributing, you agree that your contributions will be licensed under the MI
 ---
 
 Thank you for contributing to Overseer! 🚀
+
+<!--
+AGENT INSTRUCTIONS:
+This file provides contribution guidelines for the project.
+
+When updating:
+1. Keep instructions clear and actionable
+2. Update development setup steps as dependencies change
+3. Maintain coding standards section as patterns evolve
+4. Add examples for common contribution scenarios
+5. Ensure all referenced files (SETUP.md, README.md) exist and are current
+6. Test setup instructions to verify accuracy
+-->
+

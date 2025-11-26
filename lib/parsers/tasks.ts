@@ -25,15 +25,15 @@ export function parseTasks(content: string): TaskData {
     let currentSection = '';
 
     for (const line of lines) {
-        // Detect section headers (## Backlog, ## In Progress, etc.)
-        const sectionMatch = line.match(/^##\s+(.+)$/);
+        // Detect section headers (## Backlog, ## In Progress, etc.) - also accept # as fallback
+        const sectionMatch = line.match(/^(#{1,2})\s+(.+)$/);
         if (sectionMatch) {
-            currentSection = sectionMatch[1].trim();
+            currentSection = sectionMatch[2].trim();
             continue;
         }
 
-        // Parse task list items with optional ID in HTML comment
-        const taskMatch = line.match(/^-\s+\[([ x/])\]\s+(.+?)(?:\s+<!--\s*id:\s*(.+?)\s*-->)?$/);
+        // Parse task list items with optional ID in HTML comment - handle both - and * bullets
+        const taskMatch = line.match(/^[-*]\s+\[([ x/])\]\s+(.+?)(?:\s+<!--\s*id:\s*(.+?)\s*-->)?$/);
         if (taskMatch) {
             const [, statusChar, title, id] = taskMatch;
             const status = statusChar === 'x' ? 'done' : statusChar === '/' ? 'in-progress' : 'todo';

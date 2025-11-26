@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Template Health Detection (Phase 4):** Content hashing to detect unchanged/stale templates marked as "dormant"
+- **Template Version Tracking (Phase 4):** Track which template version docs are based on with template_version column
+- **Malformed Detection (Phase 4):** Detect docs with template markers like "TODO:" or <50 characters
+- **Contributor Analytics (Phase 5):** Track contributor count, commit frequency, bus factor, PR merge time
+- **Bus Factor Analysis (Phase 5):** Calculate contributor concentration risk using 80/20 rule
+- **Commit Frequency Tracking (Phase 5):** Average commits/week from last 12 weeks
+- **PR Merge Time Tracking (Phase 5):** Average hours from PR creation to merge for last 30 PRs
+- **Contributor Metrics Display (Phase 5):** Show contributor count, commits/week, bus factor, PR merge time in Repository Stats
+- Database migrations: 006_add_template_version.sql, 007_add_contributor_metrics.sql
 - Lines of Code (LOC) metrics with language breakdown from GitHub API
 - LOC display in Repository Stats section with K suffix formatting (e.g., "12.5K")
 - Test case counting parser (detects it(), test(), describe() calls in test files)

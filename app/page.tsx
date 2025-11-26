@@ -56,6 +56,10 @@ interface Repo {
   vuln_critical_count?: number;
   vuln_high_count?: number;
   vuln_last_checked?: string | null;
+  contributor_count?: number;
+  commit_frequency?: number;
+  bus_factor?: number;
+  avg_pr_merge_time_hours?: number;
 }
 
 interface RepoDetails {
@@ -863,6 +867,10 @@ export default function DashboardPage() {
                   vulnAlertCount={repo.vuln_alert_count}
                   vulnCriticalCount={repo.vuln_critical_count}
                   vulnHighCount={repo.vuln_high_count}
+                  contributorCount={repo.contributor_count}
+                  commitFrequency={repo.commit_frequency}
+                  busFactor={repo.bus_factor}
+                  avgPrMergeTimeHours={repo.avg_pr_merge_time_hours}
                 />
               </td>
             </tr>

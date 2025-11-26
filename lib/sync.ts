@@ -89,20 +89,44 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Could not get vulnerability alerts for ${repo.name}:`, (e as Error).message);
     }
 
+    // Fetch contributor metrics
+    let contributorCount = 0;
+    let commitFrequency = 0;
+    let busFactor = 0;
+    try {
+        const contributorStats = await github.getContributorStats(repo.name, owner);
+        contributorCount = contributorStats.contributorCount;
+        commitFrequency = contributorStats.commitFrequency;
+        busFactor = contributorStats.busFactor;
+    } catch (e) {
+        console.warn(`Could not get contributor stats for ${repo.name}:`, (e as Error).message);
+    }
+
+    // Fetch PR merge time
+    let avgPrMergeTimeHours = 0;
+    try {
+        const prStats = await github.getPullRequestStats(repo.name, owner);
+        avgPrMergeTimeHours = prStats.avgMergeTimeHours;
+    } catch (e) {
+        console.warn(`Could not get PR stats for ${repo.name}:`, (e as Error).message);
+    }
+
     // Upsert repo with new metrics
     const repoRows = await db`
         INSERT INTO repos (
             name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, 
             last_synced, updated_at, last_commit_date, open_prs, branches_count, readme_last_updated,
             total_loc, loc_language_breakdown, ci_status, ci_last_run, ci_workflow_name,
-            vuln_alert_count, vuln_critical_count, vuln_high_count, vuln_last_checked
+            vuln_alert_count, vuln_critical_count, vuln_high_count, vuln_last_checked,
+            contributor_count, commit_frequency, bus_factor, avg_pr_merge_time_hours, contributors_last_checked
         )
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
             ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
             NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}, ${readmeLastUpdated},
             ${totalLoc}, ${JSON.stringify(locLanguageBreakdown)}, ${ciStatus}, ${ciLastRun}, ${ciWorkflowName},
-            ${vulnAlertCount}, ${vulnCriticalCount}, ${vulnHighCount}, NOW()
+            ${vulnAlertCount}, ${vulnCriticalCount}, ${vulnHighCount}, NOW(),
+            ${contributorCount}, ${commitFrequency}, ${busFactor}, ${avgPrMergeTimeHours}, NOW()
         )
         ON CONFLICT (name) DO UPDATE SET
           description = EXCLUDED.description,
@@ -127,7 +151,12 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           vuln_alert_count = EXCLUDED.vuln_alert_count,
           vuln_critical_count = EXCLUDED.vuln_critical_count,
           vuln_high_count = EXCLUDED.vuln_high_count,
-          vuln_last_checked = EXCLUDED.vuln_last_checked
+          vuln_last_checked = EXCLUDED.vuln_last_checked,
+          contributor_count = EXCLUDED.contributor_count,
+          commit_frequency = EXCLUDED.commit_frequency,
+          bus_factor = EXCLUDED.bus_factor,
+          avg_pr_merge_time_hours = EXCLUDED.avg_pr_merge_time_hours,
+          contributors_last_checked = EXCLUDED.contributors_last_checked
         RETURNING id;
     `;
     const repoId = repoRows[0].id;
@@ -174,7 +203,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     if (!roadmapContent) {
         roadmapContent = await github.getFileContent(repo.name, 'roadmap.md', owner).catch(() => null);
     }
-    const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, null);
+    // Load template content for comparison if available
+    const roadmapTemplate = await github.getFileContent(repo.name, 'templates/ROADMAP.md', owner).catch(() => null);
+    const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, roadmapTemplate);
     if (roadmapContent) {
         const roadmapData = parseRoadmap(roadmapContent);
         await db`DELETE FROM roadmap_items WHERE repo_id = ${repoId}`;
@@ -186,18 +217,22 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         }
     }
     await db`
-        INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, last_checked)
-        VALUES (${repoId}, 'roadmap', ${!!roadmapContent}, ${roadmapHealthState}, ${roadmapContent ? hashContent(roadmapContent) : null}, NOW())
+        INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, template_version, last_checked)
+        VALUES (
+            ${repoId}, 'roadmap', ${!!roadmapContent}, ${roadmapHealthState}, ${roadmapContent ? hashContent(roadmapContent) : null}, ${roadmapTemplate ? 'v1' : null}, NOW()
+        )
         ON CONFLICT (repo_id, doc_type) DO UPDATE SET 
             exists = EXCLUDED.exists, 
             health_state = EXCLUDED.health_state,
             content_hash = EXCLUDED.content_hash,
+            template_version = EXCLUDED.template_version,
             last_checked = EXCLUDED.last_checked
     `;
 
     // TASKS.md
     const tasksContent = await github.getFileContent(repo.name, 'TASKS.md', owner);
-    const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, null);
+    const tasksTemplate = await github.getFileContent(repo.name, 'templates/TASKS.md', owner).catch(() => null);
+    const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, tasksTemplate);
     if (tasksContent) {
         const tasksData = parseTasks(tasksContent);
         await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
@@ -209,12 +244,15 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         }
     }
     await db`
-        INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, last_checked)
-        VALUES (${repoId}, 'tasks', ${!!tasksContent}, ${tasksHealthState}, ${tasksContent ? hashContent(tasksContent) : null}, NOW())
+        INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, template_version, last_checked)
+        VALUES (
+            ${repoId}, 'tasks', ${!!tasksContent}, ${tasksHealthState}, ${tasksContent ? hashContent(tasksContent) : null}, ${tasksTemplate ? 'v1' : null}, NOW()
+        )
         ON CONFLICT (repo_id, doc_type) DO UPDATE SET 
             exists = EXCLUDED.exists, 
             health_state = EXCLUDED.health_state,
             content_hash = EXCLUDED.content_hash,
+            template_version = EXCLUDED.template_version,
             last_checked = EXCLUDED.last_checked
     `;
 

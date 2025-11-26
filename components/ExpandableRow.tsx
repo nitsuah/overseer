@@ -78,6 +78,10 @@ interface ExpandableRowProps {
     vulnAlertCount?: number;
     vulnCriticalCount?: number;
     vulnHighCount?: number;
+    contributorCount?: number;
+    commitFrequency?: number;
+    busFactor?: number;
+    avgPrMergeTimeHours?: number;
 }
 
 export default function ExpandableRow({
@@ -108,6 +112,10 @@ export default function ExpandableRow({
     vulnAlertCount,
     vulnCriticalCount,
     vulnHighCount,
+    contributorCount,
+    commitFrequency,
+    busFactor,
+    avgPrMergeTimeHours,
 }: ExpandableRowProps) {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
     const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
@@ -502,6 +510,47 @@ export default function ExpandableRow({
                                         }`}>
                                             {vulnAlertCount}
                                             {vulnCriticalCount && vulnCriticalCount > 0 && ` (${vulnCriticalCount} critical)`}
+                                        </span>
+                                    </div>
+                                )}
+                                {contributorCount !== undefined && contributorCount > 0 && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-indigo-500">👥</span>
+                                            <span className="text-slate-400">Contributors</span>
+                                        </div>
+                                        <span className="text-slate-200 font-medium">{contributorCount}</span>
+                                    </div>
+                                )}
+                                {commitFrequency !== undefined && commitFrequency > 0 && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-cyan-500">📈</span>
+                                            <span className="text-slate-400">Commits/Week</span>
+                                        </div>
+                                        <span className="text-slate-200 font-medium">{commitFrequency.toFixed(1)}</span>
+                                    </div>
+                                )}
+                                {busFactor !== undefined && busFactor > 0 && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-pink-500">🚌</span>
+                                            <span className="text-slate-400">Bus Factor</span>
+                                        </div>
+                                        <span className="text-slate-200 font-medium">{busFactor}</span>
+                                    </div>
+                                )}
+                                {avgPrMergeTimeHours !== undefined && avgPrMergeTimeHours > 0 && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-emerald-500">⏱️</span>
+                                            <span className="text-slate-400">Avg PR Merge</span>
+                                        </div>
+                                        <span className="text-slate-200 font-medium">
+                                            {avgPrMergeTimeHours < 24 
+                                                ? `${avgPrMergeTimeHours.toFixed(1)}h`
+                                                : `${(avgPrMergeTimeHours / 24).toFixed(1)}d`
+                                            }
                                         </span>
                                     </div>
                                 )}

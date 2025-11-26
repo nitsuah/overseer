@@ -63,17 +63,23 @@
 - [x] CI/CD Status Display: Show passing/failing status with workflow name and last run in Best Practices section
 - [x] Vulnerability Display: Show alert count with severity-based color coding in Repository Stats
 
-## Q4 2025: Contributor Analytics & Enterprise Features 🏗️
+## Q4 2025: Contributor Analytics & Enterprise Features (IN PROGRESS) 🏗️
 
+- [x] Template Health Detection: Content hashing to detect unchanged/stale templates (November 2025)
+- [x] Template Version Tracking: Track which template version docs are based on (November 2025)
+- [x] Dormant State Detection: Mark docs matching templates as "dormant" (November 2025)
+- [x] Malformed State Detection: Detect docs with template markers or too short (November 2025)
+- [x] Contributor Analytics: Track contributor count and diversity (November 2025)
+- [x] Commit Frequency Tracking: Calculate commits/week from last 12 weeks (November 2025)
+- [x] Bus Factor Analysis: Contributor concentration risk (80/20 rule) (November 2025)
+- [x] PR Merge Time Tracking: Average cycle time from creation to merge (November 2025)
+- [x] Contributor Metrics Display: Show all contributor analytics in Repository Stats (November 2025)
 - [ ] Security in Health Score: Add vulnerability metrics to calculation
-- [ ] Velocity Tracking: Average PR Merge Time (Cycle Time), Commit Cadence
+- [ ] Velocity Tracking: Expand PR/commit analytics with trends
 - [ ] Technical Debt Scoring: Dependency Age Score
 - [ ] Agent APIs: AI-driven actions like "Suggest Roadmap" and "Propose Code Review Assignment"
 - [ ] Extensibility: Plugin System for Custom Parsers
 - [ ] Real-time: Webhook Integration for Real-time Updates
-- [ ] Contributor Metrics: Count, diversity, commit frequency
-- [ ] Bus Factor Analysis: Contributor concentration risk assessment
-- [ ] PR Merge Time Tracking: Cycle time and velocity metrics
 - [ ] Team Collaboration Features (Comments, Assignments)
 - [ ] Enterprise SSO Integration
 - [ ] Mobile App (React Native)

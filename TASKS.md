@@ -68,35 +68,26 @@
 - [x] Display vulnerability count and severity in Repository Stats (November 2025)
 - [x] Add Lines of Code (LOC) metrics: total LOC with language breakdown (November 2025)
 - [x] Calculate and display LOC-based statistics in Repository Stats section (November 2025)
+- [x] Implement content hashing for documentation templates (Phase 4, November 2025)
+- [x] Detect unchanged/stale templates - mark as "Dormant" (Phase 4, November 2025)
+- [x] Detect malformed document structure - mark as "Malformed" (Phase 4, November 2025)
+- [x] Add template version tracking (Phase 4, November 2025)
+- [x] Track contributor count and diversity (Phase 5, November 2025)
+- [x] Calculate commit frequency (commits/week) (Phase 5, November 2025)
+- [x] Implement bus factor analysis (contributor concentration) (Phase 5, November 2025)
+- [x] Track PR merge time (cycle time) (Phase 5, November 2025)
+- [x] Display contributor metrics in Repository Stats section (Phase 5, November 2025)
 
 ## In Progress
 
 ## Todo
-
-### Phase 3: Advanced Metrics & Integrations (Weeks 3-4) - COMPLETED ✅
-
-All Phase 3 tasks completed November 26, 2025
-
-### Phase 4: Template Health & Advanced Detection (Future) - LOW PRIORITY
-
-- [ ] Implement content hashing for documentation templates
-- [ ] Detect unchanged/stale templates (mark as "Dormant")
-- [ ] Detect malformed document structure (mark as "Malformed")
-- [ ] Add template version tracking
-
-### Phase 5: Contributor Analytics (Future) - LOW PRIORITY
-
-- [ ] Track contributor count and diversity
-- [ ] Calculate commit frequency (commits/week)
-- [ ] Implement bus factor analysis (contributor concentration)
-- [ ] Track PR merge time (cycle time)
-- [ ] Display contributor metrics in Activity section
 
 ### Phase 6: Final Launch Preparations - HIGH PRIORITY
 
 - [x] Add Health State Icons to main table row for each major detail section
 - [x] Validate Health Score Meter visualization with new calculation
 - [x] Add Testing Metrics Display (test count, coverage %, framework detection) - COMPLETED
+- [ ] Default repos should appear when not logged in yet (preview screen)
 - [ ] FIX GitHub OAuth in production environment (token/callback issues)
 - [ ] FIX Gemini API integration (404 errors - model version mismatch)
 

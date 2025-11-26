@@ -371,4 +371,88 @@ export class GitHubClient {
       return { total: 0, critical: 0, high: 0 };
     }
   }
+
+  async getContributorStats(repo: string, owner?: string): Promise<{
+    contributorCount: number;
+    commitFrequency: number; // commits per week
+    busFactor: number;
+  }> {
+    try {
+      const { data: contributors } = await this.octokit.repos.listContributors({
+        owner: owner || this.owner,
+        repo,
+        per_page: 100,
+      });
+
+      const contributorCount = contributors.length;
+
+      // Calculate bus factor (80/20 rule: contributors making 80% of commits)
+      const totalCommits = contributors.reduce((sum, c) => sum + (c.contributions || 0), 0);
+      let cumulativeCommits = 0;
+      let busFactor = 0;
+      
+      for (const contributor of contributors) {
+        cumulativeCommits += contributor.contributions || 0;
+        busFactor++;
+        if (cumulativeCommits >= totalCommits * 0.8) {
+          break;
+        }
+      }
+
+      // Get commit activity for last 52 weeks
+      const { data: commitActivity } = await this.octokit.repos.getCommitActivityStats({
+        owner: owner || this.owner,
+        repo,
+      });
+
+      // Calculate average commits per week from last 12 weeks
+      const recentWeeks = commitActivity?.slice(-12) || [];
+      const commitFrequency = recentWeeks.length > 0
+        ? recentWeeks.reduce((sum, week) => sum + (week.total || 0), 0) / recentWeeks.length
+        : 0;
+
+      return {
+        contributorCount,
+        commitFrequency: Math.round(commitFrequency * 10) / 10, // 1 decimal place
+        busFactor,
+      };
+    } catch {
+      return { contributorCount: 0, commitFrequency: 0, busFactor: 0 };
+    }
+  }
+
+  async getPullRequestStats(repo: string, owner?: string): Promise<{
+    avgMergeTimeHours: number;
+  }> {
+    try {
+      const { data: prs } = await this.octokit.pulls.list({
+        owner: owner || this.owner,
+        repo,
+        state: 'closed',
+        per_page: 30,
+        sort: 'updated',
+        direction: 'desc',
+      });
+
+      const mergedPrs = prs.filter(pr => pr.merged_at);
+      
+      if (mergedPrs.length === 0) {
+        return { avgMergeTimeHours: 0 };
+      }
+
+      const mergeTimes = mergedPrs.map(pr => {
+        const created = new Date(pr.created_at).getTime();
+        const merged = new Date(pr.merged_at!).getTime();
+        return (merged - created) / (1000 * 60 * 60); // hours
+      });
+
+      const avgMergeTimeHours = mergeTimes.reduce((sum, time) => sum + time, 0) / mergeTimes.length;
+
+      return {
+        avgMergeTimeHours: Math.round(avgMergeTimeHours * 10) / 10, // 1 decimal place
+      };
+    } catch {
+      return { avgMergeTimeHours: 0 };
+    }
+  }
 }

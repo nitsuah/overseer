@@ -33,6 +33,15 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Failed to fetch PRs for ${repo.fullName}`, e);
     }
 
+    // Fetch branches count
+    let branchesCount = 0;
+    try {
+        const branches = await github.getBranches(repo.name, owner);
+        branchesCount = branches.length;
+    } catch (e) {
+        console.warn(`Could not get branches for ${repo.name}:`, (e as Error).message);
+    }
+
     // Upsert repo with new metrics
     const repoRows = await db`
         INSERT INTO repos (
@@ -42,7 +51,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
             ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
-            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, 0
+            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}
         )
         ON CONFLICT (name) DO UPDATE SET
           description = EXCLUDED.description,
@@ -56,20 +65,11 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           last_synced = NOW(),
           updated_at = NOW(),
           last_commit_date = EXCLUDED.last_commit_date,
-          open_prs = EXCLUDED.open_prs
+          open_prs = EXCLUDED.open_prs,
+          branches_count = EXCLUDED.branches_count
         RETURNING id;
     `;
     const repoId = repoRows[0].id;
-
-    // Branches count
-    try {
-        const branches = await github.getBranches(repo.name, owner);
-        await db`
-            UPDATE repos SET branches_count = ${branches.length} WHERE id = ${repoId}
-        `;
-    } catch (e) {
-        console.warn(`Failed to fetch branches for ${repo.fullName}`, e);
-    }
 
     // Get file list for best practices and community standards checks
     let fileList: string[] = [];
@@ -133,8 +133,8 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         await db`DELETE FROM metrics WHERE repo_id = ${repoId}`;
         for (const metric of metricsData.metrics) {
             await db`
-                INSERT INTO metrics (repo_id, name, value, unit)
-                VALUES (${repoId}, ${metric.name}, ${metric.value}, ${metric.unit})
+                INSERT INTO metrics (repo_id, metric_name, value, unit, timestamp)
+                VALUES (${repoId}, ${metric.name}, ${metric.value}, ${metric.unit}, NOW())
             `;
         }
     }
@@ -228,7 +228,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         const metrics = await db`SELECT * FROM metrics WHERE repo_id = ${repoId}`;
         
         const docHealth = calculateDocHealth(docStatuses, 'other');
-        const coverage = metrics.find((m: { name: string }) => m.name?.toLowerCase().includes('coverage'));
+        const coverage = metrics.find((m: { metric_name: string }) => m.metric_name?.toLowerCase().includes('coverage'));
         const hasTests = bestPractices.some((bp: { practice_type: string; status: string }) => 
             bp.practice_type === 'testing_framework' && bp.status === 'healthy'
         );

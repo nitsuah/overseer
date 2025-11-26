@@ -49,14 +49,14 @@ CREATE TABLE IF NOT EXISTS roadmap_items (
 );
 
 -- Metrics table
+-- NOTE: Production uses 'metric_name' and 'timestamp' columns (legacy schema)
 CREATE TABLE IF NOT EXISTS metrics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   repo_id UUID REFERENCES repos(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
+  metric_name TEXT NOT NULL,
   value NUMERIC NOT NULL,
   unit TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Doc status table

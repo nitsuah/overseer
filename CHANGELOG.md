@@ -9,10 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Health score component breakdown display with progress bars (Documentation 30%, Testing 20%, Best Practices 20%, Community 15%)
+- README freshness tracking with color-coded staleness indicators (Fresh/Recent/Aging/Stale)
+- Coverage score sync from METRICS.md to database during repository sync
+- Docker as 11th best practice check (detects Dockerfile, docker-compose files, .dockerignore)
 - Toast notification system replacing browser alerts
 - Testing section enhancement with framework detection and test file counting
 - Comprehensive feature audit and documentation accuracy review (November 2025)
-- Feature detection matrix tracking 50+ items with detection/health/fix status
+- Feature detection matrix tracking 60+ items with detection/health/fix status
 - AUDIT.md documenting critical gaps, strengths, and opportunities
 - Repository stats (stars, forks, branches) in detail panel
 - LICENSE.md tracking as a document type
@@ -27,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Reordered dashboard columns: Health, Activity, Links, Docs (previously Health, Docs, Activity, Links)
+- GitHub link icon changed to purple Github icon, homepage link to green ExternalLink icon
+- Hide button changed to red X icon with toast notification (removed confirmation dialog)
+- Login redirect from header now correctly redirects to homepage instead of /api/auth/signin
 - Moved Stats column from main table to detail panel
 - Description column now hidden on smaller screens (xl+ only)
 - Updated Gemini API model to `gemini-1.5-flash`
@@ -34,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Coverage score from METRICS.md now properly stored in database and displayed in UI
+- Health score breakdown now visible to users (previously calculated but not shown)
+- Login redirect loop when signing in from header
 - React key warnings in metrics mapping
 - Null safety checks for metric names
 - OAuth callback URL configuration for Netlify

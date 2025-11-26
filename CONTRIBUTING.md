@@ -81,7 +81,7 @@ npm run dev
 
 ## Project Structure
 
-```bash
+```text
 overseer/
 ├── app/                    # Next.js App Router pages
 │   ├── api/               # API routes

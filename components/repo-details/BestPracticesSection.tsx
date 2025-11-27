@@ -45,7 +45,27 @@ export function BestPracticesSection({
         <p className="text-xs text-slate-500 italic">No data available</p>
       ) : (
         <div className="space-y-2">
-          {bestPractices.map((practice, i) => (
+          {bestPractices
+            .sort((a, b) => {
+              // Define custom order
+              const order = [
+                'branch_protection',
+                'cicd',
+                'gitignore',
+                'env_template',
+                'pre_commit_hooks',
+                'testing_framework',
+                'linting',
+                'dependabot',
+                'docker'
+              ];
+              const aIndex = order.indexOf(a.practice_type);
+              const bIndex = order.indexOf(b.practice_type);
+              const aPos = aIndex === -1 ? 999 : aIndex;
+              const bPos = bIndex === -1 ? 999 : bIndex;
+              return aPos - bPos;
+            })
+            .map((practice, i) => (
             <div key={i} className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 {getStatusIcon(practice.status)}

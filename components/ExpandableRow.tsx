@@ -136,8 +136,8 @@ export default function ExpandableRow({
         </div>
       </div>
 
-      {/* Second Row: Documentation, Community Standards, Best Practices, Testing, Issues, Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+      {/* Second Row: Documentation, Community Standards, Best Practices, Testing, Issues - All in one row */}
+      <div className="grid grid-cols-5 gap-4 mt-6">
         {/* Documentation Status */}
         <DocumentationSection docStatuses={docStatuses} readmeLastUpdated={readmeLastUpdated} />
 
@@ -166,10 +166,14 @@ export default function ExpandableRow({
 
         {/* Issues */}
         <IssuesSection metrics={metrics} />
-
-        {/* Metrics */}
-        <MetricsSection metrics={metrics} />
       </div>
+
+      {/* Metrics Row - if needed separately */}
+      {metrics && metrics.length > 0 && (
+        <div className="mt-6">
+          <MetricsSection metrics={metrics} />
+        </div>
+      )}
     </div>
   );
 }

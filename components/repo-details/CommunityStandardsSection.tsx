@@ -30,7 +30,19 @@ export function CommunityStandardsSection({
   };
 
   const getLabel = (type: string) => {
-    return type
+    // Use explicit filenames for community standards
+    const labels: Record<string, string> = {
+      'contributing': 'CONTRIBUTING',
+      'security': 'SECURITY',
+      'license': 'LICENSE',
+      'changelog': 'CHANGELOG',
+      'code_of_conduct': 'Code of Conduct',
+      'issue_template': 'Issue Template',
+      'pr_template': 'PR Template',
+      'codeowners': 'CODEOWNERS',
+      'copilot_instructions': 'COPILOT',
+    };
+    return labels[type] || type
       .split('_')
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(' ');
@@ -43,7 +55,9 @@ export function CommunityStandardsSection({
       'license',
       'changelog',
       'issue_template',
-      'pr_template'
+      'pr_template',
+      'codeowners',
+      'copilot_instructions'
     ].includes(s.standard_type)
   );
 
@@ -71,14 +85,37 @@ export function CommunityStandardsSection({
         <p className="text-xs text-slate-500 italic">No data available</p>
       ) : (
         <div className="space-y-2">
-          {communityStandards.map((standard, i) => {
+          {communityStandards
+            .sort((a, b) => {
+              // Define custom order
+              const order = [
+                'contributing',
+                'changelog',
+                'codeowners',
+                'security',
+                'copilot_instructions',
+                'license',
+                'issue_template',
+                'pr_template',
+                'code_of_conduct'
+              ];
+              const aIndex = order.indexOf(a.standard_type);
+              const bIndex = order.indexOf(b.standard_type);
+              // If not in order array, put at end
+              const aPos = aIndex === -1 ? 999 : aIndex;
+              const bPos = bIndex === -1 ? 999 : bIndex;
+              return aPos - bPos;
+            })
+            .map((standard, i) => {
             const hasTemplate = [
               'code_of_conduct',
               'security',
               'license',
               'changelog',
               'issue_template',
-              'pr_template'
+              'pr_template',
+              'codeowners',
+              'copilot_instructions'
             ].includes(standard.standard_type);
             const isMissing = standard.status === 'missing';
 

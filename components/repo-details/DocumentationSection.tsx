@@ -13,8 +13,8 @@ export function DocumentationSection({ docStatuses, readmeLastUpdated }: Documen
   const coreDocs = docStatuses.filter((d) =>
     ['roadmap', 'tasks', 'metrics', 'features'].includes(d.doc_type)
   );
-  const standardDocs = docStatuses.filter((d) => ['readme', 'contributing'].includes(d.doc_type));
-  // Removed changelog and license - they're covered in Community Standards
+  const standardDocs = docStatuses.filter((d) => ['readme'].includes(d.doc_type));
+  // Removed contributing, changelog and license - they're covered in Community Standards
   const otherDocs = docStatuses.filter(
     (d) =>
       !['roadmap', 'tasks', 'metrics', 'readme', 'features', 'contributing', 'changelog', 'license'].includes(d.doc_type)
@@ -33,7 +33,17 @@ export function DocumentationSection({ docStatuses, readmeLastUpdated }: Documen
       <div className="mb-4">
         <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Core</h5>
         <div className="space-y-2">
-          {coreDocs.map((d) => (
+          {coreDocs
+            .sort((a, b) => {
+              // Define custom order: roadmap, tasks, features, metrics
+              const order = ['roadmap', 'tasks', 'features', 'metrics'];
+              const aIndex = order.indexOf(a.doc_type);
+              const bIndex = order.indexOf(b.doc_type);
+              const aPos = aIndex === -1 ? 999 : aIndex;
+              const bPos = bIndex === -1 ? 999 : bIndex;
+              return aPos - bPos;
+            })
+            .map((d) => (
             <div key={d.doc_type} className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 {d.exists ? (

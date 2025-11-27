@@ -45,25 +45,48 @@ export async function POST(
         }
 
         // Filter standards that have templates
-        const standardsWithTemplates = ['code_of_conduct', 'security'];
+        const standardsWithTemplates = [
+            'code_of_conduct', 
+            'security', 
+            'license', 
+            'changelog', 
+            'issue_template', 
+            'pr_template',
+            'codeowners',
+            'copilot_instructions'
+        ];
         const fixableStandards = csRows.filter(row => 
             standardsWithTemplates.includes(row.standard_type)
         );
 
         if (fixableStandards.length === 0) {
             return NextResponse.json({ 
-                message: 'No fixable standards (only CODE_OF_CONDUCT and SECURITY have templates)' 
+                message: 'No fixable standards found' 
             }, { status: 200 });
         }
 
         // Collect files to add
         const filesToAdd: { path: string; content: string }[] = [];
         for (const standard of fixableStandards) {
-            const templatePath = path.join(process.cwd(), 'templates', `${standard.standard_type.toUpperCase()}.md`);
+            let templatePath: string;
+            let targetPath: string;
+
+            // Handle special cases for file paths
+            if (standard.standard_type === 'codeowners') {
+                templatePath = path.join(process.cwd(), 'templates', '.github', 'CODEOWNERS');
+                targetPath = '.github/CODEOWNERS';
+            } else if (standard.standard_type === 'copilot_instructions') {
+                templatePath = path.join(process.cwd(), 'templates', '.github', 'copilot-instructions.md');
+                targetPath = '.github/copilot-instructions.md';
+            } else {
+                templatePath = path.join(process.cwd(), 'templates', `${standard.standard_type.toUpperCase()}.md`);
+                targetPath = `${standard.standard_type.toUpperCase()}.md`;
+            }
+
             try {
                 const content = await fs.readFile(templatePath, 'utf-8');
                 filesToAdd.push({
-                    path: `${standard.standard_type.toUpperCase()}.md`,
+                    path: targetPath,
                     content
                 });
             } catch (error) {

@@ -63,5 +63,21 @@ export function checkCommunityStandards(fileList: string[]): CommunityStandardsR
         details: { exists: hasPRTemplate }
     });
 
+    // CODEOWNERS
+    const hasCodeowners = lowerFiles.includes('.github/codeowners') || lowerFiles.includes('codeowners');
+    standards.push({
+        type: 'codeowners',
+        status: hasCodeowners ? 'healthy' : 'missing',
+        details: { exists: hasCodeowners }
+    });
+
+    // Copilot Instructions
+    const hasCopilotInstructions = lowerFiles.includes('.github/copilot-instructions.md');
+    standards.push({
+        type: 'copilot_instructions',
+        status: hasCopilotInstructions ? 'healthy' : 'missing',
+        details: { exists: hasCopilotInstructions }
+    });
+
     return { standards };
 }

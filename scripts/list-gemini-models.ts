@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
@@ -12,15 +11,22 @@ async function listModels() {
     }
     
     try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        
         console.log('Fetching available models...\n');
         
-        const models = await genAI.listModels();
+        // Use fetch API directly to list models
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+        );
+        
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
         
         console.log('Available models that support generateContent:\n');
         
-        for await (const model of models) {
+        for (const model of data.models || []) {
             if (model.supportedGenerationMethods?.includes('generateContent')) {
                 console.log(`✅ ${model.name}`);
                 console.log(`   Display Name: ${model.displayName}`);

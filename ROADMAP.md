@@ -78,7 +78,7 @@
   - [ ] Security policy - Define vulnerability reporting process
   - [ ] Security advisories - View/disclose security advisories
   - [ ] Private vulnerability reporting - Allow private reports
-  - [ ] Dependabot alerts - Dependency vulnerability notifications
+  - [ ] Dependabot alerts - Dependency vulnerability counter/link
   - [ ] Code scanning alerts - Automatic vulnerability detection
   - [ ] Secret scanning alerts - Secret detection in commits
 - [ ] Velocity Tracking: Expand PR/commit analytics with trends

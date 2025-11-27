@@ -1,6 +1,6 @@
 // Repository table row component
 
-import React, { Fragment, useMemo, useState, useEffect } from 'react';
+import React, { Fragment, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   GitPullRequest,
@@ -68,6 +68,21 @@ export function RepoTableRow({
 }: RepoTableRowProps) {
   const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
   const repoType = (repo.repo_type as RepoType) || typeInfo.type;
+  
+  // Get icon based on actual repo_type if set, otherwise use detected type
+  const getTypeIcon = (type: RepoType): string => {
+    const iconMap: Record<RepoType, string> = {
+      'web-app': '🌐',
+      'game': '🎮',
+      'tool': '🔧',
+      'library': '📦',
+      'bot': '🤖',
+      'research': '🔬',
+      'unknown': '📄',
+    };
+    return iconMap[type];
+  };
+  
   const docHealth = details ? calculateDocHealth(details.docStatuses, repoType) : null;
   const health = getHealthGrade(repo.health_score || 0);
 
@@ -237,7 +252,7 @@ export function RepoTableRow({
               )} ${isAuthenticated ? 'hover:opacity-80 cursor-pointer' : ''} transition-opacity`}
               title={isAuthenticated ? 'Click to edit type' : ''}
             >
-              <span>{typeInfo.icon}</span>
+              <span>{getTypeIcon(repoType)}</span>
               <span className="capitalize">{repoType.replace('-', ' ')}</span>
             </button>
           )}
@@ -379,9 +394,6 @@ export function RepoTableRow({
               totalLoc={repo.total_loc}
               locLanguageBreakdown={repo.loc_language_breakdown}
               testCaseCount={repo.test_case_count}
-              ciStatus={repo.ci_status}
-              ciLastRun={repo.ci_last_run}
-              ciWorkflowName={repo.ci_workflow_name}
               vulnAlertCount={repo.vuln_alert_count}
               vulnCriticalCount={repo.vuln_critical_count}
               vulnHighCount={repo.vuln_high_count}

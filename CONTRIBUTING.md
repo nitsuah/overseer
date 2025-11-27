@@ -79,6 +79,29 @@ cp .env.example .env.local
 npm run dev
 ```
 
+### Environment Variables
+
+Edit `.env.local` with these required values:
+
+```env
+# GitHub OAuth (get from https://github.com/settings/developers)
+GITHUB_ID=your_github_oauth_client_id
+GITHUB_SECRET=your_github_oauth_client_secret
+
+# NextAuth
+NEXTAUTH_SECRET=your_random_secret
+NEXTAUTH_URL=http://localhost:3000
+
+# Neon Database (get from Neon console or Netlify)
+DATABASE_URL=postgresql://user:pass@host/db
+
+# Google Gemini API (optional - for AI summaries)
+# Get from https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=AIzaSy...your_key_here
+```
+
+**Note on Gemini API**: As of late 2025, Google deprecated Gemini 1.x models. The codebase uses `gemini-2.5-flash`. Test with `npm run test-gemini` to verify your API key works.
+
 ## Project Structure
 
 ```text

@@ -86,11 +86,11 @@
 - [x] Add pre-commit hooks to Overseer project (husky + lint-staged + prettier)
 - [x] Implement full E2E tests with Playwright (comprehensive test suite)
 - [x] Default repos should appear when not logged in yet (preview screen)
+- [x] Update Gemini AI integration to use Gemini 2.5 models (1.x models deprecated)
 
 ## In Progress
 
 - [ ] FIX GitHub OAuth in production environment (token/callback issues)
-- [ ] FIX Gemini API integration (404 errors - model version mismatch)
 
 ## Todo
 

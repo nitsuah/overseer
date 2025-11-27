@@ -72,7 +72,7 @@
 - [x] PR Merge Time Tracking: Average cycle time from creation to merge (November 2025)
 - [x] Contributor Metrics Display: Show all contributor analytics in Repository Stats (November 2025)
 - [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
-- [ ] Gemini API Integration Fix: Resolve model version compatibility
+- [x] Gemini API Integration: Updated to use Gemini 2.5 models (deprecated 1.x models) (November 2025)
 - [ ] Security in Health Score: Add vulnerability metrics to calculation
 - [ ] Security Detail: Track 6 GitHub security configuration settings
   - [ ] Security policy - Define vulnerability reporting process

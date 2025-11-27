@@ -6,16 +6,10 @@ import { getStatusColor } from '@/lib/expandable-row-utils';
 
 interface BestPracticesSectionProps {
   bestPractices: BestPractice[];
-  ciStatus?: string;
-  ciLastRun?: string | null;
-  ciWorkflowName?: string | null;
 }
 
 export function BestPracticesSection({
   bestPractices,
-  ciStatus,
-  ciLastRun,
-  ciWorkflowName,
 }: BestPracticesSectionProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -68,42 +62,6 @@ export function BestPracticesSection({
               </span>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* CI/CD Status Badge - at bottom like README status in Documentation */}
-      {ciStatus && ciStatus !== 'unknown' && (
-        <div
-          className={`mt-4 pt-4 border-t border-slate-700/50 p-3 rounded-lg ${
-            ciStatus === 'passing'
-              ? 'bg-green-500/10 border border-green-500/30'
-              : 'bg-red-500/10 border border-red-500/30'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className={`text-lg ${ciStatus === 'passing' ? '✓' : '✗'}`}>
-                {ciStatus === 'passing' ? '✓' : '✗'}
-              </span>
-              <div>
-                <div
-                  className={`text-sm font-semibold ${
-                    ciStatus === 'passing' ? 'text-green-300' : 'text-red-300'
-                  }`}
-                >
-                  CI/CD {ciStatus === 'passing' ? 'Passing' : 'Failing'}
-                </div>
-                {ciWorkflowName && (
-                  <div className="text-xs text-slate-400 mt-0.5">{ciWorkflowName}</div>
-                )}
-              </div>
-            </div>
-            {ciLastRun && (
-              <div className="text-xs text-slate-400">
-                {new Date(ciLastRun).toLocaleDateString()}
-              </div>
-            )}
-          </div>
         </div>
       )}
     </div>

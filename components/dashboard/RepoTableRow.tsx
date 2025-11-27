@@ -1,6 +1,7 @@
 // Repository table row component
 
-import React, { Fragment, useMemo, useState } from 'react';
+import React, { Fragment, useMemo, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   GitPullRequest,
   AlertCircle,
@@ -17,6 +18,9 @@ import {
   CheckCircle2,
   XCircle,
   HelpCircle,
+  FileText,
+  FlaskConical,
+  Clock,
 } from 'lucide-react';
 import ExpandableRow from '@/components/ExpandableRow';
 import { Repo, RepoDetails } from '@/types/repo';
@@ -281,15 +285,7 @@ export function RepoTableRow({
         <td className="px-6 py-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <span className={`text-lg font-bold ${health.color} relative group`}>
-                {health.grade}
-                {details && (
-                  <>
-                    {/* Health Breakdown Popup */}
-                    <HealthBreakdown repo={repo} details={details} />
-                  </>
-                )}
-              </span>
+              {details && <HealthBreakdown repo={repo} details={details} health={health} />}
               {details && (
                 <>
                   {/* Health Shields */}
@@ -402,7 +398,25 @@ export function RepoTableRow({
 }
 
 // Helper components for cleaner code
-function HealthBreakdown({ repo, details }: { repo: Repo; details: RepoDetails }) {
+function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoDetails; health: { grade: string; color: string } }) {
+  const [showPopup, setShowPopup] = useState(false);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const spanRef = React.useRef<HTMLSpanElement>(null);
+  
+  const handleMouseEnter = () => {
+    if (!spanRef.current) return;
+    const rect = spanRef.current.getBoundingClientRect();
+    setPosition({
+      top: rect.bottom + 8,
+      left: rect.left + rect.width / 2,
+    });
+    setShowPopup(true);
+  };
+  
+  const handleMouseLeave = () => {
+    setShowPopup(false);
+  };
+  
   // Get repo type for doc health calculation
   const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
   const repoType = (repo.repo_type as RepoType) || typeInfo.type;
@@ -500,34 +514,69 @@ function HealthBreakdown({ repo, details }: { repo: Repo; details: RepoDetails }
   };
 
   return (
-    <div className="absolute left-0 top-8 z-50 hidden group-hover:block w-72 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-4">
-      <h4 className="text-sm font-semibold text-slate-200 mb-3">Health Breakdown</h4>
-      <div className="space-y-3">
-        {scores.map(({ label, score, color, weight }) => {
-          const colors = colorMap[color] || colorMap.blue;
-          return (
-            <div key={label} className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">{label}</span>
-                <div className="flex items-center gap-2">
-                  <span className={`${colors.text} font-medium`}>{score}%</span>
-                  <span className="text-slate-500 text-[10px]">({weight})</span>
+    <>
+      <span 
+        ref={spanRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={`text-lg font-bold ${health.color} cursor-help`}
+      >
+        {health.grade}
+      </span>
+      {showPopup && position && createPortal(
+        <div 
+          className="fixed -translate-x-1/2 w-80 bg-slate-800 border border-slate-700 rounded-lg shadow-2xl p-4 pointer-events-none"
+          style={{ 
+            top: `${position.top}px`,
+            left: `${position.left}px`,
+            zIndex: 9999,
+          }}
+        >
+          <h4 className="text-sm font-semibold text-slate-200 mb-3">Health Breakdown</h4>
+          <div className="space-y-3">
+            {scores.map(({ label, score, color, weight }) => {
+              const colors = colorMap[color] || colorMap.blue;
+              // Use red for scores below 50%
+              const barColor = score < 50 ? '#ef4444' : colors.hex;
+              
+              // Icon mapping for each section
+              const iconMap: Record<string, React.ReactNode> = {
+                'Documentation': <FileText className="h-3.5 w-3.5 text-slate-400" />,
+                'Testing': <FlaskConical className="h-3.5 w-3.5 text-blue-400" />,
+                'Best Practices': <Shield className="h-3.5 w-3.5 text-purple-400" />,
+                'Community': <Shield className="h-3.5 w-3.5 text-green-400" />,
+                'Activity': <Clock className="h-3.5 w-3.5 text-green-400" />,
+              };
+              
+              return (
+                <div key={label} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5">
+                      {iconMap[label]}
+                      <span className="text-slate-400">{label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`${score < 50 ? 'text-red-400' : colors.text} font-medium`}>{score}%</span>
+                      <span className="text-slate-500 text-[10px]">({weight})</span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-full transition-all"
+                      style={{ 
+                        width: `${score}%`,
+                        backgroundColor: barColor
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="h-full transition-all"
-                  style={{ 
-                    width: `${score}%`,
-                    backgroundColor: colors.hex
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+              );
+            })}
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }
 

@@ -36,9 +36,6 @@ interface ExpandableRowProps {
   totalLoc?: number;
   locLanguageBreakdown?: Record<string, number>;
   testCaseCount?: number;
-  ciStatus?: string;
-  ciLastRun?: string | null;
-  ciWorkflowName?: string | null;
   vulnAlertCount?: number;
   vulnCriticalCount?: number;
   vulnHighCount?: number;
@@ -70,9 +67,6 @@ export default function ExpandableRow({
   totalLoc,
   locLanguageBreakdown,
   testCaseCount,
-  ciStatus,
-  ciLastRun,
-  ciWorkflowName,
   vulnAlertCount,
   vulnCriticalCount,
   vulnHighCount,
@@ -159,9 +153,6 @@ export default function ExpandableRow({
         {/* Best Practices */}
         <BestPracticesSection
           bestPractices={bestPractices}
-          ciStatus={ciStatus}
-          ciLastRun={ciLastRun}
-          ciWorkflowName={ciWorkflowName}
         />
 
         {/* Testing */}

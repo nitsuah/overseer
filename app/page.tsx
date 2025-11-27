@@ -146,7 +146,7 @@ export default function Dashboard() {
             </p>
           </div>
         ) : (
-          <div className="glass rounded-lg overflow-hidden">
+          <div className="glass rounded-lg overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-800/50 border-b border-slate-700">
                 <tr>

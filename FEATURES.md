@@ -9,7 +9,7 @@
 - **Template Health Detection**: Content hashing to detect unchanged/stale templates marked as "dormant" state (Phase 4)
 - **Template Version Tracking**: Tracks which template version docs are based on with template_version column (Phase 4)
 - **Malformed Doc Detection**: Identifies docs with template markers like `TODO:` or <50 characters (Phase 4)
-- **Code Coverage Visualization**: Progress bars showing test coverage synced from METRICS.md
+- **Code Coverage Visualization**: Progress bars showing test coverage synced from METRICS.md (self-reported from target repositories)
 - **README Freshness Tracking**: Days since README last updated with color-coded staleness (Fresh/Recent/Aging/Stale)
 - **Activity Monitoring**: Last commit dates, open PRs, open issues with color-coded freshness indicators
 - **Lines of Code (LOC)**: Total LOC calculated from GitHub language stats with K suffix formatting (e.g., "12.5K")
@@ -22,7 +22,7 @@
 - **PR Merge Time**: Average hours from creation to merge for last 30 PRs (Phase 5)
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
-- **Community Standards**: 8 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates
+- **Community Standards**: 9 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions
 
 ### 🤖 AI-Powered Features
 
@@ -33,10 +33,16 @@
 
 - **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, and community standards templates
 - **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Overseer compliance and avoiding hallucination
-- **Auto-Fix Missing Docs**: One-click PR creation for missing documentation
-- **Batch Operations**: Fix all missing docs across repositories with single PR
+- **Auto-Fix Missing Docs**: One-click PR creation for missing documentation (8 doc types)
+- **Auto-Fix Best Practices**: One-click PR creation for missing best practices (4 types: Dependabot, Env Template, Docker, Netlify Badge)
+- **Auto-Fix Community Standards**: One-click PR creation for missing standards (9 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions)
+- **Batch Operations**: Fix all missing docs or all missing standards with single PR
 - **Doc Health Scoring**: Percentage-based health scores for documentation completeness
 - **Template Health Detection**: Content hashing to identify unchanged/dormant templates
+- **OAuth Error Handling**: Comprehensive error detection for organization access restrictions with auto-redirect to GitHub authorization
+- **GitHub Error Parsing**: Detects 5 error types (OAuth restrictions, permissions, not found, rate limits, unknown) with user-friendly messages
+- **Authorization Auto-Redirect**: Automatically opens GitHub OAuth settings when org restrictions detected
+- **Error Instructions**: Step-by-step guidance for resolving OAuth and permission issues
 
 ### 🎯 Project Tracking
 
@@ -103,7 +109,7 @@ Overseer monitors the following documentation files in each repository:
 
 Overseer tracks adherence to development and community standards with 4-state health tracking (Missing, Dormant, Malformed, Healthy):
 
-### 🛡️ Community Standards (8 Checks)
+### 🛡️ Community Standards (9 Checks)
 
 - **CODE_OF_CONDUCT.md** - Community behavior guidelines (template available)
 - **CONTRIBUTING.md** - Contribution guidelines
@@ -112,6 +118,8 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **CHANGELOG.md** - Version history
 - **Issue Templates** - Standardized issue creation (templates available: bug_report, feature_request)
 - **Pull Request Templates** - PR guidelines
+- **CODEOWNERS** - Code ownership and review assignments (template available)
+- **Copilot Instructions** - AI assistant guidance file (template available)
 
 ### ✅ Best Practices (10 Checks)
 
@@ -130,13 +138,13 @@ Overseer tracks adherence to development and community standards with 4-state he
 
 Overseer calculates comprehensive health scores (0-100) based on 5 weighted components:
 
-| Component             | Weight | What It Measures                                                                                                               |
-| --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| Documentation Health  | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md     |
-| Testing & Quality     | 20%    | Test coverage, framework detection, CI/CD status                                                                               |
-| Best Practices        | 20%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker |
-| Community Standards   | 15%    | 8 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates                           |
-| Activity & Engagement | 15%    | Commit frequency, PR/Issue counts, contributor activity                                                                        |
+| Component             | Weight | What It Measures                                                                                                                       |
+| --------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Documentation Health  | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md             |
+| Testing & Quality     | 20%    | Test coverage, framework detection, CI/CD status                                                                                       |
+| Best Practices        | 20%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker         |
+| Community Standards   | 15%    | 9 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates, CODEOWNERS, Copilot Instructions |
+| Activity & Engagement | 15%    | Commit frequency, PR/Issue counts, contributor activity                                                                                |
 
 Health scores are displayed as letter grades (A-F) with detailed component breakdowns available in the expandable detail panel.
 

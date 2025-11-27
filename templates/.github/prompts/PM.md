@@ -991,6 +991,94 @@ After:
 4. **Stay Actionable**: Todo should have clear, achievable tasks
 5. **Respect Format**: Follow all Overseer parsing requirements
 6. **Document Workflow**: Update this guide when workflow evolves
+7. **Track UX Improvements**: When discovering UX issues during development, add them to ROADMAP as "Future: UX Enhancements"
+
+---
+
+## 🎯 Documenting Error Handling & UX Improvements
+
+**New Pattern Learned**: When implementing error handling or UX improvements, document them comprehensively.
+
+### When Adding Error Handling
+
+If you create error detection/handling systems:
+
+1. **FEATURES.md** - Add to appropriate category (e.g., "Documentation Management" or "Authentication & Security")
+   - List error types detected (OAuth restrictions, permissions, rate limits, etc.)
+   - Describe user-facing improvements (auto-redirect, toast notifications, instructions)
+   - Include both technical features (error parsing) and UX features (helpful messaging)
+
+2. **CHANGELOG.md** - Document in [Unreleased] section
+   - Added: New error detection systems, documentation, utilities
+   - Changed: Error messages, UX flows
+   - Fixed: Specific error scenarios that now work better
+
+3. **ROADMAP.md** - If discovering new UX issues during implementation
+   - Add "Future: UX Enhancements" section for follow-up improvements
+   - Example: Modal previews, confirmation dialogs, pick-and-choose functionality
+
+4. **TASKS.md** - Move error handling work to Done
+   - Consolidate multiple related tasks into summary items
+   - Include both implementation and documentation work
+
+5. **AUDIT.md** - Add to Feature Detection & Display Matrix
+   - New row section: "Error Handling & UX"
+   - List detection methods, sources, health indicators
+   - Mark status as Complete when implemented
+
+6. **METRICS.md** - Track new files/utilities created
+   - Add rows for new utility files (e.g., lib/github-errors.ts)
+   - Add rows for new documentation (e.g., OAuth guides)
+
+### Example: OAuth Error Handling Documentation
+
+**What we implemented:**
+
+- lib/github-errors.ts (error parsing utility)
+- Enhanced API error responses in fix-doc/fix-best-practice endpoints
+- Auto-redirect to GitHub authorization page
+- Toast notifications with instructions
+- Two user guides (GITHUB_OAUTH_ORG_ACCESS.md, OAUTH_ORG_FIX_SUMMARY.md)
+
+**How we documented it:**
+
+```markdown
+FEATURES.md:
+
+- **OAuth Error Handling**: Comprehensive error detection...
+- **GitHub Error Parsing**: Detects 5 error types...
+- **Authorization Auto-Redirect**: Automatically opens...
+- **Error Instructions**: Step-by-step guidance...
+
+CHANGELOG.md [Unreleased]:
+
+### Added
+
+- **OAuth Error Handling System:** Comprehensive error detection...
+- **GitHub Error Parsing:** Detects 5 error types...
+
+ROADMAP.md Future:
+
+- [ ] Doc Fix Preview Modal: Modal window before PR creation...
+
+TASKS.md Done:
+
+- [x] OAuth error handling: Comprehensive error parsing...
+- [x] Error detection system: Created lib/github-errors.ts...
+
+AUDIT.md:
+| **Error Handling & UX** |
+| OAuth Error Detection | Error message pattern matching | ✅ Complete
+```
+
+This pattern ensures:
+
+1. Users understand new features (FEATURES.md)
+2. Changes are tracked historically (CHANGELOG.md)
+3. Future improvements are planned (ROADMAP.md)
+4. Work is marked complete (TASKS.md)
+5. Implementation is audited (AUDIT.md)
+6. New files are tracked (METRICS.md)
 
 ---
 

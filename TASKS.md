@@ -11,13 +11,19 @@
 - [x] UI/UX enhancements: health breakdown hover, detail panel reorganization, toast notifications
 - [x] Testing infrastructure: Pre-commit hooks, full E2E test suite with Playwright
 - [x] Component refactoring: Extracted hooks (useDashboard, useRepoActions, useRepoFilters), modular components
+- [x] OAuth error handling: Comprehensive error parsing, auto-redirect to GitHub authorization, user-friendly messages
+- [x] Error detection system: Created lib/github-errors.ts with OAuth restriction, permission, rate limit detection
+- [x] Enhanced API error responses: Detailed error types and actionable instructions in fix-doc and fix-best-practice endpoints
+- [x] OAuth documentation: Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md guides
+- [x] Best practices auto-fix: Fix buttons for Dependabot, Env Template, Docker, Netlify Badge (4 practices with templates)
+- [x] Documentation accuracy audit: Fixed Community Standards count from 8 to 9 (added CODEOWNERS, Copilot Instructions tracking)
 
 ### Core Features Delivered (Earlier in Q4 2025)
 
 - [x] Repository dashboard with health scoring, filtering, and expandable details
-- [x] Documentation tracking and automated fixes (single/batch PR creation)
+- [x] Documentation tracking and automated fixes (single/batch PR creation for 8 doc types)
 - [x] AI-powered summaries (Google Gemini 2.5)
-- [x] Best Practices detection (10 checks) and Community Standards tracking (8 checks)
+- [x] Best Practices detection (10 checks) and Community Standards tracking (9 checks)
 - [x] Features parser and display system with category organization
 - [x] Default repositories feature for non-authenticated users
 - [x] Database schema with comprehensive metric tracking
@@ -26,12 +32,20 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ## In Progress
 
-- [ ] FIX GitHub OAuth in production environment (token/callback issues)
+_No active tasks - ready for next assignment._
 
 ## Todo
 
-### Phase 7: Security Configuration & Tracking
+### Phase 7: UX Improvements
 
+- [ ] Add modal window for doc fix preview before PR creation
+- [ ] Implement template preview in modal with markdown rendering
+- [ ] Add pick-and-choose functionality for batch fix operations
+- [ ] Add "Do you really want to fix all?" confirmation with per-doc opt-in
+
+### Phase 8: Security Configuration & Tracking
+
+- [ ] Add new "Security Details" section to application detail window.
 - [ ] Track GitHub security policy presence (SECURITY.md existence)
 - [ ] Detect security advisory configuration (vulnerability disclosure enabled)
 - [ ] Check private vulnerability reporting status
@@ -39,7 +53,7 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 - [ ] Track code scanning alerts configuration
 - [ ] Track secret scanning alerts configuration
 
-### Phase 8: Future Enhancements
+### Phase 9: Future Enhancements
 
 - [ ] Add webhook integration for real-time updates
 - [ ] Token Density Metric (LOC per logical unit with AI-assisted parsing)

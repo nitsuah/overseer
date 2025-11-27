@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **OAuth Error Handling System:** Comprehensive error detection for organization access restrictions (lib/github-errors.ts)
+- **GitHub Error Parsing:** Detects 5 error types (OAuth restrictions, permissions, not found, rate limits, unknown) with user-friendly messages
+- **Auto-Redirect to GitHub:** Automatically opens GitHub OAuth settings when org access restrictions detected
+- **Enhanced Error Responses:** API endpoints return detailed error types, instructions, and help URLs
+- **OAuth Documentation:** Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md user guides
+- **Frontend Error Handling:** Enhanced useRepoActions hook with OAuth detection, toast notifications, and console logging
+- **Template Path Debugging:** Added comprehensive logging to fix-doc endpoint for troubleshooting template resolution issues
+- **UX Roadmap Item:** Doc fix preview modal with template preview and pick-and-choose functionality before PR creation
+- **Best Practices Fix Buttons:** Auto-fix for 4 best practices (Dependabot, Env Template, Docker, Netlify Badge) with one-click PR creation
+
+### Changed
+
+- **Error Messages:** Replaced raw GitHub API errors with actionable, user-friendly messages
+- **Fix Button UX:** Now shows toast notifications with authorization instructions instead of generic errors
+- **API Error Handling:** All fix endpoints now parse and classify GitHub errors before responding
+
+### Fixed
+
+- **OAuth Organization Restrictions:** Users now get clear instructions when org blocks OAuth app access instead of cryptic errors
+- **Error Context:** Console logs now show detailed error information for debugging template and authorization issues
+
+## [1.2.0] - 2025-11-27
+
+### Added
+
 - **Smart Links Column:** Issues and Dependabot alerts now show as badge buttons with counts (only when > 0)
 - **Dependabot Alerts Button:** New shield icon button linking to /security/dependabot when alerts exist
 - **Security Configuration Tracking:** Added Security Detail section to ROADMAP.md tracking 6 GitHub security settings
@@ -38,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README freshness tracking with color-coded staleness indicators (Fresh/Recent/Aging/Stale)
 - Coverage score sync from METRICS.md to database during repository sync
 - Docker as 10th best practice check (detects Dockerfile, docker-compose files, .dockerignore)
-- PR Template correctly categorized under Community Standards (now 8 checks total, was in Best Practices)
+- PR Template correctly categorized under Community Standards (now 9 checks total: added CODEOWNERS and Copilot Instructions)
 - Toast notification system replacing browser alerts
 - Testing section enhancement with framework detection and test file counting
 - Comprehensive feature audit and documentation accuracy review (November 2025)

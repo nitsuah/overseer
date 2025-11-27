@@ -8,7 +8,7 @@
 - **Documentation Tracking**: Monitors presence and status of key docs with 4-state health model (Missing, Dormant, Malformed, Healthy)
 - **Template Health Detection**: Content hashing to detect unchanged/stale templates marked as "dormant" state (Phase 4)
 - **Template Version Tracking**: Tracks which template version docs are based on with template_version column (Phase 4)
-- **Malformed Doc Detection**: Identifies docs with template markers like "TODO:" or <50 characters (Phase 4)
+- **Malformed Doc Detection**: Identifies docs with template markers like `TODO:` or <50 characters (Phase 4)
 - **Code Coverage Visualization**: Progress bars showing test coverage synced from METRICS.md
 - **README Freshness Tracking**: Days since README last updated with color-coded staleness (Fresh/Recent/Aging/Stale)
 - **Activity Monitoring**: Last commit dates, open PRs, open issues with color-coded freshness indicators
@@ -31,10 +31,12 @@
 
 ### 📝 Documentation Management
 
-- **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, and more
+- **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, and community standards templates
+- **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Overseer compliance and avoiding hallucination
 - **Auto-Fix Missing Docs**: One-click PR creation for missing documentation
-- **Batch Operations**: Fix all missing docs across repositories
+- **Batch Operations**: Fix all missing docs across repositories with single PR
 - **Doc Health Scoring**: Percentage-based health scores for documentation completeness
+- **Template Health Detection**: Content hashing to identify unchanged/dormant templates
 
 ### 🎯 Project Tracking
 

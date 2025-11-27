@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Smart Links Column:** Issues and Dependabot alerts now show as badge buttons with counts (only when > 0)
+- **Dependabot Alerts Button:** New shield icon button linking to /security/dependabot when alerts exist
+- **Security Configuration Tracking:** Added Security Detail section to ROADMAP.md tracking 6 GitHub security settings
+- **Activity Badge in Health Column:** Moved activity indicator to Health shields as 5th badge with time formatting
+- **Health Breakdown Hover:** Interactive tooltip showing all 5 health components on grade letter hover
+- **Community Standards Templates:** Expanded Fix buttons to 6 standards (CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, ISSUE_TEMPLATE, PR_TEMPLATE)
 - **Template Health Detection (Phase 4):** Content hashing to detect unchanged/stale templates marked as "dormant"
 - **Template Version Tracking (Phase 4):** Track which template version docs are based on with template_version column
 - **Malformed Detection (Phase 4):** Detect docs with template markers like "TODO:" or <50 characters
@@ -51,6 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Table Structure:** Removed Activity column (now 8 columns: Links, Repository, Type, Description, Language, Health, Docs, Actions)
+- **Column Order:** Links moved to first position, Activity badge integrated into Health shields
+- **AI Summary Display:** Changed condition from `includes('unavailable')` to `startsWith('Summary unavailable')` for better accuracy
+- **Health Breakdown Positioning:** Moved hover group to grade span only (not entire Health column)
+- **Doc Tooltips:** Enhanced with multiline status showing individual doc health states
 - Reordered dashboard columns: Health, Activity, Links, Docs (previously Health, Docs, Activity, Links)
 - GitHub link icon changed to purple Github icon, homepage link to green ExternalLink icon
 - Hide button changed to red X icon with toast notification (removed confirmation dialog)
@@ -59,6 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Description column now hidden on smaller screens (xl+ only)
 - Updated Gemini API model to `gemini-1.5-flash`
 - Reorganized ExpandableRow component for better space utilization
+
+### Removed
+
+- **Activity Column:** Removed redundant Activity column from main table (functionality moved to Health shields)
 
 ### Fixed
 
@@ -96,7 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-*This changelog is maintained manually. For detailed commit history, see the Git log.*
+_This changelog is maintained manually. For detailed commit history, see the Git log._
 
 <!--
 AGENT INSTRUCTIONS:

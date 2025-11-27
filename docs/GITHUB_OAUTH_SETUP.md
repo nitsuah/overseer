@@ -2,7 +2,31 @@
 
 ## Github Auth issues
 
-Solving GitHub Auth (NextAuth v5)Since you are using NextAuth v5, the setup is slightly stricter than v4. You likely have issues with callback URLs or scopes (since Overseer needs to write to your repos to open PRs).The "Two-App" StrategyGitHub does not allow localhost and production URLs in the same OAuth App. You need two separate OAuth Apps in your GitHub Developer Settings.SettingLocal Development AppProduction AppHomepage URLhttp://localhost:3000https://your-overseer.netlify.appCallback URLhttp://localhost:3000/api/auth/callback/githubhttps://your-overseer.netlify.app/api/auth/callback/githubThe Code Fix (auth.ts)Create or update your auth.ts (or app/api/auth/[...nextauth]/route.ts depending on your routing). Crucially, you must request the repo scope so Overseer can read your code and open PRs.
+Solving GitHub Auth (NextAuth v5)
+
+Since you are using NextAuth v5, the setup is slightly stricter than v4. You likely have issues with callback URLs or scopes (since Overseer needs to write to your repos to open PRs).
+
+The "Two-App" Strategy
+
+GitHub does not allow localhost and production URLs in the same OAuth App. You need two separate OAuth Apps in your GitHub Developer Settings.
+
+Setting
+
+Local Development App - Production App
+
+Homepage URL
+[http://localhost:3000]
+[https://ghoverseer.netlify.app]
+
+Callback URL
+[http://localhost:3000/api/auth/callback/github]
+[https://ghoverseer.netlify.app/api/auth/callback/github]
+
+The Code Fix
+
+(auth.ts)
+Create or update your auth.ts (or app/api/auth/[...nextauth]/route.ts depending on your routing).
+Crucially, you must request the repo scope so Overseer can read your code and open PRs.
 
 ```ts
 import NextAuth from 'next-auth';
@@ -82,7 +106,7 @@ The system auto-detects deployment URLs. Just set these in Netlify environment v
 
 Add callback URL to GitHub OAuth app:
 
-```
+```text
 https://your-site.netlify.app/api/auth/callback/github
 ```
 

@@ -94,7 +94,16 @@
 
 ## Todo
 
-### Phase 7: Future Enhancements
+### Phase 7: Security Configuration & Tracking
+
+- [ ] Track GitHub security policy presence (SECURITY.md existence)
+- [ ] Detect security advisory configuration (vulnerability disclosure enabled)
+- [ ] Check private vulnerability reporting status
+- [ ] Monitor Dependabot alerts status (enabled/disabled)
+- [ ] Track code scanning alerts configuration
+- [ ] Track secret scanning alerts configuration
+
+### Phase 8: Future Enhancements
 
 - [ ] Add webhook integration for real-time updates
 - [ ] Template health checking (dormant/malformed detection with hashing)

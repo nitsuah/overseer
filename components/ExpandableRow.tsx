@@ -83,11 +83,10 @@ export default function ExpandableRow({
 
   return (
     <div className="p-6">
-      {/* AI Summary */}
+      {/* AI Summary - Only show if generated successfully (not error messages) */}
       {aiSummary && 
-       aiSummary.trim() && 
-       !aiSummary.includes('unavailable') &&
-       !aiSummary.includes('Service Error') &&
+       aiSummary.trim() &&
+       !aiSummary.startsWith('Summary unavailable') &&
        !aiSummaryDismissed && (
         <div className="mb-6 bg-linear-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4 relative">
           <button

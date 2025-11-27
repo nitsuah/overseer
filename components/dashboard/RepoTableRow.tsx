@@ -2,7 +2,6 @@
 
 import React, { Fragment, useMemo, useState } from 'react';
 import {
-  Clock,
   GitPullRequest,
   AlertCircle,
   Activity,
@@ -14,6 +13,7 @@ import {
   ExternalLink,
   X,
   RefreshCw,
+  Shield,
 } from 'lucide-react';
 import ExpandableRow from '@/components/ExpandableRow';
 import { Repo, RepoDetails } from '@/types/repo';
@@ -22,7 +22,6 @@ import { calculateDocHealth } from '@/lib/doc-health';
 import {
   getHealthGrade,
   formatTimeAgo,
-  getCommitFreshnessColor,
   getDocHealthColor,
   getLanguageColor,
 } from '@/lib/dashboard-utils';
@@ -94,6 +93,48 @@ export function RepoTableRow({
                 <ExternalLink className="h-4 w-4" />
               </a>
             )}
+            {repo.open_prs !== undefined && repo.open_prs > 0 && (
+              <a
+                href={`${repo.url}/pulls`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors"
+                title={`${repo.open_prs} open PRs`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GitPullRequest className="h-4 w-4" />
+              </a>
+            )}
+            {repo.open_issues_count !== undefined && repo.open_issues_count > 0 && (
+              <a
+                href={`${repo.url}/issues`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative p-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded transition-colors"
+                title={`${repo.open_issues_count} open issues`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <AlertCircle className="h-4 w-4" />
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                  {repo.open_issues_count}
+                </span>
+              </a>
+            )}
+            {repo.vuln_alert_count !== undefined && repo.vuln_alert_count > 0 && (
+              <a
+                href={`${repo.url}/security/dependabot`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
+                title={`${repo.vuln_alert_count} Dependabot alerts`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Shield className="h-4 w-4" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                  {repo.vuln_alert_count}
+                </span>
+              </a>
+            )}
           </div>
         </td>
         {/* Repository Name */}
@@ -153,14 +194,20 @@ export function RepoTableRow({
         </td>
         <td className="px-6 py-4">
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 relative group">
-              <span className={`text-lg font-bold ${health.color}`}>{health.grade}</span>
+            <div className="flex items-center gap-2">
+              <span className={`text-lg font-bold ${health.color} relative group`}>
+                {health.grade}
+                {details && (
+                  <>
+                    {/* Health Breakdown Popup */}
+                    <HealthBreakdown repo={repo} details={details} />
+                  </>
+                )}
+              </span>
               {details && (
                 <>
-                  {/* Health Breakdown Popup */}
-                  <HealthBreakdown repo={repo} details={details} />
                   {/* Health Shields */}
-                  <HealthShields details={details} />
+                  <HealthShields details={details} repo={repo} />
                 </>
               )}
             </div>
@@ -176,45 +223,6 @@ export function RepoTableRow({
                 <span className="text-[10px] text-slate-400 w-8">{repo.coverage_score}%</span>
               </div>
             )}
-          </div>
-        </td>
-        <td className="px-6 py-4">
-          <div className="flex flex-col gap-1 text-xs">
-            <div
-              className={`flex items-center gap-1 ${getCommitFreshnessColor(
-                repo.last_commit_date || null
-              )}`}
-              title={repo.last_commit_date || 'No commits'}
-            >
-              <Clock className="h-3 w-3" />
-              <span>{formatTimeAgo(repo.last_commit_date || null)}</span>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400">
-              {repo.open_prs !== undefined && repo.open_prs > 0 && (
-                <a
-                  href={`${repo.url}/pulls`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-slate-400 hover:text-blue-400 transition-colors"
-                  title={`${repo.open_prs} open PRs - click to view`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <GitPullRequest className="h-3 w-3" /> {repo.open_prs}
-                </a>
-              )}
-              {repo.open_issues_count && repo.open_issues_count > 0 && (
-                <a
-                  href={`${repo.url}/issues`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-slate-400 hover:text-orange-400 transition-colors"
-                  title={`${repo.open_issues_count} open issues - click to view`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <AlertCircle className="h-3 w-3" /> {repo.open_issues_count}
-                </a>
-              )}
-            </div>
           </div>
         </td>
         {/* Docs Column */}
@@ -261,7 +269,7 @@ export function RepoTableRow({
       </tr>
       {isExpanded && details && (
         <tr>
-          <td colSpan={9} className="p-0">
+          <td colSpan={8} className="p-0">
             <ExpandableRow
               tasks={details.tasks}
               roadmapItems={details.roadmapItems}
@@ -423,7 +431,10 @@ function HealthBreakdown({ repo, details }: { repo: Repo; details: RepoDetails }
   );
 }
 
-function HealthShields({ details }: { details: RepoDetails }) {
+function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) {
+  // Capture timestamp once
+  const [now] = useState(() => Date.now());
+  
   const coreDocs = ['roadmap', 'tasks', 'metrics', 'features', 'readme'];
   const coreDocsPresent = details.docStatuses.filter(
     (d) => coreDocs.includes(d.doc_type) && d.exists
@@ -460,6 +471,34 @@ function HealthShields({ details }: { details: RepoDetails }) {
   const csHealthy = details.communityStandards.filter((s) => s.status === 'healthy').length;
   const csTotal = details.communityStandards.length;
   const csPercentage = csTotal > 0 ? Math.round((csHealthy / csTotal) * 100) : 0;
+  
+  // Activity freshness calculation
+  const getActivityColor = (dateString: string | null | undefined) => {
+    if (!dateString) return 'bg-slate-700/50 text-slate-500';
+    const date = new Date(dateString);
+    const diffDays = Math.floor((now - date.getTime()) / 86400000);
+    
+    if (diffDays <= 7) return 'bg-green-500/20 text-green-400';
+    if (diffDays <= 30) return 'bg-yellow-500/20 text-yellow-400';
+    if (diffDays <= 90) return 'bg-orange-500/20 text-orange-400';
+    return 'bg-red-500/20 text-red-400';
+  };
+  
+  const formatActivityTime = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'Never';
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    const diffMonths = Math.floor(diffDays / 30);
+
+    if (diffHours < 1) return '< 1h';
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 30) return `${diffDays}d`;
+    if (diffMonths < 12) return `${diffMonths}mo`;
+    return `${Math.floor(diffDays / 365)}y`;
+  };
 
   return (
     <>
@@ -506,6 +545,12 @@ function HealthShields({ details }: { details: RepoDetails }) {
         }`}
       >
         {csHealthy}/{csTotal}
+      </span>
+      <span
+        title={repo.last_commit_date ? `Last commit: ${repo.last_commit_date}` : 'No commits'}
+        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${getActivityColor(repo.last_commit_date)}`}
+      >
+        {formatActivityTime(repo.last_commit_date)}
       </span>
     </>
   );

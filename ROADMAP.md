@@ -1,6 +1,6 @@
 # 🗺️ Overseer Product Roadmap
 
-## Q4 2024: Stability & Core Integration (Completed) 🚀
+## Q4 2025: Stability & Core Integration (Completed) 🚀
 
 - [x] Initial Project Setup (Next.js, Tailwind, Neon DB)
 - [x] GitHub Authentication & Integration
@@ -12,7 +12,7 @@
 - [x] Default Repositories Feature
 - [x] Dynamic OAuth URL Support (Netlify)
 
-## Q1 2025: Feature Audit & Data Integration (COMPLETED) ✅
+## Q4 2025: Feature Audit & Data Integration (COMPLETED) ✅
 
 - [x] Baseline Indicator Integration: Last Commit Date, Open PR/Issue Counts
 - [x] Dashboard Polish: Stats column (Stars, Forks, Branches)
@@ -37,21 +37,18 @@
 - [x] README Freshness Tracking: Days since last update with color-coded staleness
 - [x] Documentation Accuracy: All docs updated to match implementation (100% accuracy)
 
-## Q2 2025: UX Consistency & Quick Wins (IN PROGRESS) 🎨
+## Q4 2025: UX Consistency & Quick Wins (COMPLETED) 🎨
 
 - [x] Templates for Community Standards: CODE_OF_CONDUCT, SECURITY, Issue templates (November 2025)
 - [x] Fix Buttons: Add automated fixes for best practices/community standards (November 2025)
 - [x] Batch Fix All Standards: Single PR for all missing standards (November 2025)
 - [x] Test File Prominence: Show test file count more prominently in Testing section (November 2025)
 - [x] Health Component Tooltips: Add tooltips explaining each health score component (November 2025)
-- [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
-- [ ] Gemini API Integration Fix: Resolve model version compatibility
 - [x] Health State Icons: Display in main table row for each doc type (November 2025)
 - [x] Foundation: Full E2E Tests and Pre-commit Hooks (November 2025)
-- [ ] Foundation: Dark/Light Mode Toggle
 - [x] Template File Hashing: Detect stale/unchanged templates (November 2025)
 
-## Q3 2025: Advanced Metrics & Integrations (COMPLETED) 🚀
+## Q4 2025: Advanced Metrics & Integrations (COMPLETED) 🚀
 
 - [x] CI/CD Build Status: Integrate GitHub Actions API for live build status
 - [x] Test Case Counting: Parse test files for actual test case counts
@@ -74,7 +71,16 @@
 - [x] Bus Factor Analysis: Contributor concentration risk (80/20 rule) (November 2025)
 - [x] PR Merge Time Tracking: Average cycle time from creation to merge (November 2025)
 - [x] Contributor Metrics Display: Show all contributor analytics in Repository Stats (November 2025)
+- [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
+- [ ] Gemini API Integration Fix: Resolve model version compatibility
 - [ ] Security in Health Score: Add vulnerability metrics to calculation
+- [ ] Security Detail: Track 6 GitHub security configuration settings
+  - [ ] Security policy - Define vulnerability reporting process
+  - [ ] Security advisories - View/disclose security advisories
+  - [ ] Private vulnerability reporting - Allow private reports
+  - [ ] Dependabot alerts - Dependency vulnerability notifications
+  - [ ] Code scanning alerts - Automatic vulnerability detection
+  - [ ] Secret scanning alerts - Secret detection in commits
 - [ ] Velocity Tracking: Expand PR/commit analytics with trends
 - [ ] Technical Debt Scoring: Dependency Age Score
 - [ ] Agent APIs: AI-driven actions like "Suggest Roadmap" and "Propose Code Review Assignment"
@@ -84,6 +90,7 @@
 - [ ] Enterprise SSO Integration
 - [ ] Mobile App (React Native)
 - [ ] Custom AI Model Fine-tuning
+- [ ] Foundation: Dark/Light Mode Toggle
 
 ## Q1 2026: Autonomous Agents & Conversational UI 🤖
 

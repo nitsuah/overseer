@@ -35,7 +35,14 @@ export function CommunityStandardsSection({
   };
 
   const missingWithTemplates = communityStandards.filter(
-    (s) => s.status === 'missing' && ['code_of_conduct', 'security'].includes(s.standard_type)
+    (s) => s.status === 'missing' && [
+      'code_of_conduct',
+      'security',
+      'license',
+      'changelog',
+      'issue_template',
+      'pr_template'
+    ].includes(s.standard_type)
   );
 
   return (
@@ -63,7 +70,14 @@ export function CommunityStandardsSection({
       ) : (
         <div className="space-y-2">
           {communityStandards.map((standard, i) => {
-            const hasTemplate = ['code_of_conduct', 'security'].includes(standard.standard_type);
+            const hasTemplate = [
+              'code_of_conduct',
+              'security',
+              'license',
+              'changelog',
+              'issue_template',
+              'pr_template'
+            ].includes(standard.standard_type);
             const isMissing = standard.status === 'missing';
 
             return (

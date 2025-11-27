@@ -67,6 +67,32 @@ export function RepoTableRow({
   const docHealth = details ? calculateDocHealth(details.docStatuses, repoType) : null;
   const health = getHealthGrade(repo.health_score || 0);
 
+  const [editingType, setEditingType] = useState(false);
+  const [updatingType, setUpdatingType] = useState(false);
+
+  const handleTypeChange = async (newType: RepoType) => {
+    try {
+      setUpdatingType(true);
+      const res = await fetch(`/api/repos/${repo.name}/update-type`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: newType }),
+      });
+
+      if (res.ok) {
+        // Refresh the page to show updated type
+        window.location.reload();
+      } else {
+        console.error('Failed to update repo type');
+      }
+    } catch (error) {
+      console.error('Error updating repo type:', error);
+    } finally {
+      setUpdatingType(false);
+      setEditingType(false);
+    }
+  };
+
   return (
     <Fragment key={repo.id}>
       <tr
@@ -180,15 +206,37 @@ export function RepoTableRow({
           </span>
         </td>
         {/* Type */}
-        <td className="px-6 py-4">
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(
-              repoType
-            )}`}
-          >
-            <span>{typeInfo.icon}</span>
-            <span className="capitalize">{repoType.replace('-', ' ')}</span>
-          </span>
+        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+          {isAuthenticated && editingType ? (
+            <select
+              value={repoType}
+              onChange={(e) => handleTypeChange(e.target.value as RepoType)}
+              disabled={updatingType}
+              className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+              onBlur={() => setEditingType(false)}
+              autoFocus
+            >
+              <option value="web-app">🌐 Web App</option>
+              <option value="game">🎮 Game</option>
+              <option value="tool">🔧 Tool</option>
+              <option value="library">📦 Library</option>
+              <option value="bot">🤖 Bot</option>
+              <option value="research">🔬 Research</option>
+              <option value="unknown">📄 Unknown</option>
+            </select>
+          ) : (
+            <button
+              onClick={() => isAuthenticated && setEditingType(true)}
+              disabled={!isAuthenticated}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(
+                repoType
+              )} ${isAuthenticated ? 'hover:opacity-80 cursor-pointer' : ''} transition-opacity`}
+              title={isAuthenticated ? 'Click to edit type' : ''}
+            >
+              <span>{typeInfo.icon}</span>
+              <span className="capitalize">{repoType.replace('-', ' ')}</span>
+            </button>
+          )}
         </td>
         {/* Description with AI Summary Button */}
         <td className="px-6 py-4 text-sm text-slate-400 hidden xl:table-cell">

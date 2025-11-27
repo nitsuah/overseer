@@ -37,9 +37,22 @@ export async function POST(
         const github = new GitHubClient(accessToken, githubUsername);
         const db = getNeonClient();
 
-        // Get repo metadata from GitHub
-        const repos = await github.listRepos();
-        const repo = repos.find(r => r.name === repoName);
+        // Check if repo exists in database first to get full_name (owner/repo)
+        const dbRepos = await db`
+            SELECT name, full_name FROM repos WHERE name = ${repoName}
+        `;
+
+        let repo;
+        if (dbRepos.length > 0 && dbRepos[0].full_name) {
+            // Repo exists in DB - use full_name to fetch from GitHub
+            const [owner, repoShortName] = dbRepos[0].full_name.split('/');
+            const repoMeta = await github.getRepo(owner, repoShortName);
+            repo = repoMeta;
+        } else {
+            // Repo not in DB - try to find in user's repos
+            const repos = await github.listRepos();
+            repo = repos.find(r => r.name === repoName);
+        }
 
         if (!repo) {
             return NextResponse.json({ error: `Repository ${repoName} not found` }, { status: 404 });

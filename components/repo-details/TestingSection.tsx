@@ -19,7 +19,11 @@ export function TestingSection({
   metrics = [],
 }: TestingSectionProps) {
   const testingPractice = bestPractices.find((p) => p.practice_type === 'testing_framework');
-  const testFileCount = testingPractice?.details?.test_file_count as number | undefined;
+  const testFileCount =
+    testingPractice?.details &&
+    typeof testingPractice.details.test_file_count === 'number'
+      ? testingPractice.details.test_file_count
+      : undefined;
 
   // Filter testing-related metrics
   const testingKeywords = [

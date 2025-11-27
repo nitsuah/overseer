@@ -1,4 +1,5 @@
 import matter from 'gray-matter';
+import { Task } from '@/types/repo';
 
 export interface TaskData {
     frontmatter: {
@@ -7,21 +8,13 @@ export interface TaskData {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [key: string]: any;
     };
-    tasks: TaskItemData[];
-}
-
-export interface TaskItemData {
-    id: string;
-    title: string;
-    status: 'todo' | 'in-progress' | 'done';
-    section: string | null;
-    subsection: string | null;
+    tasks: Task[];
 }
 
 export function parseTasks(content: string): TaskData {
     const { data: frontmatter, content: markdown } = matter(content);
 
-    const tasks: TaskItemData[] = [];
+    const tasks: Task[] = [];
     const lines = markdown.split('\n');
     let currentSection = '';
     let currentSubsection = '';

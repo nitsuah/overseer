@@ -33,6 +33,7 @@ interface RepoTableRowProps {
   fixingDoc: boolean;
   syncingRepo: string | null;
   generatingSummary: string | null;
+  isAuthenticated?: boolean;
   onToggleExpanded: () => void;
   onRemove: () => void;
   onFixAllDocs: () => void;
@@ -49,6 +50,7 @@ export function RepoTableRow({
   fixingDoc,
   syncingRepo,
   generatingSummary,
+  isAuthenticated = true,
   onToggleExpanded,
   onRemove,
   onFixAllDocs,
@@ -160,23 +162,25 @@ export function RepoTableRow({
             <div className="truncate max-w-md" title={repo.description || ''}>
               {repo.description || '—'}
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onGenerateSummary();
-              }}
-              className="shrink-0 p-1.5 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors disabled:opacity-50"
-              title={
-                generatingSummary === repo.name
-                  ? 'Generating AI summary...'
-                  : 'Generate AI summary'
-              }
-              disabled={generatingSummary === repo.name}
-            >
-              <Sparkles
-                className={`h-4 w-4 ${generatingSummary === repo.name ? 'animate-pulse' : ''}`}
-              />
-            </button>
+            {isAuthenticated && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onGenerateSummary();
+                }}
+                className="shrink-0 p-1.5 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors disabled:opacity-50"
+                title={
+                  generatingSummary === repo.name
+                    ? 'Generating AI summary...'
+                    : 'Generate AI summary'
+                }
+                disabled={generatingSummary === repo.name}
+              >
+                <Sparkles
+                  className={`h-4 w-4 ${generatingSummary === repo.name ? 'animate-pulse' : ''}`}
+                />
+              </button>
+            )}
           </div>
         </td>
         <td className="px-6 py-4">
@@ -234,37 +238,42 @@ export function RepoTableRow({
             lastSynced={repo.last_synced}
             fixingDoc={fixingDoc}
             syncingRepo={syncingRepo}
+            isAuthenticated={isAuthenticated}
             onFixAllDocs={onFixAllDocs}
             onSyncSingleRepo={onSyncSingleRepo}
           />
         </td>
         {/* Actions Column - Refresh + Remove */}
         <td className="px-6 py-4">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onSyncSingleRepo();
-              }}
-              className="p-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50"
-              title={syncingRepo === repo.name ? 'Syncing...' : 'Refresh repository data'}
-              disabled={syncingRepo === repo.name}
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${syncingRepo === repo.name ? 'animate-spin' : ''}`}
-              />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
-              className="p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
-              title="Hide this repository"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSyncSingleRepo();
+                }}
+                className="p-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50"
+                title={syncingRepo === repo.name ? 'Syncing...' : 'Refresh repository data'}
+                disabled={syncingRepo === repo.name}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${syncingRepo === repo.name ? 'animate-spin' : ''}`}
+                />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove();
+                }}
+                className="p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
+                title="Hide this repository"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="text-slate-500 text-sm">—</div>
+          )}
         </td>
       </tr>
       {isExpanded && details && (
@@ -279,6 +288,7 @@ export function RepoTableRow({
               bestPractices={details.bestPractices}
               communityStandards={details.communityStandards}
               aiSummary={repo.ai_summary}
+              isAuthenticated={isAuthenticated}
               stars={repo.stars}
               forks={repo.forks}
               branches={repo.branches_count}
@@ -381,22 +391,30 @@ function HealthBreakdown({ repo, details }: { repo: Repo; details: RepoDetails }
     
     activityScore = Math.max(0, Math.round(activityScore));
 
+    // Determine activity color based on score (green to red scale)
+    let activityColor = 'green';
+    if (activityScore < 40) activityColor = 'red';
+    else if (activityScore < 60) activityColor = 'orange';
+    else if (activityScore < 80) activityColor = 'yellow';
+
     return [
-      { label: 'Documentation', score: docScore, color: 'blue', weight: '30%' },
-      { label: 'Testing', score: testScore, color: 'purple', weight: '20%' },
-      { label: 'Best Practices', score: bpScore, color: 'indigo', weight: '20%' },
+      { label: 'Documentation', score: docScore, color: 'slate', weight: '30%' },
+      { label: 'Testing', score: testScore, color: 'blue', weight: '20%' },
+      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '20%' },
       { label: 'Community', score: csScore, color: 'green', weight: '15%' },
-      { label: 'Activity', score: activityScore, color: 'amber', weight: '15%' },
+      { label: 'Activity', score: activityScore, color: activityColor, weight: '15%' },
     ];
   }, [repo, details, repoType, now]);
 
   // Color mapping for proper Tailwind JIT compilation
   const colorMap: Record<string, { text: string; bg: string; hex: string }> = {
+    slate: { text: 'text-slate-400', bg: 'bg-slate-500', hex: '#64748b' },
     blue: { text: 'text-blue-400', bg: 'bg-blue-500', hex: '#3b82f6' },
     purple: { text: 'text-purple-400', bg: 'bg-purple-500', hex: '#a855f7' },
-    indigo: { text: 'text-indigo-400', bg: 'bg-indigo-500', hex: '#6366f1' },
     green: { text: 'text-green-400', bg: 'bg-green-500', hex: '#22c55e' },
-    amber: { text: 'text-amber-400', bg: 'bg-amber-500', hex: '#f59e0b' },
+    yellow: { text: 'text-yellow-400', bg: 'bg-yellow-500', hex: '#eab308' },
+    orange: { text: 'text-orange-400', bg: 'bg-orange-500', hex: '#f97316' },
+    red: { text: 'text-red-400', bg: 'bg-red-500', hex: '#ef4444' },
   };
 
   return (
@@ -563,6 +581,7 @@ function DocStatusDisplay({
   lastSynced,
   fixingDoc,
   syncingRepo,
+  isAuthenticated = true,
   onFixAllDocs,
   onSyncSingleRepo,
 }: {
@@ -572,10 +591,16 @@ function DocStatusDisplay({
   lastSynced: string | null;
   fixingDoc: boolean;
   syncingRepo: string | null;
+  isAuthenticated?: boolean;
   onFixAllDocs: () => void;
   onSyncSingleRepo: () => void;
 }) {
   if (!details) {
+    if (!isAuthenticated) {
+      return (
+        <span className="text-xs text-slate-400">{formatTimeAgo(lastSynced)}</span>
+      );
+    }
     return (
       <button
         onClick={(e) => {
@@ -611,7 +636,12 @@ function DocStatusDisplay({
         : healthState === 'malformed'
         ? 'text-orange-400'
         : 'text-slate-600';
-    return { exists, iconColor, title: docType.toUpperCase() };
+    
+    // Build tooltip with health status
+    const healthLabel = healthState.charAt(0).toUpperCase() + healthState.slice(1);
+    const tooltip = `${docType.toUpperCase()}: ${healthLabel}`;
+    
+    return { exists, iconColor, title: tooltip };
   };
 
   const roadmap = getIconInfo('roadmap');
@@ -641,7 +671,7 @@ function DocStatusDisplay({
       <span className={`text-xs font-medium ml-1 ${getDocHealthColor(docHealth?.score || 0)}`}>
         {docHealth?.score}%
       </span>
-      {!allDocsPresent && docHealth && docHealth.score < 100 && (
+      {isAuthenticated && !allDocsPresent && docHealth && docHealth.score < 100 && (
         <button
           onClick={onFixAllDocs}
           className="ml-2 p-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded transition-colors"

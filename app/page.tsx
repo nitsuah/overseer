@@ -2,6 +2,7 @@
 
 import { Toast } from '@/components/Toast';
 import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { FilterPanel } from '@/components/dashboard/FilterPanel';
 import { RepoTableRow } from '@/components/dashboard/RepoTableRow';
@@ -11,6 +12,7 @@ import { useRepoFilters } from '@/hooks/useRepoFilters';
 import { RepoType } from '@/lib/repo-type';
 
 export default function Dashboard() {
+  const { data: session } = useSession();
   const { repos, setRepos, loading, refetch } = useRepos();
   const { repoDetails, fetchRepoDetails } = useRepoDetails();
   const { expandedRepos, toggleRepo } = useRepoExpansion();
@@ -108,6 +110,7 @@ export default function Dashboard() {
             addingRepo={addingRepo}
             showFilters={showFilters}
             syncing={syncing}
+            isAuthenticated={!!session}
             onAddRepoUrlChange={setAddRepoUrl}
             onAddRepoTypeChange={setAddRepoType}
             onAddRepoSubmit={onAddRepoSubmit}
@@ -175,6 +178,7 @@ export default function Dashboard() {
                     fixingDoc={fixingDoc}
                     syncingRepo={syncingRepo}
                     generatingSummary={generatingSummary}
+                    isAuthenticated={!!session}
                     onToggleExpanded={() => handleToggleExpanded(repo.name)}
                     onRemove={() => handleRemoveRepo(repo.name)}
                     onFixAllDocs={() => handleFixAllDocs(repo.name)}

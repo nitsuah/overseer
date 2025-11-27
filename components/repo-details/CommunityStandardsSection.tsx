@@ -6,6 +6,7 @@ import { CommunityStandard } from '@/types/repo';
 interface CommunityStandardsSectionProps {
   communityStandards: CommunityStandard[];
   repoName?: string;
+  isAuthenticated?: boolean;
   onFixStandard?: (repoName: string, standardType: string) => void;
   onFixAllStandards?: (repoName: string) => void;
 }
@@ -13,6 +14,7 @@ interface CommunityStandardsSectionProps {
 export function CommunityStandardsSection({
   communityStandards,
   repoName,
+  isAuthenticated = true,
   onFixStandard,
   onFixAllStandards,
 }: CommunityStandardsSectionProps) {
@@ -55,7 +57,7 @@ export function CommunityStandardsSection({
             ({communityStandards.length})
           </span>
         </h4>
-        {missingWithTemplates.length > 0 && onFixAllStandards && repoName && (
+        {isAuthenticated && missingWithTemplates.length > 0 && onFixAllStandards && repoName && (
           <button
             onClick={() => onFixAllStandards(repoName)}
             className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
@@ -102,7 +104,7 @@ export function CommunityStandardsSection({
                   >
                     {standard.status === 'healthy' ? 'Present' : 'Missing'}
                   </span>
-                  {hasTemplate && isMissing && onFixStandard && repoName && (
+                  {isAuthenticated && hasTemplate && isMissing && onFixStandard && repoName && (
                     <button
                       onClick={() => onFixStandard(repoName, standard.standard_type)}
                       className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"

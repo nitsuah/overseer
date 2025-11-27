@@ -12,6 +12,7 @@ interface DashboardHeaderProps {
   addingRepo: boolean;
   showFilters: boolean;
   syncing: boolean;
+  isAuthenticated?: boolean;
   onAddRepoUrlChange: (url: string) => void;
   onAddRepoTypeChange: (type: RepoType) => void;
   onAddRepoSubmit: (e: React.FormEvent) => void;
@@ -29,6 +30,7 @@ export function DashboardHeader({
   addingRepo,
   showFilters,
   syncing,
+  isAuthenticated = true,
   onAddRepoUrlChange,
   onAddRepoTypeChange,
   onAddRepoSubmit,
@@ -46,7 +48,14 @@ export function DashboardHeader({
         </p>
       </div>
       <div className="flex items-center gap-2">
-        {showAddRepo ? (
+        {!isAuthenticated ? (
+          <button
+            onClick={() => window.location.href = '/login'}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            Sign in to manage repositories
+          </button>
+        ) : showAddRepo ? (
           <form onSubmit={onAddRepoSubmit} className="flex items-center gap-2">
             <input
               type="text"

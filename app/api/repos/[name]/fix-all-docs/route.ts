@@ -20,25 +20,20 @@ export async function POST(
         const repoName = params.name;
         const db = getNeonClient();
 
-        // Get missing docs
-        // Get missing docs
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const _docStatuses = await db`
-            SELECT doc_type FROM doc_status 
-            WHERE repo_id = (SELECT id FROM repos WHERE name = ${repoName}) 
-            AND exists = false
-        `;
-
-        // Also check for docs that might not even be in the status table yet
-        // But for now rely on what we know is missing
-
-        const requiredDocs = ['readme', 'roadmap', 'tasks', 'metrics'];
+        // Core docs that should be fixed by this endpoint
+        const coreDocs = ['roadmap', 'tasks', 'metrics', 'features'];
+        
+        // Get existing docs from status table
         const existingDocTypes = new Set(
-            (await db`SELECT doc_type FROM doc_status WHERE repo_id = (SELECT id FROM repos WHERE name = ${repoName}) AND exists = true`)
-                .map(d => d.doc_type)
+            (await db`
+                SELECT doc_type 
+                FROM doc_status 
+                WHERE repo_id = (SELECT id FROM repos WHERE name = ${repoName}) 
+                AND exists = true
+            `).map(d => d.doc_type)
         );
 
-        const missingDocs = requiredDocs.filter(d => !existingDocTypes.has(d));
+        const missingDocs = coreDocs.filter(d => !existingDocTypes.has(d));
 
         if (missingDocs.length === 0) {
             return NextResponse.json({ message: 'No missing docs to fix' });

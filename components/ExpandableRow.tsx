@@ -30,6 +30,7 @@ interface ExpandableRowProps {
   coverageScore?: number;
   readmeLastUpdated?: string | null;
   repoName?: string;
+  isAuthenticated?: boolean;
   onFixStandard?: (repoName: string, standardType: string) => void;
   onFixAllStandards?: (repoName: string) => void;
   totalLoc?: number;
@@ -63,6 +64,7 @@ export default function ExpandableRow({
   coverageScore,
   readmeLastUpdated,
   repoName,
+  isAuthenticated = true,
   onFixStandard,
   onFixAllStandards,
   totalLoc,
@@ -149,6 +151,7 @@ export default function ExpandableRow({
         <CommunityStandardsSection
           communityStandards={communityStandards}
           repoName={repoName}
+          isAuthenticated={isAuthenticated}
           onFixStandard={onFixStandard}
           onFixAllStandards={onFixAllStandards}
         />

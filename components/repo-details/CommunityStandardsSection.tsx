@@ -50,6 +50,7 @@ export function CommunityStandardsSection({
 
   const missingWithTemplates = communityStandards.filter(
     (s) => s.status === 'missing' && [
+      'contributing',
       'code_of_conduct',
       'security',
       'license',
@@ -108,6 +109,7 @@ export function CommunityStandardsSection({
             })
             .map((standard, i) => {
             const hasTemplate = [
+              'contributing',
               'code_of_conduct',
               'security',
               'license',

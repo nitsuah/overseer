@@ -47,6 +47,8 @@ interface RepoTableRowProps {
   onFixDoc: (docType: string) => void;
   onFixStandard: (standardType: string) => void;
   onFixAllStandards: () => void;
+  onFixPractice: (practiceType: string) => void;
+  onFixAllPractices: () => void;
   onGenerateSummary: () => void;
   onSyncSingleRepo: () => void;
 }
@@ -65,6 +67,8 @@ export function RepoTableRow({
   onFixDoc,
   onFixStandard,
   onFixAllStandards,
+  onFixPractice,
+  onFixAllPractices,
   onGenerateSummary,
   onSyncSingleRepo,
 }: RepoTableRowProps) {
@@ -395,6 +399,8 @@ export function RepoTableRow({
               onFixAllDocs={onFixAllDocs}
               onFixStandard={onFixStandard}
               onFixAllStandards={onFixAllStandards}
+              onFixPractice={onFixPractice}
+              onFixAllPractices={onFixAllPractices}
               totalLoc={repo.total_loc}
               locLanguageBreakdown={repo.loc_language_breakdown}
               testCaseCount={repo.test_case_count}

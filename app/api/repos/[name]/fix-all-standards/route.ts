@@ -46,6 +46,7 @@ export async function POST(
 
         // Filter standards that have templates
         const standardsWithTemplates = [
+            'contributing',
             'code_of_conduct', 
             'security', 
             'license', 

@@ -35,6 +35,8 @@ export default function Dashboard() {
     handleFixDoc,
     handleFixStandard,
     handleFixAllStandards,
+    handleFixPractice,
+    handleFixAllPractices,
     handleGenerateSummary,
     handleSyncSingleRepo,
   } = useRepoActions(refetch, setRepos, setToastMessage);
@@ -194,6 +196,8 @@ export default function Dashboard() {
                     onFixDoc={(type) => handleFixDoc(repo.name, type)}
                     onFixStandard={(type) => handleFixStandard(repo.name, type)}
                     onFixAllStandards={() => handleFixAllStandards(repo.name)}
+                    onFixPractice={(type) => handleFixPractice(repo.name, type)}
+                    onFixAllPractices={() => handleFixAllPractices(repo.name)}
                     onGenerateSummary={() => handleGenerateSummary(repo.name)}
                     onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
                   />

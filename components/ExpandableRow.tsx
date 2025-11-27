@@ -35,6 +35,8 @@ interface ExpandableRowProps {
   onFixAllStandards?: (repoName: string) => void;
   onFixDoc?: (repoName: string, docType: string) => void;
   onFixAllDocs?: (repoName: string) => void;
+  onFixPractice?: (repoName: string, practiceType: string) => void;
+  onFixAllPractices?: (repoName: string) => void;
   totalLoc?: number;
   locLanguageBreakdown?: Record<string, number>;
   testCaseCount?: number;
@@ -68,6 +70,8 @@ export default function ExpandableRow({
   onFixAllStandards,
   onFixDoc,
   onFixAllDocs,
+  onFixPractice,
+  onFixAllPractices,
   totalLoc,
   locLanguageBreakdown,
   testCaseCount,
@@ -164,6 +168,10 @@ export default function ExpandableRow({
         {/* Best Practices */}
         <BestPracticesSection
           bestPractices={bestPractices}
+          repoName={repoName}
+          isAuthenticated={isAuthenticated}
+          onFixPractice={onFixPractice}
+          onFixAllPractices={onFixAllPractices}
         />
 
         {/* Testing */}

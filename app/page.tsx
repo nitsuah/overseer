@@ -140,6 +140,9 @@ export default function Dashboard() {
               <thead className="bg-slate-800/50 border-b border-slate-700">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                    Links
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
                     Repository
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
@@ -156,9 +159,6 @@ export default function Dashboard() {
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
                     Activity
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                    Links
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
                     Docs

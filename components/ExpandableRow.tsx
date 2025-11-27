@@ -6,6 +6,7 @@ import { Task, RoadmapItem, DocStatus, Metric, Feature, BestPractice, CommunityS
 import { RepositoryStatsSection } from './repo-details/RepositoryStatsSection';
 import { TestingSection } from './repo-details/TestingSection';
 import { MetricsSection } from './repo-details/MetricsSection';
+import { IssuesSection } from './repo-details/IssuesSection';
 import { DocumentationSection } from './repo-details/DocumentationSection';
 import { BestPracticesSection } from './repo-details/BestPracticesSection';
 import { CommunityStandardsSection } from './repo-details/CommunityStandardsSection';
@@ -83,7 +84,11 @@ export default function ExpandableRow({
   return (
     <div className="p-6">
       {/* AI Summary */}
-      {aiSummary && !aiSummaryDismissed && (
+      {aiSummary && 
+       aiSummary.trim() && 
+       !aiSummary.includes('unavailable') &&
+       !aiSummary.includes('Service Error') &&
+       !aiSummaryDismissed && (
         <div className="mb-6 bg-linear-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4 relative">
           <button
             onClick={() => setAiSummaryDismissed(true)}
@@ -100,9 +105,9 @@ export default function ExpandableRow({
         </div>
       )}
 
-      {/* First Row: Tasks, Roadmap, Features + Repo Stats */}
+      {/* First Row: Roadmap, Tasks, Features + Repo Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Tasks, Roadmap, Features (9 cols) */}
+        {/* Left Column: Roadmap, Tasks, Features (9 cols) */}
         <div className="lg:col-span-9 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Roadmap */}
@@ -113,20 +118,6 @@ export default function ExpandableRow({
 
             {/* Features */}
             <FeaturesSection features={features} />
-          </div>
-
-          {/* Testing & Metrics Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Testing */}
-            <TestingSection
-              testingStatus={testingStatus}
-              coverageScore={coverageScore}
-              testCaseCount={testCaseCount}
-              bestPractices={bestPractices}
-            />
-
-            {/* Metrics */}
-            <MetricsSection metrics={metrics} />
           </div>
         </div>
 
@@ -145,14 +136,23 @@ export default function ExpandableRow({
             commitFrequency={commitFrequency}
             busFactor={busFactor}
             avgPrMergeTimeHours={avgPrMergeTimeHours}
+            metrics={metrics}
           />
         </div>
       </div>
 
-      {/* Second Row: Documentation, Best Practices, Community Standards (3 equal columns) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      {/* Second Row: Documentation, Community Standards, Best Practices, Testing, Issues, Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
         {/* Documentation Status */}
         <DocumentationSection docStatuses={docStatuses} readmeLastUpdated={readmeLastUpdated} />
+
+        {/* Community Standards */}
+        <CommunityStandardsSection
+          communityStandards={communityStandards}
+          repoName={repoName}
+          onFixStandard={onFixStandard}
+          onFixAllStandards={onFixAllStandards}
+        />
 
         {/* Best Practices */}
         <BestPracticesSection
@@ -162,13 +162,20 @@ export default function ExpandableRow({
           ciWorkflowName={ciWorkflowName}
         />
 
-        {/* Community Standards */}
-        <CommunityStandardsSection
-          communityStandards={communityStandards}
-          repoName={repoName}
-          onFixStandard={onFixStandard}
-          onFixAllStandards={onFixAllStandards}
+        {/* Testing */}
+        <TestingSection
+          testingStatus={testingStatus}
+          coverageScore={coverageScore}
+          testCaseCount={testCaseCount}
+          bestPractices={bestPractices}
+          metrics={metrics}
         />
+
+        {/* Issues */}
+        <IssuesSection metrics={metrics} />
+
+        {/* Metrics */}
+        <MetricsSection metrics={metrics} />
       </div>
     </div>
   );

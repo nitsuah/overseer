@@ -1,13 +1,14 @@
 "use client";
 
 import { Shield } from 'lucide-react';
-import { BestPractice } from '@/types/repo';
+import { BestPractice, Metric } from '@/types/repo';
 
 interface TestingSectionProps {
   testingStatus?: string;
   coverageScore?: number;
   testCaseCount?: number;
   bestPractices: BestPractice[];
+  metrics?: Metric[];
 }
 
 export function TestingSection({
@@ -15,9 +16,32 @@ export function TestingSection({
   coverageScore,
   testCaseCount,
   bestPractices,
+  metrics = [],
 }: TestingSectionProps) {
   const testingPractice = bestPractices.find((p) => p.practice_type === 'testing_framework');
   const testFileCount = testingPractice?.details?.test_file_count as number | undefined;
+
+  // Filter testing-related metrics
+  const testingKeywords = [
+    'skipped tests',
+    'test cases',
+    'test files',
+    'build time',
+    'bundle size',
+    'e2e tests',
+    'utilities & effects',
+    'shared systems',
+    'shared ui components',
+    'components',
+    'logic',
+    'total unit tests',
+    'unit tests',
+  ];
+
+  const testingMetrics = metrics.filter((m) => {
+    const lowerName = m.name.toLowerCase();
+    return testingKeywords.some((keyword) => lowerName.includes(keyword));
+  });
 
   return (
     <div className="bg-slate-800/30 rounded-lg p-4">
@@ -70,6 +94,17 @@ export function TestingSection({
             </div>
           </div>
         )}
+
+        {/* Additional Testing Metrics from METRICS.md */}
+        {testingMetrics.map((metric, index) => (
+          <div key={`${metric.name}-${index}`} className="flex items-center justify-between text-xs">
+            <span className="text-slate-400">{metric.name}</span>
+            <span className="text-slate-200 font-medium">
+              {metric.value}
+              {metric.unit ?? ''}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

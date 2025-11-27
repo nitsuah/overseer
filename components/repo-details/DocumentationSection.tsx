@@ -14,9 +14,10 @@ export function DocumentationSection({ docStatuses, readmeLastUpdated }: Documen
     ['roadmap', 'tasks', 'metrics', 'features'].includes(d.doc_type)
   );
   const standardDocs = docStatuses.filter((d) => ['readme', 'contributing'].includes(d.doc_type));
+  // Removed changelog and license - they're covered in Community Standards
   const otherDocs = docStatuses.filter(
     (d) =>
-      !['roadmap', 'tasks', 'metrics', 'readme', 'features', 'contributing'].includes(d.doc_type)
+      !['roadmap', 'tasks', 'metrics', 'readme', 'features', 'contributing', 'changelog', 'license'].includes(d.doc_type)
   );
 
   const freshness = getReadmeFreshness(readmeLastUpdated);

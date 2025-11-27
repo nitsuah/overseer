@@ -14,15 +14,14 @@ export function formatTimeAgo(dateString: string | null): string {
   const now = new Date();
   const date = new Date(dateString);
   const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
+  const diffMonths = Math.floor(diffDays / 30);
 
-  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 1) return '< 1h ago';
   if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays === 1) return 'Yesterday';
   if (diffDays < 30) return `${diffDays}d ago`;
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+  if (diffMonths < 12) return `${diffMonths}mo ago`;
   return `${Math.floor(diffDays / 365)}y ago`;
 }
 

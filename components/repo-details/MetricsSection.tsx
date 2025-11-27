@@ -8,8 +8,49 @@ interface MetricsSectionProps {
 }
 
 export function MetricsSection({ metrics }: MetricsSectionProps) {
-  // Filter out coverage metrics (shown in Testing section)
-  const otherMetrics = metrics.filter((m) => !m.name.toLowerCase().includes('coverage'));
+  // Filter out metrics that are shown in other sections
+  const excludeKeywords = [
+    'coverage',
+    'last updated',
+    'api routes',
+    'database tables',
+    'pr turnaround',
+    'open prs',
+    'outdated dependencies',
+    'prettier violations',
+    'typescript errors',
+    'eslint warnings',
+    'eslint errors',
+    'health score',
+    'lighthouse score',
+    'lighthouse a11y score',
+    'skipped tests',
+    'test cases',
+    'test files',
+    'build time',
+    'bundle size',
+    'e2e tests',
+    'utilities & effects',
+    'shared systems',
+    'shared ui components',
+    'components',
+    'logic',
+    'total unit tests',
+    'unit tests',
+    'open issues',
+    'critical issue',
+    'high priority issue',
+    'failed build',
+    'community standards',
+    'best practices',
+    'testing & quality',
+    'documentation health',
+  ];
+
+  const otherMetrics = metrics.filter((m) => {
+    const lowerName = m.name.toLowerCase();
+    return !excludeKeywords.some((keyword) => lowerName.includes(keyword));
+  });
 
   if (otherMetrics.length === 0) return null;
 

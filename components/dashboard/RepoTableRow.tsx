@@ -1,6 +1,6 @@
 // Repository table row component
 
-import React, { Fragment } from 'react';
+import React, { Fragment, useMemo, useState } from 'react';
 import {
   Clock,
   GitPullRequest,
@@ -69,11 +69,40 @@ export function RepoTableRow({
         className="hover:bg-slate-800/30 transition-colors cursor-pointer"
         onClick={onToggleExpanded}
       >
+        {/* Links Column - NOW FIRST */}
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-2">
+            <a
+              href={repo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
+              title="View on GitHub"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Github className="h-4 w-4" />
+            </a>
+            {repo.homepage && (
+              <a
+                href={repo.homepage}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded transition-colors"
+                title="Visit Homepage"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            )}
+          </div>
+        </td>
+        {/* Repository Name */}
         <td className="px-6 py-4">
           <span className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
             {repo.name}
           </span>
         </td>
+        {/* Type */}
         <td className="px-6 py-4">
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(
@@ -84,9 +113,29 @@ export function RepoTableRow({
             <span className="capitalize">{repoType.replace('-', ' ')}</span>
           </span>
         </td>
+        {/* Description with AI Summary Button */}
         <td className="px-6 py-4 text-sm text-slate-400 hidden xl:table-cell">
-          <div className="truncate max-w-md" title={repo.description || ''}>
-            {repo.description || '—'}
+          <div className="flex items-center gap-2">
+            <div className="truncate max-w-md" title={repo.description || ''}>
+              {repo.description || '—'}
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onGenerateSummary();
+              }}
+              className="shrink-0 p-1.5 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors disabled:opacity-50"
+              title={
+                generatingSummary === repo.name
+                  ? 'Generating AI summary...'
+                  : 'Generate AI summary'
+              }
+              disabled={generatingSummary === repo.name}
+            >
+              <Sparkles
+                className={`h-4 w-4 ${generatingSummary === repo.name ? 'animate-pulse' : ''}`}
+              />
+            </button>
           </div>
         </td>
         <td className="px-6 py-4">
@@ -141,46 +190,34 @@ export function RepoTableRow({
               <span>{formatTimeAgo(repo.last_commit_date || null)}</span>
             </div>
             <div className="flex items-center gap-2 text-slate-400">
-              {repo.open_prs && repo.open_prs > 0 && (
-                <span className="flex items-center gap-1" title={`${repo.open_prs} open PRs`}>
+              {repo.open_prs !== undefined && repo.open_prs > 0 && (
+                <a
+                  href={`${repo.url}/pulls`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-slate-400 hover:text-blue-400 transition-colors"
+                  title={`${repo.open_prs} open PRs - click to view`}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <GitPullRequest className="h-3 w-3" /> {repo.open_prs}
-                </span>
+                </a>
               )}
               {repo.open_issues_count && repo.open_issues_count > 0 && (
-                <span
-                  className="flex items-center gap-1"
-                  title={`${repo.open_issues_count} open issues`}
+                <a
+                  href={`${repo.url}/issues`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-slate-400 hover:text-orange-400 transition-colors"
+                  title={`${repo.open_issues_count} open issues - click to view`}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <AlertCircle className="h-3 w-3" /> {repo.open_issues_count}
-                </span>
+                </a>
               )}
             </div>
           </div>
         </td>
-        <td className="px-6 py-4">
-          <div className="flex items-center gap-2">
-            <a
-              href={repo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
-              title="View on GitHub"
-            >
-              <Github className="h-4 w-4" />
-            </a>
-            {repo.homepage && (
-              <a
-                href={repo.homepage}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded transition-colors"
-                title="Visit Homepage"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            )}
-          </div>
-        </td>
+        {/* Docs Column */}
         <td className="px-6 py-4">
           <DocStatusDisplay
             details={details}
@@ -193,23 +230,20 @@ export function RepoTableRow({
             onSyncSingleRepo={onSyncSingleRepo}
           />
         </td>
+        {/* Actions Column - Refresh + Remove */}
         <td className="px-6 py-4">
           <div className="flex items-center gap-2">
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onGenerateSummary();
+                onSyncSingleRepo();
               }}
-              className="p-1.5 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors disabled:opacity-50"
-              title={
-                generatingSummary === repo.name
-                  ? 'Generating AI summary...'
-                  : 'Generate AI summary'
-              }
-              disabled={generatingSummary === repo.name}
+              className="p-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50"
+              title={syncingRepo === repo.name ? 'Syncing...' : 'Refresh repository data'}
+              disabled={syncingRepo === repo.name}
             >
-              <Sparkles
-                className={`h-4 w-4 ${generatingSummary === repo.name ? 'animate-pulse' : ''}`}
+              <RefreshCw
+                className={`h-4 w-4 ${syncingRepo === repo.name ? 'animate-spin' : ''}`}
               />
             </button>
             <button
@@ -269,57 +303,121 @@ export function RepoTableRow({
 
 // Helper components for cleaner code
 function HealthBreakdown({ repo, details }: { repo: Repo; details: RepoDetails }) {
-  const coreDocs = ['roadmap', 'tasks', 'metrics', 'features'];
-  const coreDocsPresent = details.docStatuses.filter(
-    (d) => coreDocs.includes(d.doc_type) && d.exists
-  ).length;
-  const docScore = Math.round((coreDocsPresent / coreDocs.length) * 100);
+  // Get repo type for doc health calculation
+  const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
+  const repoType = (repo.repo_type as RepoType) || typeInfo.type;
+  
+  // Use state to capture timestamp once on mount
+  const [now] = useState(() => Date.now());
+  
+  // Calculate all scores using useMemo
+  const scores = useMemo(() => {
+    // Calculate documentation score using the same logic as sync
+    const docHealthCalc = calculateDocHealth(details.docStatuses, repoType);
+    const docScore = Math.round(docHealthCalc.score);
 
-  const hasTests = details.bestPractices.some(
-    (bp) => bp.practice_type === 'testing_framework' && bp.status === 'healthy'
-  );
-  let testScore = hasTests ? 40 : 0;
-  if (repo.coverage_score !== undefined && hasTests) {
-    testScore += Math.min(repo.coverage_score * 0.6, 60);
-  }
-  testScore = Math.round(testScore);
+    // Calculate testing score - same formula as health-score.ts
+    const hasTests = details.bestPractices.some(
+      (bp) => bp.practice_type === 'testing_framework' && bp.status === 'healthy'
+    );
+    let testScore = 0;
+    if (hasTests) {
+      testScore = 40; // Base for having tests
+      if (repo.coverage_score !== undefined) {
+        testScore += Math.min(repo.coverage_score * 0.6, 60); // Up to 60 points for coverage
+      }
+    }
+    testScore = Math.round(testScore);
 
-  const bpHealthy = details.bestPractices.filter((bp) => bp.status === 'healthy').length;
-  const bpTotal = details.bestPractices.length;
-  const bpScore = bpTotal > 0 ? Math.round((bpHealthy / bpTotal) * 100) : 0;
+    // Calculate best practices score with CI bonus
+    const bpHealthy = details.bestPractices.filter((bp) => bp.status === 'healthy').length;
+    const bpTotal = details.bestPractices.length;
+    let bpScore = bpTotal > 0 ? (bpHealthy / bpTotal) * 100 : 0;
+    const hasCI = details.bestPractices.some(
+      (bp) => bp.practice_type === 'ci_cd' && bp.status === 'healthy'
+    );
+    if (hasCI) {
+      bpScore = Math.min(bpScore + 10, 100);
+    }
+    bpScore = Math.round(bpScore);
 
-  const csHealthy = details.communityStandards.filter((cs) => cs.status === 'healthy').length;
-  const csTotal = details.communityStandards.length;
-  const csScore = csTotal > 0 ? Math.round((csHealthy / csTotal) * 100) : 0;
+    // Calculate community standards score
+    const csHealthy = details.communityStandards.filter((cs) => cs.status === 'healthy').length;
+    const csTotal = details.communityStandards.length;
+    const csScore = csTotal > 0 ? Math.round((csHealthy / csTotal) * 100) : 0;
 
-  const scores = [
-    { label: 'Documentation', score: docScore, color: 'blue', weight: '30%' },
-    { label: 'Testing', score: testScore, color: 'purple', weight: '20%' },
-    { label: 'Best Practices', score: bpScore, color: 'indigo', weight: '20%' },
-    { label: 'Community', score: csScore, color: 'green', weight: '15%' },
-  ];
+    // Calculate activity score with penalties
+    const lastCommitDate = repo.last_commit_date;
+    const daysSinceCommit = lastCommitDate
+      ? Math.floor((now - new Date(lastCommitDate).getTime()) / (1000 * 60 * 60 * 24))
+      : 365;
+    
+    let activityScore = 100;
+    
+    // Deduct points for staleness
+    if (daysSinceCommit > 90) {
+      activityScore -= Math.min((daysSinceCommit - 90) / 3, 40);
+    }
+    
+    // Deduct points for many open issues
+    const openIssues = repo.open_issues_count || 0;
+    if (openIssues > 10) {
+      activityScore -= Math.min((openIssues - 10) * 2, 20);
+    }
+    
+    // Deduct points for stale PRs
+    const openPRs = repo.open_prs || 0;
+    if (openPRs > 5) {
+      activityScore -= Math.min((openPRs - 5) * 3, 20);
+    }
+    
+    activityScore = Math.max(0, Math.round(activityScore));
+
+    return [
+      { label: 'Documentation', score: docScore, color: 'blue', weight: '30%' },
+      { label: 'Testing', score: testScore, color: 'purple', weight: '20%' },
+      { label: 'Best Practices', score: bpScore, color: 'indigo', weight: '20%' },
+      { label: 'Community', score: csScore, color: 'green', weight: '15%' },
+      { label: 'Activity', score: activityScore, color: 'amber', weight: '15%' },
+    ];
+  }, [repo, details, repoType, now]);
+
+  // Color mapping for proper Tailwind JIT compilation
+  const colorMap: Record<string, { text: string; bg: string; hex: string }> = {
+    blue: { text: 'text-blue-400', bg: 'bg-blue-500', hex: '#3b82f6' },
+    purple: { text: 'text-purple-400', bg: 'bg-purple-500', hex: '#a855f7' },
+    indigo: { text: 'text-indigo-400', bg: 'bg-indigo-500', hex: '#6366f1' },
+    green: { text: 'text-green-400', bg: 'bg-green-500', hex: '#22c55e' },
+    amber: { text: 'text-amber-400', bg: 'bg-amber-500', hex: '#f59e0b' },
+  };
 
   return (
     <div className="absolute left-0 top-8 z-50 hidden group-hover:block w-72 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-4">
       <h4 className="text-sm font-semibold text-slate-200 mb-3">Health Breakdown</h4>
       <div className="space-y-3">
-        {scores.map(({ label, score, color, weight }) => (
-          <div key={label} className="space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">{label}</span>
-              <div className="flex items-center gap-2">
-                <span className={`text-${color}-400 font-medium`}>{score}%</span>
-                <span className="text-slate-500 text-[10px]">({weight})</span>
+        {scores.map(({ label, score, color, weight }) => {
+          const colors = colorMap[color] || colorMap.blue;
+          return (
+            <div key={label} className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">{label}</span>
+                <div className="flex items-center gap-2">
+                  <span className={`${colors.text} font-medium`}>{score}%</span>
+                  <span className="text-slate-500 text-[10px]">({weight})</span>
+                </div>
+              </div>
+              <div className="bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-full transition-all"
+                  style={{ 
+                    width: `${score}%`,
+                    backgroundColor: colors.hex
+                  }}
+                />
               </div>
             </div>
-            <div className="bg-slate-700 rounded-full h-1.5 overflow-hidden">
-              <div
-                className={`h-full bg-${color}-500 transition-all`}
-                style={{ width: `${score}%` }}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -331,6 +429,19 @@ function HealthShields({ details }: { details: RepoDetails }) {
     (d) => coreDocs.includes(d.doc_type) && d.exists
   ).length;
   const docPercentage = Math.round((coreDocsPresent / coreDocs.length) * 100);
+
+  // Build detailed doc tooltip showing status of each doc
+  const docTooltip = coreDocs
+    .map((docType) => {
+      const status = details.docStatuses.find((d) => d.doc_type === docType);
+      const docName = docType.toUpperCase();
+      if (!status || !status.exists) {
+        return `${docName}: missing`;
+      }
+      const health = status.health_state || 'unknown';
+      return `${docName}: ${health}`;
+    })
+    .join('\n');
 
   const testingCount = details.bestPractices.filter(
     (p) => ['testing_framework', 'ci_cd'].includes(p.practice_type) && p.status === 'healthy'
@@ -353,7 +464,7 @@ function HealthShields({ details }: { details: RepoDetails }) {
   return (
     <>
       <span
-        title={`Documentation: ${coreDocsPresent}/${coreDocs.length} core docs (${docPercentage}%)`}
+        title={docTooltip}
         className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
           docPercentage >= 80
             ? 'bg-slate-500/20 text-slate-300'

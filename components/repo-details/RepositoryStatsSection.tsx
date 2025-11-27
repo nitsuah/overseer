@@ -1,6 +1,7 @@
 "use client";
 
 import { formatLocNumber } from '@/lib/expandable-row-utils';
+import { Metric } from '@/types/repo';
 
 interface RepositoryStatsSectionProps {
   stars?: number;
@@ -15,6 +16,7 @@ interface RepositoryStatsSectionProps {
   commitFrequency?: number;
   busFactor?: number;
   avgPrMergeTimeHours?: number;
+  metrics?: Metric[];
 }
 
 export function RepositoryStatsSection({
@@ -30,7 +32,29 @@ export function RepositoryStatsSection({
   commitFrequency,
   busFactor,
   avgPrMergeTimeHours,
+  metrics = [],
 }: RepositoryStatsSectionProps) {
+  // Filter metrics that should appear in Repo Stats
+  const repoStatsKeywords = [
+    'last updated',
+    'api routes',
+    'database tables',
+    'pr turnaround',
+    'open prs',
+    'outdated dependencies',
+    'prettier violations',
+    'typescript errors',
+    'eslint warnings',
+    'eslint errors',
+    'health score',
+    'lighthouse score',
+    'lighthouse a11y score',
+  ];
+
+  const repoStatsMetrics = metrics.filter((m) => {
+    const lowerName = m.name.toLowerCase();
+    return repoStatsKeywords.some((keyword) => lowerName.includes(keyword));
+  });
   return (
     <div className="bg-slate-900/50 rounded-lg p-5">
       <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
@@ -156,6 +180,17 @@ export function RepositoryStatsSection({
             </span>
           </div>
         )}
+
+        {/* Additional Repo Stats Metrics from METRICS.md */}
+        {repoStatsMetrics.map((metric, index) => (
+          <div key={`${metric.name}-${index}`} className="flex items-center justify-between text-xs">
+            <span className="text-slate-400">{metric.name}</span>
+            <span className="text-slate-200 font-medium">
+              {metric.value}
+              {metric.unit ?? ''}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

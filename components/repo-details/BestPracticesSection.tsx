@@ -47,13 +47,37 @@ export function BestPracticesSection({
         <span className="text-xs text-slate-500 font-normal">({bestPractices.length})</span>
       </h4>
 
-      {/* CI/CD Status Badge */}
+      {bestPractices.length === 0 ? (
+        <p className="text-xs text-slate-500 italic">No data available</p>
+      ) : (
+        <div className="space-y-2">
+          {bestPractices.map((practice, i) => (
+            <div key={i} className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                {getStatusIcon(practice.status)}
+                <span className={getStatusColor(practice.status)}>
+                  {getLabel(practice.practice_type)}
+                </span>
+              </div>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded capitalize ${getStatusColor(
+                  practice.status
+                )}`}
+              >
+                {practice.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* CI/CD Status Badge - at bottom like README status in Documentation */}
       {ciStatus && ciStatus !== 'unknown' && (
         <div
-          className={`mb-3 p-3 rounded-lg border ${
+          className={`mt-4 pt-4 border-t border-slate-700/50 p-3 rounded-lg ${
             ciStatus === 'passing'
-              ? 'bg-green-500/10 border-green-500/30'
-              : 'bg-red-500/10 border-red-500/30'
+              ? 'bg-green-500/10 border border-green-500/30'
+              : 'bg-red-500/10 border border-red-500/30'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -80,30 +104,6 @@ export function BestPracticesSection({
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      {bestPractices.length === 0 ? (
-        <p className="text-xs text-slate-500 italic">No data available</p>
-      ) : (
-        <div className="space-y-2">
-          {bestPractices.map((practice, i) => (
-            <div key={i} className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                {getStatusIcon(practice.status)}
-                <span className={getStatusColor(practice.status)}>
-                  {getLabel(practice.practice_type)}
-                </span>
-              </div>
-              <span
-                className={`text-[10px] px-1.5 py-0.5 rounded capitalize ${getStatusColor(
-                  practice.status
-                )}`}
-              >
-                {practice.status}
-              </span>
-            </div>
-          ))}
         </div>
       )}
     </div>

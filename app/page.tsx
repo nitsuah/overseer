@@ -32,6 +32,7 @@ export default function Dashboard() {
     handleAddRepo,
     handleRemoveRepo,
     handleFixAllDocs,
+    handleFixDoc,
     handleFixStandard,
     handleFixAllStandards,
     handleGenerateSummary,
@@ -190,6 +191,7 @@ export default function Dashboard() {
                     onToggleExpanded={() => handleToggleExpanded(repo.name)}
                     onRemove={() => handleRemoveRepo(repo.name)}
                     onFixAllDocs={() => handleFixAllDocs(repo.name)}
+                    onFixDoc={(type) => handleFixDoc(repo.name, type)}
                     onFixStandard={(type) => handleFixStandard(repo.name, type)}
                     onFixAllStandards={() => handleFixAllStandards(repo.name)}
                     onGenerateSummary={() => handleGenerateSummary(repo.name)}

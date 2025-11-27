@@ -79,6 +79,32 @@ export function useRepoActions(
     }
   };
 
+  const handleFixDoc = async (repoName: string, docType: string) => {
+    try {
+      setFixingDoc(true);
+      const res = await fetch(`/api/repos/${repoName}/fix-doc`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docType }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.prUrl) {
+          window.open(data.prUrl, '_blank');
+        }
+        setToastMessage(`PR created for ${docType.toUpperCase()}.md!`);
+      } else {
+        const err = await res.json();
+        setToastMessage(err.error || 'Failed to create PR');
+      }
+    } catch (error) {
+      console.error('Failed to fix doc:', error);
+      setToastMessage('Failed to create PR');
+    } finally {
+      setFixingDoc(false);
+    }
+  };
+
   const handleFixStandard = async (repoName: string, standardType: string) => {
     try {
       setFixingDoc(true);
@@ -179,6 +205,7 @@ export function useRepoActions(
     handleAddRepo,
     handleRemoveRepo,
     handleFixAllDocs,
+    handleFixDoc,
     handleFixStandard,
     handleFixAllStandards,
     handleGenerateSummary,

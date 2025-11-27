@@ -33,6 +33,8 @@ interface ExpandableRowProps {
   isAuthenticated?: boolean;
   onFixStandard?: (repoName: string, standardType: string) => void;
   onFixAllStandards?: (repoName: string) => void;
+  onFixDoc?: (repoName: string, docType: string) => void;
+  onFixAllDocs?: (repoName: string) => void;
   totalLoc?: number;
   locLanguageBreakdown?: Record<string, number>;
   testCaseCount?: number;
@@ -64,6 +66,8 @@ export default function ExpandableRow({
   isAuthenticated = true,
   onFixStandard,
   onFixAllStandards,
+  onFixDoc,
+  onFixAllDocs,
   totalLoc,
   locLanguageBreakdown,
   testCaseCount,
@@ -139,7 +143,14 @@ export default function ExpandableRow({
       {/* Second Row: Documentation, Community Standards, Best Practices, Testing, Issues - All in one row */}
       <div className="grid grid-cols-5 gap-4 mt-6">
         {/* Documentation Status */}
-        <DocumentationSection docStatuses={docStatuses} readmeLastUpdated={readmeLastUpdated} />
+        <DocumentationSection 
+          docStatuses={docStatuses} 
+          readmeLastUpdated={readmeLastUpdated}
+          repoName={repoName}
+          isAuthenticated={isAuthenticated}
+          onFixDoc={onFixDoc}
+          onFixAllDocs={onFixAllDocs}
+        />
 
         {/* Community Standards */}
         <CommunityStandardsSection

@@ -132,15 +132,6 @@ export function CommunityStandardsSection({
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded ${
-                      standard.status === 'healthy'
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-red-500/20 text-red-400'
-                    }`}
-                  >
-                    {standard.status === 'healthy' ? 'Present' : 'Missing'}
-                  </span>
                   {isAuthenticated && hasTemplate && isMissing && onFixStandard && repoName && (
                     <button
                       onClick={() => onFixStandard(repoName, standard.standard_type)}
@@ -150,6 +141,15 @@ export function CommunityStandardsSection({
                       Fix
                     </button>
                   )}
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded ${
+                      standard.status === 'healthy'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-red-500/20 text-red-400'
+                    }`}
+                  >
+                    {standard.status === 'healthy' ? 'Present' : 'Missing'}
+                  </span>
                 </div>
               </div>
             );

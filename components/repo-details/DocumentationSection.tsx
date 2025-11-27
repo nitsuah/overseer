@@ -7,9 +7,20 @@ import { getReadmeFreshness } from '@/lib/expandable-row-utils';
 interface DocumentationSectionProps {
   docStatuses: DocStatus[];
   readmeLastUpdated?: string | null;
+  repoName?: string;
+  isAuthenticated?: boolean;
+  onFixDoc?: (repoName: string, docType: string) => void;
+  onFixAllDocs?: (repoName: string) => void;
 }
 
-export function DocumentationSection({ docStatuses, readmeLastUpdated }: DocumentationSectionProps) {
+export function DocumentationSection({ 
+  docStatuses, 
+  readmeLastUpdated,
+  repoName,
+  isAuthenticated = true,
+  onFixDoc,
+  onFixAllDocs
+}: DocumentationSectionProps) {
   const coreDocs = docStatuses.filter((d) =>
     ['roadmap', 'tasks', 'metrics', 'features'].includes(d.doc_type)
   );
@@ -20,14 +31,32 @@ export function DocumentationSection({ docStatuses, readmeLastUpdated }: Documen
       !['roadmap', 'tasks', 'metrics', 'readme', 'features', 'contributing', 'changelog', 'license'].includes(d.doc_type)
   );
 
+  const missingWithTemplates = docStatuses.filter(
+    (d) => !d.exists && ['roadmap', 'tasks', 'metrics', 'features', 'readme'].includes(d.doc_type)
+  );
+
   const freshness = getReadmeFreshness(readmeLastUpdated);
 
   return (
     <div className="bg-slate-800/30 rounded-lg p-4">
-      <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-        <span className="text-lg">📄</span>
-        <span>Documentation</span>
-      </h4>
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+          <span className="text-lg">📄</span>
+          <span>Documentation</span>
+          <span className="text-xs text-slate-500 font-normal">
+            ({docStatuses.length})
+          </span>
+        </h4>
+        {isAuthenticated && missingWithTemplates.length > 0 && onFixAllDocs && repoName && (
+          <button
+            onClick={() => onFixAllDocs(repoName)}
+            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
+            title="Create PR for all missing documentation"
+          >
+            Fix All ({missingWithTemplates.length})
+          </button>
+        )}
+      </div>
 
       {/* Core Docs */}
       <div className="mb-4">
@@ -55,13 +84,24 @@ export function DocumentationSection({ docStatuses, readmeLastUpdated }: Documen
                   {d.doc_type.toUpperCase()}
                 </span>
               </div>
-              <span
-                className={`text-[10px] px-1.5 py-0.5 rounded ${
-                  d.exists ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                }`}
-              >
-                {d.exists ? 'Present' : 'Missing'}
-              </span>
+              <div className="flex items-center gap-2">
+                {isAuthenticated && !d.exists && onFixDoc && repoName && (
+                  <button
+                    onClick={() => onFixDoc(repoName, d.doc_type)}
+                    className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
+                    title={`Create PR for ${d.doc_type.toUpperCase()}`}
+                  >
+                    Fix
+                  </button>
+                )}
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded ${
+                    d.exists ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                  }`}
+                >
+                  {d.exists ? 'Present' : 'Missing'}
+                </span>
+              </div>
             </div>
           ))}
         </div>
@@ -85,13 +125,24 @@ export function DocumentationSection({ docStatuses, readmeLastUpdated }: Documen
                   {d.doc_type.toUpperCase()}
                 </span>
               </div>
-              <span
-                className={`text-[10px] px-1.5 py-0.5 rounded ${
-                  d.exists ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                }`}
-              >
-                {d.exists ? 'Present' : 'Missing'}
-              </span>
+              <div className="flex items-center gap-2">
+                {isAuthenticated && !d.exists && onFixDoc && repoName && (
+                  <button
+                    onClick={() => onFixDoc(repoName, d.doc_type)}
+                    className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
+                    title={`Create PR for ${d.doc_type.toUpperCase()}`}
+                  >
+                    Fix
+                  </button>
+                )}
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded ${
+                    d.exists ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                  }`}
+                >
+                  {d.exists ? 'Present' : 'Missing'}
+                </span>
+              </div>
             </div>
           ))}
         </div>

@@ -44,6 +44,7 @@ interface RepoTableRowProps {
   onToggleExpanded: () => void;
   onRemove: () => void;
   onFixAllDocs: () => void;
+  onFixDoc: (docType: string) => void;
   onFixStandard: (standardType: string) => void;
   onFixAllStandards: () => void;
   onGenerateSummary: () => void;
@@ -61,6 +62,7 @@ export function RepoTableRow({
   onToggleExpanded,
   onRemove,
   onFixAllDocs,
+  onFixDoc,
   onFixStandard,
   onFixAllStandards,
   onGenerateSummary,
@@ -389,6 +391,8 @@ export function RepoTableRow({
               coverageScore={repo.coverage_score}
               readmeLastUpdated={repo.readme_last_updated}
               repoName={repo.name}
+              onFixDoc={onFixDoc}
+              onFixAllDocs={onFixAllDocs}
               onFixStandard={onFixStandard}
               onFixAllStandards={onFixAllStandards}
               totalLoc={repo.total_loc}

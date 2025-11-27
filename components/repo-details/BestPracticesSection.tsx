@@ -75,13 +75,13 @@ export function BestPracticesSection({
               // Define custom order
               const order = [
                 'branch_protection',
-                'cicd',
+                'ci_cd',
                 'gitignore',
-                'env_template',
                 'pre_commit_hooks',
+                'env_template',
+                'dependabot',
                 'testing_framework',
                 'linting',
-                'dependabot',
                 'docker'
               ];
               const aIndex = order.indexOf(a.practice_type);

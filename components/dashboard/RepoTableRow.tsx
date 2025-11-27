@@ -517,9 +517,9 @@ function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoD
 
     return [
       { label: 'Documentation', score: docScore, color: 'slate', weight: '30%' },
-      { label: 'Testing', score: testScore, color: 'blue', weight: '20%' },
-      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '20%' },
       { label: 'Community', score: csScore, color: 'green', weight: '15%' },
+      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '20%' },
+      { label: 'Testing', score: testScore, color: 'blue', weight: '20%' },
       { label: 'Activity', score: activityScore, color: activityColor, weight: '15%' },
     ];
   }, [repo, details, repoType, now]);
@@ -690,12 +690,16 @@ function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) 
         {coreDocsPresent}/{coreDocs.length}
       </span>
       <span
-        title={`Testing: ${testingCount}/${testingTotal} checks`}
+        title={`Community Standards: ${csHealthy}/${csTotal} (${csPercentage}%)`}
         className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-          hasTests ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-700/50 text-slate-500'
+          csPercentage >= 70
+            ? 'bg-green-500/20 text-green-400'
+            : csPercentage >= 40
+            ? 'bg-yellow-500/20 text-yellow-400'
+            : 'bg-red-500/20 text-red-400'
         }`}
       >
-        {testingCount}/{testingTotal}
+        {csHealthy}/{csTotal}
       </span>
       <span
         title={`Best Practices: ${bpHealthy}/${bpTotal} (${bpPercentage}%)`}
@@ -710,16 +714,12 @@ function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) 
         {bpHealthy}/{bpTotal}
       </span>
       <span
-        title={`Community Standards: ${csHealthy}/${csTotal} (${csPercentage}%)`}
+        title={`Testing: ${testingCount}/${testingTotal} checks`}
         className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-          csPercentage >= 70
-            ? 'bg-green-500/20 text-green-400'
-            : csPercentage >= 40
-            ? 'bg-yellow-500/20 text-yellow-400'
-            : 'bg-red-500/20 text-red-400'
+          hasTests ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-700/50 text-slate-500'
         }`}
       >
-        {csHealthy}/{csTotal}
+        {testingCount}/{testingTotal}
       </span>
       <span
         title={repo.last_commit_date ? `Last commit: ${repo.last_commit_date}` : 'No commits'}

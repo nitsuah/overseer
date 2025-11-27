@@ -75,13 +75,23 @@ export async function checkBestPractices(
         'azure-pipelines.yml',
         'bitbucket-pipelines.yml'
     ];
-    const hasCICD = fileList.some(f => cicdFiles.some(ci => f.includes(ci)));
+    const detectedCICD = fileList.filter(f => cicdFiles.some(ci => f.includes(ci)));
+    const hasCICD = detectedCICD.length > 0;
+    
+    // Check if CI/CD files seem minimal/template (dormant check)
+    let cicdStatus: HealthState = 'missing';
+    if (hasCICD) {
+        // If we detect workflow files, consider them healthy by default
+        // Could be enhanced to check file size/content in the future
+        cicdStatus = 'healthy';
+    }
+    
     practices.push({
-        type: 'cicd',
-        status: hasCICD ? 'healthy' : 'missing',
+        type: 'ci_cd',
+        status: cicdStatus,
         details: { 
             exists: hasCICD,
-            detected: fileList.filter(f => cicdFiles.some(ci => f.includes(ci)))
+            detected: detectedCICD
         }
     });
 
@@ -117,9 +127,15 @@ export async function checkBestPractices(
         testFilePatterns.some(pattern => f.toLowerCase().includes(pattern))
     );
     
+    // Testing is 'dormant' if config exists but no test files, 'healthy' if both exist
+    let testingStatus: HealthState = 'missing';
+    if (hasTesting) {
+        testingStatus = testFiles.length > 0 ? 'healthy' : 'dormant';
+    }
+    
     practices.push({
         type: 'testing_framework',
-        status: hasTesting ? 'healthy' : 'missing',
+        status: testingStatus,
         details: { 
             exists: hasTesting,
             detected: detectedTestingConfigs,
@@ -173,9 +189,17 @@ export async function checkBestPractices(
 
     // 10. Docker
     const dockerFiles = ['Dockerfile', 'docker-compose.yml', 'docker-compose.yaml', '.dockerignore'];
-    const detectedDockerFiles = fileList.filter(f => 
-        dockerFiles.some(docker => f.toLowerCase().endsWith(docker.toLowerCase()) || f.toLowerCase().includes(`/${docker.toLowerCase()}`))
-    );
+    const detectedDockerFiles = fileList.filter(f => {
+        const lowerF = f.toLowerCase();
+        return dockerFiles.some(docker => {
+            const lowerDocker = docker.toLowerCase();
+            // Match exact files or variants like Dockerfile.test, docker-compose.test.yml
+            return lowerF.endsWith(lowerDocker) || 
+                   lowerF.includes(`/${lowerDocker}`) ||
+                   lowerF.match(new RegExp(`dockerfile(?:\\.\\w+)?$`)) ||
+                   lowerF.match(new RegExp(`docker-compose(?:\\.\\w+)?\\.ya?ml$`));
+        });
+    });
     const hasDocker = detectedDockerFiles.length > 0;
     practices.push({
         type: 'docker',

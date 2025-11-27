@@ -377,7 +377,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             bp.practice_type === 'testing_framework' && bp.status === 'healthy'
         );
         const hasCI = bestPractices.some((bp: { practice_type: string; status: string }) =>
-            bp.practice_type === 'cicd' && bp.status === 'healthy'
+            bp.practice_type === 'ci_cd' && bp.status === 'healthy'
         );
 
         const daysSinceCommit = lastCommitDate

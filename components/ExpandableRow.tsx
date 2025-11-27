@@ -33,12 +33,13 @@ interface ExpandableRowProps {
   isAuthenticated?: boolean;
   onFixStandard?: (repoName: string, standardType: string) => void;
   onFixAllStandards?: (repoName: string) => void;
+  onFixDoc?: (repoName: string, docType: string) => void;
+  onFixAllDocs?: (repoName: string) => void;
+  onFixPractice?: (repoName: string, practiceType: string) => void;
+  onFixAllPractices?: (repoName: string) => void;
   totalLoc?: number;
   locLanguageBreakdown?: Record<string, number>;
   testCaseCount?: number;
-  ciStatus?: string;
-  ciLastRun?: string | null;
-  ciWorkflowName?: string | null;
   vulnAlertCount?: number;
   vulnCriticalCount?: number;
   vulnHighCount?: number;
@@ -67,12 +68,13 @@ export default function ExpandableRow({
   isAuthenticated = true,
   onFixStandard,
   onFixAllStandards,
+  onFixDoc,
+  onFixAllDocs,
+  onFixPractice,
+  onFixAllPractices,
   totalLoc,
   locLanguageBreakdown,
   testCaseCount,
-  ciStatus,
-  ciLastRun,
-  ciWorkflowName,
   vulnAlertCount,
   vulnCriticalCount,
   vulnHighCount,
@@ -142,10 +144,17 @@ export default function ExpandableRow({
         </div>
       </div>
 
-      {/* Second Row: Documentation, Community Standards, Best Practices, Testing, Issues, Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+      {/* Second Row: Documentation, Community Standards, Best Practices, Testing, Issues - All in one row */}
+      <div className="grid grid-cols-5 gap-4 mt-6">
         {/* Documentation Status */}
-        <DocumentationSection docStatuses={docStatuses} readmeLastUpdated={readmeLastUpdated} />
+        <DocumentationSection 
+          docStatuses={docStatuses} 
+          readmeLastUpdated={readmeLastUpdated}
+          repoName={repoName}
+          isAuthenticated={isAuthenticated}
+          onFixDoc={onFixDoc}
+          onFixAllDocs={onFixAllDocs}
+        />
 
         {/* Community Standards */}
         <CommunityStandardsSection
@@ -159,9 +168,10 @@ export default function ExpandableRow({
         {/* Best Practices */}
         <BestPracticesSection
           bestPractices={bestPractices}
-          ciStatus={ciStatus}
-          ciLastRun={ciLastRun}
-          ciWorkflowName={ciWorkflowName}
+          repoName={repoName}
+          isAuthenticated={isAuthenticated}
+          onFixPractice={onFixPractice}
+          onFixAllPractices={onFixAllPractices}
         />
 
         {/* Testing */}
@@ -175,10 +185,14 @@ export default function ExpandableRow({
 
         {/* Issues */}
         <IssuesSection metrics={metrics} />
-
-        {/* Metrics */}
-        <MetricsSection metrics={metrics} />
       </div>
+
+      {/* Metrics Row - if needed separately */}
+      {metrics && metrics.length > 0 && (
+        <div className="mt-6">
+          <MetricsSection metrics={metrics} />
+        </div>
+      )}
     </div>
   );
 }

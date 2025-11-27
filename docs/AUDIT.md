@@ -1,17 +1,53 @@
 # Overseer Feature Audit
 
-**Last Updated**: November 26, 2025
+**Last Updated**: November 27, 2025
 
-## Recent Improvements (November 26, 2025)
+## 🚨 Audit Tracking Notes
 
-**Phase 1 Complete** - All high-priority audit gaps addressed:
+### Known Inconsistencies (November 27, 2025)
 
-- ✅ **Coverage Score Sync** - Extracted from METRICS.md, stored in DB, displayed in Health column
-- ✅ **Health Score Breakdown** - Visual panel showing Documentation (30%), Testing (20%), Best Practices (20%), Community (15%) with progress bars
-- ✅ **README Freshness** - Tracked via GitHub API with color-coded staleness (Fresh/Recent/Aging/Stale)
-- ✅ **Docker Detection** - Added as 10th best practice check (Dockerfile, docker-compose, .dockerignore)
-- ✅ **PR Template Moved** - Now correctly categorized under Community Standards (8 checks total)
-- ✅ **UI/UX Polish** - Login redirect fixed, purple GitHub icon, green homepage icon, red X hide button with toast, column reorder
+**Community Standards Count Mismatch:**
+
+- ✅ **FIXED** - All docs now correctly reflect **9 checks**
+  - FEATURES.md: Updated to 9 checks
+  - CHANGELOG.md: Updated to 9 checks
+  - ROADMAP.md: Updated to 9 checks
+  - AUDIT.md: Feature matrix shows all 9 standards
+- ✅ **Implementation** tracks **9 checks** (lib/community-standards.ts)
+  - CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue Templates, PR Templates, CODEOWNERS, Copilot Instructions
+
+**Testing & Quality Section Inconsistencies:**
+
+- ⚠️ **Code Coverage** - Multiple inconsistent mentions across docs:
+  - METRICS.md: "87.5% (branch) / 100% (statements)" - Parser tests only
+  - FEATURES.md: "Code Coverage Visualization: Progress bars showing test coverage synced from METRICS.md"
+  - Reality: We parse coverage from METRICS.md (self-reported), but Overseer's own coverage is limited to parser tests
+- **Clarification**:
+  1. **Self-reported coverage** - Extracted from target repo's METRICS.md and displayed in UI
+  2. **Overseer's own coverage** - 87.5% branch / 100% statements for parser unit tests only (limited test suite)
+- **Action Required**: Add E2E test coverage metrics when Playwright tests are expanded
+
+**Fix Button Count:**
+
+- ✅ **VERIFIED** - All documented correctly:
+  - Documentation: 8 types with fix buttons
+  - Best Practices: 4 types with fix buttons (Dependabot, Env Template, Docker, Netlify Badge)
+  - Community Standards: 9 types with fix buttons (ALL standards are fixable)
+
+---
+
+## Recent Improvements (November 27, 2025)
+
+**Phase 4 Complete** - OAuth Error Handling & UX Improvements:
+
+- ✅ **OAuth Error Detection** - Created lib/github-errors.ts to parse and classify GitHub API errors (5 types)
+- ✅ **Organization Access Restrictions** - Detects when orgs block OAuth app access with user-friendly messaging
+- ✅ **Auto-Redirect to Authorization** - Opens GitHub OAuth settings page when restrictions detected
+- ✅ **Enhanced Error Responses** - API endpoints return structured error details with actionable instructions
+- ✅ **Frontend Error Handling** - useRepoActions hook shows toast notifications and console guidance
+- ✅ **OAuth Documentation** - Created comprehensive user guides (GITHUB_OAUTH_ORG_ACCESS.md, OAUTH_ORG_FIX_SUMMARY.md)
+- ✅ **Template Path Debugging** - Added logging to fix-doc endpoint for troubleshooting template resolution
+- ✅ **UX Roadmap Planning** - Identified need for modal preview before PR creation with pick-and-choose functionality
 
 **Phase 3 Complete** - Advanced Metrics & Integrations implemented:
 
@@ -51,11 +87,11 @@ This matrix shows what Overseer tracks, how we detect it, health indicators, and
 | Branch Protection                  | GitHub Branch Protection API                    | GitHub API               | 3-state (Healthy/Dormant/Missing)           | ❌ No                     | ✅ Displayed |
 | Testing Framework                  | Config files (vitest, jest, playwright, etc.)   | File list scan           | Binary (Healthy/Missing)                    | ❌ No                     | ✅ Displayed |
 | .gitignore                         | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ❌ No                     | ✅ Displayed |
-| Netlify Badge                      | Badge URL in README                             | README content           | Binary (Healthy/Missing)                    | ❌ No                     | ✅ Displayed |
-| .env.example                       | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ❌ No                     | ✅ Displayed |
-| Dependabot                         | .github/dependabot.yml                          | File list scan           | Binary (Healthy/Missing)                    | ❌ No                     | ✅ Displayed |
-| Docker                             | Dockerfile, docker-compose.yml                  | File list scan           | Binary (Healthy/Missing)                    | ❌ No                     | ✅ Displayed |
-| **Community Standards (8 checks)** |                                                 |                          |                                             |                           |              |
+| Netlify Badge                      | Badge URL in README                             | README content           | Binary (Healthy/Missing)                    | ✅ Modify README          | ✅ Displayed |
+| .env.example                       | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
+| Dependabot                         | .github/dependabot.yml                          | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
+| Docker                             | Dockerfile, docker-compose.yml                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
+| **Community Standards (9 checks)** |                                                 |                          |                                             |                           |              |
 | CODE_OF_CONDUCT.md                 | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
 | CONTRIBUTING.md                    | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
 | SECURITY.md                        | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
@@ -63,6 +99,8 @@ This matrix shows what Overseer tracks, how we detect it, health indicators, and
 | CHANGELOG.md                       | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
 | Issue Templates                    | .github/ISSUE_TEMPLATE/                         | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
 | PR Templates                       | .github/pull_request_template.md                | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
+| CODEOWNERS                         | .github/CODEOWNERS                              | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
+| Copilot Instructions               | .github/copilot-instructions.md                 | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
 | **Activity Metrics**               |                                                 |                          |                                             |                           |              |
 | Last Commit Date                   | GitHub repo.pushed_at                           | GitHub API               | Color-coded freshness                       | N/A                       | ✅ Complete  |
 | Open PRs Count                     | GitHub PR API                                   | GitHub API               | Count display                               | N/A                       | ✅ Complete  |
@@ -89,6 +127,12 @@ This matrix shows what Overseer tracks, how we detect it, health indicators, and
 | Description                        | GitHub repo.description                         | GitHub API               | Text display                                | N/A                       | ✅ Complete  |
 | **AI Features**                    |                                                 |                          |                                             |                           |              |
 | AI Summary                         | Google Gemini API                               | On-demand generation     | Text display                                | ✅ Regenerate             | ✅ Complete  |
+| **Error Handling & UX**            |                                                 |                          |                                             |                           |              |
+| OAuth Error Detection              | Error message pattern matching                  | GitHub API errors        | User-friendly error messages                | N/A                       | ✅ Complete  |
+| Organization Access Restrictions   | OAuth restriction error parsing                 | GitHub API errors        | Toast + console + auto-redirect             | ✅ User authorization     | ✅ Complete  |
+| Permission Errors                  | 403/404 error parsing                           | GitHub API errors        | User-friendly error messages                | N/A                       | ✅ Complete  |
+| Rate Limit Errors                  | X-RateLimit headers                             | GitHub API errors        | User-friendly error messages                | N/A                       | ✅ Complete  |
+| Template Path Resolution           | Enhanced logging                                | API endpoint debugging   | Console diagnostic logs                     | N/A                       | ✅ Complete  |
 | **Health Scoring**                 |                                                 |                          |                                             |                           |              |
 | Overall Health Score               | Weighted calculation                            | Composite (5 components) | Letter grade (A-F)                          | Indirect (fix components) | ✅ Complete  |
 | Documentation Score                | Doc completeness                                | Parsed docs              | Percentage                                  | ✅ Fix missing docs       | ✅ Complete  |

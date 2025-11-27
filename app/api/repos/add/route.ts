@@ -68,17 +68,18 @@ export async function POST(request: NextRequest) {
         await syncRepo(repoMeta, github, db);
 
         // Ensure repo is visible and update repo type if provided
+        // Use repoMeta.name (from GitHub API) to ensure case-sensitive match
         if (repoType && repoType !== 'unknown') {
             await db`
                 UPDATE repos 
                 SET repo_type = ${repoType}, is_hidden = FALSE
-                WHERE name = ${repo}
+                WHERE name = ${repoMeta.name}
             `;
         } else {
             await db`
                 UPDATE repos 
                 SET is_hidden = FALSE
-                WHERE name = ${repo}
+                WHERE name = ${repoMeta.name}
             `;
         }
 

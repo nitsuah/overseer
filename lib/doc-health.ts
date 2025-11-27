@@ -53,13 +53,15 @@ export function calculateDocHealthState(
         return 'malformed';
     }
 
-    // Check for common template markers that shouldn't be in final docs
+    // Check for common template placeholder markers (not including AGENT INSTRUCTIONS which is valid)
     const templateMarkers = [
-        'AGENT INSTRUCTIONS',
-        'TODO:',
         '[Your content here]',
         '[Add your',
         'Replace this',
+        '[TODO:',
+        'TODO: Replace',
+        'TODO: Add',
+        'TODO: Update',
     ];
 
     const hasTemplateMarkers = templateMarkers.some(marker => 

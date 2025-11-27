@@ -79,6 +79,59 @@ export function useRepoActions(
     }
   };
 
+  const handleFixDoc = async (repoName: string, docType: string) => {
+    try {
+      setFixingDoc(true);
+      const res = await fetch(`/api/repos/${repoName}/fix-doc`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docType }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.prUrl) {
+          window.open(data.prUrl, '_blank');
+        }
+        setToastMessage(`PR created for ${docType.toUpperCase()}.md!`);
+      } else {
+        const err = await res.json();
+        
+        // Handle OAuth restriction errors specially
+        if (err.type === 'oauth_restriction' && err.helpUrl) {
+          console.error('🔐 OAuth Restriction - Authorization Required');
+          console.log(`\n📋 To fix this:\n1. Click the link that just opened\n2. Find the organization section\n3. Click "Grant" or "Request" access\n4. Come back and try again\n`);
+          
+          // Show error with clickable action
+          setToastMessage(`${err.error || 'Authorization required'} - Opening authorization page...`);
+          
+          // Open the authorization URL directly
+          setTimeout(() => {
+            window.open(err.helpUrl, '_blank');
+          }, 500);
+        } else if (err.type === 'oauth_restriction' && err.instructions) {
+          console.error('OAuth Restriction:', err.instructions);
+          setToastMessage(err.error || 'Failed to create PR - OAuth restriction');
+          
+          // Optionally open help URL
+          if (err.helpUrl) {
+            setTimeout(() => {
+              if (confirm('Need help authorizing the app for this organization? Click OK to view instructions.')) {
+                window.open(err.helpUrl, '_blank');
+              }
+            }, 1000);
+          }
+        } else {
+          setToastMessage(err.error || 'Failed to create PR');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fix doc:', error);
+      setToastMessage('Failed to create PR');
+    } finally {
+      setFixingDoc(false);
+    }
+  };
+
   const handleFixStandard = async (repoName: string, standardType: string) => {
     try {
       setFixingDoc(true);
@@ -124,6 +177,99 @@ export function useRepoActions(
     } catch (error) {
       console.error('Failed to fix all standards:', error);
       setToastMessage('Failed to create PR');
+    } finally {
+      setFixingDoc(false);
+    }
+  };
+
+  const handleFixPractice = async (repoName: string, practiceType: string) => {
+    try {
+      setFixingDoc(true);
+      const res = await fetch(`/api/repos/${repoName}/fix-best-practice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ practiceType }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.prUrl) {
+          window.open(data.prUrl, '_blank');
+        }
+        setToastMessage(`PR created for ${practiceType}!`);
+      } else {
+        const err = await res.json();
+        
+        // Handle OAuth restriction errors specially
+        if (err.type === 'oauth_restriction' && err.helpUrl) {
+          console.error('🔐 OAuth Restriction - Authorization Required');
+          console.log(`\n📋 To fix this:\n1. Click the link that just opened\n2. Find the organization section\n3. Click "Grant" or "Request" access\n4. Come back and try again\n`);
+          
+          // Show error with clickable action
+          setToastMessage(`${err.error || 'Authorization required'} - Opening authorization page...`);
+          
+          // Open the authorization URL directly
+          setTimeout(() => {
+            window.open(err.helpUrl, '_blank');
+          }, 500);
+        } else if (err.type === 'oauth_restriction' && err.instructions) {
+          console.error('OAuth Restriction:', err.instructions);
+          setToastMessage(err.error || 'Failed to create PR - OAuth restriction');
+          
+          // Optionally open help URL
+          if (err.helpUrl) {
+            setTimeout(() => {
+              if (confirm('Need help authorizing the app for this organization? Click OK to view instructions.')) {
+                window.open(err.helpUrl, '_blank');
+              }
+            }, 1000);
+          }
+        } else {
+          setToastMessage(err.error || 'Failed to create PR');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fix practice:', error);
+      setToastMessage('Failed to create PR');
+    } finally {
+      setFixingDoc(false);
+    }
+  };
+
+  const handleFixAllPractices = async (repoName: string) => {
+    try {
+      setFixingDoc(true);
+      
+      // Get fixable missing practices
+      const fixablePractices = ['dependabot', 'env_template', 'docker', 'netlify_badge'];
+      let successCount = 0;
+      
+      for (const practiceType of fixablePractices) {
+        try {
+          const res = await fetch(`/api/repos/${repoName}/fix-best-practice`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ practiceType }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.prUrl) {
+              window.open(data.prUrl, '_blank');
+            }
+            successCount++;
+          }
+        } catch (error) {
+          console.error(`Failed to fix ${practiceType}:`, error);
+        }
+      }
+      
+      if (successCount > 0) {
+        setToastMessage(`Created ${successCount} PR(s) for best practices!`);
+      } else {
+        setToastMessage('No PRs created - practices may already exist');
+      }
+    } catch (error) {
+      console.error('Failed to fix all practices:', error);
+      setToastMessage('Failed to create PRs');
     } finally {
       setFixingDoc(false);
     }
@@ -179,8 +325,11 @@ export function useRepoActions(
     handleAddRepo,
     handleRemoveRepo,
     handleFixAllDocs,
+    handleFixDoc,
     handleFixStandard,
     handleFixAllStandards,
+    handleFixPractice,
+    handleFixAllPractices,
     handleGenerateSummary,
     handleSyncSingleRepo,
   };

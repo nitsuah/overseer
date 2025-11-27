@@ -1,6 +1,7 @@
 // Repository table row component
 
 import React, { Fragment, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   GitPullRequest,
   AlertCircle,
@@ -14,6 +15,12 @@ import {
   X,
   RefreshCw,
   Shield,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  FileText,
+  FlaskConical,
+  Clock,
 } from 'lucide-react';
 import ExpandableRow from '@/components/ExpandableRow';
 import { Repo, RepoDetails } from '@/types/repo';
@@ -37,8 +44,11 @@ interface RepoTableRowProps {
   onToggleExpanded: () => void;
   onRemove: () => void;
   onFixAllDocs: () => void;
+  onFixDoc: (docType: string) => void;
   onFixStandard: (standardType: string) => void;
   onFixAllStandards: () => void;
+  onFixPractice: (practiceType: string) => void;
+  onFixAllPractices: () => void;
   onGenerateSummary: () => void;
   onSyncSingleRepo: () => void;
 }
@@ -54,15 +64,59 @@ export function RepoTableRow({
   onToggleExpanded,
   onRemove,
   onFixAllDocs,
+  onFixDoc,
   onFixStandard,
   onFixAllStandards,
+  onFixPractice,
+  onFixAllPractices,
   onGenerateSummary,
   onSyncSingleRepo,
 }: RepoTableRowProps) {
   const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
   const repoType = (repo.repo_type as RepoType) || typeInfo.type;
+  
+  // Get icon based on actual repo_type if set, otherwise use detected type
+  const getTypeIcon = (type: RepoType): string => {
+    const iconMap: Record<RepoType, string> = {
+      'web-app': '🌐',
+      'game': '🎮',
+      'tool': '🔧',
+      'library': '📦',
+      'bot': '🤖',
+      'research': '🔬',
+      'unknown': '📄',
+    };
+    return iconMap[type];
+  };
+  
   const docHealth = details ? calculateDocHealth(details.docStatuses, repoType) : null;
   const health = getHealthGrade(repo.health_score || 0);
+
+  const [editingType, setEditingType] = useState(false);
+  const [updatingType, setUpdatingType] = useState(false);
+
+  const handleTypeChange = async (newType: RepoType) => {
+    try {
+      setUpdatingType(true);
+      const res = await fetch(`/api/repos/${repo.name}/update-type`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: newType }),
+      });
+
+      if (res.ok) {
+        // Refresh the page to show updated type
+        window.location.reload();
+      } else {
+        console.error('Failed to update repo type');
+      }
+    } catch (error) {
+      console.error('Error updating repo type:', error);
+    } finally {
+      setUpdatingType(false);
+      setEditingType(false);
+    }
+  };
 
   return (
     <Fragment key={repo.id}>
@@ -137,6 +191,37 @@ export function RepoTableRow({
                 </span>
               </a>
             )}
+            {/* CI/CD Status Icon */}
+            {repo.ci_status && repo.ci_status !== 'unknown' && (
+              <a
+                href={`${repo.url}/actions`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`p-1 rounded transition-colors ${
+                  repo.ci_status === 'passing'
+                    ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                    : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                }`}
+                title={`CI/CD ${repo.ci_status === 'passing' ? 'Passing' : 'Failing'}${
+                  repo.ci_workflow_name ? ` - ${repo.ci_workflow_name}` : ''
+                }${repo.ci_last_run ? ` (${new Date(repo.ci_last_run).toLocaleDateString()})` : ''}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {repo.ci_status === 'passing' ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
+              </a>
+            )}
+            {repo.ci_status === 'unknown' && (
+              <div
+                className="p-1 bg-slate-500/20 text-slate-400 rounded"
+                title="CI/CD status unknown"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </div>
+            )}
           </div>
         </td>
         {/* Repository Name */}
@@ -146,15 +231,37 @@ export function RepoTableRow({
           </span>
         </td>
         {/* Type */}
-        <td className="px-6 py-4">
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(
-              repoType
-            )}`}
-          >
-            <span>{typeInfo.icon}</span>
-            <span className="capitalize">{repoType.replace('-', ' ')}</span>
-          </span>
+        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+          {isAuthenticated && editingType ? (
+            <select
+              value={repoType}
+              onChange={(e) => handleTypeChange(e.target.value as RepoType)}
+              disabled={updatingType}
+              className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+              onBlur={() => setEditingType(false)}
+              autoFocus
+            >
+              <option value="web-app">🌐 Web App</option>
+              <option value="game">🎮 Game</option>
+              <option value="tool">🔧 Tool</option>
+              <option value="library">📦 Library</option>
+              <option value="bot">🤖 Bot</option>
+              <option value="research">🔬 Research</option>
+              <option value="unknown">📄 Unknown</option>
+            </select>
+          ) : (
+            <button
+              onClick={() => isAuthenticated && setEditingType(true)}
+              disabled={!isAuthenticated}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(
+                repoType
+              )} ${isAuthenticated ? 'hover:opacity-80 cursor-pointer' : ''} transition-opacity`}
+              title={isAuthenticated ? 'Click to edit type' : ''}
+            >
+              <span>{getTypeIcon(repoType)}</span>
+              <span className="capitalize">{repoType.replace('-', ' ')}</span>
+            </button>
+          )}
         </td>
         {/* Description with AI Summary Button */}
         <td className="px-6 py-4 text-sm text-slate-400 hidden xl:table-cell">
@@ -199,15 +306,7 @@ export function RepoTableRow({
         <td className="px-6 py-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <span className={`text-lg font-bold ${health.color} relative group`}>
-                {health.grade}
-                {details && (
-                  <>
-                    {/* Health Breakdown Popup */}
-                    <HealthBreakdown repo={repo} details={details} />
-                  </>
-                )}
-              </span>
+              {details && <HealthBreakdown repo={repo} details={details} health={health} />}
               {details && (
                 <>
                   {/* Health Shields */}
@@ -296,14 +395,15 @@ export function RepoTableRow({
               coverageScore={repo.coverage_score}
               readmeLastUpdated={repo.readme_last_updated}
               repoName={repo.name}
+              onFixDoc={onFixDoc}
+              onFixAllDocs={onFixAllDocs}
               onFixStandard={onFixStandard}
               onFixAllStandards={onFixAllStandards}
+              onFixPractice={onFixPractice}
+              onFixAllPractices={onFixAllPractices}
               totalLoc={repo.total_loc}
               locLanguageBreakdown={repo.loc_language_breakdown}
               testCaseCount={repo.test_case_count}
-              ciStatus={repo.ci_status}
-              ciLastRun={repo.ci_last_run}
-              ciWorkflowName={repo.ci_workflow_name}
               vulnAlertCount={repo.vuln_alert_count}
               vulnCriticalCount={repo.vuln_critical_count}
               vulnHighCount={repo.vuln_high_count}
@@ -320,7 +420,25 @@ export function RepoTableRow({
 }
 
 // Helper components for cleaner code
-function HealthBreakdown({ repo, details }: { repo: Repo; details: RepoDetails }) {
+function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoDetails; health: { grade: string; color: string } }) {
+  const [showPopup, setShowPopup] = useState(false);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const spanRef = React.useRef<HTMLSpanElement>(null);
+  
+  const handleMouseEnter = () => {
+    if (!spanRef.current) return;
+    const rect = spanRef.current.getBoundingClientRect();
+    setPosition({
+      top: rect.bottom + 8,
+      left: rect.left + rect.width / 2,
+    });
+    setShowPopup(true);
+  };
+  
+  const handleMouseLeave = () => {
+    setShowPopup(false);
+  };
+  
   // Get repo type for doc health calculation
   const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
   const repoType = (repo.repo_type as RepoType) || typeInfo.type;
@@ -399,9 +517,9 @@ function HealthBreakdown({ repo, details }: { repo: Repo; details: RepoDetails }
 
     return [
       { label: 'Documentation', score: docScore, color: 'slate', weight: '30%' },
-      { label: 'Testing', score: testScore, color: 'blue', weight: '20%' },
-      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '20%' },
       { label: 'Community', score: csScore, color: 'green', weight: '15%' },
+      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '20%' },
+      { label: 'Testing', score: testScore, color: 'blue', weight: '20%' },
       { label: 'Activity', score: activityScore, color: activityColor, weight: '15%' },
     ];
   }, [repo, details, repoType, now]);
@@ -418,34 +536,73 @@ function HealthBreakdown({ repo, details }: { repo: Repo; details: RepoDetails }
   };
 
   return (
-    <div className="absolute left-0 top-8 z-50 hidden group-hover:block w-72 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-4">
-      <h4 className="text-sm font-semibold text-slate-200 mb-3">Health Breakdown</h4>
-      <div className="space-y-3">
-        {scores.map(({ label, score, color, weight }) => {
-          const colors = colorMap[color] || colorMap.blue;
-          return (
-            <div key={label} className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">{label}</span>
-                <div className="flex items-center gap-2">
-                  <span className={`${colors.text} font-medium`}>{score}%</span>
-                  <span className="text-slate-500 text-[10px]">({weight})</span>
+    <>
+      <span 
+        ref={spanRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={`text-lg font-bold ${health.color} cursor-help`}
+      >
+        {health.grade}
+      </span>
+      {showPopup && position && createPortal(
+        <div 
+          className="fixed -translate-x-1/2 w-[400px] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl p-4 pointer-events-none"
+          style={{ 
+            top: `${position.top}px`,
+            left: `${position.left}px`,
+            zIndex: 9999,
+          }}
+        >
+          <h4 className="text-sm font-semibold text-slate-200 mb-3">Health Breakdown</h4>
+          <div className="space-y-2.5">
+            {scores.map(({ label, score, color, weight }) => {
+              const colors = colorMap[color] || colorMap.blue;
+              // Use red for scores below 50%
+              const barColor = score < 50 ? '#ef4444' : colors.hex;
+              
+              // Icon mapping for each section
+              const iconMap: Record<string, React.ReactNode> = {
+                'Documentation': <FileText className="h-3.5 w-3.5 text-slate-400" />,
+                'Testing': <FlaskConical className="h-3.5 w-3.5 text-blue-400" />,
+                'Best Practices': <Shield className="h-3.5 w-3.5 text-purple-400" />,
+                'Community': <Shield className="h-3.5 w-3.5 text-green-400" />,
+                'Activity': <Clock className="h-3.5 w-3.5 text-green-400" />,
+              };
+              
+              return (
+                <div key={label} className="flex items-center gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 w-32 shrink-0">
+                    {iconMap[label]}
+                    <span className="text-slate-400 truncate">{label}</span>
+                  </div>
+                  <div className="flex-1 relative bg-slate-700 rounded-full h-1.5 overflow-visible">
+                    {/* 50% threshold indicator */}
+                    <div 
+                      className="absolute top-0 bottom-0 w-px bg-yellow-400/50"
+                      style={{ left: '50%' }}
+                      title="50% threshold"
+                    />
+                    <div
+                      className="h-full transition-all rounded-full"
+                      style={{ 
+                        width: `${score}%`,
+                        backgroundColor: barColor
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5 w-16 shrink-0 justify-end">
+                    <span className={`${score < 50 ? 'text-red-400' : colors.text} font-medium tabular-nums`}>{score}%</span>
+                    <span className="text-slate-500 text-[10px]">({weight})</span>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="h-full transition-all"
-                  style={{ 
-                    width: `${score}%`,
-                    backgroundColor: colors.hex
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+              );
+            })}
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }
 
@@ -533,12 +690,16 @@ function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) 
         {coreDocsPresent}/{coreDocs.length}
       </span>
       <span
-        title={`Testing: ${testingCount}/${testingTotal} checks`}
+        title={`Community Standards: ${csHealthy}/${csTotal} (${csPercentage}%)`}
         className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-          hasTests ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-700/50 text-slate-500'
+          csPercentage >= 70
+            ? 'bg-green-500/20 text-green-400'
+            : csPercentage >= 40
+            ? 'bg-yellow-500/20 text-yellow-400'
+            : 'bg-red-500/20 text-red-400'
         }`}
       >
-        {testingCount}/{testingTotal}
+        {csHealthy}/{csTotal}
       </span>
       <span
         title={`Best Practices: ${bpHealthy}/${bpTotal} (${bpPercentage}%)`}
@@ -553,16 +714,12 @@ function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) 
         {bpHealthy}/{bpTotal}
       </span>
       <span
-        title={`Community Standards: ${csHealthy}/${csTotal} (${csPercentage}%)`}
+        title={`Testing: ${testingCount}/${testingTotal} checks`}
         className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-          csPercentage >= 70
-            ? 'bg-green-500/20 text-green-400'
-            : csPercentage >= 40
-            ? 'bg-yellow-500/20 text-yellow-400'
-            : 'bg-red-500/20 text-red-400'
+          hasTests ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-700/50 text-slate-500'
         }`}
       >
-        {csHealthy}/{csTotal}
+        {testingCount}/{testingTotal}
       </span>
       <span
         title={repo.last_commit_date ? `Last commit: ${repo.last_commit_date}` : 'No commits'}

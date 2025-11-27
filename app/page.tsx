@@ -14,7 +14,7 @@ import { RepoType } from '@/lib/repo-type';
 export default function Dashboard() {
   const { data: session } = useSession();
   const { repos, setRepos, loading, refetch } = useRepos();
-  const { repoDetails, fetchRepoDetails } = useRepoDetails();
+  const { repoDetails, fetchRepoDetails, fetchAllRepoDetails } = useRepoDetails();
   const { expandedRepos, toggleRepo } = useRepoExpansion();
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -32,8 +32,11 @@ export default function Dashboard() {
     handleAddRepo,
     handleRemoveRepo,
     handleFixAllDocs,
+    handleFixDoc,
     handleFixStandard,
     handleFixAllStandards,
+    handleFixPractice,
+    handleFixAllPractices,
     handleGenerateSummary,
     handleSyncSingleRepo,
   } = useRepoActions(refetch, setRepos, setToastMessage);
@@ -89,6 +92,14 @@ export default function Dashboard() {
     });
   };
 
+  // Fetch details for all repos when repos change
+  React.useEffect(() => {
+    if (repos.length > 0 && Object.keys(repoDetails).length === 0) {
+      const repoNames = repos.map(r => r.name);
+      fetchAllRepoDetails(repoNames);
+    }
+  }, [repos, repoDetails, fetchAllRepoDetails]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -138,7 +149,7 @@ export default function Dashboard() {
             </p>
           </div>
         ) : (
-          <div className="glass rounded-lg overflow-hidden">
+          <div className="glass rounded-lg overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-800/50 border-b border-slate-700">
                 <tr>
@@ -182,8 +193,11 @@ export default function Dashboard() {
                     onToggleExpanded={() => handleToggleExpanded(repo.name)}
                     onRemove={() => handleRemoveRepo(repo.name)}
                     onFixAllDocs={() => handleFixAllDocs(repo.name)}
+                    onFixDoc={(type) => handleFixDoc(repo.name, type)}
                     onFixStandard={(type) => handleFixStandard(repo.name, type)}
                     onFixAllStandards={() => handleFixAllStandards(repo.name)}
+                    onFixPractice={(type) => handleFixPractice(repo.name, type)}
+                    onFixAllPractices={() => handleFixAllPractices(repo.name)}
                     onGenerateSummary={() => handleGenerateSummary(repo.name)}
                     onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
                   />

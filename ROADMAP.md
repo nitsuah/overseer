@@ -22,7 +22,7 @@
 - [x] UX/Flow: Sync Status Clarity (Timestamp) and Type Column Tag Refinement
 - [x] LICENSE.md Tracking: Added as tracked document type
 - [x] Detail Panel 2.0: Features Section with parsed FEATURES.md
-- [x] Meta-Features: Best Practices (10 checks) & Community Standards (8 checks) Detection
+- [x] Meta-Features: Best Practices (10 checks) & Community Standards (9 checks) Detection
 - [x] Basic Health Metrics: Testing framework, CI/CD, Linting, Pre-commit hooks, Docker
 - [x] Compliance Checks: Gitignore, PR/Issue Templates, Environment Templates
 - [x] Health Score 2.0: Comprehensive weighted calculation (Doc 30%, Testing 20%, Best Practices 20%, Community 15%, Activity 15%)
@@ -30,7 +30,7 @@
 - [x] Repo Type Selector: Added to custom repo form
 - [x] Testing Section Enhancement: Framework detection, test file counting, improved display
 - [x] Toast Notifications: Replaced alert() calls with non-intrusive toasts
-- [x] Feature Audit: Comprehensive documentation vs implementation audit (November 2025)
+- [x] Feature Audit: Comprehensive documentation vs implementation audit
 - [x] Coverage Score Sync: Extract from METRICS.md and store in database
 - [x] Health Score Breakdown Display: All 5 components visible with progress bars in UI
 - [x] Self-reported Coverage Integration: Prominently displayed in Testing section
@@ -39,14 +39,14 @@
 
 ## Q4 2025: UX Consistency & Quick Wins (COMPLETED) 🎨
 
-- [x] Templates for Community Standards: CODE_OF_CONDUCT, SECURITY, Issue templates (November 2025)
-- [x] Fix Buttons: Add automated fixes for best practices/community standards (November 2025)
-- [x] Batch Fix All Standards: Single PR for all missing standards (November 2025)
-- [x] Test File Prominence: Show test file count more prominently in Testing section (November 2025)
-- [x] Health Component Tooltips: Add tooltips explaining each health score component (November 2025)
-- [x] Health State Icons: Display in main table row for each doc type (November 2025)
-- [x] Foundation: Full E2E Tests and Pre-commit Hooks (November 2025)
-- [x] Template File Hashing: Detect stale/unchanged templates (November 2025)
+- [x] Templates for Community Standards: CODE_OF_CONDUCT, SECURITY, Issue templates
+- [x] Fix Buttons: Add automated fixes for best practices/community standards
+- [x] Batch Fix All Standards: Single PR for all missing standards
+- [x] Test File Prominence: Show test file count more prominently in Testing section
+- [x] Health Component Tooltips: Add tooltips explaining each health score component
+- [x] Health State Icons: Display in main table row for each doc type
+- [x] Foundation: Full E2E Tests and Pre-commit Hooks
+- [x] Template File Hashing: Detect stale/unchanged templates
 
 ## Q4 2025: Advanced Metrics & Integrations (COMPLETED) 🚀
 
@@ -62,22 +62,43 @@
 
 ## Q4 2025: Contributor Analytics & Enterprise Features (COMPLETED) ✅
 
-- [x] Template Health Detection: Content hashing to detect unchanged/stale templates (November 2025)
-- [x] Template Version Tracking: Track which template version docs are based on (November 2025)
-- [x] Dormant State Detection: Mark docs matching templates as "dormant" (November 2025)
-- [x] Malformed State Detection: Detect docs with template markers or too short (November 2025)
-- [x] Contributor Analytics: Track contributor count and diversity (November 2025)
-- [x] Commit Frequency Tracking: Calculate commits/week from last 12 weeks (November 2025)
-- [x] Bus Factor Analysis: Contributor concentration risk (80/20 rule) (November 2025)
-- [x] PR Merge Time Tracking: Average cycle time from creation to merge (November 2025)
-- [x] Contributor Metrics Display: Show all contributor analytics in Repository Stats (November 2025)
-- [x] Gemini API Integration: Updated to use Gemini 2.5 models (deprecated 1.x models) (November 2025)
+- [x] Template Health Detection: Content hashing to detect unchanged/stale templates
+- [x] Template Version Tracking: Track which template version docs are based on
+- [x] Dormant State Detection: Mark docs matching templates as "dormant"
+- [x] Malformed State Detection: Detect docs with template markers or too short
+- [x] Contributor Analytics: Track contributor count and diversity
+- [x] Commit Frequency Tracking: Calculate commits/week from last 12 weeks
+- [x] Bus Factor Analysis: Contributor concentration risk (80/20 rule)
+- [x] PR Merge Time Tracking: Average cycle time from creation to merge
+- [x] Contributor Metrics Display: Show all contributor analytics in Repository Stats
+- [x] Gemini API Integration: Updated to use Gemini 2.5 models (deprecated 1.x models)
 
 ## Q4 2025: Documentation & Agent Tooling (COMPLETED) 📚
 
-- [x] Agent Instruction Guide (docs/PROMPT.md): Comprehensive documentation standards for AI agents (November 2025)
-- [x] Anti-Hallucination Guidelines: Format specifications and validation rules to prevent AI errors (November 2025)
-- [x] Documentation Maintenance Workflow: Move/collapse pattern for keeping docs clean (November 2025)
+- [x] Agent Instruction Guide (templates/.github/prompts/PM.md): Comprehensive documentation standards for AI agents
+- [x] Anti-Hallucination Guidelines: Format specifications and validation rules to prevent AI errors
+- [x] Documentation Maintenance Workflow: Move/collapse pattern for keeping docs clean
+- [x] Error Handling Documentation Pattern: Comprehensive guide for documenting error handling across all core docs
+
+## Q4 2025: Error Handling & UX Polish (COMPLETED) 🛡️
+
+- [x] OAuth Error Detection System: Created lib/github-errors.ts with 5 error type classifications
+- [x] Organization Access Restrictions: User-friendly messaging when orgs block OAuth app access
+- [x] Auto-Redirect to Authorization: Opens GitHub OAuth settings automatically when restrictions detected
+- [x] Enhanced API Error Responses: Structured error details with actionable instructions in fix-doc/fix-best-practice
+- [x] Frontend Error Handling: Toast notifications with console guidance in useRepoActions hook
+- [x] OAuth User Documentation: Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md guides
+- [x] Template Path Debugging: Enhanced logging for troubleshooting template resolution
+- [x] Best Practices Fix Buttons: 4 automated fixes (Dependabot, Env Template, Docker, Netlify Badge)
+- [x] Community Standards Accuracy: Fixed count from 8 to 9 (added CODEOWNERS, Copilot Instructions)
+
+## Future: UX Enhancements & Preview Features 🎨
+
+- [ ] Doc Fix Preview Modal: Modal window before PR creation with template preview and pick-and-choose options
+  - [ ] Template preview - Show what will be added before creating PR
+  - [ ] Selective fixes - Allow users to choose which docs to fix in batch operations
+  - [ ] Confirmation step - "Do you really want to fix all?" with explicit opt-in per document
+  - [ ] Live template rendering - Preview markdown rendering in modal before committing
 
 ## Future: Production Deployment & Security Enhancements 🔐
 

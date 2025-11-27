@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
+import { parseGitHubError, getOrgAuthInstructions } from '@/lib/github-errors';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -11,6 +12,8 @@ export async function POST(
     props: { params: Promise<{ name: string }> }
 ) {
     const params = await props.params;
+    let fullName = ''; // Declare in outer scope for error handling
+    
     try {
         const session = await auth();
         if (!session?.user) {
@@ -23,13 +26,29 @@ export async function POST(
         }
 
         const repoName = params.name;
+        
+        console.log('[fix-doc] Request details:', {
+            docType,
+            repoName,
+            paramsName: params.name
+        });
+        
+        // Always use process.cwd() which should be the project root when Next.js runs
         const templatePath = path.join(process.cwd(), 'templates', `${docType.toUpperCase()}.md`);
 
         let content = '';
         try {
             content = await fs.readFile(templatePath, 'utf-8');
-        } catch {
-            return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+        } catch (error) {
+            console.error(`[fix-doc] Template not found:`, {
+                docType,
+                templatePath,
+                cwd: process.cwd(),
+                error: error instanceof Error ? error.message : String(error)
+            });
+            return NextResponse.json({ 
+                error: `Template not found for ${docType}. Expected at: ${templatePath}`
+            }, { status: 404 });
         }
 
         // Get repo owner and full name
@@ -38,7 +57,7 @@ export async function POST(
         if (repoRows.length === 0) {
             return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
         }
-        const fullName = repoRows[0].full_name;
+        fullName = repoRows[0].full_name;
         const owner = fullName.split('/')[0];
 
         // Initialize GitHub client with session token
@@ -71,7 +90,26 @@ export async function POST(
         return NextResponse.json({ success: true, branch: branchName, prUrl });
     } catch (error: unknown) {
         console.error('Error creating PR:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+        
+        // Parse the error and provide helpful context
+        const errorDetails = parseGitHubError(error);
+        
+        if (errorDetails.type === 'oauth_restriction') {
+            const orgName = fullName.split('/')[0];
+            const instructions = getOrgAuthInstructions(orgName);
+            
+            return NextResponse.json({ 
+                error: errorDetails.userMessage,
+                type: errorDetails.type,
+                instructions,
+                helpUrl: errorDetails.helpUrl
+            }, { status: 403 });
+        }
+        
+        return NextResponse.json({ 
+            error: errorDetails.userMessage,
+            type: errorDetails.type,
+            helpUrl: errorDetails.helpUrl
+        }, { status: 500 });
     }
 }

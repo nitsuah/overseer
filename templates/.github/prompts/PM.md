@@ -14,8 +14,11 @@
 2. **Read existing documentation** - Do NOT blindly overwrite existing content with templates
 3. **Preserve custom content** - The goal is to conform to format expectations while keeping the repository's unique information
 4. **Only update on non-main branches** - Never push directly to main/master unless explicitly authorized
+5. **DO NOT commit automatically** - Stage changes and let the user review before committing
 
 **Golden Rule**: You are ENHANCING and CONFORMING existing docs, not replacing them wholesale.
+
+**Workflow Rule**: STAGE changes, but let the user COMMIT and PUSH after review.
 
 ---
 
@@ -215,6 +218,24 @@ Overseer expects these files at the repository root:
 - `Code Coverage` is extracted and displayed prominently - include percentage
 - Keep sections: `## Core Metrics` and `## Health`
 - Update `Last Updated` date when changing metrics
+- **Use estimates when exact values unavailable** - prefix with `~` or note as "estimated"
+- **Use TBD for unknown values** - don't invent numbers
+
+**Getting Accurate Metrics**:
+
+1. **Test Files Count**: Use `Get-ChildItem -Path "src" -Recurse -Filter "*.test.*" | Measure-Object` (PowerShell) or `find src -name "*.test.*" | wc -l` (Unix)
+2. **Source Files Count**: Count TypeScript/JSX files excluding tests and type definitions
+3. **Test Cases Count**: Run test suite and check output summary (e.g., "302 tests passing")
+4. **Code Coverage**: If no coverage report exists, estimate based on test file ratio (~70% if 41 test files cover 64 source files)
+5. **Build Time**: Note as "TBD" unless you can actually run build
+6. **Bundle Size**: Note as "TBD" unless dist/ folder exists with build artifacts
+
+**Estimation Guidelines**:
+
+- Good test coverage: 40+ test files for 60+ source files = ~70% estimated
+- Moderate coverage: 10-20 test files = ~40-60% estimated
+- Low coverage: <10 test files = ~20-30% estimated
+- Always mark estimates clearly: `~70%` or note "Estimated from X test files"
 
 **Parser Expectations**:
 
@@ -519,19 +540,24 @@ For each file:
 ### Step 3: Execute Updates
 
 ```text
-1. Create feature branch (not main!)
+1. Verify you're on correct feature branch (not main!)
 2. Update files one at a time
 3. Validate format after each change
-4. Commit with descriptive messages
+4. Stage changes with git add
+5. DO NOT commit automatically - let user review
+6. Report what was changed and stage for user review
 ```
 
-### Step 4: Validate
+### Step 4: Validate & Stage for Review
 
 ```text
 1. Check all required sections are present
 2. Verify heading levels are correct
 3. Confirm checkbox syntax is correct
 4. Test that content makes sense for this repo
+5. Use 'git add' to stage changes
+6. Provide summary of changes for user review
+7. Wait for user to commit and push
 ```
 
 ---
@@ -598,11 +624,74 @@ For each file:
 - Document methodology in README
 - Track experiment results in METRICS.md
 
+### For Repositories with Detailed Existing Roadmaps
+
+**Challenge**: Repository has very detailed ROADMAP (500+ lines) with phases, timelines, estimated efforts
+
+**Solution**:
+
+1. **Create condensed Overseer-compliant version** at root (`ROADMAP.md`)
+   - Extract high-level quarterly objectives
+   - Convert to checkbox format with status indicators
+   - Keep 1-2 lines per item maximum
+   - Add status emojis (🚀, 🏗️, 💰, 📱)
+
+2. **Preserve detailed version** in docs folder (`docs/ROADMAP_DETAILED.md`)
+   - Move original detailed roadmap to docs/
+   - Keep all phases, timelines, effort estimates, deliverables
+   - Reference from condensed ROADMAP if needed
+
+3. **Benefits of this approach**:
+   - Overseer can parse quarterly structure
+   - Detailed planning information preserved
+   - Team still has access to full technical roadmap
+   - Best of both worlds: compliance + detail
+
+**Example transformation**:
+
+```markdown
+FROM (detailed, 700 lines):
+
+## Phase 1: Foundation & Mobile Fix (v1.1)
+
+**Timeline:** 4-6 weeks
+**Goal:** Fix P0 bugs, establish maintainable architecture
+
+### Week 1-2: Critical Mobile Fixes
+
+#### 🔴 Mobile Touch Controls
+
+**Problem:** Joysticks not responding...
+**Tasks:**
+
+- [ ] Add comprehensive touch event logging...
+- [ ] Test on physical iOS devices...
+      [continues for many lines]
+
+TO (condensed, Overseer-compliant):
+
+## Q4 2025: Foundation & Mobile Fix (IN PROGRESS) 🚀
+
+- [x] Project structure and CI/CD pipeline setup
+- [x] Basic multiplayer functionality
+- [ ] Fix mobile touch controls
+- [ ] Refactor Solo.tsx (1,002 lines → modular structure)
+- [ ] Add server input validation and rate limiting
+      [See docs/ROADMAP_DETAILED.md for full plan]
+```
+
+**Implementation Steps**:
+
+1. Create new compliant ROADMAP.md from scratch
+2. Move original to docs/ROADMAP_DETAILED.md
+3. Extract key milestones and convert to checkbox format
+4. Add cross-reference at bottom of condensed version
+
 ---
 
 ## ✅ Validation Checklist
 
-Before submitting changes, verify:
+Before staging changes for user review, verify:
 
 - [ ] All required files exist
 - [ ] Section names match exactly (case-sensitive)
@@ -611,8 +700,10 @@ Before submitting changes, verify:
 - [ ] Tables have proper headers and separators
 - [ ] No content was hallucinated
 - [ ] All existing unique content was preserved
-- [ ] Commit messages are descriptive
+- [ ] Detailed content moved to docs/ folder if needed (not deleted)
 - [ ] Changes are on a feature branch, not main
+- [ ] Files are staged with git add (DO NOT commit)
+- [ ] Summary of changes provided for user review
 
 ---
 
@@ -620,15 +711,52 @@ Before submitting changes, verify:
 
 Understanding what Overseer measures helps you prioritize documentation:
 
-| Component             | Weight | What It Measures                                        |
-| --------------------- | ------ | ------------------------------------------------------- |
-| Documentation Health  | 30%    | Presence and health of 8 tracked docs                   |
-| Testing & Quality     | 20%    | Test coverage, framework detection, CI/CD status        |
-| Best Practices        | 20%    | 10 checks: CI/CD, linting, hooks, Docker, etc.          |
-| Community Standards   | 15%    | 8 checks: CODE_OF_CONDUCT, SECURITY, templates, etc.    |
-| Activity & Engagement | 15%    | Commit frequency, PR/Issue counts, contributor activity |
+| Component             | Weight | What It Measures                                                                       |
+| --------------------- | ------ | -------------------------------------------------------------------------------------- |
+| Documentation Health  | 30%    | Presence and health of 8 tracked docs                                                  |
+| Testing & Quality     | 20%    | Test coverage, framework detection, CI/CD status                                       |
+| Best Practices        | 20%    | 10 checks: CI/CD, linting, hooks, Docker, etc.                                         |
+| Community Standards   | 15%    | 9 checks: CODE_OF_CONDUCT, SECURITY, templates, CODEOWNERS, Copilot Instructions, etc. |
+| Activity & Engagement | 15%    | Commit frequency, PR/Issue counts, contributor activity                                |
 
 **Implication**: Focus first on the 8 tracked docs (README, ROADMAP, TASKS, METRICS, FEATURES, LICENSE, CHANGELOG, CONTRIBUTING) as they have the highest impact on health scores.
+
+### Critical Accuracy Requirements
+
+When performing PM-driven documentation reviews:
+
+1. **Use AUDIT.md as Source of Truth**
+   - Before updating any doc, check docs/AUDIT.md for known inconsistencies
+   - AUDIT.md tracks accurate counts, clarifications, and validation status
+   - Update AUDIT.md when discovering new inconsistencies
+
+2. **Verify Counts Against Implementation**
+   - Community Standards: **9 checks** (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue Templates, PR Templates, CODEOWNERS, Copilot Instructions)
+   - Fix Buttons: **21 total** (8 doc types, 4 best practices, 9 community standards - ALL standards are auto-fixable)
+   - API Routes: Run `Get-ChildItem -Path "app/api" -Filter "route.ts" -Recurse` to count accurately
+   - Always validate metrics against actual implementation
+
+3. **Run Tests to Verify Metrics**
+   - Code Coverage: Run `npx vitest run --coverage` to get accurate percentages
+   - Use **overall repo average** for main metric value (e.g., "86.66%" for branch coverage)
+   - Put detailed breakdowns in Notes column, not in Value column
+   - Format: `| Code Coverage | 86.66% | Overall branch coverage (vitest). Breakdown: tasks.ts 87.5%, metrics.ts 85.29%, roadmap.ts 90% |`
+
+4. **Distinguish Self-Reported vs. Own Metrics**
+   - FEATURES.md "Code Coverage" feature = self-reported from target repositories
+   - METRICS.md "Code Coverage" metric = Overseer's own test coverage
+   - Add clarifications like "(self-reported from target repositories)" when ambiguous
+
+5. **Systematic Review Process**
+   - Follow order: ROADMAP → TASKS → FEATURES → METRICS → CHANGELOG
+   - Mark tasks in todo list as in-progress/completed systematically
+   - Cross-reference between docs for consistency
+   - Validate final state against AUDIT.md checklist
+
+6. **Document New Inconsistencies**
+   - When discovering count mismatches, add to AUDIT.md tracking section
+   - Mark status: ✅ Fixed, ⚠️ Clarified, ❌ Needs Fix
+   - Include which docs were affected and what was corrected
 
 ---
 
@@ -991,12 +1119,100 @@ After:
 4. **Stay Actionable**: Todo should have clear, achievable tasks
 5. **Respect Format**: Follow all Overseer parsing requirements
 6. **Document Workflow**: Update this guide when workflow evolves
+7. **Track UX Improvements**: When discovering UX issues during development, add them to ROADMAP as "Future: UX Enhancements"
+
+---
+
+## 🎯 Documenting Error Handling & UX Improvements
+
+**New Pattern Learned**: When implementing error handling or UX improvements, document them comprehensively.
+
+### When Adding Error Handling
+
+If you create error detection/handling systems:
+
+1. **FEATURES.md** - Add to appropriate category (e.g., "Documentation Management" or "Authentication & Security")
+   - List error types detected (OAuth restrictions, permissions, rate limits, etc.)
+   - Describe user-facing improvements (auto-redirect, toast notifications, instructions)
+   - Include both technical features (error parsing) and UX features (helpful messaging)
+
+2. **CHANGELOG.md** - Document in [Unreleased] section
+   - Added: New error detection systems, documentation, utilities
+   - Changed: Error messages, UX flows
+   - Fixed: Specific error scenarios that now work better
+
+3. **ROADMAP.md** - If discovering new UX issues during implementation
+   - Add "Future: UX Enhancements" section for follow-up improvements
+   - Example: Modal previews, confirmation dialogs, pick-and-choose functionality
+
+4. **TASKS.md** - Move error handling work to Done
+   - Consolidate multiple related tasks into summary items
+   - Include both implementation and documentation work
+
+5. **AUDIT.md** - Add to Feature Detection & Display Matrix
+   - New row section: "Error Handling & UX"
+   - List detection methods, sources, health indicators
+   - Mark status as Complete when implemented
+
+6. **METRICS.md** - Track new files/utilities created
+   - Add rows for new utility files (e.g., lib/github-errors.ts)
+   - Add rows for new documentation (e.g., OAuth guides)
+
+### Example: OAuth Error Handling Documentation
+
+**What we implemented:**
+
+- lib/github-errors.ts (error parsing utility)
+- Enhanced API error responses in fix-doc/fix-best-practice endpoints
+- Auto-redirect to GitHub authorization page
+- Toast notifications with instructions
+- Two user guides (GITHUB_OAUTH_ORG_ACCESS.md, OAUTH_ORG_FIX_SUMMARY.md)
+
+**How we documented it:**
+
+```markdown
+FEATURES.md:
+
+- **OAuth Error Handling**: Comprehensive error detection...
+- **GitHub Error Parsing**: Detects 5 error types...
+- **Authorization Auto-Redirect**: Automatically opens...
+- **Error Instructions**: Step-by-step guidance...
+
+CHANGELOG.md [Unreleased]:
+
+### Added
+
+- **OAuth Error Handling System:** Comprehensive error detection...
+- **GitHub Error Parsing:** Detects 5 error types...
+
+ROADMAP.md Future:
+
+- [ ] Doc Fix Preview Modal: Modal window before PR creation...
+
+TASKS.md Done:
+
+- [x] OAuth error handling: Comprehensive error parsing...
+- [x] Error detection system: Created lib/github-errors.ts...
+
+AUDIT.md:
+| **Error Handling & UX** |
+| OAuth Error Detection | Error message pattern matching | ✅ Complete
+```
+
+This pattern ensures:
+
+1. Users understand new features (FEATURES.md)
+2. Changes are tracked historically (CHANGELOG.md)
+3. Future improvements are planned (ROADMAP.md)
+4. Work is marked complete (TASKS.md)
+5. Implementation is audited (AUDIT.md)
+6. New files are tracked (METRICS.md)
 
 ---
 
 ## 🤖 Agent Self-Check Questions
 
-Before finalizing documentation updates, ask yourself:
+Before staging documentation updates for user review, ask yourself:
 
 1. **Did I read the entire codebase?** → Understanding prevents hallucination
 2. **Is this content specific to THIS repository?** → Generic = bad
@@ -1004,7 +1220,36 @@ Before finalizing documentation updates, ask yourself:
 4. **Are section names EXACTLY correct?** → Parser depends on exact matches
 5. **Would a human maintainer approve this?** → Quality check
 6. **Can Overseer parse this successfully?** → Format validation
-7. **Did I commit to a feature branch?** → Never push to main directly
+7. **Am I on a feature branch?** → Never work on main directly
+8. **Did I STAGE but NOT COMMIT changes?** → User must review first
+9. **Did I preserve detailed docs in docs/ folder?** → Don't delete, relocate
+10. **Did I provide clear summary of changes?** → User needs to understand what changed
+
+---
+
+## 📝 Best Practices for Compliance Updates
+
+### DO ✅
+
+1. **Preserve all existing content** - Move to docs/ if needed, never delete
+2. **Use actual metrics** - Count files, run tests, check real values
+3. **Estimate clearly** - Mark with `~` or "estimated" when needed
+4. **Stage for review** - Use `git add`, let user commit
+5. **Create backup versions** - Save detailed docs before condensing
+6. **Cross-reference** - Link condensed docs to detailed versions
+7. **Be specific** - Repository-specific content beats generic templates
+8. **Test commands** - Verify PowerShell/bash commands work in that environment
+
+### DON'T ❌
+
+1. **Don't auto-commit** - User must review before commit
+2. **Don't auto-push** - User controls when changes go to remote
+3. **Don't hallucinate metrics** - Use "TBD" if you don't know
+4. **Don't delete detailed content** - Preserve in docs/ folder
+5. **Don't blindly apply templates** - Merge with existing content
+6. **Don't invent features** - Document what actually exists
+7. **Don't skip validation** - Check format requirements before staging
+8. **Don't work on main branch** - Always use feature branches
 
 ---
 
@@ -1024,7 +1269,10 @@ If you're unsure about:
 
 ## 📄 Document Version
 
-- **Version**: 1.0
+- **Version**: 1.1
 - **Last Updated**: 2025-11-27
 - **Maintained By**: Overseer Project
 - **Source**: Based on actual Overseer parsing requirements and health score calculations
+- **Changelog**:
+  - v1.1 (2025-11-27): Added workflow guidance for user review, detailed roadmap preservation, metric estimation guidelines, and comprehensive DO/DON'T best practices
+  - v1.0 (2025-11-27): Initial version with core formatting requirements and examples

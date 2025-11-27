@@ -198,14 +198,13 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         WHERE id = ${repoId}
     `;
 
-    // ROADMAP.md (try uppercase then lowercase)
+    // ROADMAP.md (try uppercase then lowercase) - root only
     let roadmapContent = await github.getFileContent(repo.name, 'ROADMAP.md', owner).catch(() => null);
     if (!roadmapContent) {
         roadmapContent = await github.getFileContent(repo.name, 'roadmap.md', owner).catch(() => null);
     }
-    // Load template content for comparison if available
-    const roadmapTemplate = await github.getFileContent(repo.name, 'templates/ROADMAP.md', owner).catch(() => null);
-    const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, roadmapTemplate);
+    // Core docs should be in root - no template comparison
+    const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, null);
     if (roadmapContent) {
         const roadmapData = parseRoadmap(roadmapContent);
         await db`DELETE FROM roadmap_items WHERE repo_id = ${repoId}`;
@@ -219,7 +218,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     await db`
         INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, template_version, last_checked)
         VALUES (
-            ${repoId}, 'roadmap', ${!!roadmapContent}, ${roadmapHealthState}, ${roadmapContent ? hashContent(roadmapContent) : null}, ${roadmapTemplate ? 'v1' : null}, NOW()
+            ${repoId}, 'roadmap', ${!!roadmapContent}, ${roadmapHealthState}, ${roadmapContent ? hashContent(roadmapContent) : null}, NULL, NOW()
         )
         ON CONFLICT (repo_id, doc_type) DO UPDATE SET 
             exists = EXCLUDED.exists, 
@@ -229,10 +228,10 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             last_checked = EXCLUDED.last_checked
     `;
 
-    // TASKS.md
+    // TASKS.md - root only
     const tasksContent = await github.getFileContent(repo.name, 'TASKS.md', owner);
-    const tasksTemplate = await github.getFileContent(repo.name, 'templates/TASKS.md', owner).catch(() => null);
-    const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, tasksTemplate);
+    // Core docs should be in root - no template comparison
+    const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, null);
     if (tasksContent) {
         const tasksData = parseTasks(tasksContent);
         await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
@@ -246,7 +245,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     await db`
         INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, template_version, last_checked)
         VALUES (
-            ${repoId}, 'tasks', ${!!tasksContent}, ${tasksHealthState}, ${tasksContent ? hashContent(tasksContent) : null}, ${tasksTemplate ? 'v1' : null}, NOW()
+            ${repoId}, 'tasks', ${!!tasksContent}, ${tasksHealthState}, ${tasksContent ? hashContent(tasksContent) : null}, NULL, NOW()
         )
         ON CONFLICT (repo_id, doc_type) DO UPDATE SET 
             exists = EXCLUDED.exists, 
@@ -378,7 +377,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             bp.practice_type === 'testing_framework' && bp.status === 'healthy'
         );
         const hasCI = bestPractices.some((bp: { practice_type: string; status: string }) =>
-            bp.practice_type === 'cicd' && bp.status === 'healthy'
+            bp.practice_type === 'ci_cd' && bp.status === 'healthy'
         );
 
         const daysSinceCommit = lastCommitDate

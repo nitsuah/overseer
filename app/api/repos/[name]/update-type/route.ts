@@ -1,0 +1,46 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { getNeonClient } from '@/lib/db';
+
+export async function PATCH(
+    request: NextRequest,
+    props: { params: Promise<{ name: string }> }
+) {
+    try {
+        const session = await auth();
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const params = await props.params;
+        const repoName = params.name;
+        const { type } = await request.json();
+
+        if (!repoName) {
+            return NextResponse.json({ error: 'Repo name required' }, { status: 400 });
+        }
+
+        if (!type) {
+            return NextResponse.json({ error: 'Type required' }, { status: 400 });
+        }
+
+        const validTypes = ['web-app', 'game', 'tool', 'library', 'bot', 'research', 'unknown'];
+        if (!validTypes.includes(type)) {
+            return NextResponse.json({ error: 'Invalid repo type' }, { status: 400 });
+        }
+
+        const db = getNeonClient();
+        
+        await db`
+            UPDATE repos 
+            SET repo_type = ${type}, updated_at = NOW()
+            WHERE name = ${repoName}
+        `;
+
+        return NextResponse.json({ success: true, type });
+    } catch (error: unknown) {
+        console.error('Error updating repo type:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
+    }
+}

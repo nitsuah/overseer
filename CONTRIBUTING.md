@@ -59,7 +59,7 @@ Be respectful, constructive, and professional in all interactions.
 
 ## Development Setup
 
-See [SETUP.md](./SETUP.md) for detailed setup instructions.
+This section provides detailed setup instructions.
 
 ### Quick Start
 
@@ -79,9 +79,32 @@ cp .env.example .env.local
 npm run dev
 ```
 
+### Environment Variables
+
+Edit `.env.local` with these required values:
+
+```env
+# GitHub OAuth (get from https://github.com/settings/developers)
+GITHUB_ID=your_github_oauth_client_id
+GITHUB_SECRET=your_github_oauth_client_secret
+
+# NextAuth
+NEXTAUTH_SECRET=your_random_secret
+NEXTAUTH_URL=http://localhost:3000
+
+# Neon Database (get from Neon console or Netlify)
+DATABASE_URL=postgresql://user:pass@host/db
+
+# Google Gemini API (optional - for AI summaries)
+# Get from https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=AIzaSy...your_key_here
+```
+
+**Note on Gemini API**: As of late 2025, Google deprecated Gemini 1.x models. The codebase uses `gemini-2.5-flash`. Test with `npm run test-gemini` to verify your API key works.
+
 ## Project Structure
 
-```
+```text
 overseer/
 ├── app/                    # Next.js App Router pages
 │   ├── api/               # API routes
@@ -97,21 +120,25 @@ overseer/
 ## Coding Standards
 
 ### TypeScript
+
 - Use strict type checking
 - Avoid `any` types when possible
 - Define interfaces for complex objects
 
 ### React Components
+
 - Use functional components with hooks
 - Keep components focused and reusable
 - Use descriptive prop names
 
 ### Styling
+
 - Use Tailwind CSS utility classes
 - Follow existing color scheme
 - Ensure responsive design
 
 ### Database
+
 - Use parameterized queries
 - Handle errors gracefully
 - Add migrations for schema changes
@@ -121,35 +148,36 @@ overseer/
 All root-level documentation files should follow these formats:
 
 ### ROADMAP.md
+
 - Organized by quarters
 - Use checkboxes for completion status
 - Include brief descriptions
 
 ### TASKS.md
+
 - Sections: Done, In Progress, Todo
 - Use checkboxes
 - Keep descriptions concise
 
 ### METRICS.md
+
 - Table format for metrics
 - Include units and timestamps
 - Update regularly
 
 ### FEATURES.md
+
 - Categorized by feature type
 - Include implementation status
 - Document tech stack
 
 ## Testing
 
-Currently, we have:
-- Parser tests (87.5% coverage)
-- Manual testing procedures
+- Run tests: `npm test`
+- Check coverage: `npm run coverage`
+- Parser tests achieve 87.5% branch coverage (vitest)
 
-Future additions:
-- E2E tests with Playwright
-- Component tests
-- Integration tests
+See [ROADMAP.md](./ROADMAP.md) for planned testing improvements.
 
 ## Questions?
 
@@ -174,7 +202,6 @@ When updating:
 2. Update development setup steps as dependencies change
 3. Maintain coding standards section as patterns evolve
 4. Add examples for common contribution scenarios
-5. Ensure all referenced files (SETUP.md, README.md) exist and are current
+5. Ensure all referenced files (README.md, LICENSE.md) exist and are current
 6. Test setup instructions to verify accuracy
 -->
-

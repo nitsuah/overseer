@@ -2,80 +2,51 @@
 
 ## Done
 
-- [x] Build main dashboard table with sorting and filtering
-- [x] Implement "Fix Missing Docs" feature
-- [x] Integrate Google Gemini for AI summaries
-- [x] Add "Add Custom Repo" functionality
-- [x] Code coverage improvements (parsers now at 87.5%)
-- [x] Implement baseline GitHub API metrics (Last Commit Date, Open PR/Issue Counts)
-- [x] Add Last Commit Date to dashboard rows
-- [x] Implement Sync Status timestamp display
-- [x] Complete dashboard UI integration (Activity + Last Sync columns)
-- [x] Add Stats column (Stars, Forks, Branches)
-- [x] Implement code coverage visualization (progress bars)
-- [x] Reorganize ExpandableRow component (2-column layout)
-- [x] Add AI Summary display in expandable rows
-- [x] Fix Gemini API model name (gemini-pro)
-- [x] Implement default repositories feature
-- [x] Add dynamic NEXTAUTH_URL for Netlify deployments
-- [x] Move Stats to detail panel to save column space
-- [x] Add LICENSE.md as tracked document type
-- [x] Create comprehensive FEATURES.md
-- [x] Update DEFAULT_REPOS (removed pverseer)
-- [x] Make "+X more" expandable in task/roadmap lists
-- [x] Create CHANGELOG.md and CONTRIBUTING.md
-- [x] Consolidate documentation
-- [x] Update database schema with features, best_practices, community_standards tables
-- [x] Create FEATURES.md parser with category and description support
-- [x] Implement Best Practices detection (10 checks including CI/CD, hooks, linting)
-- [x] Implement Community Standards detection (7 checks)
-- [x] Add document health states (missing, dormant, malformed, healthy)
-- [x] Integrate new parsers and detection into sync workflow
-- [x] Update API endpoints to return features, best practices, community standards
-- [x] Display Features section in UI with real data
-- [x] Display Best Practices section with status indicators
-- [x] Display Community Standards section with status indicators
-- [x] Implement comprehensive health score calculation (weighted)
-- [x] Add repo type selector to Add Custom Repo form
-- [x] Run database migration script (created migrate-schema.ts with dotenv support)
-- [x] Execute migration successfully (all new tables and columns created)
-- [x] Update Gemini AI integration (gemini-1.5-flash, improved prompts, error handling)
+### Recent Completions (November 2025)
+
+- [x] Documentation system overhaul: PROMPT.md for agent instructions, full audit, accuracy fixes
+- [x] Advanced metrics integration: LOC, test case counting, CI/CD status, vulnerability tracking
+- [x] Contributor analytics: count, commit frequency, bus factor, PR merge time
+- [x] Template health detection: content hashing, dormant/malformed state detection, version tracking
+- [x] UI/UX enhancements: health breakdown hover, detail panel reorganization, toast notifications
+- [x] Testing infrastructure: Pre-commit hooks, full E2E test suite with Playwright
+- [x] Component refactoring: Extracted hooks (useDashboard, useRepoActions, useRepoFilters), modular components
+
+### Core Features Delivered (Earlier in Q4 2025)
+
+- [x] Repository dashboard with health scoring, filtering, and expandable details
+- [x] Documentation tracking and automated fixes (single/batch PR creation)
+- [x] AI-powered summaries (Google Gemini 2.5)
+- [x] Best Practices detection (10 checks) and Community Standards tracking (8 checks)
+- [x] Features parser and display system with category organization
+- [x] Default repositories feature for non-authenticated users
+- [x] Database schema with comprehensive metric tracking
+
+_For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._
 
 ## In Progress
 
-- [ ] Test all new features end-to-end after migration
-- [ ] Verify Features/Best Practices/Community Standards display in UI
-- [ ] Fix GitHub OAuth in production environment (token/callback issues)
-- [ ] Fix Gemini API integration (404 errors - model version mismatch)
+- [ ] FIX GitHub OAuth in production environment (token/callback issues)
 
 ## Todo
 
-### High Priority
+### Phase 7: Security Configuration & Tracking
 
-- [ ] Add Testing Metrics Display (test count, coverage %, framework detection)
-- [ ] Add Health State Icons to main table row for each section
-- [ ] Fix PR creation to open in new tab
-- [ ] Add README Freshness metric calculation
-- [ ] Validate Health Score Meter visualization with new calculation
+- [ ] Track GitHub security policy presence (SECURITY.md existence)
+- [ ] Detect security advisory configuration (vulnerability disclosure enabled)
+- [ ] Check private vulnerability reporting status
+- [ ] Monitor Dependabot alerts status (enabled/disabled)
+- [ ] Track code scanning alerts configuration
+- [ ] Track secret scanning alerts configuration
 
-### Medium Priority
+### Phase 8: Future Enhancements
 
-- [ ] Metrics Display Enhancement (ensure all METRICS.md data shows in panels)
-- [ ] Verify GitHub OAuth works in all environments (local, preview, production)
-
-### Future Enhancements
-
-- [ ] Add pre-commit hooks to Overseer project
-- [ ] Implement full E2E tests with Playwright
-- [ ] Implement Dark/Light Mode Toggle
 - [ ] Add webhook integration for real-time updates
-- [ ] Template health checking (dormant/malformed detection with hashing)
-- [ ] Add "Fix" buttons for missing best practices and community standards
 - [ ] Token Density Metric (LOC per logical unit with AI-assisted parsing)
-- [ ] Bus Factor Analysis (contributor concentration risk)
 - [ ] Zombie Branch Detection (stale branches past merge)
 - [ ] Maintenance Mode Detection (activity patterns suggesting abandonment)
 - [ ] Comment-to-Code Ratio Analysis (documentation density)
+- [ ] Implement Dark/Light Mode Toggle and other UI enhancements
 
 <!--
 AGENT INSTRUCTIONS:
@@ -83,4 +54,5 @@ AGENT INSTRUCTIONS:
 2. Move tasks to "In Progress" when you start working on them.
 3. Move tasks to "Done" when completed.
 4. Keep task descriptions concise.
+5. Wait for PM to add new Tasks if completed all current tasks.
 -->

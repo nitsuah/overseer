@@ -22,8 +22,9 @@ export async function POST() {
         }
 
         // Fetch the authenticated user's GitHub username
-        const { Octokit } = await import('@octokit/rest');
-        const octokit = new Octokit({ auth: accessToken });
+        // Fetch the authenticated user's GitHub username
+        const { createOctokitClient } = await import('@/lib/githubClient');
+        const octokit = createOctokitClient(accessToken);
         const { data: user } = await octokit.rest.users.getAuthenticated();
         const githubUsername = user.login;
 

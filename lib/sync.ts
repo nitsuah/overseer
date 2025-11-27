@@ -8,6 +8,7 @@ import { calculateDocHealthState, hashContent, calculateDocHealth } from './doc-
 import { checkBestPractices } from './best-practices';
 import { checkCommunityStandards } from './community-standards';
 import { calculateHealthScore } from './health-score';
+import { isTestFile, parseTestFile } from './parsers/test-cases';
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,16 +43,90 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Could not get branches for ${repo.name}:`, (e as Error).message);
     }
 
+    // Fetch README last updated
+    let readmeLastUpdated: string | null = null;
+    try {
+        readmeLastUpdated = await github.getFileLastModified(repo.name, 'README.md', owner);
+    } catch (e) {
+        console.warn(`Could not get README last modified for ${repo.name}:`, (e as Error).message);
+    }
+
+    // Fetch LOC (Lines of Code) metrics
+    let totalLoc = 0;
+    let locLanguageBreakdown: Record<string, number> = {};
+    try {
+        const languageStats = await github.getLanguageStats(repo.name, owner);
+        locLanguageBreakdown = languageStats;
+        // GitHub returns bytes, rough estimate: 1 LOC ~= 50 bytes (average line length)
+        totalLoc = Math.round(Object.values(languageStats).reduce((sum, bytes) => sum + bytes, 0) / 50);
+    } catch (e) {
+        console.warn(`Could not get language stats for ${repo.name}:`, (e as Error).message);
+    }
+
+    // Fetch CI/CD status from GitHub Actions
+    let ciStatus = 'unknown';
+    let ciLastRun: string | null = null;
+    let ciWorkflowName: string | null = null;
+    try {
+        const workflowData = await github.getWorkflowRuns(repo.name, owner);
+        ciStatus = workflowData.status;
+        ciLastRun = workflowData.lastRun;
+        ciWorkflowName = workflowData.workflowName;
+    } catch (e) {
+        console.warn(`Could not get workflow runs for ${repo.name}:`, (e as Error).message);
+    }
+
+    // Fetch vulnerability alerts
+    let vulnAlertCount = 0;
+    let vulnCriticalCount = 0;
+    let vulnHighCount = 0;
+    try {
+        const vulnData = await github.getVulnerabilityAlerts(repo.name, owner);
+        vulnAlertCount = vulnData.total;
+        vulnCriticalCount = vulnData.critical;
+        vulnHighCount = vulnData.high;
+    } catch (e) {
+        console.warn(`Could not get vulnerability alerts for ${repo.name}:`, (e as Error).message);
+    }
+
+    // Fetch contributor metrics
+    let contributorCount = 0;
+    let commitFrequency = 0;
+    let busFactor = 0;
+    try {
+        const contributorStats = await github.getContributorStats(repo.name, owner);
+        contributorCount = contributorStats.contributorCount;
+        commitFrequency = contributorStats.commitFrequency;
+        busFactor = contributorStats.busFactor;
+    } catch (e) {
+        console.warn(`Could not get contributor stats for ${repo.name}:`, (e as Error).message);
+    }
+
+    // Fetch PR merge time
+    let avgPrMergeTimeHours = 0;
+    try {
+        const prStats = await github.getPullRequestStats(repo.name, owner);
+        avgPrMergeTimeHours = prStats.avgMergeTimeHours;
+    } catch (e) {
+        console.warn(`Could not get PR stats for ${repo.name}:`, (e as Error).message);
+    }
+
     // Upsert repo with new metrics
     const repoRows = await db`
         INSERT INTO repos (
             name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, 
-            last_synced, updated_at, last_commit_date, open_prs, branches_count
+            last_synced, updated_at, last_commit_date, open_prs, branches_count, readme_last_updated,
+            total_loc, loc_language_breakdown, ci_status, ci_last_run, ci_workflow_name,
+            vuln_alert_count, vuln_critical_count, vuln_high_count, vuln_last_checked,
+            contributor_count, commit_frequency, bus_factor, avg_pr_merge_time_hours, contributors_last_checked
         )
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
             ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
-            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}
+            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}, ${readmeLastUpdated},
+            ${totalLoc}, ${JSON.stringify(locLanguageBreakdown)}, ${ciStatus}, ${ciLastRun}, ${ciWorkflowName},
+            ${vulnAlertCount}, ${vulnCriticalCount}, ${vulnHighCount}, NOW(),
+            ${contributorCount}, ${commitFrequency}, ${busFactor}, ${avgPrMergeTimeHours}, NOW()
         )
         ON CONFLICT (name) DO UPDATE SET
           description = EXCLUDED.description,
@@ -66,7 +141,22 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           updated_at = NOW(),
           last_commit_date = EXCLUDED.last_commit_date,
           open_prs = EXCLUDED.open_prs,
-          branches_count = EXCLUDED.branches_count
+          branches_count = EXCLUDED.branches_count,
+          readme_last_updated = EXCLUDED.readme_last_updated,
+          total_loc = EXCLUDED.total_loc,
+          loc_language_breakdown = EXCLUDED.loc_language_breakdown,
+          ci_status = EXCLUDED.ci_status,
+          ci_last_run = EXCLUDED.ci_last_run,
+          ci_workflow_name = EXCLUDED.ci_workflow_name,
+          vuln_alert_count = EXCLUDED.vuln_alert_count,
+          vuln_critical_count = EXCLUDED.vuln_critical_count,
+          vuln_high_count = EXCLUDED.vuln_high_count,
+          vuln_last_checked = EXCLUDED.vuln_last_checked,
+          contributor_count = EXCLUDED.contributor_count,
+          commit_frequency = EXCLUDED.commit_frequency,
+          bus_factor = EXCLUDED.bus_factor,
+          avg_pr_merge_time_hours = EXCLUDED.avg_pr_merge_time_hours,
+          contributors_last_checked = EXCLUDED.contributors_last_checked
         RETURNING id;
     `;
     const repoId = repoRows[0].id;
@@ -79,9 +169,43 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Failed to fetch file list for ${repo.fullName}`, e);
     }
 
-    // ROADMAP.md
-    const roadmapContent = await github.getFileContent(repo.name, 'ROADMAP.md', owner);
-    const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, null);
+    // Count test cases from test files
+    let testCaseCount = 0;
+    let testDescribeCount = 0;
+    try {
+        const testFiles = fileList.filter(isTestFile);
+        for (const testFile of testFiles) {
+            try {
+                const content = await github.getFileContent(repo.name, testFile, owner);
+                if (content) {
+                    const stats = parseTestFile(content);
+                    testCaseCount += stats.tests;
+                    testDescribeCount += stats.describes;
+                }
+            } catch {
+                // Skip files that can't be fetched
+                console.warn(`Failed to fetch test file ${testFile} for ${repo.fullName}`);
+            }
+        }
+    } catch (e) {
+        console.warn(`Failed to count test cases for ${repo.fullName}`, e);
+    }
+
+    // Update repo with test case counts
+    await db`
+        UPDATE repos 
+        SET test_case_count = ${testCaseCount}, test_describe_count = ${testDescribeCount}
+        WHERE id = ${repoId}
+    `;
+
+    // ROADMAP.md (try uppercase then lowercase)
+    let roadmapContent = await github.getFileContent(repo.name, 'ROADMAP.md', owner).catch(() => null);
+    if (!roadmapContent) {
+        roadmapContent = await github.getFileContent(repo.name, 'roadmap.md', owner).catch(() => null);
+    }
+    // Load template content for comparison if available
+    const roadmapTemplate = await github.getFileContent(repo.name, 'templates/ROADMAP.md', owner).catch(() => null);
+    const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, roadmapTemplate);
     if (roadmapContent) {
         const roadmapData = parseRoadmap(roadmapContent);
         await db`DELETE FROM roadmap_items WHERE repo_id = ${repoId}`;
@@ -93,18 +217,22 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         }
     }
     await db`
-        INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, last_checked)
-        VALUES (${repoId}, 'roadmap', ${!!roadmapContent}, ${roadmapHealthState}, ${roadmapContent ? hashContent(roadmapContent) : null}, NOW())
+        INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, template_version, last_checked)
+        VALUES (
+            ${repoId}, 'roadmap', ${!!roadmapContent}, ${roadmapHealthState}, ${roadmapContent ? hashContent(roadmapContent) : null}, ${roadmapTemplate ? 'v1' : null}, NOW()
+        )
         ON CONFLICT (repo_id, doc_type) DO UPDATE SET 
             exists = EXCLUDED.exists, 
             health_state = EXCLUDED.health_state,
             content_hash = EXCLUDED.content_hash,
+            template_version = EXCLUDED.template_version,
             last_checked = EXCLUDED.last_checked
     `;
 
     // TASKS.md
     const tasksContent = await github.getFileContent(repo.name, 'TASKS.md', owner);
-    const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, null);
+    const tasksTemplate = await github.getFileContent(repo.name, 'templates/TASKS.md', owner).catch(() => null);
+    const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, tasksTemplate);
     if (tasksContent) {
         const tasksData = parseTasks(tasksContent);
         await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
@@ -116,18 +244,22 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         }
     }
     await db`
-        INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, last_checked)
-        VALUES (${repoId}, 'tasks', ${!!tasksContent}, ${tasksHealthState}, ${tasksContent ? hashContent(tasksContent) : null}, NOW())
+        INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, template_version, last_checked)
+        VALUES (
+            ${repoId}, 'tasks', ${!!tasksContent}, ${tasksHealthState}, ${tasksContent ? hashContent(tasksContent) : null}, ${tasksTemplate ? 'v1' : null}, NOW()
+        )
         ON CONFLICT (repo_id, doc_type) DO UPDATE SET 
             exists = EXCLUDED.exists, 
             health_state = EXCLUDED.health_state,
             content_hash = EXCLUDED.content_hash,
+            template_version = EXCLUDED.template_version,
             last_checked = EXCLUDED.last_checked
     `;
 
     // METRICS.md
     const metricsContent = await github.getFileContent(repo.name, 'METRICS.md', owner);
     const metricsHealthState = calculateDocHealthState(!!metricsContent, metricsContent, null);
+    let coverageScore: number | null = null;
     if (metricsContent) {
         const metricsData = parseMetrics(metricsContent);
         await db`DELETE FROM metrics WHERE repo_id = ${repoId}`;
@@ -135,6 +267,19 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             await db`
                 INSERT INTO metrics (repo_id, metric_name, value, unit, timestamp)
                 VALUES (${repoId}, ${metric.name}, ${metric.value}, ${metric.unit}, NOW())
+            `;
+            // Extract coverage metric for repos table
+            if (metric.name.toLowerCase().includes('coverage') && metric.unit === '%') {
+                coverageScore = metric.value;
+            }
+        }
+        
+        // Update repos table with coverage if found
+        if (coverageScore !== null) {
+            await db`
+                UPDATE repos 
+                SET coverage_score = ${coverageScore}
+                WHERE id = ${repoId}
             `;
         }
     }
@@ -192,7 +337,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     try {
         const readmeContent = await github.getFileContent(repo.name, 'README.md', owner);
         const bestPracticesResult = await checkBestPractices(owner, repo.name, github.octokit, fileList, readmeContent || undefined);
-        
+
         await db`DELETE FROM best_practices WHERE repo_id = ${repoId}`;
         for (const practice of bestPracticesResult.practices) {
             await db`
@@ -207,7 +352,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     // Community Standards Detection
     try {
         const communityStandardsResult = checkCommunityStandards(fileList);
-        
+
         await db`DELETE FROM community_standards WHERE repo_id = ${repoId}`;
         for (const standard of communityStandardsResult.standards) {
             await db`
@@ -226,20 +371,20 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         const bestPractices = await db`SELECT * FROM best_practices WHERE repo_id = ${repoId}`;
         const communityStandards = await db`SELECT * FROM community_standards WHERE repo_id = ${repoId}`;
         const metrics = await db`SELECT * FROM metrics WHERE repo_id = ${repoId}`;
-        
+
         const docHealth = calculateDocHealth(docStatuses, 'other');
         const coverage = metrics.find((m: { metric_name: string }) => m.metric_name?.toLowerCase().includes('coverage'));
-        const hasTests = bestPractices.some((bp: { practice_type: string; status: string }) => 
+        const hasTests = bestPractices.some((bp: { practice_type: string; status: string }) =>
             bp.practice_type === 'testing_framework' && bp.status === 'healthy'
         );
-        const hasCI = bestPractices.some((bp: { practice_type: string; status: string }) => 
+        const hasCI = bestPractices.some((bp: { practice_type: string; status: string }) =>
             bp.practice_type === 'cicd' && bp.status === 'healthy'
         );
-        
-        const daysSinceCommit = lastCommitDate 
+
+        const daysSinceCommit = lastCommitDate
             ? Math.floor((Date.now() - new Date(lastCommitDate).getTime()) / (1000 * 60 * 60 * 24))
             : 365;
-        
+
         const healthScore = calculateHealthScore({
             docHealth: docHealth.score,
             hasTests,
@@ -253,15 +398,32 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             openIssuesCount: repo.openIssues,
             openPRsCount: openPrs,
         });
-        
+
         await db`
             UPDATE repos 
             SET health_score = ${healthScore.total}
             WHERE id = ${repoId}
         `;
-        
+
         console.log(`✓ Health score for ${repo.name}: ${healthScore.total}/100`);
     } catch (e) {
         console.warn(`Failed to calculate health score for ${repo.fullName}`, e);
     }
+}
+
+// Wrapper function to sync a single repo by name
+export async function syncSingleRepo(github: GitHubClient, repoName: string) {
+    const { getNeonClient } = await import('./db');
+    const db = getNeonClient();
+
+    // Get the repo metadata from GitHub
+    const repos = await github.listRepos();
+    const repo = repos.find((r: RepoMetadata) => r.name === repoName);
+
+    if (!repo) {
+        throw new Error(`Repository ${repoName} not found in user's repos`);
+    }
+
+    await syncRepo(repo, github, db);
+    console.log(`✓ Synced ${repoName}`);
 }

@@ -18,6 +18,9 @@ CREATE TABLE IF NOT EXISTS repos (
   is_hidden BOOLEAN DEFAULT FALSE,
   repo_type TEXT CHECK (repo_type IN ('web-app', 'game', 'tool', 'library', 'bot', 'research', 'other')) DEFAULT 'other',
   ai_summary TEXT,
+  health_score INTEGER DEFAULT 0,
+  testing_status TEXT,
+  coverage_score NUMERIC,
   last_synced TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

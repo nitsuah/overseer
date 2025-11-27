@@ -4,13 +4,25 @@
 
 ### 📊 Repository Intelligence
 
-- **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, and activity
+- **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, and activity with component breakdown display
 - **Documentation Tracking**: Monitors presence and status of key docs with 4-state health model (Missing, Dormant, Malformed, Healthy)
-- **Code Coverage Visualization**: Progress bars showing test coverage at a glance
+- **Template Health Detection**: Content hashing to detect unchanged/stale templates marked as "dormant" state (Phase 4)
+- **Template Version Tracking**: Tracks which template version docs are based on with template_version column (Phase 4)
+- **Malformed Doc Detection**: Identifies docs with template markers like `TODO:` or <50 characters (Phase 4)
+- **Code Coverage Visualization**: Progress bars showing test coverage synced from METRICS.md
+- **README Freshness Tracking**: Days since README last updated with color-coded staleness (Fresh/Recent/Aging/Stale)
 - **Activity Monitoring**: Last commit dates, open PRs, open issues with color-coded freshness indicators
+- **Lines of Code (LOC)**: Total LOC calculated from GitHub language stats with K suffix formatting (e.g., "12.5K")
+- **Test Case Counting**: Automatic parsing of test files to count it(), test(), describe() calls
+- **CI/CD Status**: Live build status from GitHub Actions (passing/failing with workflow name and last run)
+- **Vulnerability Tracking**: Open Dependabot alerts with count and severity (critical/high) color-coded display
+- **Contributor Analytics**: Track contributor count, commit frequency (commits/week), bus factor, PR merge time (Phase 5)
+- **Bus Factor Analysis**: Contributor concentration risk using 80/20 rule (Phase 5)
+- **Commit Frequency**: Average commits/week from last 12 weeks (Phase 5)
+- **PR Merge Time**: Average hours from creation to merge for last 30 PRs (Phase 5)
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
-- **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, templates, testing, etc.)
-- **Community Standards**: 7 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, templates
+- **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
+- **Community Standards**: 8 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates
 
 ### 🤖 AI-Powered Features
 
@@ -19,16 +31,21 @@
 
 ### 📝 Documentation Management
 
-- **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, and more
+- **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, and community standards templates
+- **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Overseer compliance and avoiding hallucination
 - **Auto-Fix Missing Docs**: One-click PR creation for missing documentation
-- **Batch Operations**: Fix all missing docs across repositories
+- **Batch Operations**: Fix all missing docs across repositories with single PR
 - **Doc Health Scoring**: Percentage-based health scores for documentation completeness
+- **Template Health Detection**: Content hashing to identify unchanged/dormant templates
 
 ### 🎯 Project Tracking
 
 - **Task Management**: Parse and display tasks by status (Todo, In Progress, Done)
 - **Roadmap Visualization**: Quarterly planning with status tracking (Planned, In Progress, Completed)
 - **Metrics Tracking**: Custom metrics per repository
+- **Testing Metrics**: Test file count and test case count prominently displayed
+- **CI/CD Monitoring**: Live workflow status with last run timestamp
+- **Vulnerability Alerts**: Real-time security alert tracking
 - **Expandable Details**: Rich detail panels with organized information
 
 ### 🔐 Authentication & Security
@@ -43,7 +60,10 @@
 - **Responsive Design**: Adapts to different screen sizes
 - **Filtering & Sorting**: Filter by type, language, fork status
 - **Visual Indicators**: Icons, badges, and color-coding for quick scanning
-- **Repository Stats**: Stars, forks, branches displayed in detail panels
+- **Repository Stats**: Stars, forks, branches, LOC, vulnerabilities displayed in detail panels
+- **CI/CD Badges**: Prominent passing/failing status indicators in Best Practices section
+- **Test Metrics**: Test file and test case counts with highlighted badges in Testing section
+- **Vulnerability Warnings**: Color-coded severity indicators (red for critical, orange for high)
 
 ### 🔄 Synchronization
 
@@ -78,21 +98,19 @@ Overseer monitors the following documentation files in each repository:
 - **LICENSE.md** - Project license
 - **CHANGELOG.md** - Version history
 - **CONTRIBUTING.md** - Contribution guidelines
-- **SETUP.md** - Setup instructions
-- **FEATURES.md** - Feature documentation
 
 ## Best Practices & Community Standards
 
 Overseer tracks adherence to development and community standards with 4-state health tracking (Missing, Dormant, Malformed, Healthy):
 
-### 🛡️ Community Standards (7 Checks)
+### 🛡️ Community Standards (8 Checks)
 
-- **CODE_OF_CONDUCT.md** - Community behavior guidelines
+- **CODE_OF_CONDUCT.md** - Community behavior guidelines (template available)
 - **CONTRIBUTING.md** - Contribution guidelines
-- **SECURITY.md** - Security policy and vulnerability reporting
+- **SECURITY.md** - Security policy and vulnerability reporting (template available)
 - **LICENSE** - Project license
 - **CHANGELOG.md** - Version history
-- **Issue Templates** - Standardized issue creation
+- **Issue Templates** - Standardized issue creation (templates available: bug_report, feature_request)
 - **Pull Request Templates** - PR guidelines
 
 ### ✅ Best Practices (10 Checks)
@@ -101,12 +119,26 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **Pre-commit Hooks** - `.pre-commit-config.yaml` present
 - **Linting Configuration** - ESLint, Prettier, or similar
 - **Branch Protection** - Main branch protection with review requirements
-- **PR Templates** - Pull request templates
 - **Testing Framework** - Test files and framework detection
 - **`.gitignore`** - Proper git ignore configuration
 - **Netlify Badge** - Deployment status badge
 - **`.env.example`** - Environment variable template
 - **Dependabot** - Automated dependency updates
+- **Docker** - Dockerfile, docker-compose files, .dockerignore
+
+## Health Score System
+
+Overseer calculates comprehensive health scores (0-100) based on 5 weighted components:
+
+| Component             | Weight | What It Measures                                                                                                               |
+| --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Documentation Health  | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md     |
+| Testing & Quality     | 20%    | Test coverage, framework detection, CI/CD status                                                                               |
+| Best Practices        | 20%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker |
+| Community Standards   | 15%    | 8 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates                           |
+| Activity & Engagement | 15%    | Commit frequency, PR/Issue counts, contributor activity                                                                        |
+
+Health scores are displayed as letter grades (A-F) with detailed component breakdowns available in the expandable detail panel.
 
 ## Technology Stack
 
@@ -136,35 +168,6 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **Functions**: Netlify serverless functions
 - **Scheduled Jobs**: Netlify scheduled functions for auto-sync
 
-## Future Enhancements
-
-See [ROADMAP.md](./ROADMAP.md) for detailed quarterly plans.
-
-### Q2 2025
-
-- Dark/Light mode toggle
-- README Freshness metric
-- Full E2E tests
-- GitHub OAuth production fix
-- Gemini API integration fix
-- Testing metrics display
-- Health state icons in main row
-- Fix buttons for best practices
-
-### Q3 2025
-
-- Velocity tracking (PR merge time, commit cadence)
-- Advanced health metrics (vulnerability alerts, failing CI/CD ratio)
-- Technical debt scoring
-- Plugin system for custom parsers
-
-### Q4 2025
-
-- Team collaboration features
-- Enterprise SSO
-- Mobile app
-- Custom AI model fine-tuning
-
 ## Last Updated
 
-November 25, 2025
+November 26, 2025 - Phase 3 Advanced Metrics Complete

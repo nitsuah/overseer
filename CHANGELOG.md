@@ -9,10 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Smart Links Column:** Issues and Dependabot alerts now show as badge buttons with counts (only when > 0)
+- **Dependabot Alerts Button:** New shield icon button linking to /security/dependabot when alerts exist
+- **Security Configuration Tracking:** Added Security Detail section to ROADMAP.md tracking 6 GitHub security settings
+- **Activity Badge in Health Column:** Moved activity indicator to Health shields as 5th badge with time formatting
+- **Health Breakdown Hover:** Interactive tooltip showing all 5 health components on grade letter hover
+- **Community Standards Templates:** Expanded Fix buttons to 6 standards (CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, ISSUE_TEMPLATE, PR_TEMPLATE)
+- **Template Health Detection (Phase 4):** Content hashing to detect unchanged/stale templates marked as "dormant"
+- **Template Version Tracking (Phase 4):** Track which template version docs are based on with template_version column
+- **Malformed Detection (Phase 4):** Detect docs with template markers like "TODO:" or <50 characters
+- **Contributor Analytics (Phase 5):** Track contributor count, commit frequency, bus factor, PR merge time
+- **Bus Factor Analysis (Phase 5):** Calculate contributor concentration risk using 80/20 rule
+- **Commit Frequency Tracking (Phase 5):** Average commits/week from last 12 weeks
+- **PR Merge Time Tracking (Phase 5):** Average hours from PR creation to merge for last 30 PRs
+- **Contributor Metrics Display (Phase 5):** Show contributor count, commits/week, bus factor, PR merge time in Repository Stats
+- Database migrations: 006_add_template_version.sql, 007_add_contributor_metrics.sql
+- Lines of Code (LOC) metrics with language breakdown from GitHub API
+- LOC display in Repository Stats section with K suffix formatting (e.g., "12.5K")
+- Test case counting parser (detects it(), test(), describe() calls in test files)
+- Test case count display in Testing section with prominent badge
+- CI/CD build status integration via GitHub Actions API
+- CI/CD status badge in Best Practices section (passing/failing with workflow name and last run date)
+- Vulnerability alerts integration via GitHub Security/Dependabot API
+- Vulnerability count display in Repository Stats with severity-based color coding
+- Critical vulnerability count highlighted in parentheses
+- Database migrations: 002_add_loc_metrics.sql, 003_add_test_counts.sql, 004_add_ci_status.sql, 005_add_vulnerability_alerts.sql
+- Health score component breakdown display with progress bars (Documentation 30%, Testing 20%, Best Practices 20%, Community 15%)
+- README freshness tracking with color-coded staleness indicators (Fresh/Recent/Aging/Stale)
+- Coverage score sync from METRICS.md to database during repository sync
+- Docker as 10th best practice check (detects Dockerfile, docker-compose files, .dockerignore)
+- PR Template correctly categorized under Community Standards (now 8 checks total, was in Best Practices)
+- Toast notification system replacing browser alerts
+- Testing section enhancement with framework detection and test file counting
+- Comprehensive feature audit and documentation accuracy review (November 2025)
+- Feature detection matrix tracking 60+ items with detection/health/fix status
+- AUDIT.md documenting critical gaps, strengths, and opportunities
 - Repository stats (stars, forks, branches) in detail panel
 - LICENSE.md tracking as a document type
 - Comprehensive FEATURES.md documentation
-- Best practices detection framework planning
 - Code coverage visualization with progress bars
 - AI summary display in expandable rows
 - Activity tracking (last commit, PRs, issues)
@@ -23,20 +57,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Table Structure:** Removed Activity column (now 8 columns: Links, Repository, Type, Description, Language, Health, Docs, Actions)
+- **Column Order:** Links moved to first position, Activity badge integrated into Health shields
+- **AI Summary Display:** Changed condition from `includes('unavailable')` to `startsWith('Summary unavailable')` for better accuracy
+- **Health Breakdown Positioning:** Moved hover group to grade span only (not entire Health column)
+- **Doc Tooltips:** Enhanced with multiline status showing individual doc health states
+- Reordered dashboard columns: Health, Activity, Links, Docs (previously Health, Docs, Activity, Links)
+- GitHub link icon changed to purple Github icon, homepage link to green ExternalLink icon
+- Hide button changed to red X icon with toast notification (removed confirmation dialog)
+- Login redirect from header now correctly redirects to homepage instead of /api/auth/signin
 - Moved Stats column from main table to detail panel
 - Description column now hidden on smaller screens (xl+ only)
-- Updated Gemini API model to `gemini-pro`
+- Updated Gemini API model to `gemini-1.5-flash`
 - Reorganized ExpandableRow component for better space utilization
+
+### Removed
+
+- **Activity Column:** Removed redundant Activity column from main table (functionality moved to Health shields)
 
 ### Fixed
 
+- Coverage score from METRICS.md now properly stored in database and displayed in UI
+- Health score breakdown now visible to users (previously calculated but not shown)
+- Login redirect loop when signing in from header
 - React key warnings in metrics mapping
 - Null safety checks for metric names
 - OAuth callback URL configuration for Netlify
 
 ## [0.1.0] - 2024-11-24
 
-### Added
+### Implemented
 
 - Initial release
 - GitHub OAuth authentication
@@ -61,7 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-*This changelog is maintained manually. For detailed commit history, see the Git log.*
+_This changelog is maintained manually. For detailed commit history, see the Git log._
 
 <!--
 AGENT INSTRUCTIONS:

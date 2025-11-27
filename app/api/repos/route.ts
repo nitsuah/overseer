@@ -1,10 +1,39 @@
 import { NextResponse } from 'next/server';
 import { getNeonClient } from '@/lib/db';
+import { auth } from '@/auth';
+import { DEFAULT_REPOS } from '@/lib/default-repos';
 
 export async function GET() {
     try {
+        const session = await auth();
         const db = getNeonClient();
 
+        // If not authenticated, only return default repos
+        if (!session) {
+            const defaultRepoNames = DEFAULT_REPOS.map(r => r.fullName);
+            const repos = await db`
+                SELECT * FROM repos
+                WHERE (is_hidden = FALSE OR is_hidden IS NULL)
+                AND full_name = ANY(${defaultRepoNames})
+                ORDER BY 
+                    is_fork ASC,
+                    CASE 
+                        WHEN repo_type = 'unknown' THEN 999
+                        WHEN repo_type = 'web-app' THEN 1
+                        WHEN repo_type = 'game' THEN 2
+                        WHEN repo_type = 'tool' THEN 3
+                        WHEN repo_type = 'library' THEN 4
+                        WHEN repo_type = 'bot' THEN 5
+                        WHEN repo_type = 'research' THEN 6
+                        ELSE 999
+                    END ASC,
+                    stars DESC, 
+                    updated_at DESC
+            `;
+            return NextResponse.json(repos);
+        }
+
+        // If authenticated, return all non-hidden repos
         const repos = await db`
             SELECT * FROM repos
             WHERE is_hidden = FALSE OR is_hidden IS NULL

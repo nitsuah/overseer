@@ -1,0 +1,686 @@
+// Repository table row component
+
+import React, { Fragment, useMemo, useState } from 'react';
+import {
+  GitPullRequest,
+  AlertCircle,
+  Activity,
+  Map,
+  ListTodo,
+  Sparkles,
+  Play,
+  Github,
+  ExternalLink,
+  X,
+  RefreshCw,
+  Shield,
+} from 'lucide-react';
+import ExpandableRow from '@/components/ExpandableRow';
+import { Repo, RepoDetails } from '@/types/repo';
+import { detectRepoType, getTypeColor, RepoType } from '@/lib/repo-type';
+import { calculateDocHealth } from '@/lib/doc-health';
+import {
+  getHealthGrade,
+  formatTimeAgo,
+  getDocHealthColor,
+  getLanguageColor,
+} from '@/lib/dashboard-utils';
+
+interface RepoTableRowProps {
+  repo: Repo;
+  details: RepoDetails | undefined;
+  isExpanded: boolean;
+  fixingDoc: boolean;
+  syncingRepo: string | null;
+  generatingSummary: string | null;
+  isAuthenticated?: boolean;
+  onToggleExpanded: () => void;
+  onRemove: () => void;
+  onFixAllDocs: () => void;
+  onFixStandard: (standardType: string) => void;
+  onFixAllStandards: () => void;
+  onGenerateSummary: () => void;
+  onSyncSingleRepo: () => void;
+}
+
+export function RepoTableRow({
+  repo,
+  details,
+  isExpanded,
+  fixingDoc,
+  syncingRepo,
+  generatingSummary,
+  isAuthenticated = true,
+  onToggleExpanded,
+  onRemove,
+  onFixAllDocs,
+  onFixStandard,
+  onFixAllStandards,
+  onGenerateSummary,
+  onSyncSingleRepo,
+}: RepoTableRowProps) {
+  const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
+  const repoType = (repo.repo_type as RepoType) || typeInfo.type;
+  const docHealth = details ? calculateDocHealth(details.docStatuses, repoType) : null;
+  const health = getHealthGrade(repo.health_score || 0);
+
+  return (
+    <Fragment key={repo.id}>
+      <tr
+        className="hover:bg-slate-800/30 transition-colors cursor-pointer"
+        onClick={onToggleExpanded}
+      >
+        {/* Links Column - NOW FIRST */}
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-2">
+            <a
+              href={repo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
+              title="View on GitHub"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Github className="h-4 w-4" />
+            </a>
+            {repo.homepage && (
+              <a
+                href={repo.homepage}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded transition-colors"
+                title="Visit Homepage"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            )}
+            {repo.open_prs !== undefined && repo.open_prs > 0 && (
+              <a
+                href={`${repo.url}/pulls`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors"
+                title={`${repo.open_prs} open PRs`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GitPullRequest className="h-4 w-4" />
+              </a>
+            )}
+            {repo.open_issues_count !== undefined && repo.open_issues_count > 0 && (
+              <a
+                href={`${repo.url}/issues`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative p-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded transition-colors"
+                title={`${repo.open_issues_count} open issues`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <AlertCircle className="h-4 w-4" />
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                  {repo.open_issues_count}
+                </span>
+              </a>
+            )}
+            {repo.vuln_alert_count !== undefined && repo.vuln_alert_count > 0 && (
+              <a
+                href={`${repo.url}/security/dependabot`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
+                title={`${repo.vuln_alert_count} Dependabot alerts`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Shield className="h-4 w-4" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                  {repo.vuln_alert_count}
+                </span>
+              </a>
+            )}
+          </div>
+        </td>
+        {/* Repository Name */}
+        <td className="px-6 py-4">
+          <span className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
+            {repo.name}
+          </span>
+        </td>
+        {/* Type */}
+        <td className="px-6 py-4">
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(
+              repoType
+            )}`}
+          >
+            <span>{typeInfo.icon}</span>
+            <span className="capitalize">{repoType.replace('-', ' ')}</span>
+          </span>
+        </td>
+        {/* Description with AI Summary Button */}
+        <td className="px-6 py-4 text-sm text-slate-400 hidden xl:table-cell">
+          <div className="flex items-center gap-2">
+            <div className="truncate max-w-md" title={repo.description || ''}>
+              {repo.description || '—'}
+            </div>
+            {isAuthenticated && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onGenerateSummary();
+                }}
+                className="shrink-0 p-1.5 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors disabled:opacity-50"
+                title={
+                  generatingSummary === repo.name
+                    ? 'Generating AI summary...'
+                    : 'Generate AI summary'
+                }
+                disabled={generatingSummary === repo.name}
+              >
+                <Sparkles
+                  className={`h-4 w-4 ${generatingSummary === repo.name ? 'animate-pulse' : ''}`}
+                />
+              </button>
+            )}
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          {repo.language ? (
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getLanguageColor(
+                repo.language
+              )}`}
+            >
+              {repo.language}
+            </span>
+          ) : (
+            <span className="text-slate-500">—</span>
+          )}
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className={`text-lg font-bold ${health.color} relative group`}>
+                {health.grade}
+                {details && (
+                  <>
+                    {/* Health Breakdown Popup */}
+                    <HealthBreakdown repo={repo} details={details} />
+                  </>
+                )}
+              </span>
+              {details && (
+                <>
+                  {/* Health Shields */}
+                  <HealthShields details={details} repo={repo} />
+                </>
+              )}
+            </div>
+            {repo.coverage_score != null && (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-slate-700 rounded-full h-1.5 w-16">
+                  <div
+                    className="bg-linear-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all"
+                    style={{ width: `${Math.min(repo.coverage_score, 100)}%` }}
+                    title={`${repo.coverage_score}% coverage`}
+                  />
+                </div>
+                <span className="text-[10px] text-slate-400 w-8">{repo.coverage_score}%</span>
+              </div>
+            )}
+          </div>
+        </td>
+        {/* Docs Column */}
+        <td className="px-6 py-4">
+          <DocStatusDisplay
+            details={details}
+            docHealth={docHealth}
+            repoName={repo.name}
+            lastSynced={repo.last_synced}
+            fixingDoc={fixingDoc}
+            syncingRepo={syncingRepo}
+            isAuthenticated={isAuthenticated}
+            onFixAllDocs={onFixAllDocs}
+            onSyncSingleRepo={onSyncSingleRepo}
+          />
+        </td>
+        {/* Actions Column - Refresh + Remove */}
+        <td className="px-6 py-4">
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSyncSingleRepo();
+                }}
+                className="p-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50"
+                title={syncingRepo === repo.name ? 'Syncing...' : 'Refresh repository data'}
+                disabled={syncingRepo === repo.name}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${syncingRepo === repo.name ? 'animate-spin' : ''}`}
+                />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove();
+                }}
+                className="p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
+                title="Hide this repository"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="text-slate-500 text-sm">—</div>
+          )}
+        </td>
+      </tr>
+      {isExpanded && details && (
+        <tr>
+          <td colSpan={8} className="p-0">
+            <ExpandableRow
+              tasks={details.tasks}
+              roadmapItems={details.roadmapItems}
+              docStatuses={details.docStatuses}
+              metrics={details.metrics}
+              features={details.features}
+              bestPractices={details.bestPractices}
+              communityStandards={details.communityStandards}
+              aiSummary={repo.ai_summary}
+              isAuthenticated={isAuthenticated}
+              stars={repo.stars}
+              forks={repo.forks}
+              branches={repo.branches_count}
+              testingStatus={repo.testing_status}
+              coverageScore={repo.coverage_score}
+              readmeLastUpdated={repo.readme_last_updated}
+              repoName={repo.name}
+              onFixStandard={onFixStandard}
+              onFixAllStandards={onFixAllStandards}
+              totalLoc={repo.total_loc}
+              locLanguageBreakdown={repo.loc_language_breakdown}
+              testCaseCount={repo.test_case_count}
+              ciStatus={repo.ci_status}
+              ciLastRun={repo.ci_last_run}
+              ciWorkflowName={repo.ci_workflow_name}
+              vulnAlertCount={repo.vuln_alert_count}
+              vulnCriticalCount={repo.vuln_critical_count}
+              vulnHighCount={repo.vuln_high_count}
+              contributorCount={repo.contributor_count}
+              commitFrequency={repo.commit_frequency}
+              busFactor={repo.bus_factor}
+              avgPrMergeTimeHours={repo.avg_pr_merge_time_hours}
+            />
+          </td>
+        </tr>
+      )}
+    </Fragment>
+  );
+}
+
+// Helper components for cleaner code
+function HealthBreakdown({ repo, details }: { repo: Repo; details: RepoDetails }) {
+  // Get repo type for doc health calculation
+  const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
+  const repoType = (repo.repo_type as RepoType) || typeInfo.type;
+  
+  // Use state to capture timestamp once on mount
+  const [now] = useState(() => Date.now());
+  
+  // Calculate all scores using useMemo
+  const scores = useMemo(() => {
+    // Calculate documentation score using the same logic as sync
+    const docHealthCalc = calculateDocHealth(details.docStatuses, repoType);
+    const docScore = Math.round(docHealthCalc.score);
+
+    // Calculate testing score - same formula as health-score.ts
+    const hasTests = details.bestPractices.some(
+      (bp) => bp.practice_type === 'testing_framework' && bp.status === 'healthy'
+    );
+    let testScore = 0;
+    if (hasTests) {
+      testScore = 40; // Base for having tests
+      if (repo.coverage_score !== undefined) {
+        testScore += Math.min(repo.coverage_score * 0.6, 60); // Up to 60 points for coverage
+      }
+    }
+    testScore = Math.round(testScore);
+
+    // Calculate best practices score with CI bonus
+    const bpHealthy = details.bestPractices.filter((bp) => bp.status === 'healthy').length;
+    const bpTotal = details.bestPractices.length;
+    let bpScore = bpTotal > 0 ? (bpHealthy / bpTotal) * 100 : 0;
+    const hasCI = details.bestPractices.some(
+      (bp) => bp.practice_type === 'ci_cd' && bp.status === 'healthy'
+    );
+    if (hasCI) {
+      bpScore = Math.min(bpScore + 10, 100);
+    }
+    bpScore = Math.round(bpScore);
+
+    // Calculate community standards score
+    const csHealthy = details.communityStandards.filter((cs) => cs.status === 'healthy').length;
+    const csTotal = details.communityStandards.length;
+    const csScore = csTotal > 0 ? Math.round((csHealthy / csTotal) * 100) : 0;
+
+    // Calculate activity score with penalties
+    const lastCommitDate = repo.last_commit_date;
+    const daysSinceCommit = lastCommitDate
+      ? Math.floor((now - new Date(lastCommitDate).getTime()) / (1000 * 60 * 60 * 24))
+      : 365;
+    
+    let activityScore = 100;
+    
+    // Deduct points for staleness
+    if (daysSinceCommit > 90) {
+      activityScore -= Math.min((daysSinceCommit - 90) / 3, 40);
+    }
+    
+    // Deduct points for many open issues
+    const openIssues = repo.open_issues_count || 0;
+    if (openIssues > 10) {
+      activityScore -= Math.min((openIssues - 10) * 2, 20);
+    }
+    
+    // Deduct points for stale PRs
+    const openPRs = repo.open_prs || 0;
+    if (openPRs > 5) {
+      activityScore -= Math.min((openPRs - 5) * 3, 20);
+    }
+    
+    activityScore = Math.max(0, Math.round(activityScore));
+
+    // Determine activity color based on score (green to red scale)
+    let activityColor = 'green';
+    if (activityScore < 40) activityColor = 'red';
+    else if (activityScore < 60) activityColor = 'orange';
+    else if (activityScore < 80) activityColor = 'yellow';
+
+    return [
+      { label: 'Documentation', score: docScore, color: 'slate', weight: '30%' },
+      { label: 'Testing', score: testScore, color: 'blue', weight: '20%' },
+      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '20%' },
+      { label: 'Community', score: csScore, color: 'green', weight: '15%' },
+      { label: 'Activity', score: activityScore, color: activityColor, weight: '15%' },
+    ];
+  }, [repo, details, repoType, now]);
+
+  // Color mapping for proper Tailwind JIT compilation
+  const colorMap: Record<string, { text: string; bg: string; hex: string }> = {
+    slate: { text: 'text-slate-400', bg: 'bg-slate-500', hex: '#64748b' },
+    blue: { text: 'text-blue-400', bg: 'bg-blue-500', hex: '#3b82f6' },
+    purple: { text: 'text-purple-400', bg: 'bg-purple-500', hex: '#a855f7' },
+    green: { text: 'text-green-400', bg: 'bg-green-500', hex: '#22c55e' },
+    yellow: { text: 'text-yellow-400', bg: 'bg-yellow-500', hex: '#eab308' },
+    orange: { text: 'text-orange-400', bg: 'bg-orange-500', hex: '#f97316' },
+    red: { text: 'text-red-400', bg: 'bg-red-500', hex: '#ef4444' },
+  };
+
+  return (
+    <div className="absolute left-0 top-8 z-50 hidden group-hover:block w-72 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-4">
+      <h4 className="text-sm font-semibold text-slate-200 mb-3">Health Breakdown</h4>
+      <div className="space-y-3">
+        {scores.map(({ label, score, color, weight }) => {
+          const colors = colorMap[color] || colorMap.blue;
+          return (
+            <div key={label} className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">{label}</span>
+                <div className="flex items-center gap-2">
+                  <span className={`${colors.text} font-medium`}>{score}%</span>
+                  <span className="text-slate-500 text-[10px]">({weight})</span>
+                </div>
+              </div>
+              <div className="bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-full transition-all"
+                  style={{ 
+                    width: `${score}%`,
+                    backgroundColor: colors.hex
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) {
+  // Capture timestamp once
+  const [now] = useState(() => Date.now());
+  
+  const coreDocs = ['roadmap', 'tasks', 'metrics', 'features', 'readme'];
+  const coreDocsPresent = details.docStatuses.filter(
+    (d) => coreDocs.includes(d.doc_type) && d.exists
+  ).length;
+  const docPercentage = Math.round((coreDocsPresent / coreDocs.length) * 100);
+
+  // Build detailed doc tooltip showing status of each doc
+  const docTooltip = coreDocs
+    .map((docType) => {
+      const status = details.docStatuses.find((d) => d.doc_type === docType);
+      const docName = docType.toUpperCase();
+      if (!status || !status.exists) {
+        return `${docName}: missing`;
+      }
+      const health = status.health_state || 'unknown';
+      return `${docName}: ${health}`;
+    })
+    .join('\n');
+
+  const testingCount = details.bestPractices.filter(
+    (p) => ['testing_framework', 'ci_cd'].includes(p.practice_type) && p.status === 'healthy'
+  ).length;
+  const testingTotal = details.bestPractices.filter((p) =>
+    ['testing_framework', 'ci_cd'].includes(p.practice_type)
+  ).length;
+  const hasTests = details.bestPractices.some(
+    (p) => p.practice_type === 'testing_framework' && p.status === 'healthy'
+  );
+
+  const bpHealthy = details.bestPractices.filter((p) => p.status === 'healthy').length;
+  const bpTotal = details.bestPractices.length;
+  const bpPercentage = bpTotal > 0 ? Math.round((bpHealthy / bpTotal) * 100) : 0;
+
+  const csHealthy = details.communityStandards.filter((s) => s.status === 'healthy').length;
+  const csTotal = details.communityStandards.length;
+  const csPercentage = csTotal > 0 ? Math.round((csHealthy / csTotal) * 100) : 0;
+  
+  // Activity freshness calculation
+  const getActivityColor = (dateString: string | null | undefined) => {
+    if (!dateString) return 'bg-slate-700/50 text-slate-500';
+    const date = new Date(dateString);
+    const diffDays = Math.floor((now - date.getTime()) / 86400000);
+    
+    if (diffDays <= 7) return 'bg-green-500/20 text-green-400';
+    if (diffDays <= 30) return 'bg-yellow-500/20 text-yellow-400';
+    if (diffDays <= 90) return 'bg-orange-500/20 text-orange-400';
+    return 'bg-red-500/20 text-red-400';
+  };
+  
+  const formatActivityTime = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'Never';
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    const diffMonths = Math.floor(diffDays / 30);
+
+    if (diffHours < 1) return '< 1h';
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 30) return `${diffDays}d`;
+    if (diffMonths < 12) return `${diffMonths}mo`;
+    return `${Math.floor(diffDays / 365)}y`;
+  };
+
+  return (
+    <>
+      <span
+        title={docTooltip}
+        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+          docPercentage >= 80
+            ? 'bg-slate-500/20 text-slate-300'
+            : docPercentage >= 50
+            ? 'bg-yellow-500/20 text-yellow-400'
+            : 'bg-red-500/20 text-red-400'
+        }`}
+      >
+        {coreDocsPresent}/{coreDocs.length}
+      </span>
+      <span
+        title={`Testing: ${testingCount}/${testingTotal} checks`}
+        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+          hasTests ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-700/50 text-slate-500'
+        }`}
+      >
+        {testingCount}/{testingTotal}
+      </span>
+      <span
+        title={`Best Practices: ${bpHealthy}/${bpTotal} (${bpPercentage}%)`}
+        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+          bpPercentage >= 70
+            ? 'bg-purple-500/20 text-purple-400'
+            : bpPercentage >= 40
+            ? 'bg-yellow-500/20 text-yellow-400'
+            : 'bg-red-500/20 text-red-400'
+        }`}
+      >
+        {bpHealthy}/{bpTotal}
+      </span>
+      <span
+        title={`Community Standards: ${csHealthy}/${csTotal} (${csPercentage}%)`}
+        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+          csPercentage >= 70
+            ? 'bg-green-500/20 text-green-400'
+            : csPercentage >= 40
+            ? 'bg-yellow-500/20 text-yellow-400'
+            : 'bg-red-500/20 text-red-400'
+        }`}
+      >
+        {csHealthy}/{csTotal}
+      </span>
+      <span
+        title={repo.last_commit_date ? `Last commit: ${repo.last_commit_date}` : 'No commits'}
+        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${getActivityColor(repo.last_commit_date)}`}
+      >
+        {formatActivityTime(repo.last_commit_date)}
+      </span>
+    </>
+  );
+}
+
+function DocStatusDisplay({
+  details,
+  docHealth,
+  repoName,
+  lastSynced,
+  fixingDoc,
+  syncingRepo,
+  isAuthenticated = true,
+  onFixAllDocs,
+  onSyncSingleRepo,
+}: {
+  details: RepoDetails | undefined;
+  docHealth: { score: number } | null;
+  repoName: string;
+  lastSynced: string | null;
+  fixingDoc: boolean;
+  syncingRepo: string | null;
+  isAuthenticated?: boolean;
+  onFixAllDocs: () => void;
+  onSyncSingleRepo: () => void;
+}) {
+  if (!details) {
+    if (!isAuthenticated) {
+      return (
+        <span className="text-xs text-slate-400">{formatTimeAgo(lastSynced)}</span>
+      );
+    }
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onSyncSingleRepo();
+        }}
+        disabled={syncingRepo === repoName}
+        className="text-xs text-slate-400 hover:text-blue-400 transition-colors flex items-center gap-1 disabled:opacity-50"
+        title="Click to sync and load docs"
+      >
+        <RefreshCw className={`h-3 w-3 ${syncingRepo === repoName ? 'animate-spin' : ''}`} />
+        {syncingRepo === repoName ? 'Syncing...' : formatTimeAgo(lastSynced)}
+      </button>
+    );
+  }
+
+  const getIconInfo = (docType: string) => {
+    const doc = details.docStatuses.find((d) => d.doc_type === docType);
+    const exists = doc && doc.exists;
+    const healthState = doc?.health_state || (exists ? 'healthy' : 'missing');
+    const colorMap: Record<string, string> = {
+      roadmap: 'blue',
+      tasks: 'purple',
+      metrics: 'green',
+      features: 'indigo',
+    };
+    const color = colorMap[docType] || 'slate';
+    const iconColor =
+      healthState === 'healthy'
+        ? `text-${color}-400`
+        : healthState === 'dormant'
+        ? 'text-yellow-400'
+        : healthState === 'malformed'
+        ? 'text-orange-400'
+        : 'text-slate-600';
+    
+    // Build tooltip with health status
+    const healthLabel = healthState.charAt(0).toUpperCase() + healthState.slice(1);
+    const tooltip = `${docType.toUpperCase()}: ${healthLabel}`;
+    
+    return { exists, iconColor, title: tooltip };
+  };
+
+  const roadmap = getIconInfo('roadmap');
+  const tasks = getIconInfo('tasks');
+  const metrics = getIconInfo('metrics');
+  const features = getIconInfo('features');
+
+  const coreDocs = ['roadmap', 'tasks', 'metrics', 'features'];
+  const allDocsPresent = coreDocs.every((docType) =>
+    details.docStatuses.find((d) => d.doc_type === docType && d.exists)
+  );
+
+  return (
+    <div className="flex items-center gap-2">
+      <span title={roadmap.title}>
+        <Map className={`h-4 w-4 ${roadmap.exists ? roadmap.iconColor : 'opacity-20'}`} />
+      </span>
+      <span title={tasks.title}>
+        <ListTodo className={`h-4 w-4 ${tasks.exists ? tasks.iconColor : 'opacity-20'}`} />
+      </span>
+      <span title={metrics.title}>
+        <Activity className={`h-4 w-4 ${metrics.exists ? metrics.iconColor : 'opacity-20'}`} />
+      </span>
+      <span title={features.title}>
+        <Sparkles className={`h-4 w-4 ${features.exists ? features.iconColor : 'opacity-20'}`} />
+      </span>
+      <span className={`text-xs font-medium ml-1 ${getDocHealthColor(docHealth?.score || 0)}`}>
+        {docHealth?.score}%
+      </span>
+      {isAuthenticated && !allDocsPresent && docHealth && docHealth.score < 100 && (
+        <button
+          onClick={onFixAllDocs}
+          className="ml-2 p-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded transition-colors"
+          title="Fix all missing docs"
+          disabled={fixingDoc}
+        >
+          <Play className="h-3.5 w-3.5 fill-current" />
+        </button>
+      )}
+    </div>
+  );
+}

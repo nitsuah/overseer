@@ -537,7 +537,7 @@ function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoD
       </span>
       {showPopup && position && createPortal(
         <div 
-          className="fixed -translate-x-1/2 w-80 bg-slate-800 border border-slate-700 rounded-lg shadow-2xl p-4 pointer-events-none"
+          className="fixed -translate-x-1/2 w-[400px] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl p-4 pointer-events-none"
           style={{ 
             top: `${position.top}px`,
             left: `${position.left}px`,
@@ -545,7 +545,7 @@ function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoD
           }}
         >
           <h4 className="text-sm font-semibold text-slate-200 mb-3">Health Breakdown</h4>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {scores.map(({ label, score, color, weight }) => {
               const colors = colorMap[color] || colorMap.blue;
               // Use red for scores below 50%
@@ -561,25 +561,29 @@ function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoD
               };
               
               return (
-                <div key={label} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5">
-                      {iconMap[label]}
-                      <span className="text-slate-400">{label}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`${score < 50 ? 'text-red-400' : colors.text} font-medium`}>{score}%</span>
-                      <span className="text-slate-500 text-[10px]">({weight})</span>
-                    </div>
+                <div key={label} className="flex items-center gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 w-32 shrink-0">
+                    {iconMap[label]}
+                    <span className="text-slate-400 truncate">{label}</span>
                   </div>
-                  <div className="bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                  <div className="flex-1 relative bg-slate-700 rounded-full h-1.5 overflow-visible">
+                    {/* 50% threshold indicator */}
+                    <div 
+                      className="absolute top-0 bottom-0 w-px bg-yellow-400/50"
+                      style={{ left: '50%' }}
+                      title="50% threshold"
+                    />
                     <div
-                      className="h-full transition-all"
+                      className="h-full transition-all rounded-full"
                       style={{ 
                         width: `${score}%`,
                         backgroundColor: barColor
                       }}
                     />
+                  </div>
+                  <div className="flex items-center gap-1.5 w-16 shrink-0 justify-end">
+                    <span className={`${score < 50 ? 'text-red-400' : colors.text} font-medium tabular-nums`}>{score}%</span>
+                    <span className="text-slate-500 text-[10px]">({weight})</span>
                   </div>
                 </div>
               );

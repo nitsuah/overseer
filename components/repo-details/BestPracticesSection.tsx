@@ -24,13 +24,28 @@ export function BestPracticesSection({
       case 'healthy':
         return <CheckCircle2 className="h-3 w-3 text-green-400" />;
       case 'dormant':
-        return <Circle className="h-3 w-3 text-yellow-400" />;
+        return <Circle className="h-3 w-3 text-yellow-400 fill-yellow-400" />;
       case 'malformed':
         return <XCircle className="h-3 w-3 text-orange-400" />;
       case 'missing':
         return <XCircle className="h-3 w-3 text-red-400" />;
       default:
         return <Circle className="h-3 w-3 text-slate-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'healthy':
+        return <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">Healthy</span>;
+      case 'dormant':
+        return <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400">Dormant</span>;
+      case 'malformed':
+        return <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400">Malformed</span>;
+      case 'missing':
+        return <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">Missing</span>;
+      default:
+        return <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-500/20 text-slate-500">Unknown</span>;
     }
   };
 
@@ -114,13 +129,7 @@ export function BestPracticesSection({
                     Fix
                   </button>
                 )}
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded capitalize ${getStatusColor(
-                    practice.status
-                  )}`}
-                >
-                  {practice.status}
-                </span>
+                {getStatusBadge(practice.status)}
               </div>
             </div>
             );

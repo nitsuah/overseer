@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
+import { parseGitHubError, getOrgAuthInstructions } from '@/lib/github-errors';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -10,6 +11,8 @@ export async function POST(
     props: { params: Promise<{ name: string }> }
 ) {
     const params = await props.params;
+    let fullName = ''; // Declare in outer scope for error handling
+    
     try {
         const session = await auth();
         if (!session?.user) {
@@ -25,7 +28,7 @@ export async function POST(
         if (repoRows.length === 0) {
             return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
         }
-        const fullName = repoRows[0].full_name;
+        fullName = repoRows[0].full_name;
         const owner = fullName.split('/')[0];
 
         // Initialize GitHub client
@@ -157,7 +160,26 @@ export async function POST(
         });
     } catch (error: unknown) {
         console.error('Error creating PR for best practice:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+        
+        // Parse the error and provide helpful context
+        const errorDetails = parseGitHubError(error);
+        
+        if (errorDetails.type === 'oauth_restriction') {
+            const orgName = fullName.split('/')[0];
+            const instructions = getOrgAuthInstructions(orgName);
+            
+            return NextResponse.json({ 
+                error: errorDetails.userMessage,
+                type: errorDetails.type,
+                instructions,
+                helpUrl: errorDetails.helpUrl
+            }, { status: 403 });
+        }
+        
+        return NextResponse.json({ 
+            error: errorDetails.userMessage,
+            type: errorDetails.type,
+            helpUrl: errorDetails.helpUrl
+        }, { status: 500 });
     }
 }

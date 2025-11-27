@@ -95,7 +95,34 @@ export function useRepoActions(
         setToastMessage(`PR created for ${docType.toUpperCase()}.md!`);
       } else {
         const err = await res.json();
-        setToastMessage(err.error || 'Failed to create PR');
+        
+        // Handle OAuth restriction errors specially
+        if (err.type === 'oauth_restriction' && err.helpUrl) {
+          console.error('🔐 OAuth Restriction - Authorization Required');
+          console.log(`\n📋 To fix this:\n1. Click the link that just opened\n2. Find the organization section\n3. Click "Grant" or "Request" access\n4. Come back and try again\n`);
+          
+          // Show error with clickable action
+          setToastMessage(`${err.error || 'Authorization required'} - Opening authorization page...`);
+          
+          // Open the authorization URL directly
+          setTimeout(() => {
+            window.open(err.helpUrl, '_blank');
+          }, 500);
+        } else if (err.type === 'oauth_restriction' && err.instructions) {
+          console.error('OAuth Restriction:', err.instructions);
+          setToastMessage(err.error || 'Failed to create PR - OAuth restriction');
+          
+          // Optionally open help URL
+          if (err.helpUrl) {
+            setTimeout(() => {
+              if (confirm('Need help authorizing the app for this organization? Click OK to view instructions.')) {
+                window.open(err.helpUrl, '_blank');
+              }
+            }, 1000);
+          }
+        } else {
+          setToastMessage(err.error || 'Failed to create PR');
+        }
       }
     } catch (error) {
       console.error('Failed to fix doc:', error);
@@ -171,7 +198,34 @@ export function useRepoActions(
         setToastMessage(`PR created for ${practiceType}!`);
       } else {
         const err = await res.json();
-        setToastMessage(err.error || 'Failed to create PR');
+        
+        // Handle OAuth restriction errors specially
+        if (err.type === 'oauth_restriction' && err.helpUrl) {
+          console.error('🔐 OAuth Restriction - Authorization Required');
+          console.log(`\n📋 To fix this:\n1. Click the link that just opened\n2. Find the organization section\n3. Click "Grant" or "Request" access\n4. Come back and try again\n`);
+          
+          // Show error with clickable action
+          setToastMessage(`${err.error || 'Authorization required'} - Opening authorization page...`);
+          
+          // Open the authorization URL directly
+          setTimeout(() => {
+            window.open(err.helpUrl, '_blank');
+          }, 500);
+        } else if (err.type === 'oauth_restriction' && err.instructions) {
+          console.error('OAuth Restriction:', err.instructions);
+          setToastMessage(err.error || 'Failed to create PR - OAuth restriction');
+          
+          // Optionally open help URL
+          if (err.helpUrl) {
+            setTimeout(() => {
+              if (confirm('Need help authorizing the app for this organization? Click OK to view instructions.')) {
+                window.open(err.helpUrl, '_blank');
+              }
+            }, 1000);
+          }
+        } else {
+          setToastMessage(err.error || 'Failed to create PR');
+        }
       }
     } catch (error) {
       console.error('Failed to fix practice:', error);

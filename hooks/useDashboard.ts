@@ -40,9 +40,12 @@ export function useRepos() {
 
 export function useRepoDetails() {
   const [repoDetails, setRepoDetails] = useState<Record<string, RepoDetails>>({});
+  const [loadingDetails, setLoadingDetails] = useState<Set<string>>(new Set());
 
-  const fetchRepoDetails = async (repoName: string) => {
-    if (repoDetails[repoName]) return;
+  const fetchRepoDetails = async (repoName: string, force = false) => {
+    if (!force && (repoDetails[repoName] || loadingDetails.has(repoName))) return;
+    
+    setLoadingDetails(prev => new Set(prev).add(repoName));
     
     try {
       const res = await fetch(`/api/repo-details/${repoName}`);
@@ -72,10 +75,21 @@ export function useRepoDetails() {
       }));
     } catch (error) {
       console.error('Failed to fetch repo details:', error);
+    } finally {
+      setLoadingDetails(prev => {
+        const next = new Set(prev);
+        next.delete(repoName);
+        return next;
+      });
     }
   };
 
-  return { repoDetails, fetchRepoDetails };
+  const fetchAllRepoDetails = async (repoNames: string[]) => {
+    // Fetch all repo details in parallel
+    await Promise.all(repoNames.map(name => fetchRepoDetails(name)));
+  };
+
+  return { repoDetails, fetchRepoDetails, fetchAllRepoDetails };
 }
 
 export function useRepoExpansion() {

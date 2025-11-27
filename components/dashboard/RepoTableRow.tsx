@@ -14,6 +14,9 @@ import {
   X,
   RefreshCw,
   Shield,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
 } from 'lucide-react';
 import ExpandableRow from '@/components/ExpandableRow';
 import { Repo, RepoDetails } from '@/types/repo';
@@ -136,6 +139,37 @@ export function RepoTableRow({
                   {repo.vuln_alert_count}
                 </span>
               </a>
+            )}
+            {/* CI/CD Status Icon */}
+            {repo.ci_status && repo.ci_status !== 'unknown' && (
+              <a
+                href={`${repo.url}/actions`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`p-1 rounded transition-colors ${
+                  repo.ci_status === 'passing'
+                    ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                    : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                }`}
+                title={`CI/CD ${repo.ci_status === 'passing' ? 'Passing' : 'Failing'}${
+                  repo.ci_workflow_name ? ` - ${repo.ci_workflow_name}` : ''
+                }${repo.ci_last_run ? ` (${new Date(repo.ci_last_run).toLocaleDateString()})` : ''}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {repo.ci_status === 'passing' ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
+              </a>
+            )}
+            {repo.ci_status === 'unknown' && (
+              <div
+                className="p-1 bg-slate-500/20 text-slate-400 rounded"
+                title="CI/CD status unknown"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </div>
             )}
           </div>
         </td>

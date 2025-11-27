@@ -14,7 +14,7 @@ import { RepoType } from '@/lib/repo-type';
 export default function Dashboard() {
   const { data: session } = useSession();
   const { repos, setRepos, loading, refetch } = useRepos();
-  const { repoDetails, fetchRepoDetails } = useRepoDetails();
+  const { repoDetails, fetchRepoDetails, fetchAllRepoDetails } = useRepoDetails();
   const { expandedRepos, toggleRepo } = useRepoExpansion();
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -88,6 +88,14 @@ export default function Dashboard() {
       }
     });
   };
+
+  // Fetch details for all repos when repos change
+  React.useEffect(() => {
+    if (repos.length > 0 && Object.keys(repoDetails).length === 0) {
+      const repoNames = repos.map(r => r.name);
+      fetchAllRepoDetails(repoNames);
+    }
+  }, [repos, repoDetails, fetchAllRepoDetails]);
 
   if (loading) {
     return (

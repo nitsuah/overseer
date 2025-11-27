@@ -1,13 +1,11 @@
 import { signIn } from "@/auth"
-import { DEFAULT_REPOS } from "@/lib/default-repos"
-import { Github, Star, GitFork } from "lucide-react"
 
 export default async function LoginPage() {
     return (
-        <div className="min-h-screen bg-slate-950">
-            <div className="container mx-auto px-4 py-12">
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className="container mx-auto px-4">
                 {/* Login Card */}
-                <div className="flex justify-center mb-16">
+                <div className="flex justify-center">
                     <div className="glass rounded-lg p-12 max-w-md w-full text-center space-y-6">
                         <div className="flex justify-center">
                             <div className="h-16 w-16 rounded-lg bg-linear-to-br from-blue-500 to-purple-600" />
@@ -39,65 +37,6 @@ export default async function LoginPage() {
 
                         <p className="text-xs text-slate-500">
                             We&apos;ll request access to your repositories to sync metadata and documentation
-                        </p>
-                    </div>
-                </div>
-
-                {/* Preview Section */}
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold mb-2">Featured Repositories</h2>
-                        <p className="text-slate-400">
-                            Preview some of the repositories you can track with Overseer
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {DEFAULT_REPOS.map((repo) => (
-                            <div
-                                key={repo.fullName}
-                                className="glass rounded-lg p-6 hover:bg-slate-800/50 transition-colors"
-                            >
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex-1">
-                                        <h3 className="font-semibold text-lg mb-1 text-blue-400">
-                                            {repo.name}
-                                        </h3>
-                                        <p className="text-xs text-slate-500 mb-2">
-                                            {repo.owner}
-                                        </p>
-                                    </div>
-                                    <a
-                                        href={`https://github.com/${repo.fullName}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-slate-400 hover:text-slate-200 transition-colors"
-                                    >
-                                        <Github className="h-5 w-5" />
-                                    </a>
-                                </div>
-
-                                <p className="text-sm text-slate-400 mb-4">
-                                    GitHub repository tracking and health monitoring
-                                </p>
-
-                                <div className="flex items-center gap-4 text-xs text-slate-500">
-                                    <div className="flex items-center gap-1">
-                                        <Star className="h-3 w-3" />
-                                        <span>Stars</span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <GitFork className="h-3 w-3" />
-                                        <span>Forks</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="text-center mt-8">
-                        <p className="text-slate-500 text-sm">
-                            Sign in to track your own repositories and get comprehensive health insights
                         </p>
                     </div>
                 </div>

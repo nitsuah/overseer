@@ -11,10 +11,19 @@ export function useRepos() {
     try {
       setLoading(true);
       const res = await fetch('/api/repos');
-      if (res.ok) {
-        const data = await res.json();
-        setRepos(data);
+      if (!res.ok) {
+        console.error(`Failed to fetch repos: ${res.status} ${res.statusText}`);
+        return;
       }
+      
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error(`Invalid response type: ${contentType}`);
+        return;
+      }
+      
+      const data = await res.json();
+      setRepos(data);
     } catch (error) {
       console.error('Failed to fetch repos:', error);
     } finally {
@@ -37,21 +46,30 @@ export function useRepoDetails() {
     
     try {
       const res = await fetch(`/api/repo-details/${repoName}`);
-      if (res.ok) {
-        const data = await res.json();
-        setRepoDetails((prev) => ({
-          ...prev,
-          [repoName]: {
-            tasks: data.tasks || [],
-            roadmapItems: data.roadmapItems || [],
-            docStatuses: data.docStatuses || [],
-            metrics: data.metrics || [],
-            features: data.features || [],
-            bestPractices: data.bestPractices || [],
-            communityStandards: data.communityStandards || [],
-          },
-        }));
+      if (!res.ok) {
+        console.error(`Failed to fetch details for ${repoName}: ${res.status} ${res.statusText}`);
+        return;
       }
+      
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error(`Invalid response type for ${repoName}: ${contentType}`);
+        return;
+      }
+      
+      const data = await res.json();
+      setRepoDetails((prev) => ({
+        ...prev,
+        [repoName]: {
+          tasks: data.tasks || [],
+          roadmapItems: data.roadmapItems || [],
+          docStatuses: data.docStatuses || [],
+          metrics: data.metrics || [],
+          features: data.features || [],
+          bestPractices: data.bestPractices || [],
+          communityStandards: data.communityStandards || [],
+        },
+      }));
     } catch (error) {
       console.error('Failed to fetch repo details:', error);
     }

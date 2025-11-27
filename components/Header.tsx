@@ -22,9 +22,9 @@ export default function Header() {
                     <>
                         <div className="flex items-center gap-3">
                             {session.user?.image && (
-                                <Image 
-                                    src={session.user.image} 
-                                    alt={session.user?.name ?? "User"} 
+                                <Image
+                                    src={session.user.image}
+                                    alt={session.user?.name ?? "User"}
                                     width={32}
                                     height={32}
                                     className="rounded-full border-2 border-white/30"
@@ -41,7 +41,7 @@ export default function Header() {
                     </>
                 ) : (
                     <button
-                        onClick={() => signIn("github", { callbackUrl: "/" })}
+                        onClick={() => signIn("github", { redirectTo: "/" })}
                         className="flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm hover:bg-slate-800 transition-colors"
                     >
                         <Github className="h-5 w-5" />

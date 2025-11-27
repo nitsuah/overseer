@@ -1,4 +1,5 @@
 import { Octokit } from '@octokit/rest';
+import { createOctokitClient } from '@/lib/githubClient';
 
 export interface RepoMetadata {
   name: string;
@@ -39,7 +40,8 @@ export class GitHubClient {
   private owner: string;
 
   constructor(token: string, owner: string) {
-    this.octokit = new Octokit({ auth: token });
+    // Use shared Octokit instance factory
+    this.octokit = createOctokitClient(token);
     this.owner = owner;
   }
 
@@ -284,7 +286,7 @@ export class GitHubClient {
       });
 
       const files: string[] = [];
-      
+
       if (Array.isArray(data)) {
         for (const item of data) {
           if (item.type === 'file') {
@@ -296,7 +298,7 @@ export class GitHubClient {
           }
         }
       }
-      
+
       return files;
     } catch {
       return [];
@@ -330,7 +332,7 @@ export class GitHubClient {
 
       const latestRun = data.workflow_runs[0];
       const status = latestRun.conclusion === 'success' ? 'passing' : 'failing';
-      
+
       return {
         status,
         lastRun: latestRun.updated_at || latestRun.created_at,
@@ -341,10 +343,10 @@ export class GitHubClient {
     }
   }
 
-  async getVulnerabilityAlerts(repo: string, owner?: string): Promise<{ 
-    total: number; 
-    critical: number; 
-    high: number; 
+  async getVulnerabilityAlerts(repo: string, owner?: string): Promise<{
+    total: number;
+    critical: number;
+    high: number;
   }> {
     try {
       // Note: This requires special permissions (security_events scope)
@@ -357,7 +359,7 @@ export class GitHubClient {
       });
 
       const alerts = data as Array<{ security_advisory?: { severity?: string } }>;
-      
+
       const critical = alerts.filter(a => a.security_advisory?.severity === 'critical').length;
       const high = alerts.filter(a => a.security_advisory?.severity === 'high').length;
 
@@ -390,7 +392,7 @@ export class GitHubClient {
       const totalCommits = contributors.reduce((sum, c) => sum + (c.contributions || 0), 0);
       let cumulativeCommits = 0;
       let busFactor = 0;
-      
+
       for (const contributor of contributors) {
         cumulativeCommits += contributor.contributions || 0;
         busFactor++;
@@ -435,7 +437,7 @@ export class GitHubClient {
       });
 
       const mergedPrs = prs.filter(pr => pr.merged_at);
-      
+
       if (mergedPrs.length === 0) {
         return { avgMergeTimeHours: 0 };
       }

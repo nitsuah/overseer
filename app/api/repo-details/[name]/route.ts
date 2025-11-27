@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNeonClient } from '@/lib/db';
+import { auth } from '@/auth';
+import { DEFAULT_REPOS } from '@/lib/default-repos';
 
 export async function GET(
     request: NextRequest,
@@ -7,6 +9,7 @@ export async function GET(
 ) {
     const params = await props.params;
     try {
+        const session = await auth();
         const repoName = params.name;
 
         if (!repoName) {
@@ -23,6 +26,14 @@ export async function GET(
         }
 
         const repo = repoRows[0];
+
+        // If not authenticated, only allow access to default repos
+        if (!session) {
+            const defaultRepoNames = DEFAULT_REPOS.map(r => r.name);
+            if (!defaultRepoNames.includes(repo.name)) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+        }
 
         // Get tasks
         const tasks = await db`SELECT * FROM tasks WHERE repo_id = ${repo.id} ORDER BY created_at DESC`;

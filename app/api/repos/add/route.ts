@@ -67,11 +67,17 @@ export async function POST(request: NextRequest) {
         const db = getNeonClient();
         await syncRepo(repoMeta, github, db);
 
-        // Update repo type if provided
+        // Ensure repo is visible and update repo type if provided
         if (repoType && repoType !== 'unknown') {
             await db`
                 UPDATE repos 
-                SET repo_type = ${repoType}
+                SET repo_type = ${repoType}, is_hidden = FALSE
+                WHERE name = ${repo}
+            `;
+        } else {
+            await db`
+                UPDATE repos 
+                SET is_hidden = FALSE
                 WHERE name = ${repo}
             `;
         }

@@ -8,17 +8,39 @@ const mockListForAuthenticatedUser = vi.fn();
 const mockGetRepo = vi.fn();
 const mockGetContent = vi.fn();
 
+const mockOctokitInstance = {
+    repos: {
+        listForAuthenticatedUser: mockListForAuthenticatedUser,
+        get: mockGetRepo,
+        getContent: mockGetContent,
+    },
+};
+
 vi.mock('@octokit/rest', () => {
+    const MockOctokit: any = vi.fn(function (this: any) {
+        this.repos = {
+            listForAuthenticatedUser: mockListForAuthenticatedUser,
+            get: mockGetRepo,
+            getContent: mockGetContent,
+        };
+    });
+    MockOctokit.plugin = vi.fn(() => MockOctokit);
     return {
-        Octokit: vi.fn(function (this: any) {
-            this.repos = {
-                listForAuthenticatedUser: mockListForAuthenticatedUser,
-                get: mockGetRepo,
-                getContent: mockGetContent,
-            };
-        }),
+        Octokit: MockOctokit,
     };
 });
+
+vi.mock('@octokit/plugin-throttling', () => ({
+    throttling: {},
+}));
+
+vi.mock('@octokit/plugin-retry', () => ({
+    retry: {},
+}));
+
+vi.mock('@/lib/githubClient', () => ({
+    createOctokitClient: vi.fn(() => mockOctokitInstance),
+}));
 
 describe('GitHubClient', () => {
     let client: GitHubClient;

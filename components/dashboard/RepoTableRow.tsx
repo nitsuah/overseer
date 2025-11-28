@@ -679,18 +679,6 @@ function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) 
   return (
     <>
       <span
-        title={docTooltip}
-        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-          docPercentage >= 80
-            ? 'bg-slate-500/20 text-slate-300'
-            : docPercentage >= 50
-            ? 'bg-yellow-500/20 text-yellow-400'
-            : 'bg-red-500/20 text-red-400'
-        }`}
-      >
-        {coreDocsPresent}/{coreDocs.length}
-      </span>
-      <span
         title={`Community Standards: ${csHealthy}/${csTotal} (${csPercentage}%)`}
         className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
           csPercentage >= 70
@@ -821,13 +809,13 @@ function DocStatusDisplay({
   const repoType = repoTypeInfo.type;
   
   const expectedDocsMap: Record<string, string[]> = {
-    'web-app': ['readme', 'license', 'features', 'roadmap', 'tasks', 'contributing', 'routes'],
-    'game': ['readme', 'license', 'features', 'roadmap', 'tasks', 'contributing'],
-    'library': ['readme', 'license', 'features', 'changelog', 'contributing'],
-    'tool': ['readme', 'license', 'features', 'roadmap', 'tasks'],
-    'bot': ['readme', 'license', 'features', 'roadmap', 'tasks'],
-    'research': ['readme', 'license', 'features'],
-    'unknown': ['readme', 'license', 'features', 'roadmap']
+    'web-app': ['readme', 'features', 'roadmap', 'tasks'],
+    'game': ['readme', 'features', 'roadmap', 'tasks'],
+    'library': ['readme', 'features', 'changelog'],
+    'tool': ['readme', 'features', 'roadmap', 'tasks'],
+    'bot': ['readme', 'features', 'roadmap', 'tasks'],
+    'research': ['readme', 'features'],
+    'unknown': ['readme', 'features', 'roadmap']
   };
   const expectedDocs = expectedDocsMap[repoType] || expectedDocsMap['unknown'];
   const presentCount = expectedDocs.filter((docType: string) => 

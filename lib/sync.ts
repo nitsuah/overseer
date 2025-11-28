@@ -243,10 +243,24 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             console.log(`[SYNC] ${repo.name} - Tasks content preview:`, tasksContent.substring(0, 200));
         }
         await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
+        
+        // Track seen task IDs to handle duplicates
+        const seenTaskIds = new Set<string>();
+        
         for (const task of tasksData.tasks) {
+            let taskId = task.id;
+            let counter = 1;
+            
+            // If duplicate task_id, append counter to make it unique
+            while (seenTaskIds.has(taskId)) {
+                taskId = `${task.id}-${counter}`;
+                counter++;
+            }
+            seenTaskIds.add(taskId);
+            
             await db`
                 INSERT INTO tasks (repo_id, task_id, title, status, section)
-                VALUES (${repoId}, ${task.id}, ${task.title}, ${task.status}, ${task.section})
+                VALUES (${repoId}, ${taskId}, ${task.title}, ${task.status}, ${task.section})
             `;
         }
     }

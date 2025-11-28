@@ -41,8 +41,8 @@ export function parseTasks(content: string): TaskData {
             const [, statusChar, title, id] = taskMatch;
             const status = statusChar === 'x' ? 'done' : statusChar === '/' ? 'in-progress' : 'todo';
 
-            // Generate ID if not provided
-            const taskId = id?.trim() || generateTaskId(title);
+            // Generate ID if not provided - include section for better uniqueness
+            const taskId = id?.trim() || generateTaskId(title, currentSection, currentSubsection);
 
             tasks.push({
                 id: taskId,
@@ -60,10 +60,29 @@ export function parseTasks(content: string): TaskData {
     };
 }
 
-function generateTaskId(title: string): string {
-    return title
+function generateTaskId(title: string, section?: string, subsection?: string): string {
+    // Create a more unique ID by incorporating section/subsection
+    let baseId = title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-        .substring(0, 50);
+        .replace(/^-|-$/g, '');
+    
+    // If we have section context, prepend a short version of it
+    if (subsection) {
+        const subsectionPrefix = subsection
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '')
+            .substring(0, 20);
+        baseId = `${subsectionPrefix}-${baseId}`;
+    } else if (section) {
+        const sectionPrefix = section
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '')
+            .substring(0, 15);
+        baseId = `${sectionPrefix}-${baseId}`;
+    }
+    
+    return baseId.substring(0, 100);
 }

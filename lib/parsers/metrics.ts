@@ -90,8 +90,8 @@ export function parseMetrics(content: string): MetricsData {
                     if (unitMatch) {
                         unit = unitMatch[0];
                     } else if (notes) {
-                        // Use notes column as unit if available
-                        unit = notes;
+                        // Use notes column as unit if available, but only if it's short
+                        unit = notes.length <= 15 ? notes : null;
                     }
                 }
 

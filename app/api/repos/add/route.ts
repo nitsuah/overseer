@@ -1,5 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
+import logger from '@/lib/log';
 import { auth } from '@/auth';
 import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ success: true, repo: repoMeta });
     } catch (error: unknown) {
-        console.error('Error adding repo:', error);
+        logger.warn('Error adding repo:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

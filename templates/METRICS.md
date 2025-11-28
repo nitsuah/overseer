@@ -2,22 +2,22 @@
 
 ## Core Metrics
 
-| Metric         | Value  |
-| -------------- | ------ |
-| Code Coverage  | 0%     |
-| Build Time     | 0s     |
-| Bundle Size    | 0KB    |
-| Test Files     | 0      |
-| Test Cases     | 0      |
+| Metric        | Value |
+| ------------- | ----- |
+| Code Coverage | 0%    |
+| Build Time    | 0s    |
+| Bundle Size   | 0KB   |
+| Test Files    | 0     |
+| Test Cases    | 0     |
 
 ## Health
 
-| Metric         | Value    |
-| -------------- | -------- |
-| Open Issues    | 0        |
-| PR Turnaround  | 0 days   |
-| Skipped Tests  | 0        |
-| Health Score   | 0/100    |
+| Metric        | Value  |
+| ------------- | ------ |
+| Open Issues   | 0      |
+| PR Turnaround | 0 days |
+| Skipped Tests | 0      |
+| Health Score  | 0/100  |
 
 <!--
 AGENT INSTRUCTIONS:
@@ -38,14 +38,14 @@ PARSEABLE METRIC NAMES (case-insensitive):
 - "Open Issues" → Health indicator
 - "Health Score" → Overall health
 
-GOOD EXAMPLES:
+GOOD EXAMPLES - REMOVE THESE EXAMPLES AFTER FIRST USE:
 ## Core Metrics
 
-| Metric         | Value  |
-| -------------- | ------ |
-| Code Coverage  | 87.5%  |
-| Build Time     | 6.2s   |
-| Test Files     | 4      |
+| Metric         | Value  | |
+| -------------- | ------ | |
+| Code Coverage  | 87.5%  | example code coverage |
+| Build Time     | 6.2s   | example detail about build time |
+| Test Files     | 4      | types of files or location text |
 
 ## Health
 

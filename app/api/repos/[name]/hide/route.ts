@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
+import logger from '@/lib/log';
 
 export async function POST(
     request: NextRequest,
@@ -25,7 +26,7 @@ export async function POST(
 
         return NextResponse.json({ success: true });
     } catch (error: unknown) {
-        console.error('Error hiding repo:', error);
+        logger.warn('Error hiding repo:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

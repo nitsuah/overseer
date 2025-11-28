@@ -4,6 +4,13 @@
 
 ### Recent Completions (November 2025)
 
+- [x] **Windows Line Endings Bug Fix**: Fixed markdown parsers to handle CRLF line endings (split(/\r?\n/) instead of split('\n'))
+- [x] **GraphQL Rate Limit Safety**: Added null check for data.resources.graphql in rate-limit endpoint
+- [x] **TypeScript Build Fixes**: Extended Session interface, fixed array mutation, centralized repo type detection
+- [x] **UI Improvements Phase 4**: Reversed features order, doc health tooltips, removed duplicate badges
+- [x] **FUNDING.yml Standard**: Added 10th community standard with template and auto-fix support
+- [x] **Refresh Button**: Added force refetch capability in detail panel with animated icon
+- [x] **Duplicate Metrics Fix**: Implemented DELETE before INSERT pattern to prevent metric accumulation
 - [x] Documentation system overhaul: PROMPT.md for agent instructions, full audit, accuracy fixes
 - [x] Advanced metrics integration: LOC, test case counting, CI/CD status, vulnerability tracking
 - [x] Contributor analytics: count, commit frequency, bus factor, PR merge time
@@ -16,14 +23,20 @@
 - [x] Enhanced API error responses: Detailed error types and actionable instructions in fix-doc and fix-best-practice endpoints
 - [x] OAuth documentation: Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md guides
 - [x] Best practices auto-fix: Fix buttons for Dependabot, Env Template, Docker, Netlify Badge (4 practices with templates)
-- [x] Documentation accuracy audit: Fixed Community Standards count from 8 to 9 (added CODEOWNERS, Copilot Instructions tracking)
+- [x] Documentation accuracy audit: Fixed Community Standards count from 8 to 10 (added CODEOWNERS, Copilot Instructions, FUNDING)
+- [x] Coverage sync bug fix: Always update coverage_score to NULL when no coverage found (prevents stale values)
+- [x] Batch sync coverage fix: Added coverage extraction to sync-repos endpoint
+- [x] Metrics parser enhancement: Normalize percentage formats (0.8666 → 86.66%, 86.66% stays 86.66)
+- [x] Testing section display: Separate metric values from long descriptions with detail text
+- [x] Rate limit detection: Created /api/github-rate-limit endpoint for monitoring API usage
+- [x] Debug tooling: Created /api/repos/[name]/debug endpoint for database inspection
 
 ### Core Features Delivered (Earlier in Q4 2025)
 
 - [x] Repository dashboard with health scoring, filtering, and expandable details
 - [x] Documentation tracking and automated fixes (single/batch PR creation for 8 doc types)
 - [x] AI-powered summaries (Google Gemini 2.5)
-- [x] Best Practices detection (10 checks) and Community Standards tracking (9 checks)
+- [x] Best Practices detection (10 checks) and Community Standards tracking (10 checks)
 - [x] Features parser and display system with category organization
 - [x] Default repositories feature for non-authenticated users
 - [x] Database schema with comprehensive metric tracking
@@ -32,7 +45,15 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ## In Progress
 
-_No active tasks - ready for next assignment._
+- [ ] Fix Github Auth in PROD - currently failing due to OAuth app misconfiguration? or redirect URI issue? (we have local and prod versions in github, both authorized)
+- [ ] When not logged in the two expected default repos are not shown (overseer, nitsuah-io) might be a routes auth thing? GET `https://ghoverseer.netlify.app/api/auth/signin/github?` 500 (Internal Server Error)
+- [ ] AI fix Community Standards Gaps (Cake Test) - Overseer tracks these but doesn't have them itself at root, will need to add using overseer to test the features (maybe using AI generate to take the template, and the repo info, and create them):
+  - CODE_OF_CONDUCT.md (exists in templates/ only)
+  - SECURITY.md (exists in templates/ only)
+  - Issue Templates (exists in templates/ only)
+  - PR Template (not present)
+
+**Priority**: Medium - Nice to have for dogfooding our own standards and integrating AI further.
 
 ## Todo
 
@@ -43,7 +64,15 @@ _No active tasks - ready for next assignment._
 - [ ] Add pick-and-choose functionality for batch fix operations
 - [ ] Add "Do you really want to fix all?" confirmation with per-doc opt-in
 
-### Phase 8: Security Configuration & Tracking
+### Phase 8: Performance & Rate Limiting
+
+- [ ] Implement smart caching for GitHub API calls using content_hash from doc_status
+- [ ] Add ETag support to skip unchanged file fetches
+- [ ] Add delay batching between repos during sync to reduce rate limit pressure
+- [ ] Display rate limit status in UI with warning when approaching limits
+- [ ] Consider implementing exponential backoff for rate limit retries
+
+### Phase 9: Security Configuration & Tracking
 
 - [ ] Add new "Security Details" section to application detail window.
 - [ ] Track GitHub security policy presence (SECURITY.md existence)
@@ -53,7 +82,7 @@ _No active tasks - ready for next assignment._
 - [ ] Track code scanning alerts configuration
 - [ ] Track secret scanning alerts configuration
 
-### Phase 9: Future Enhancements
+### Phase 10: Future Enhancements
 
 - [ ] Add webhook integration for real-time updates
 - [ ] Token Density Metric (LOC per logical unit with AI-assisted parsing)

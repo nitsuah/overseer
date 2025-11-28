@@ -87,7 +87,7 @@ export default function Dashboard() {
   const handleSyncAndRefresh = async (repoName: string) => {
     await handleSyncSingleRepo(repoName, () => {
       if (expandedRepos.has(repoName)) {
-        fetchRepoDetails(repoName);
+        fetchRepoDetails(repoName, true); // Force refetch after sync
       }
     });
   };

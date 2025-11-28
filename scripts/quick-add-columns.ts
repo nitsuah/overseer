@@ -2,6 +2,7 @@
 
 import { getNeonClient } from '../lib/db';
 import * as dotenv from 'dotenv';
+import logger from '../lib/log';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
@@ -29,25 +30,23 @@ async function addMissingColumns() {
     { name: 'open_issues_count', type: 'INTEGER' },
   ];
 
-  console.log('🔌 Adding missing columns to repos table...\n');
+  logger.info('🔌 Adding missing columns to repos table...\n');
 
   for (const col of columns) {
     try {
       // Neon requires raw SQL for ALTER TABLE with dynamic types
       const query = `ALTER TABLE repos ADD COLUMN IF NOT EXISTS ${col.name} ${col.type}`;
       await sql([query] as unknown as TemplateStringsArray);
-      console.log(`✅ Added column: ${col.name} (${col.type})`);
+      logger.info(`✅ Added column: ${col.name} (${col.type})`);
     } catch (error: unknown) {
       const err = error as Error;
       if (err.message?.includes('already exists')) {
-        console.log(`ℹ️  Column ${col.name} already exists`);
+        logger.info(`ℹ️  Column ${col.name} already exists`);
       } else {
-        console.error(`❌ Failed to add ${col.name}:`, err.message);
+        logger.warn(`❌ Failed to add ${col.name}:`, err.message);
       }
     }
   }
-
-  console.log('\n🎉 Migration complete!');
+  logger.info('\n🎉 Migration complete!');
 }
-
-addMissingColumns().catch(console.error);
+addMissingColumns().catch((e) => logger.warn(e));

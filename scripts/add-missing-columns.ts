@@ -1,3 +1,4 @@
+import logger from '../lib/log';
 import { config } from 'dotenv';
 import { getNeonClient } from '../lib/db';
 import fs from 'fs';
@@ -9,7 +10,7 @@ config({ path: '.env.local' });
 async function addMissingColumns() {
     const db = getNeonClient();
     
-    console.log('Adding missing columns to existing tables...');
+        logger.info('Adding missing columns to existing tables...');
     
     try {
         // Read migration file
@@ -25,17 +26,17 @@ async function addMissingColumns() {
         for (const statement of statements) {
             try {
                 await db.unsafe(statement);
-                console.log('✓ Executed statement');
+                    logger.info('✓ Executed statement');
             } catch (error) {
                 if (error instanceof Error) {
-                    console.error('Error executing statement:', error.message);
+                        logger.warn('Error executing statement:', error.message);
                 }
             }
         }
         
-        console.log('✓ Column migration complete!');
+            logger.info('✓ Column migration complete!');
     } catch (error) {
-        console.error('Migration failed:', error);
+            logger.warn('Migration failed:', error);
         process.exit(1);
     }
 }

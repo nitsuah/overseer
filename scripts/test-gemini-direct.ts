@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import logger from '../lib/log';
 
 dotenv.config({ path: '.env.local' });
 
@@ -6,12 +7,12 @@ async function testDirectAPI() {
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
-        console.error('❌ No API key found');
+        logger.warn('❌ No API key found');
         process.exit(1);
     }
     
-    console.log('Testing direct API calls to Gemini...\n');
-    console.log('API Key:', apiKey.substring(0, 20) + '...\n');
+    logger.info('Testing direct API calls to Gemini...\n');
+    logger.info('API Key:', apiKey.substring(0, 20) + '...\n');
     
     // Try different API versions and model names
     const tests = [
@@ -26,8 +27,8 @@ async function testDirectAPI() {
     for (const test of tests) {
         const url = `https://generativelanguage.googleapis.com/${test.version}/models/${test.model}:generateContent?key=${apiKey}`;
         
-        try {
-            console.log(`Testing ${test.version}/${test.model}...`);
+            try {
+            logger.info(`Testing ${test.version}/${test.model}...`);
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -39,24 +40,24 @@ async function testDirectAPI() {
                 })
             });
             
-            if (response.ok) {
+                if (response.ok) {
                 const data = await response.json();
-                console.log(`✅ SUCCESS with ${test.version}/${test.model}!`);
-                console.log('Response:', JSON.stringify(data, null, 2).substring(0, 200));
-                console.log('\n🎉 Use this configuration in lib/ai.ts!\n');
+                logger.info(`✅ SUCCESS with ${test.version}/${test.model}!`);
+                logger.debug('Response:', JSON.stringify(data, null, 2).substring(0, 200));
+                logger.info('\n🎉 Use this configuration in lib/ai.ts!\n');
                 return;
             } else {
                 const error = await response.text();
-                console.log(`❌ ${response.status} ${response.statusText}`);
-                console.log('   Error:', error.substring(0, 150));
+                logger.warn(`❌ ${response.status} ${response.statusText}`);
+                logger.warn('   Error:', error.substring(0, 150));
             }
         } catch (err) {
-            console.log(`❌ Network error:`, err instanceof Error ? err.message : 'Unknown');
+            logger.warn(`❌ Network error:`, err instanceof Error ? err.message : 'Unknown');
         }
-        console.log('');
+        logger.debug('');
     }
     
-    console.log('❌ All tests failed. The API key may be invalid or restricted.');
+    logger.warn('❌ All tests failed. The API key may be invalid or restricted.');
 }
 
 testDirectAPI();

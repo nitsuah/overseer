@@ -79,5 +79,13 @@ export function checkCommunityStandards(fileList: string[]): CommunityStandardsR
         details: { exists: hasCopilotInstructions }
     });
 
+    // Funding configuration
+    const hasFunding = lowerFiles.includes('.github/funding.yml') || lowerFiles.includes('.github/funding.yaml');
+    standards.push({
+        type: 'funding',
+        status: hasFunding ? 'healthy' : 'missing',
+        details: { exists: hasFunding }
+    });
+
     return { standards };
 }

@@ -22,7 +22,7 @@
 - [x] UX/Flow: Sync Status Clarity (Timestamp) and Type Column Tag Refinement
 - [x] LICENSE.md Tracking: Added as tracked document type
 - [x] Detail Panel 2.0: Features Section with parsed FEATURES.md
-- [x] Meta-Features: Best Practices (10 checks) & Community Standards (9 checks) Detection
+- [x] Meta-Features: Best Practices (10 checks) & Community Standards (10 checks) Detection
 - [x] Basic Health Metrics: Testing framework, CI/CD, Linting, Pre-commit hooks, Docker
 - [x] Compliance Checks: Gitignore, PR/Issue Templates, Environment Templates
 - [x] Health Score 2.0: Comprehensive weighted calculation (Doc 30%, Testing 20%, Best Practices 20%, Community 15%, Activity 15%)
@@ -90,7 +90,17 @@
 - [x] OAuth User Documentation: Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md guides
 - [x] Template Path Debugging: Enhanced logging for troubleshooting template resolution
 - [x] Best Practices Fix Buttons: 4 automated fixes (Dependabot, Env Template, Docker, Netlify Badge)
-- [x] Community Standards Accuracy: Fixed count from 8 to 9 (added CODEOWNERS, Copilot Instructions)
+- [x] Community Standards Accuracy: Fixed count to 10 (added CODEOWNERS, Copilot Instructions, FUNDING.yml)
+- [x] FUNDING.yml Community Standard: 10th standard with template and auto-fix support
+- [x] Features Display Order: Reversed to show newest features first
+- [x] Doc Health Calculation: Removed LICENSE, CONTRIBUTING, ROUTES from scoring (focus on core docs)
+- [x] Doc Health Tooltips: Comprehensive breakdown showing individual document states
+- [x] Doc Counter Badge: Removed redundant 5/5 badge (health states now in tooltip)
+- [x] Duplicate Metrics Fix: Implemented DELETE before INSERT to prevent accumulation
+- [x] Refresh Button: Added force refetch in detail panel with animated RefreshCw icon
+- [x] Windows Line Endings Bug: Fixed parsers to handle CRLF with split(/\r?\n/)
+- [x] GraphQL Rate Limit Safety: Added null check for optional GraphQL rate limit data
+- [x] TypeScript Build Fixes: Session type extension, array mutation fix, centralized repo detection
 
 ## Future: UX Enhancements & Preview Features 🎨
 
@@ -103,6 +113,12 @@
 ## Future: Production Deployment & Security Enhancements 🔐
 
 - [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
+- [ ] Rate Limiting Optimization: Smart caching and batching to reduce API pressure
+  - [ ] Content-hash based caching - Skip unchanged files using doc_status.content_hash
+  - [ ] ETag support - Use GitHub ETag headers to avoid redundant fetches
+  - [ ] Batch delays - Add configurable delays between repo syncs
+  - [ ] Rate limit UI - Display current rate limit status with warnings
+  - [ ] Exponential backoff - Retry with backoff when rate limited
 - [ ] Security in Health Score: Add vulnerability metrics to calculation
 - [ ] Security Detail: Track 6 GitHub security configuration settings
   - [ ] Security policy - Define vulnerability reporting process

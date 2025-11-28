@@ -4,6 +4,7 @@ import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
 import fs from 'fs/promises';
 import path from 'path';
+import logger from '@/lib/log';
 
 export async function POST(
     request: NextRequest,
@@ -46,7 +47,7 @@ export async function POST(
 
         // Filter standards that have templates
         const standardsWithTemplates = [
-            'contributing',
+            'contributing', 
             'code_of_conduct', 
             'security', 
             'license', 
@@ -54,7 +55,8 @@ export async function POST(
             'issue_template', 
             'pr_template',
             'codeowners',
-            'copilot_instructions'
+            'copilot_instructions',
+            'funding'
         ];
         const fixableStandards = csRows.filter(row => 
             standardsWithTemplates.includes(row.standard_type)
@@ -79,6 +81,9 @@ export async function POST(
             } else if (standard.standard_type === 'copilot_instructions') {
                 templatePath = path.join(process.cwd(), 'templates', '.github', 'copilot-instructions.md');
                 targetPath = '.github/copilot-instructions.md';
+            } else if (standard.standard_type === 'funding') {
+                templatePath = path.join(process.cwd(), 'templates', '.github', 'FUNDING.yml');
+                targetPath = '.github/FUNDING.yml';
             } else {
                 templatePath = path.join(process.cwd(), 'templates', `${standard.standard_type.toUpperCase()}.md`);
                 targetPath = `${standard.standard_type.toUpperCase()}.md`;
@@ -91,7 +96,7 @@ export async function POST(
                     content
                 });
             } catch (error) {
-                console.error(`Template not found for ${standard.standard_type}:`, error);
+                logger.warn(`Template not found for ${standard.standard_type}:`, error);
             }
         }
 
@@ -116,7 +121,7 @@ export async function POST(
             files: filesToAdd.map(f => f.path)
         });
     } catch (error: unknown) {
-        console.error('Error creating PR for standards:', error);
+        logger.warn('Error creating PR for standards:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

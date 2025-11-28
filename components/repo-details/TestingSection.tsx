@@ -3,6 +3,8 @@
 import { Shield } from 'lucide-react';
 import { BestPractice, Metric } from '@/types/repo';
 
+import { MAX_UNIT_LENGTH } from '../../lib/constants';
+
 interface TestingSectionProps {
   testingStatus?: string;
   coverageScore?: number;
@@ -46,6 +48,26 @@ export function TestingSection({
     const lowerName = m.name.toLowerCase();
     return testingKeywords.some((keyword) => lowerName.includes(keyword));
   });
+
+  // Helper to format metric display value
+  const formatMetricValue = (metric: Metric) => {
+    // If unit is already included or is a long description, just show the value
+    if (!metric.unit || metric.unit.length > MAX_UNIT_LENGTH) {
+      return `${metric.value}`;
+    }
+    
+    // Add space between value and unit for readability
+    return `${metric.value}${metric.unit}`;
+  };
+
+  // Helper to get detail text (unit column when it's descriptive)
+  const getMetricDetail = (metric: Metric) => {
+    // If unit is long (like a note/description), return it as detail text
+    if (metric.unit && metric.unit.length > MAX_UNIT_LENGTH) {
+      return metric.unit;
+    }
+    return null;
+  };
 
   return (
     <div className="bg-slate-800/30 rounded-lg p-4">
@@ -100,15 +122,24 @@ export function TestingSection({
         )}
 
         {/* Additional Testing Metrics from METRICS.md */}
-        {testingMetrics.map((metric, index) => (
-          <div key={`${metric.name}-${index}`} className="flex items-center justify-between text-xs">
-            <span className="text-slate-400">{metric.name}</span>
-            <span className="text-slate-200 font-medium">
-              {metric.value}
-              {metric.unit ?? ''}
-            </span>
-          </div>
-        ))}
+        {testingMetrics.map((metric, index) => {
+          const detail = getMetricDetail(metric);
+          return (
+            <div key={`${metric.name}-${index}`} className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">{metric.name}</span>
+                <span className="text-slate-200 font-medium">
+                  {formatMetricValue(metric)}
+                </span>
+              </div>
+              {detail && (
+                <div className="text-[10px] text-slate-500 italic pl-2">
+                  {detail}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

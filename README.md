@@ -58,7 +58,7 @@ cd overseer
 npm install
 
 # Set up environment variables (see CONTRIBUTING.md for details)
-cp .env.example .env.local
+cp .env.template .env.local
 # Edit .env.local with your credentials
 
 # Setup database
@@ -86,6 +86,10 @@ DATABASE_URL=postgresql://user:pass@host/db
 
 # Google Gemini (optional - for AI summaries)
 GEMINI_API_KEY=your_gemini_api_key
+
+# Optional Netlify
+NETLIFY_SITE_ID=
+NETLIFY_AUTH_TOKEN=
 ```
 
 ## Project Structure

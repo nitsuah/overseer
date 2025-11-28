@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import logger from '@/lib/log';
 import { auth } from '@/auth';
 import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
@@ -73,7 +74,7 @@ export async function POST() {
                     if (Array.isArray(existing) && existing.length > 0 && existing[0]) {
                         repoId = existing[0].id;
                     } else {
-                        console.error(`Failed to get repo ID for ${repo.name}`);
+                        logger.warn(`Failed to get repo ID for ${repo.name}`);
                         continue;
                     }
                 }
@@ -87,7 +88,7 @@ export async function POST() {
                 } catch (branchError: unknown) {
                     // If we can't get branches, just set to 0 and continue
                     const message = branchError instanceof Error ? branchError.message : 'Unknown error';
-                    console.warn(`Could not get branches for ${repo.name}: ${message}`);
+                    logger.warn(`Could not get branches for ${repo.name}: ${message}`);
                     await db`
                     UPDATE repos SET branches_count = 0 WHERE id = ${repoId}
                 `;
@@ -122,10 +123,24 @@ export async function POST() {
                 if (tasksContent) {
                     const tasksData = parseTasks(tasksContent);
                     await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
+                    
+                    // Track seen task IDs to handle duplicates
+                    const seenTaskIds = new Set<string>();
+                    
                     for (const task of tasksData.tasks) {
+                        let taskId = task.id;
+                        let counter = 1;
+                        
+                        // If duplicate task_id, append counter to make it unique
+                        while (seenTaskIds.has(taskId)) {
+                            taskId = `${task.id}-${counter}`;
+                            counter++;
+                        }
+                        seenTaskIds.add(taskId);
+                        
                         await db`
                         INSERT INTO tasks (repo_id, task_id, title, status, section)
-                        VALUES (${repoId}, ${task.id}, ${task.title}, ${task.status}, ${task.section})
+                        VALUES (${repoId}, ${taskId}, ${task.title}, ${task.status}, ${task.section})
                     `;
                     }
                     await db`
@@ -143,13 +158,20 @@ export async function POST() {
 
                 // METRICS.md
                 const metricsContent = await github.getFileContent(repo.name, 'METRICS.md');
+                let coverageScore: number | null = null;
                 if (metricsContent) {
                     const metricsData = parseMetrics(metricsContent);
+                    // Delete existing metrics to prevent duplicates
+                    await db`DELETE FROM metrics WHERE repo_id = ${repoId}`;
                     for (const metric of metricsData.metrics) {
                         await db`
                         INSERT INTO metrics (repo_id, metric_name, value, unit, timestamp)
                         VALUES (${repoId}, ${metric.name}, ${metric.value}, ${metric.unit}, NOW())
                     `;
+                        // Extract coverage metric for repos table
+                        if (metric.name.toLowerCase().includes('coverage') && metric.unit === '%') {
+                            coverageScore = metric.value;
+                        }
                     }
                     await db`
                     INSERT INTO doc_status (repo_id, doc_type, exists, last_checked)
@@ -163,6 +185,13 @@ export async function POST() {
                     ON CONFLICT (repo_id, doc_type) DO UPDATE SET exists = EXCLUDED.exists, last_checked = EXCLUDED.last_checked
                 `;
                 }
+                
+                // Always update coverage_score (set to NULL if no coverage found)
+                await db`
+                    UPDATE repos 
+                    SET coverage_score = ${coverageScore}
+                    WHERE id = ${repoId}
+                `;
 
                 // Other docs
                 const docTypes = ['README.md', 'CHANGELOG.md', 'CONTRIBUTING.md'];
@@ -179,7 +208,7 @@ export async function POST() {
                 successCount++;
             } catch (repoError: unknown) {
                 const message = repoError instanceof Error ? repoError.message : 'Unknown error';
-                console.error(`Error syncing repo ${repo.name}:`, message);
+                logger.warn(`Error syncing repo ${repo.name}:`, message);
                 errorCount++;
                 // Continue with next repo instead of failing entire sync
                 continue;
@@ -193,7 +222,7 @@ export async function POST() {
             errors: errorCount
         });
     } catch (error: unknown) {
-        console.error('Sync error:', error);
+    logger.warn('Sync error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

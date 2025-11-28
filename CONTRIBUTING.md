@@ -57,6 +57,13 @@ Be respectful, constructive, and professional in all interactions.
    - Describe what changed and why
    - Include screenshots for UI changes
 
+## Best Practices
+
+- Env template: provided at `.env.template` — copy to `.env.local`.
+- Dependabot: configured in `.github/dependabot.yml` for npm and Actions.
+- Docker: included `Dockerfile` for production builds.
+- CI/CD & linting/testing: see `package.json` scripts; integrate with your provider (GitHub Actions/Netlify) as needed.
+
 ## Development Setup
 
 This section provides detailed setup instructions.
@@ -72,7 +79,7 @@ cd overseer
 npm install
 
 # Set up environment variables
-cp .env.example .env.local
+cp .env.template .env.local
 # Edit .env.local with your credentials
 
 # Run development server
@@ -98,6 +105,10 @@ DATABASE_URL=postgresql://user:pass@host/db
 # Google Gemini API (optional - for AI summaries)
 # Get from https://aistudio.google.com/app/apikey
 GEMINI_API_KEY=AIzaSy...your_key_here
+
+# Netlify (optional)
+NETLIFY_SITE_ID=
+NETLIFY_AUTH_TOKEN=
 ```
 
 **Note on Gemini API**: As of late 2025, Google deprecated Gemini 1.x models. The codebase uses `gemini-2.5-flash`. Test with `npm run test-gemini` to verify your API key works.

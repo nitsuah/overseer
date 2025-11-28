@@ -9,6 +9,7 @@ import { checkBestPractices } from './best-practices';
 import { checkCommunityStandards } from './community-standards';
 import { calculateHealthScore } from './health-score';
 import { isTestFile, parseTestFile } from './parsers/test-cases';
+import logger from './log';
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -207,6 +208,10 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, null);
     if (roadmapContent) {
         const roadmapData = parseRoadmap(roadmapContent);
+        logger.debug(`[SYNC] ${repo.name} - Roadmap items parsed: ${roadmapData.items.length}`);
+        if (roadmapData.items.length === 0) {
+            logger.debug(`[SYNC] ${repo.name} - Roadmap content preview:`, roadmapContent.substring(0, 200));
+        }
         await db`DELETE FROM roadmap_items WHERE repo_id = ${repoId}`;
         for (const item of roadmapData.items) {
             await db`
@@ -234,11 +239,29 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, null);
     if (tasksContent) {
         const tasksData = parseTasks(tasksContent);
+        logger.debug(`[SYNC] ${repo.name} - Tasks parsed: ${tasksData.tasks.length}`);
+        if (tasksData.tasks.length === 0) {
+            logger.debug(`[SYNC] ${repo.name} - Tasks content preview:`, tasksContent.substring(0, 200));
+        }
         await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
+        
+        // Track seen task IDs to handle duplicates
+        const seenTaskIds = new Set<string>();
+        
         for (const task of tasksData.tasks) {
+            let taskId = task.id;
+            let counter = 1;
+            
+            // If duplicate task_id, append counter to make it unique
+            while (seenTaskIds.has(taskId)) {
+                taskId = `${task.id}-${counter}`;
+                counter++;
+            }
+            seenTaskIds.add(taskId);
+            
             await db`
                 INSERT INTO tasks (repo_id, task_id, title, status, section)
-                VALUES (${repoId}, ${task.id}, ${task.title}, ${task.status}, ${task.section})
+                VALUES (${repoId}, ${taskId}, ${task.title}, ${task.status}, ${task.section})
             `;
         }
     }
@@ -261,6 +284,11 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     let coverageScore: number | null = null;
     if (metricsContent) {
         const metricsData = parseMetrics(metricsContent);
+        // Use logger.debug so these parser logs can be gated in production
+        logger.debug(`[SYNC] ${repo.name} - Metrics parsed: ${metricsData.metrics.length}`);
+        if (metricsData.metrics.length === 0) {
+            logger.debug(`[SYNC] ${repo.name} - Metrics content preview:`, metricsContent.substring(0, 200));
+        }
         await db`DELETE FROM metrics WHERE repo_id = ${repoId}`;
         for (const metric of metricsData.metrics) {
             await db`
@@ -269,19 +297,18 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             `;
             // Extract coverage metric for repos table
             if (metric.name.toLowerCase().includes('coverage') && metric.unit === '%') {
+                // Value is already normalized to 0-100 range by parser
                 coverageScore = metric.value;
             }
         }
-        
-        // Update repos table with coverage if found
-        if (coverageScore !== null) {
-            await db`
-                UPDATE repos 
-                SET coverage_score = ${coverageScore}
-                WHERE id = ${repoId}
-            `;
-        }
     }
+    
+    // Always update coverage_score (set to NULL if no coverage found)
+    await db`
+        UPDATE repos 
+        SET coverage_score = ${coverageScore}
+        WHERE id = ${repoId}
+    `;
     await db`
         INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, last_checked)
         VALUES (${repoId}, 'metrics', ${!!metricsContent}, ${metricsHealthState}, ${metricsContent ? hashContent(metricsContent) : null}, NOW())
@@ -297,6 +324,10 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const featuresHealthState = calculateDocHealthState(!!featuresContent, featuresContent, null);
     if (featuresContent) {
         const featuresData = parseFeatures(featuresContent);
+        logger.debug(`[SYNC] ${repo.name} - Features categories parsed: ${featuresData.categories.length}`);
+        if (featuresData.categories.length === 0) {
+            logger.debug(`[SYNC] ${repo.name} - Features content preview:`, featuresContent.substring(0, 200));
+        }
         await db`DELETE FROM features WHERE repo_id = ${repoId}`;
         for (const category of featuresData.categories) {
             await db`
@@ -404,7 +435,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             WHERE id = ${repoId}
         `;
 
-        console.log(`✓ Health score for ${repo.name}: ${healthScore.total}/100`);
+        logger.info(`✓ Health score for ${repo.name}: ${healthScore.total}/100`);
     } catch (e) {
         console.warn(`Failed to calculate health score for ${repo.fullName}`, e);
     }
@@ -424,5 +455,5 @@ export async function syncSingleRepo(github: GitHubClient, repoName: string) {
     }
 
     await syncRepo(repo, github, db);
-    console.log(`✓ Synced ${repoName}`);
+    logger.info(`✓ Synced ${repoName}`);
 }

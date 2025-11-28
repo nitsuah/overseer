@@ -22,7 +22,7 @@ export function parseRoadmap(content: string): RoadmapData {
     const { data: frontmatter, content: markdown } = matter(content);
 
     const items: RoadmapItemData[] = [];
-    const lines = markdown.split('\n');
+    const lines = markdown.split(/\r?\n/);
     let currentSection = '';
 
     for (const line of lines) {

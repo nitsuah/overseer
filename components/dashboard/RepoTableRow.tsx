@@ -72,10 +72,18 @@ export function RepoTableRow({
   onGenerateSummary,
   onSyncSingleRepo,
 }: RepoTableRowProps) {
-  const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
-  const repoType = (repo.repo_type as RepoType) || typeInfo.type;
+  // Centralized repo type resolution - use stored type or detect from metadata
+  const getRepoType = (): RepoType => {
+    if (repo.repo_type) {
+      return repo.repo_type as RepoType;
+    }
+    const detected = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
+    return detected.type;
+  };
   
-  // Get icon based on actual repo_type if set, otherwise use detected type
+  const repoType = getRepoType();
+  
+  // Get icon based on repo type
   const getTypeIcon = (type: RepoType): string => {
     const iconMap: Record<RepoType, string> = {
       'web-app': '🌐',
@@ -331,6 +339,7 @@ export function RepoTableRow({
         {/* Docs Column */}
         <td className="px-6 py-4">
           <DocStatusDisplay
+            repo={repo}
             details={details}
             docHealth={docHealth}
             repoName={repo.name}
@@ -411,6 +420,9 @@ export function RepoTableRow({
               commitFrequency={repo.commit_frequency}
               busFactor={repo.bus_factor}
               avgPrMergeTimeHours={repo.avg_pr_merge_time_hours}
+              onSyncSingleRepo={onSyncSingleRepo}
+              syncingRepo={syncingRepo}
+              repoNameForSync={repo.name}
             />
           </td>
         </tr>
@@ -439,17 +451,18 @@ function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoD
     setShowPopup(false);
   };
   
-  // Get repo type for doc health calculation
-  const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
-  const repoType = (repo.repo_type as RepoType) || typeInfo.type;
-  
   // Use state to capture timestamp once on mount
   const [now] = useState(() => Date.now());
   
   // Calculate all scores using useMemo
   const scores = useMemo(() => {
+    // Get repo type for calculations (same logic as component level)
+    const calcRepoType = repo.repo_type 
+      ? (repo.repo_type as RepoType)
+      : detectRepoType(repo.name, repo.description, repo.language, repo.topics).type;
+      
     // Calculate documentation score using the same logic as sync
-    const docHealthCalc = calculateDocHealth(details.docStatuses, repoType);
+    const docHealthCalc = calculateDocHealth(details.docStatuses, calcRepoType);
     const docScore = Math.round(docHealthCalc.score);
 
     // Calculate testing score - same formula as health-score.ts
@@ -522,7 +535,7 @@ function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoD
       { label: 'Testing', score: testScore, color: 'blue', weight: '20%' },
       { label: 'Activity', score: activityScore, color: activityColor, weight: '15%' },
     ];
-  }, [repo, details, repoType, now]);
+  }, [repo, details, now]);
 
   // Color mapping for proper Tailwind JIT compilation
   const colorMap: Record<string, { text: string; bg: string; hex: string }> = {
@@ -609,25 +622,6 @@ function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoD
 function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) {
   // Capture timestamp once
   const [now] = useState(() => Date.now());
-  
-  const coreDocs = ['roadmap', 'tasks', 'metrics', 'features', 'readme'];
-  const coreDocsPresent = details.docStatuses.filter(
-    (d) => coreDocs.includes(d.doc_type) && d.exists
-  ).length;
-  const docPercentage = Math.round((coreDocsPresent / coreDocs.length) * 100);
-
-  // Build detailed doc tooltip showing status of each doc
-  const docTooltip = coreDocs
-    .map((docType) => {
-      const status = details.docStatuses.find((d) => d.doc_type === docType);
-      const docName = docType.toUpperCase();
-      if (!status || !status.exists) {
-        return `${docName}: missing`;
-      }
-      const health = status.health_state || 'unknown';
-      return `${docName}: ${health}`;
-    })
-    .join('\n');
 
   const testingCount = details.bestPractices.filter(
     (p) => ['testing_framework', 'ci_cd'].includes(p.practice_type) && p.status === 'healthy'
@@ -678,18 +672,6 @@ function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) 
   return (
     <>
       <span
-        title={docTooltip}
-        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-          docPercentage >= 80
-            ? 'bg-slate-500/20 text-slate-300'
-            : docPercentage >= 50
-            ? 'bg-yellow-500/20 text-yellow-400'
-            : 'bg-red-500/20 text-red-400'
-        }`}
-      >
-        {coreDocsPresent}/{coreDocs.length}
-      </span>
-      <span
         title={`Community Standards: ${csHealthy}/${csTotal} (${csPercentage}%)`}
         className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
           csPercentage >= 70
@@ -732,6 +714,7 @@ function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) 
 }
 
 function DocStatusDisplay({
+  repo,
   details,
   docHealth,
   repoName,
@@ -742,6 +725,7 @@ function DocStatusDisplay({
   onFixAllDocs,
   onSyncSingleRepo,
 }: {
+  repo: Repo;
   details: RepoDetails | undefined;
   docHealth: { score: number } | null;
   repoName: string;
@@ -752,6 +736,10 @@ function DocStatusDisplay({
   onFixAllDocs: () => void;
   onSyncSingleRepo: () => void;
 }) {
+  // Calculate repo type within this component
+  const repoType = repo.repo_type
+    ? (repo.repo_type as RepoType)
+    : detectRepoType(repo.name, repo.description, repo.language, repo.topics).type;
   if (!details) {
     if (!isAuthenticated) {
       return (
@@ -811,6 +799,38 @@ function DocStatusDisplay({
     details.docStatuses.find((d) => d.doc_type === docType && d.exists)
   );
 
+  // Use centralized repo type (already calculated at component level)
+  const expectedDocsMap: Record<string, string[]> = {
+    'web-app': ['readme', 'features', 'roadmap', 'tasks'],
+    'game': ['readme', 'features', 'roadmap', 'tasks'],
+    'library': ['readme', 'features', 'changelog'],
+    'tool': ['readme', 'features', 'roadmap', 'tasks'],
+    'bot': ['readme', 'features', 'roadmap', 'tasks'],
+    'research': ['readme', 'features'],
+    'unknown': ['readme', 'features', 'roadmap']
+  };
+  const expectedDocs = expectedDocsMap[repoType] || expectedDocsMap['unknown'];
+  const existingDocs = useMemo(
+    () => new Set(details.docStatuses.filter(d => d.exists).map(d => d.doc_type)),
+    [details.docStatuses]
+  );
+  const presentCount = expectedDocs.filter((docType: string) => existingDocs.has(docType)).length;
+
+  // Build comprehensive doc health breakdown tooltip
+  const docHealthTooltip = [
+    `Repo Type: ${repoType}`,
+    `Score: ${presentCount}/${expectedDocs.length} docs present = ${docHealth?.score}%`,
+    '',
+    'Expected Documents:',
+    ...expectedDocs.map((docType: string) => {
+      const doc = details.docStatuses.find((d) => d.doc_type === docType);
+      const exists = doc && doc.exists;
+      const healthState = doc?.health_state || (exists ? 'healthy' : 'missing');
+      const status = exists ? (healthState === 'healthy' ? '✓' : healthState === 'dormant' ? '~' : '!') : '✗';
+      return `  ${status} ${docType.toUpperCase()}: ${healthState}`;
+    })
+  ].join('\n');
+
   return (
     <div className="flex items-center gap-2">
       <span title={roadmap.title}>
@@ -825,7 +845,10 @@ function DocStatusDisplay({
       <span title={features.title}>
         <Sparkles className={`h-4 w-4 ${features.exists ? features.iconColor : 'opacity-20'}`} />
       </span>
-      <span className={`text-xs font-medium ml-1 ${getDocHealthColor(docHealth?.score || 0)}`}>
+      <span 
+        className={`text-xs font-medium ml-1 ${getDocHealthColor(docHealth?.score || 0)}`}
+        title={docHealthTooltip}
+      >
         {docHealth?.score}%
       </span>
       {isAuthenticated && !allDocsPresent && docHealth && docHealth.score < 100 && (

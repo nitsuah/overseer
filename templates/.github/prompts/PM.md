@@ -6,6 +6,22 @@
 
 ---
 
+## Introduction
+
+I need you to update this repository's documentation to meet Overseer compliance standards.
+
+**Instructions:**
+
+1. Read the PM.md guidelines below carefully
+2. Read this entire repository to understand what it does
+3. Update ROADMAP.md, TASKS.md, FEATURES.md, METRICS.md, CHANGELOG.md, and other required docs
+4. Preserve all existing content - only fix formatting and add missing sections
+5. Create a feature branch called `docs/overseer-compliance` (NOT main)
+6. Never hallucinate features or metrics - use "TBD" if unsure
+7. Be sure metrics are accurate, double check numbers, run tests yourself, ensure conformity (can always include additional attribute value pairs but keep existing ones unless no longer relevant)
+
+**Critical:** This is about conforming to format standards while keeping all repository-specific content intact.
+
 ## ⚠️ CRITICAL: Read Repository Context First
 
 **Before making ANY changes:**
@@ -226,16 +242,14 @@ Overseer expects these files at the repository root:
 1. **Test Files Count**: Use `Get-ChildItem -Path "src" -Recurse -Filter "*.test.*" | Measure-Object` (PowerShell) or `find src -name "*.test.*" | wc -l` (Unix)
 2. **Source Files Count**: Count TypeScript/JSX files excluding tests and type definitions
 3. **Test Cases Count**: Run test suite and check output summary (e.g., "302 tests passing")
-4. **Code Coverage**: If no coverage report exists, estimate based on test file ratio (~70% if 41 test files cover 64 source files)
+4. **Code Coverage**:
+   - **ALWAYS run coverage tool to get actual percentage** - don't estimate or use TBD
+   - Python: `pytest --cov=src --cov-report=term-missing tests/` (or `pytest -m "not slow" --cov=src --cov-report=term-missing` for fast tests)
+   - Node/JS: `npm run test:coverage` or `npx vitest run --coverage`
+   - Extract the overall percentage from coverage report output
+   - Put detailed breakdowns in Notes column: `| Code Coverage | 86.66% | Overall branch coverage (pytest). Breakdown: module1 87%, module2 85% |`
 5. **Build Time**: Note as "TBD" unless you can actually run build
 6. **Bundle Size**: Note as "TBD" unless dist/ folder exists with build artifacts
-
-**Estimation Guidelines**:
-
-- Good test coverage: 40+ test files for 60+ source files = ~70% estimated
-- Moderate coverage: 10-20 test files = ~40-60% estimated
-- Low coverage: <10 test files = ~20-30% estimated
-- Always mark estimates clearly: `~70%` or note "Estimated from X test files"
 
 **Parser Expectations**:
 
@@ -624,7 +638,7 @@ For each file:
 - Document methodology in README
 - Track experiment results in METRICS.md
 
-### For Repositories with Detailed Existing Roadmaps
+### For Repositories with Detailed Existing Roadmap
 
 **Challenge**: Repository has very detailed ROADMAP (500+ lines) with phases, timelines, estimated efforts
 

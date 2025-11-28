@@ -22,7 +22,7 @@
 - **PR Merge Time**: Average hours from creation to merge for last 30 PRs (Phase 5)
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
-- **Community Standards**: 9 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions
+- **Community Standards**: 10 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING
 
 ### 🤖 AI-Powered Features
 
@@ -35,7 +35,7 @@
 - **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Overseer compliance and avoiding hallucination
 - **Auto-Fix Missing Docs**: One-click PR creation for missing documentation (8 doc types)
 - **Auto-Fix Best Practices**: One-click PR creation for missing best practices (4 types: Dependabot, Env Template, Docker, Netlify Badge)
-- **Auto-Fix Community Standards**: One-click PR creation for missing standards (9 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions)
+- **Auto-Fix Community Standards**: One-click PR creation for missing standards (10 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions, FUNDING)
 - **Batch Operations**: Fix all missing docs or all missing standards with single PR
 - **Doc Health Scoring**: Percentage-based health scores for documentation completeness
 - **Template Health Detection**: Content hashing to identify unchanged/dormant templates
@@ -77,6 +77,8 @@
 - **Automated Sync**: Netlify scheduled functions for background updates
 - **Default Repositories**: Always-visible demo repositories
 - **Custom Repository Support**: Add any public GitHub repository
+- **Rate Limit Monitoring**: Check GitHub API rate limit status via /api/github-rate-limit endpoint
+- **Debug Tools**: Inspect database records for troubleshooting via /api/repos/[name]/debug endpoint
 
 #### Default Repositories
 
@@ -109,7 +111,7 @@ Overseer monitors the following documentation files in each repository:
 
 Overseer tracks adherence to development and community standards with 4-state health tracking (Missing, Dormant, Malformed, Healthy):
 
-### 🛡️ Community Standards (9 Checks)
+### 🛡️ Community Standards (10 Checks)
 
 - **CODE_OF_CONDUCT.md** - Community behavior guidelines (template available)
 - **CONTRIBUTING.md** - Contribution guidelines
@@ -120,6 +122,7 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **Pull Request Templates** - PR guidelines
 - **CODEOWNERS** - Code ownership and review assignments (template available)
 - **Copilot Instructions** - AI assistant guidance file (template available)
+- **FUNDING.yml** - Funding/sponsorship information (template available)
 
 ### ✅ Best Practices (10 Checks)
 

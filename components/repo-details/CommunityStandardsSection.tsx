@@ -41,6 +41,7 @@ export function CommunityStandardsSection({
       'pr_template': 'PR Template',
       'codeowners': 'CODEOWNERS',
       'copilot_instructions': 'COPILOT',
+      'funding': 'FUNDING',
     };
     return labels[type] || type
       .split('_')
@@ -58,7 +59,8 @@ export function CommunityStandardsSection({
       'issue_template',
       'pr_template',
       'codeowners',
-      'copilot_instructions'
+      'copilot_instructions',
+      'funding'
     ].includes(s.standard_type)
   );
 
@@ -95,6 +97,7 @@ export function CommunityStandardsSection({
                 'codeowners',
                 'security',
                 'copilot_instructions',
+                'funding',
                 'license',
                 'issue_template',
                 'pr_template',
@@ -117,7 +120,8 @@ export function CommunityStandardsSection({
               'issue_template',
               'pr_template',
               'codeowners',
-              'copilot_instructions'
+              'copilot_instructions',
+              'funding'
             ].includes(standard.standard_type);
             const isMissing = standard.status === 'missing';
 

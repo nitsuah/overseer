@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import logger from '@/lib/log';
 import { getNeonClient } from '@/lib/db';
 
 export async function POST() {
@@ -19,12 +20,12 @@ export async function POST() {
             await db`SELECT health_state FROM doc_status LIMIT 1`;
             columnExists = true;
         } catch (e) {
-            console.log('Column select failed:', e);
+            logger.warn('Column select failed:', e);
         }
 
-        console.log('Columns in doc_status:', columns);
-        console.log('DB Info:', dbInfo);
-        console.log('Column health_state exists:', columnExists);
+    logger.debug('Columns in doc_status:', columns);
+    logger.debug('DB Info:', dbInfo);
+    logger.debug('Column health_state exists:', columnExists);
 
         return NextResponse.json({
             success: true,
@@ -33,7 +34,7 @@ export async function POST() {
             columnExists
         });
     } catch (error: unknown) {
-        console.error('Check schema error:', error);
+    logger.warn('Check schema error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

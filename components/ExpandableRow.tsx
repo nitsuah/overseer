@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from 'lucide-react';
+import { X, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { Task, RoadmapItem, DocStatus, Metric, Feature, BestPractice, CommunityStandard } from '@/types/repo';
 import { RepositoryStatsSection } from './repo-details/RepositoryStatsSection';
@@ -47,6 +47,9 @@ interface ExpandableRowProps {
   commitFrequency?: number;
   busFactor?: number;
   avgPrMergeTimeHours?: number;
+  onSyncSingleRepo?: () => void;
+  syncingRepo?: string | null;
+  repoNameForSync?: string;
 }
 
 export default function ExpandableRow({
@@ -82,11 +85,34 @@ export default function ExpandableRow({
   commitFrequency,
   busFactor,
   avgPrMergeTimeHours,
+  onSyncSingleRepo,
+  syncingRepo,
+  repoNameForSync,
 }: ExpandableRowProps) {
   const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
+  
+  const isSyncing = syncingRepo === repoNameForSync;
+  const hasNoData = roadmapItems.length === 0 && tasks.length === 0 && features.length === 0;
 
   return (
     <div className="p-6">
+      {/* Sync/Refresh Button - Show when no data or always for convenience */}
+      {onSyncSingleRepo && (hasNoData || isAuthenticated) && (
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSyncSingleRepo();
+            }}
+            disabled={isSyncing}
+            className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 text-sm"
+            title="Refresh repository data"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Syncing...' : 'Refresh Data'}
+          </button>
+        </div>
+      )}
       {/* AI Summary - Only show if generated successfully (not error messages) */}
       {aiSummary && 
        aiSummary.trim() &&

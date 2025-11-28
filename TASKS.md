@@ -4,6 +4,13 @@
 
 ### Recent Completions (November 2025)
 
+- [x] **Windows Line Endings Bug Fix**: Fixed markdown parsers to handle CRLF line endings (split(/\r?\n/) instead of split('\n'))
+- [x] **GraphQL Rate Limit Safety**: Added null check for data.resources.graphql in rate-limit endpoint
+- [x] **TypeScript Build Fixes**: Extended Session interface, fixed array mutation, centralized repo type detection
+- [x] **UI Improvements Phase 4**: Reversed features order, doc health tooltips, removed duplicate badges
+- [x] **FUNDING.yml Standard**: Added 10th community standard with template and auto-fix support
+- [x] **Refresh Button**: Added force refetch capability in detail panel with animated icon
+- [x] **Duplicate Metrics Fix**: Implemented DELETE before INSERT pattern to prevent metric accumulation
 - [x] Documentation system overhaul: PROMPT.md for agent instructions, full audit, accuracy fixes
 - [x] Advanced metrics integration: LOC, test case counting, CI/CD status, vulnerability tracking
 - [x] Contributor analytics: count, commit frequency, bus factor, PR merge time
@@ -16,7 +23,7 @@
 - [x] Enhanced API error responses: Detailed error types and actionable instructions in fix-doc and fix-best-practice endpoints
 - [x] OAuth documentation: Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md guides
 - [x] Best practices auto-fix: Fix buttons for Dependabot, Env Template, Docker, Netlify Badge (4 practices with templates)
-- [x] Documentation accuracy audit: Fixed Community Standards count from 8 to 9 (added CODEOWNERS, Copilot Instructions tracking)
+- [x] Documentation accuracy audit: Fixed Community Standards count from 8 to 10 (added CODEOWNERS, Copilot Instructions, FUNDING)
 - [x] Coverage sync bug fix: Always update coverage_score to NULL when no coverage found (prevents stale values)
 - [x] Batch sync coverage fix: Added coverage extraction to sync-repos endpoint
 - [x] Metrics parser enhancement: Normalize percentage formats (0.8666 → 86.66%, 86.66% stays 86.66)
@@ -29,7 +36,7 @@
 - [x] Repository dashboard with health scoring, filtering, and expandable details
 - [x] Documentation tracking and automated fixes (single/batch PR creation for 8 doc types)
 - [x] AI-powered summaries (Google Gemini 2.5)
-- [x] Best Practices detection (10 checks) and Community Standards tracking (9 checks)
+- [x] Best Practices detection (10 checks) and Community Standards tracking (10 checks)
 - [x] Features parser and display system with category organization
 - [x] Default repositories feature for non-authenticated users
 - [x] Database schema with comprehensive metric tracking

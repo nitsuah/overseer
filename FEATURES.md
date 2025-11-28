@@ -111,7 +111,7 @@ Overseer monitors the following documentation files in each repository:
 
 Overseer tracks adherence to development and community standards with 4-state health tracking (Missing, Dormant, Malformed, Healthy):
 
-### 🛡️ Community Standards (9 Checks)
+### 🛡️ Community Standards (10 Checks)
 
 - **CODE_OF_CONDUCT.md** - Community behavior guidelines (template available)
 - **CONTRIBUTING.md** - Contribution guidelines
@@ -122,6 +122,7 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **Pull Request Templates** - PR guidelines
 - **CODEOWNERS** - Code ownership and review assignments (template available)
 - **Copilot Instructions** - AI assistant guidance file (template available)
+- **FUNDING.yml** - Funding/sponsorship information (template available)
 
 ### ✅ Best Practices (10 Checks)
 

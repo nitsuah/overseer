@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **UX Roadmap Item:** Doc fix preview modal with template preview and pick-and-choose functionality before PR creation (planned)
+
+## [1.3.0] - 2025-11-27
+
+### Added
+
 - **OAuth Error Handling System:** Comprehensive error detection for organization access restrictions (lib/github-errors.ts)
 - **GitHub Error Parsing:** Detects 5 error types (OAuth restrictions, permissions, not found, rate limits, unknown) with user-friendly messages
 - **Auto-Redirect to GitHub:** Automatically opens GitHub OAuth settings when org access restrictions detected
@@ -16,10 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **OAuth Documentation:** Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md user guides
 - **Frontend Error Handling:** Enhanced useRepoActions hook with OAuth detection, toast notifications, and console logging
 - **Template Path Debugging:** Added comprehensive logging to fix-doc endpoint for troubleshooting template resolution issues
-- **UX Roadmap Item:** Doc fix preview modal with template preview and pick-and-choose functionality before PR creation
 - **Best Practices Fix Buttons:** Auto-fix for 4 best practices (Dependabot, Env Template, Docker, Netlify Badge) with one-click PR creation
 - **Rate Limit Status Endpoint:** New /api/github-rate-limit endpoint to check current GitHub API rate limit status
 - **Debug Endpoint:** New /api/repos/[name]/debug endpoint to inspect database records for troubleshooting
+- **FUNDING.yml Community Standard:** 10th community standard check with template and auto-fix support
+- **Refresh Button in Detail Panel:** Force re-sync individual repos with animated RefreshCw icon
 
 ### Changed
 
@@ -28,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **API Error Handling:** All fix endpoints now parse and classify GitHub errors before responding
 - **Metrics Parser:** Enhanced to normalize percentage formats (both 0.8666 and 86.66% now correctly display as 86.66)
 - **Testing Section Display:** Separated metric values from long descriptions with detail text display
+- **Features Display Order:** Reversed to show newest features first (most recent at top)
+- **Doc Health Calculation:** Removed LICENSE, CONTRIBUTING, and ROUTES.md from health scoring (focus on core docs)
+- **Doc Health Tooltips:** Added comprehensive breakdown showing individual document states on hover
+- **Doc Counter Badge:** Removed redundant 5/5 badge from Docs column (health states now in tooltip)
 
 ### Fixed
 
@@ -37,6 +48,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Batch Sync Coverage:** Sync-repos endpoint now properly extracts and updates coverage_score (was missing this logic)
 - **Metrics Duplication:** Removed duplicate metrics that were accumulating from template instructions being parsed
 - **Template Content Pollution:** Identified that markdown templates with example data can pollute parsing results
+- **Duplicate Metrics Display:** Fixed DELETE before INSERT in metrics sync to prevent accumulation
+- **Refresh Not Refetching:** Added force=true parameter to bypass cache when using refresh button
+- **Array Mutation Warning:** Changed .reverse() to .slice().reverse() in FeaturesSection component
+- **Duplicate Repo Type Detection:** Centralized detection logic to prevent multiple calls per render
+- **TypeScript Build Error:** Extended Session interface with accessToken property via module augmentation
+- **Windows Line Endings Bug:** Changed markdown parsers to use split(/\r?\n/) instead of split('\n') to handle CRLF line endings
+- **GraphQL Rate Limit Type Error:** Added null safety check for data.resources.graphql before accessing properties
 
 ## [1.2.0] - 2025-11-27
 
@@ -117,7 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Null safety checks for metric names
 - OAuth callback URL configuration for Netlify
 
-## [0.1.0] - 2024-11-24
+## [0.1.0] - 2025-11-24
 
 ### Implemented
 

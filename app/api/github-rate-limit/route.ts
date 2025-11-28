@@ -12,6 +12,14 @@ export async function GET() {
         const octokit = createOctokitClient(session.accessToken);
         const { data } = await octokit.rateLimit.get();
 
+        const graphql = data.resources?.graphql;
+        if (!graphql) {
+            return NextResponse.json(
+                { error: 'GraphQL rate limit data unavailable' },
+                { status: 502 }
+            );
+        }
+
         return NextResponse.json({
             core: {
                 limit: data.resources.core.limit,
@@ -20,10 +28,10 @@ export async function GET() {
                 used: data.resources.core.used,
             },
             graphql: {
-                limit: data.resources.graphql.limit,
-                remaining: data.resources.graphql.remaining,
-                reset: new Date(data.resources.graphql.reset * 1000).toISOString(),
-                used: data.resources.graphql.used,
+                limit: graphql.limit,
+                remaining: graphql.remaining,
+                reset: new Date(graphql.reset * 1000).toISOString(),
+                used: graphql.used,
             },
         });
     } catch (error: unknown) {

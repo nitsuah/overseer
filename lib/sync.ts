@@ -283,6 +283,11 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     let coverageScore: number | null = null;
     if (metricsContent) {
         const metricsData = parseMetrics(metricsContent);
+        // Debug logging to make metrics parsing visibility consistent with other parsers
+        console.log(`[SYNC] ${repo.name} - Metrics parsed: ${metricsData.metrics.length}`);
+        if (metricsData.metrics.length === 0) {
+            console.log(`[SYNC] ${repo.name} - Metrics content preview:`, metricsContent.substring(0, 200));
+        }
         await db`DELETE FROM metrics WHERE repo_id = ${repoId}`;
         for (const metric of metricsData.metrics) {
             await db`

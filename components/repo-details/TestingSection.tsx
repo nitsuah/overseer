@@ -11,6 +11,9 @@ interface TestingSectionProps {
   metrics?: Metric[];
 }
 
+// Threshold for considering a metric.unit value as a descriptive note (not a unit)
+const MAX_UNIT_LENGTH = 10;
+
 export function TestingSection({
   testingStatus,
   coverageScore,
@@ -50,7 +53,7 @@ export function TestingSection({
   // Helper to format metric display value
   const formatMetricValue = (metric: Metric) => {
     // If unit is already included or is a long description, just show the value
-    if (!metric.unit || metric.unit.length > 10) {
+    if (!metric.unit || metric.unit.length > MAX_UNIT_LENGTH) {
       return `${metric.value}`;
     }
     
@@ -61,7 +64,7 @@ export function TestingSection({
   // Helper to get detail text (unit column when it's descriptive)
   const getMetricDetail = (metric: Metric) => {
     // If unit is long (like a note/description), return it as detail text
-    if (metric.unit && metric.unit.length > 10) {
+    if (metric.unit && metric.unit.length > MAX_UNIT_LENGTH) {
       return metric.unit;
     }
     return null;

@@ -3,6 +3,8 @@
 import { Shield } from 'lucide-react';
 import { BestPractice, Metric } from '@/types/repo';
 
+import { MAX_UNIT_LENGTH } from '../../lib/constants';
+
 interface TestingSectionProps {
   testingStatus?: string;
   coverageScore?: number;
@@ -10,9 +12,6 @@ interface TestingSectionProps {
   bestPractices: BestPractice[];
   metrics?: Metric[];
 }
-
-// Threshold for considering a metric.unit value as a descriptive note (not a unit)
-const MAX_UNIT_LENGTH = 10;
 
 export function TestingSection({
   testingStatus,

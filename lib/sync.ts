@@ -207,6 +207,10 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, null);
     if (roadmapContent) {
         const roadmapData = parseRoadmap(roadmapContent);
+        console.log(`[SYNC] ${repo.name} - Roadmap items parsed: ${roadmapData.items.length}`);
+        if (roadmapData.items.length === 0) {
+            console.log(`[SYNC] ${repo.name} - Roadmap content preview:`, roadmapContent.substring(0, 200));
+        }
         await db`DELETE FROM roadmap_items WHERE repo_id = ${repoId}`;
         for (const item of roadmapData.items) {
             await db`
@@ -234,6 +238,10 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, null);
     if (tasksContent) {
         const tasksData = parseTasks(tasksContent);
+        console.log(`[SYNC] ${repo.name} - Tasks parsed: ${tasksData.tasks.length}`);
+        if (tasksData.tasks.length === 0) {
+            console.log(`[SYNC] ${repo.name} - Tasks content preview:`, tasksContent.substring(0, 200));
+        }
         await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
         for (const task of tasksData.tasks) {
             await db`
@@ -296,6 +304,10 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const featuresHealthState = calculateDocHealthState(!!featuresContent, featuresContent, null);
     if (featuresContent) {
         const featuresData = parseFeatures(featuresContent);
+        console.log(`[SYNC] ${repo.name} - Features categories parsed: ${featuresData.categories.length}`);
+        if (featuresData.categories.length === 0) {
+            console.log(`[SYNC] ${repo.name} - Features content preview:`, featuresContent.substring(0, 200));
+        }
         await db`DELETE FROM features WHERE repo_id = ${repoId}`;
         for (const category of featuresData.categories) {
             await db`

@@ -18,7 +18,7 @@ export function parseFeatures(content: string): FeaturesData {
     const { data: frontmatter, content: markdown } = matter(content);
 
     const categories: FeatureCategory[] = [];
-    const lines = markdown.split('\n');
+    const lines = markdown.split(/\r?\n/);
     let currentCategory: FeatureCategory | null = null;
     let pendingDescription: string[] = [];
 

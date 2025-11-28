@@ -15,7 +15,7 @@ export function parseTasks(content: string): TaskData {
     const { data: frontmatter, content: markdown } = matter(content);
 
     const tasks: Task[] = [];
-    const lines = markdown.split('\n');
+    const lines = markdown.split(/\r?\n/);
     let currentSection = '';
     let currentSubsection = '';
 

@@ -269,6 +269,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             `;
             // Extract coverage metric for repos table
             if (metric.name.toLowerCase().includes('coverage') && metric.unit === '%') {
+                // Value is already normalized to 0-100 range by parser
                 coverageScore = metric.value;
             }
         }

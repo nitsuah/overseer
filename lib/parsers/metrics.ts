@@ -62,9 +62,38 @@ export function parseMetrics(content: string): MetricsData {
 
             if (cells.length >= 2) {
                 const name = cells[0];
-                const valueStr = cells[1].replace(/[^0-9.-]/g, '');
-                const value = parseFloat(valueStr);
-                const unit = cells[2] || null;
+                const rawValue = cells[1];
+                const notes = cells.length >= 3 ? cells[2] : null;
+                
+                // Extract numeric value and unit
+                let value: number;
+                let unit: string | null = null;
+                
+                // Check if value contains a percent sign
+                if (rawValue.includes('%')) {
+                    const numStr = rawValue.replace(/[^0-9.-]/g, '');
+                    value = parseFloat(numStr);
+                    unit = '%';
+                    
+                    // Normalize: if value is between 0 and 1, convert to percentage
+                    // e.g., 0.8666 -> 86.66, but 86.66 stays as 86.66
+                    if (!isNaN(value) && value > 0 && value < 1) {
+                        value = value * 100;
+                    }
+                } else {
+                    // Try to extract just the number
+                    const numStr = rawValue.replace(/[^0-9.-]/g, '');
+                    value = parseFloat(numStr);
+                    
+                    // Extract unit from the original value (e.g., "6s" -> "s", "245KB" -> "KB")
+                    const unitMatch = rawValue.match(/[a-zA-Z]+/);
+                    if (unitMatch) {
+                        unit = unitMatch[0];
+                    } else if (notes) {
+                        // Use notes column as unit if available
+                        unit = notes;
+                    }
+                }
 
                 if (!isNaN(value)) {
                     metrics.push({ name, value, unit });

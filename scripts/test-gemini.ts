@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
+import logger from '../lib/log';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
@@ -7,8 +8,8 @@ dotenv.config({ path: '.env.local' });
 async function testGemini() {
     const apiKey = process.env.GEMINI_API_KEY;
     
-    console.log('Testing Gemini API connection...\n');
-    console.log('API Key configured:', apiKey ? `Yes (${apiKey.substring(0, 10)}...)` : 'No');
+    logger.info('Testing Gemini API connection...\n');
+    logger.info('API Key configured:', apiKey ? `Yes (${apiKey.substring(0, 10)}...)` : 'No');
     
     if (!apiKey) {
         console.error('❌ GEMINI_API_KEY not found in .env.local');
@@ -26,7 +27,7 @@ async function testGemini() {
         ];
         
         for (const modelName of modelsToTry) {
-            console.log(`\nTrying model: ${modelName}...`);
+            logger.info(`\nTrying model: ${modelName}...`);
             try {
                 const model = genAI.getGenerativeModel({ 
                     model: modelName,
@@ -40,39 +41,39 @@ async function testGemini() {
                 const response = result.response;
                 const text = response.text();
                 
-                console.log(`✅ Success with ${modelName}!`);
-                console.log('Response:', text);
-                console.log(`\n🎉 Use this model in lib/ai.ts: "${modelName}"`);
+                logger.info(`✅ Success with ${modelName}!`);
+                logger.debug('Response:', text);
+                logger.info(`\n🎉 Use this model in lib/ai.ts: "${modelName}"`);
                 return;
                 
             } catch (err) {
-                console.log(`❌ ${modelName} failed:`, err instanceof Error ? err.message.split('\n')[0] : 'Unknown error');
+                logger.warn(`❌ ${modelName} failed:`, err instanceof Error ? err.message.split('\n')[0] : 'Unknown error');
             }
         }
         
-        console.error('\n❌ All models failed. Check your API key or try a different region.');
+        logger.warn('\n❌ All models failed. Check your API key or try a different region.');
         process.exit(1);
         
     } catch (error) {
-        console.error('\n❌ Error testing Gemini API:');
+        logger.warn('\n❌ Error testing Gemini API:');
         if (error instanceof Error) {
-            console.error('Name:', error.name);
-            console.error('Message:', error.message);
+            logger.warn('Name:', error.name);
+            logger.warn('Message:', error.message);
             
             // Provide specific guidance
             if (error.message.includes('API_KEY') || error.message.includes('401')) {
-                console.error('\n💡 Fix: Check your GEMINI_API_KEY is valid');
-                console.error('   Get a new key at: https://makersuite.google.com/app/apikey');
+                logger.info('\n💡 Fix: Check your GEMINI_API_KEY is valid');
+                logger.info('   Get a new key at: https://makersuite.google.com/app/apikey');
             } else if (error.message.includes('404') || error.message.includes('not found')) {
-                console.error('\n💡 Fix: Model name may be incorrect or unavailable');
-                console.error('   Try: gemini-1.5-flash, gemini-1.5-pro, or gemini-2.0-flash-exp');
+                logger.info('\n💡 Fix: Model name may be incorrect or unavailable');
+                logger.info('   Try: gemini-1.5-flash, gemini-1.5-pro, or gemini-2.0-flash-exp');
             } else if (error.message.includes('quota') || error.message.includes('429')) {
-                console.error('\n💡 Fix: API quota exceeded - wait or upgrade plan');
+                logger.info('\n💡 Fix: API quota exceeded - wait or upgrade plan');
             }
         }
         
         if (typeof error === 'object' && error !== null) {
-            console.error('\nFull error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+            logger.debug('\nFull error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
         }
         
         process.exit(1);

@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import logger from '../lib/log';
 
 const filePath = path.join(process.cwd(), 'app', 'page.tsx');
 let content = fs.readFileSync(filePath, 'utf8');
@@ -49,4 +50,4 @@ content = content.replace(actionsPattern, `$1${syncCell}$2`);
 content = content.replace(/<td colSpan=\{8\}/g, '<td colSpan={10}');
 
 fs.writeFileSync(filePath, content);
-console.log('✅ Dashboard updated successfully!');
+logger.info('✅ Dashboard updated successfully!');

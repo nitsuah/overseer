@@ -2,6 +2,7 @@ import { config } from 'dotenv';
 import { getNeonClient } from '../lib/db';
 import fs from 'fs';
 import path from 'path';
+import logger from '../lib/log';
 
 // Load environment variables
 config({ path: '.env.local' });
@@ -9,7 +10,7 @@ config({ path: '.env.local' });
 async function migrateSchema() {
     const db = getNeonClient();
     
-    console.log('Starting schema migration...');
+    logger.info('Starting schema migration...');
     
     try {
         // Read schema file
@@ -25,19 +26,19 @@ async function migrateSchema() {
         for (const statement of statements) {
             try {
                 await db.unsafe(statement);
-                console.log('✓ Executed statement');
+                logger.info('✓ Executed statement');
             } catch (error) {
                 // Ignore errors for CREATE TABLE IF NOT EXISTS, etc.
                 if (error instanceof Error && !error.message.includes('already exists')) {
-                    console.error('Error executing statement:', error.message);
-                    console.error('Statement:', statement.substring(0, 100));
+                    logger.warn('Error executing statement:', error.message);
+                    logger.debug('Statement:', statement.substring(0, 100));
                 }
             }
         }
         
-        console.log('✓ Schema migration complete!');
+        logger.info('✓ Schema migration complete!');
     } catch (error) {
-        console.error('Migration failed:', error);
+        logger.warn('Migration failed:', error);
         process.exit(1);
     }
 }

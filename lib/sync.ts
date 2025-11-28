@@ -9,6 +9,7 @@ import { checkBestPractices } from './best-practices';
 import { checkCommunityStandards } from './community-standards';
 import { calculateHealthScore } from './health-score';
 import { isTestFile, parseTestFile } from './parsers/test-cases';
+import logger from './log';
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -207,9 +208,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, null);
     if (roadmapContent) {
         const roadmapData = parseRoadmap(roadmapContent);
-        console.log(`[SYNC] ${repo.name} - Roadmap items parsed: ${roadmapData.items.length}`);
+        logger.debug(`[SYNC] ${repo.name} - Roadmap items parsed: ${roadmapData.items.length}`);
         if (roadmapData.items.length === 0) {
-            console.log(`[SYNC] ${repo.name} - Roadmap content preview:`, roadmapContent.substring(0, 200));
+            logger.debug(`[SYNC] ${repo.name} - Roadmap content preview:`, roadmapContent.substring(0, 200));
         }
         await db`DELETE FROM roadmap_items WHERE repo_id = ${repoId}`;
         for (const item of roadmapData.items) {
@@ -238,9 +239,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, null);
     if (tasksContent) {
         const tasksData = parseTasks(tasksContent);
-        console.log(`[SYNC] ${repo.name} - Tasks parsed: ${tasksData.tasks.length}`);
+        logger.debug(`[SYNC] ${repo.name} - Tasks parsed: ${tasksData.tasks.length}`);
         if (tasksData.tasks.length === 0) {
-            console.log(`[SYNC] ${repo.name} - Tasks content preview:`, tasksContent.substring(0, 200));
+            logger.debug(`[SYNC] ${repo.name} - Tasks content preview:`, tasksContent.substring(0, 200));
         }
         await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
         
@@ -283,10 +284,10 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     let coverageScore: number | null = null;
     if (metricsContent) {
         const metricsData = parseMetrics(metricsContent);
-        // Debug logging to make metrics parsing visibility consistent with other parsers
-        console.log(`[SYNC] ${repo.name} - Metrics parsed: ${metricsData.metrics.length}`);
+        // Use logger.debug so these parser logs can be gated in production
+        logger.debug(`[SYNC] ${repo.name} - Metrics parsed: ${metricsData.metrics.length}`);
         if (metricsData.metrics.length === 0) {
-            console.log(`[SYNC] ${repo.name} - Metrics content preview:`, metricsContent.substring(0, 200));
+            logger.debug(`[SYNC] ${repo.name} - Metrics content preview:`, metricsContent.substring(0, 200));
         }
         await db`DELETE FROM metrics WHERE repo_id = ${repoId}`;
         for (const metric of metricsData.metrics) {
@@ -323,9 +324,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const featuresHealthState = calculateDocHealthState(!!featuresContent, featuresContent, null);
     if (featuresContent) {
         const featuresData = parseFeatures(featuresContent);
-        console.log(`[SYNC] ${repo.name} - Features categories parsed: ${featuresData.categories.length}`);
+        logger.debug(`[SYNC] ${repo.name} - Features categories parsed: ${featuresData.categories.length}`);
         if (featuresData.categories.length === 0) {
-            console.log(`[SYNC] ${repo.name} - Features content preview:`, featuresContent.substring(0, 200));
+            logger.debug(`[SYNC] ${repo.name} - Features content preview:`, featuresContent.substring(0, 200));
         }
         await db`DELETE FROM features WHERE repo_id = ${repoId}`;
         for (const category of featuresData.categories) {

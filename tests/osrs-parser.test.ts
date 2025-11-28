@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import logger from '@/lib/log';
 import { parseRoadmap } from '@/lib/parsers/roadmap';
 import { parseTasks } from '@/lib/parsers/tasks';
 import { parseFeatures } from '@/lib/parsers/features';
@@ -18,8 +19,8 @@ describe('OSRS Parser Tests', () => {
 - [ ] User feedback integration`;
 
     const result = parseRoadmap(content);
-    console.log('Roadmap items:', result.items.length);
-    console.log(JSON.stringify(result.items, null, 2));
+  logger.debug('Roadmap items:', result.items.length);
+  logger.debug(JSON.stringify(result.items, null, 2));
     expect(result.items.length).toBeGreaterThan(0);
   });
 
@@ -40,8 +41,8 @@ describe('OSRS Parser Tests', () => {
 - [x] Set up CI/CD pipeline`;
 
     const result = parseTasks(content);
-    console.log('Tasks:', result.tasks.length);
-    console.log(JSON.stringify(result.tasks, null, 2));
+  logger.debug('Tasks:', result.tasks.length);
+  logger.debug(JSON.stringify(result.tasks, null, 2));
     expect(result.tasks.length).toBeGreaterThan(0);
   });
 
@@ -55,8 +56,8 @@ describe('OSRS Parser Tests', () => {
 - **Feature Name**: Description of what it does`;
 
     const result = parseFeatures(content);
-    console.log('Features:', result.categories.length);
-    console.log(JSON.stringify(result.categories, null, 2));
+  logger.debug('Features:', result.categories.length);
+  logger.debug(JSON.stringify(result.categories, null, 2));
     expect(result.categories.length).toBeGreaterThan(0);
   });
 });

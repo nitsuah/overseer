@@ -3,6 +3,7 @@ import { neon } from '@neondatabase/serverless';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { config } from 'dotenv';
+import logger from '../lib/log';
 
 // Load environment variables
 config({ path: join(process.cwd(), '.env.local') });
@@ -10,12 +11,12 @@ config({ path: join(process.cwd(), '.env.local') });
 async function setupDatabase() {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
-        console.error('❌ DATABASE_URL not configured in environment variables');
-        console.log('Please add DATABASE_URL to your .env.local file');
+        logger.warn('❌ DATABASE_URL not configured in environment variables');
+        logger.info('Please add DATABASE_URL to your .env.local file');
         process.exit(1);
     }
 
-    console.log('📦 Setting up database schema...');
+    logger.info('📦 Setting up database schema...');
 
     const db = neon(databaseUrl);
 
@@ -61,7 +62,7 @@ async function setupDatabase() {
         const tableStatements = filteredStatements.filter(s => s.toUpperCase().startsWith('CREATE TABLE'));
         const indexStatements = filteredStatements.filter(s => s.toUpperCase().startsWith('CREATE INDEX'));
 
-        console.log(`Found ${tableStatements.length} table statements and ${indexStatements.length} index statements`);
+    logger.info(`Found ${tableStatements.length} table statements and ${indexStatements.length} index statements`);
 
         // Execute table creation first
         for (const statement of tableStatements) {
@@ -70,14 +71,14 @@ async function setupDatabase() {
                 await sql.query(statement);
                 // Extract table name - handle "CREATE TABLE IF NOT EXISTS table_name" or "CREATE TABLE table_name"
                 const tableName = statement.match(/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?(\w+)/i)?.[1] || 'unknown';
-                console.log(`✓ Created table: ${tableName}`);
+                logger.info(`✓ Created table: ${tableName}`);
             } catch (error: any) {
                 if (!error.message?.includes('already exists') && !error.message?.includes('duplicate')) {
-                    console.error(`❌ Error creating table: ${error.message}`);
-                    console.error(`   Statement: ${statement.substring(0, 150)}...`);
+                    logger.warn(`❌ Error creating table: ${error.message}`);
+                    logger.debug(`   Statement: ${statement.substring(0, 150)}...`);
                 } else {
                     const tableName = statement.match(/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?(\w+)/i)?.[1] || 'unknown';
-                    console.log(`✓ Table already exists: ${tableName}`);
+                    logger.info(`✓ Table already exists: ${tableName}`);
                 }
             }
         }
@@ -88,21 +89,21 @@ async function setupDatabase() {
                 const sql = db as any;
                 await sql.query(statement);
                 const indexName = statement.match(/CREATE INDEX.*?(\w+)/i)?.[1] || 'unknown';
-                console.log(`✓ Created index: ${indexName}`);
+                logger.info(`✓ Created index: ${indexName}`);
             } catch (error: any) {
                 if (!error.message?.includes('already exists') && !error.message?.includes('duplicate')) {
-                    console.warn(`⚠️  Warning creating index: ${error.message}`);
+                    logger.warn(`⚠️  Warning creating index: ${error.message}`);
                 } else {
                     const indexName = statement.match(/CREATE INDEX.*?(\w+)/i)?.[1] || 'unknown';
-                    console.log(`✓ Index already exists: ${indexName}`);
+                    logger.info(`✓ Index already exists: ${indexName}`);
                 }
             }
         }
 
-        console.log('✅ Database schema created successfully!');
-        console.log('\nYou can now sync your repos from the dashboard.');
+        logger.info('✅ Database schema created successfully!');
+        logger.info('\nYou can now sync your repos from the dashboard.');
     } catch (error: any) {
-        console.error('❌ Error setting up database:', error.message);
+        logger.warn('❌ Error setting up database:', error.message);
         process.exit(1);
     }
 }

@@ -3,6 +3,7 @@ import { getNeonClient } from '@/lib/db';
 import { GitHubClient } from '@/lib/github';
 import { syncRepo } from '@/lib/sync';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
+import logger from '@/lib/log';
 
 export async function POST() {
     try {
@@ -19,13 +20,13 @@ export async function POST() {
 
         for (const defaultRepo of DEFAULT_REPOS) {
             try {
-                console.log(`Syncing default repo: ${defaultRepo.fullName}`);
+                logger.info(`Syncing default repo: ${defaultRepo.fullName}`);
                 const repoMeta = await github.getRepo(defaultRepo.owner, defaultRepo.name);
                 await syncRepo(repoMeta, github, db);
                 syncedCount++;
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                console.error(`Failed to sync ${defaultRepo.fullName}:`, errorMessage);
+                logger.warn(`Failed to sync ${defaultRepo.fullName}:`, errorMessage);
                 errors.push(`${defaultRepo.fullName}: ${errorMessage}`);
             }
         }
@@ -37,7 +38,7 @@ export async function POST() {
             errors: errors.length > 0 ? errors : undefined
         });
     } catch (error: unknown) {
-        console.error('Error seeding default repos:', error);
+        logger.warn('Error seeding default repos:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

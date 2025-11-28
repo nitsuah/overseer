@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import logger from '@/lib/log';
 import { auth } from '@/auth';
 import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
@@ -73,7 +74,7 @@ export async function POST() {
                     if (Array.isArray(existing) && existing.length > 0 && existing[0]) {
                         repoId = existing[0].id;
                     } else {
-                        console.error(`Failed to get repo ID for ${repo.name}`);
+                        logger.warn(`Failed to get repo ID for ${repo.name}`);
                         continue;
                     }
                 }
@@ -87,7 +88,7 @@ export async function POST() {
                 } catch (branchError: unknown) {
                     // If we can't get branches, just set to 0 and continue
                     const message = branchError instanceof Error ? branchError.message : 'Unknown error';
-                    console.warn(`Could not get branches for ${repo.name}: ${message}`);
+                    logger.warn(`Could not get branches for ${repo.name}: ${message}`);
                     await db`
                     UPDATE repos SET branches_count = 0 WHERE id = ${repoId}
                 `;
@@ -207,7 +208,7 @@ export async function POST() {
                 successCount++;
             } catch (repoError: unknown) {
                 const message = repoError instanceof Error ? repoError.message : 'Unknown error';
-                console.error(`Error syncing repo ${repo.name}:`, message);
+                logger.warn(`Error syncing repo ${repo.name}:`, message);
                 errorCount++;
                 // Continue with next repo instead of failing entire sync
                 continue;
@@ -221,7 +222,7 @@ export async function POST() {
             errors: errorCount
         });
     } catch (error: unknown) {
-        console.error('Sync error:', error);
+    logger.warn('Sync error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

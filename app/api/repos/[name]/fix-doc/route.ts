@@ -6,6 +6,7 @@ import { getNeonClient } from '@/lib/db';
 import { parseGitHubError, getOrgAuthInstructions } from '@/lib/github-errors';
 import fs from 'fs/promises';
 import path from 'path';
+import logger from '@/lib/log';
 
 export async function POST(
     request: NextRequest,
@@ -27,7 +28,7 @@ export async function POST(
 
         const repoName = params.name;
         
-        console.log('[fix-doc] Request details:', {
+        logger.debug('[fix-doc] Request details:', {
             docType,
             repoName,
             paramsName: params.name
@@ -40,7 +41,7 @@ export async function POST(
         try {
             content = await fs.readFile(templatePath, 'utf-8');
         } catch (error) {
-            console.error(`[fix-doc] Template not found:`, {
+            logger.warn(`[fix-doc] Template not found:`, {
                 docType,
                 templatePath,
                 cwd: process.cwd(),
@@ -89,7 +90,7 @@ export async function POST(
 
         return NextResponse.json({ success: true, branch: branchName, prUrl });
     } catch (error: unknown) {
-        console.error('Error creating PR:', error);
+        logger.warn('Error creating PR:', error);
         
         // Parse the error and provide helpful context
         const errorDetails = parseGitHubError(error);

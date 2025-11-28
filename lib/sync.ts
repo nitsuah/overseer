@@ -435,7 +435,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             WHERE id = ${repoId}
         `;
 
-        console.log(`✓ Health score for ${repo.name}: ${healthScore.total}/100`);
+        logger.info(`✓ Health score for ${repo.name}: ${healthScore.total}/100`);
     } catch (e) {
         console.warn(`Failed to calculate health score for ${repo.fullName}`, e);
     }
@@ -455,5 +455,5 @@ export async function syncSingleRepo(github: GitHubClient, repoName: string) {
     }
 
     await syncRepo(repo, github, db);
-    console.log(`✓ Synced ${repoName}`);
+    logger.info(`✓ Synced ${repoName}`);
 }

@@ -1,6 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import { throttling } from '@octokit/plugin-throttling';
 import { retry } from '@octokit/plugin-retry';
+import logger from './log';
 
 // Compose Octokit with desired plugins
 const MyOctokit = Octokit.plugin(throttling, retry);
@@ -16,17 +17,17 @@ export function createOctokitClient(token: string) {
         throttle: {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onRateLimit: (retryAfter: number, options: any) => {
-                console.warn(
+                logger.warn(
                     `Request quota exhausted for request ${options.method} ${options.url}`
                 );
                 if (options.request.retryCount === 0) {
-                    console.log(`Retrying after ${retryAfter} seconds!`);
+                    logger.debug(`Retrying after ${retryAfter} seconds!`);
                     return true;
                 }
             },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onSecondaryRateLimit: (retryAfter: number, options: any) => {
-                console.warn(
+                logger.warn(
                     `SecondaryRateLimit detected for request ${options.method} ${options.url}`
                 );
             },

@@ -57,6 +57,13 @@ Be respectful, constructive, and professional in all interactions.
    - Describe what changed and why
    - Include screenshots for UI changes
 
+## Best Practices
+
+- Env template: provided at `.env.template` — copy to `.env.local`.
+- Dependabot: configured in `.github/dependabot.yml` for npm and Actions.
+- Docker: included `Dockerfile` for production builds.
+- CI/CD & linting/testing: see `package.json` scripts; integrate with your provider (GitHub Actions/Netlify) as needed.
+
 ## Development Setup
 
 This section provides detailed setup instructions.

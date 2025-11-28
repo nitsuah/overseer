@@ -1,5 +1,6 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import logger from './log';
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
@@ -9,7 +10,7 @@ export async function generateRepoSummary(
     files: Record<string, string>
 ): Promise<string | null> {
     if (!genAI) {
-        console.warn('GEMINI_API_KEY not configured');
+    logger.warn('GEMINI_API_KEY not configured');
         return null;
     }
 
@@ -44,22 +45,22 @@ Files provided:
         const text = response.text();
         
         if (!text || text.trim().length === 0) {
-            console.error('Empty response from Gemini API');
+            logger.warn('Empty response from Gemini API');
             return 'Summary unavailable (Empty API Response)';
         }
         
         return text;
     } catch (error) {
         // Enhanced error logging for debugging
-        console.error('Gemini API Error:', error);
+    logger.warn('Gemini API Error:', error);
         if (error instanceof Error) {
-            console.error('Error name:', error.name);
-            console.error('Error message:', error.message);
-            console.error('Error stack:', error.stack);
+            logger.warn('Error name:', error.name);
+            logger.warn('Error message:', error.message);
+            logger.warn('Error stack:', error.stack);
         }
         // Check if error has additional details (API errors often have status/statusText)
         if (typeof error === 'object' && error !== null) {
-            console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+            logger.warn('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
         }
         
         // Return more specific error messages
@@ -114,13 +115,13 @@ Context: ${contextFiles}`;
         
         return text;
     } catch (error) {
-        console.error('Gemini API Error:', error);
+    logger.warn('Gemini API Error:', error);
         if (error instanceof Error) {
-            console.error('Error name:', error.name);
-            console.error('Error message:', error.message);
+            logger.warn('Error name:', error.name);
+            logger.warn('Error message:', error.message);
         }
         if (typeof error === 'object' && error !== null) {
-            console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+            logger.warn('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
         }
         
         // Throw with more context

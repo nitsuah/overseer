@@ -3,6 +3,7 @@ import type { Handler } from '@netlify/functions';
 import { GitHubClient } from '../../lib/github';
 import { getNeonClient } from '../../lib/db';
 import { syncRepo } from '../../lib/sync';
+import logger from '../../lib/log';
 import { DEFAULT_REPOS } from '../../lib/default-repos';
 
 export const handler: Handler = async (event) => {
@@ -35,7 +36,7 @@ export const handler: Handler = async (event) => {
                 const repoMeta = await github.getRepo(owner, name);
                 await syncRepo(repoMeta, github, db);
             } catch (e) {
-                console.error(`Failed to sync custom repo ${dbRepo.full_name}:`, e);
+                logger.warn(`Failed to sync custom repo ${dbRepo.full_name}:`, e);
             }
         }
 
@@ -45,14 +46,14 @@ export const handler: Handler = async (event) => {
                 const repoMeta = await github.getRepo(defaultRepo.owner, defaultRepo.name);
                 await syncRepo(repoMeta, github, db);
             } catch (e) {
-                console.error(`Failed to sync default repo ${defaultRepo.fullName}:`, e);
+                logger.warn(`Failed to sync default repo ${defaultRepo.fullName}:`, e);
             }
         }
 
         return { statusCode: 200, body: JSON.stringify({ success: true, count: githubRepos.length + customRepos.length + DEFAULT_REPOS.length }) };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-        console.error('Sync error:', error);
+        logger.warn('Sync error:', error);
         return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
     }
 };

@@ -810,9 +810,11 @@ function DocStatusDisplay({
     'unknown': ['readme', 'features', 'roadmap']
   };
   const expectedDocs = expectedDocsMap[repoType] || expectedDocsMap['unknown'];
-  const presentCount = expectedDocs.filter((docType: string) => 
-    details.docStatuses.find((d) => d.doc_type === docType && d.exists)
-  ).length;
+  const existingDocs = useMemo(
+    () => new Set(details.docStatuses.filter(d => d.exists).map(d => d.doc_type)),
+    [details.docStatuses]
+  );
+  const presentCount = expectedDocs.filter((docType: string) => existingDocs.has(docType)).length;
 
   // Build comprehensive doc health breakdown tooltip
   const docHealthTooltip = [

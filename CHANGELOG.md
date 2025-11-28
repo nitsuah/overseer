@@ -18,17 +18,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Template Path Debugging:** Added comprehensive logging to fix-doc endpoint for troubleshooting template resolution issues
 - **UX Roadmap Item:** Doc fix preview modal with template preview and pick-and-choose functionality before PR creation
 - **Best Practices Fix Buttons:** Auto-fix for 4 best practices (Dependabot, Env Template, Docker, Netlify Badge) with one-click PR creation
+- **Rate Limit Status Endpoint:** New /api/github-rate-limit endpoint to check current GitHub API rate limit status
+- **Debug Endpoint:** New /api/repos/[name]/debug endpoint to inspect database records for troubleshooting
 
 ### Changed
 
 - **Error Messages:** Replaced raw GitHub API errors with actionable, user-friendly messages
 - **Fix Button UX:** Now shows toast notifications with authorization instructions instead of generic errors
 - **API Error Handling:** All fix endpoints now parse and classify GitHub errors before responding
+- **Metrics Parser:** Enhanced to normalize percentage formats (both 0.8666 and 86.66% now correctly display as 86.66)
+- **Testing Section Display:** Separated metric values from long descriptions with detail text display
 
 ### Fixed
 
 - **OAuth Organization Restrictions:** Users now get clear instructions when org blocks OAuth app access instead of cryptic errors
 - **Error Context:** Console logs now show detailed error information for debugging template and authorization issues
+- **Coverage Score Sync:** Always updates coverage_score in repos table (sets to NULL when no coverage found) to prevent stale values bleeding across repos
+- **Batch Sync Coverage:** Sync-repos endpoint now properly extracts and updates coverage_score (was missing this logic)
+- **Metrics Duplication:** Removed duplicate metrics that were accumulating from template instructions being parsed
+- **Template Content Pollution:** Identified that markdown templates with example data can pollute parsing results
 
 ## [1.2.0] - 2025-11-27
 

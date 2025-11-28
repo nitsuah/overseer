@@ -38,6 +38,16 @@
 
 ## Recent Improvements (November 27, 2025)
 
+**Phase 5 Complete** - Bug Fixes & Debugging Tools:
+
+- ✅ **Coverage Sync Bug** - Fixed coverage_score always updating to NULL when no coverage (prevents stale values)
+- ✅ **Batch Sync Coverage** - Added coverage extraction to sync-repos endpoint (was missing)
+- ✅ **Metrics Parser Enhancement** - Normalize percentage formats (0.8666 → 86.66%, 86.66% stays 86.66)
+- ✅ **Testing Display Improvements** - Separate metric values from long descriptions with detail text
+- ✅ **Rate Limit Detection** - Created /api/github-rate-limit endpoint for monitoring API usage
+- ✅ **Debug Endpoint** - Created /api/repos/[name]/debug for database inspection and troubleshooting
+- ✅ **Template Content Pollution Fix** - Identified that template instructions can be parsed as metrics
+
 **Phase 4 Complete** - OAuth Error Handling & UX Improvements:
 
 - ✅ **OAuth Error Detection** - Created lib/github-errors.ts to parse and classify GitHub API errors (5 types)

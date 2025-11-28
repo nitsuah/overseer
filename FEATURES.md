@@ -77,6 +77,8 @@
 - **Automated Sync**: Netlify scheduled functions for background updates
 - **Default Repositories**: Always-visible demo repositories
 - **Custom Repository Support**: Add any public GitHub repository
+- **Rate Limit Monitoring**: Check GitHub API rate limit status via /api/github-rate-limit endpoint
+- **Debug Tools**: Inspect database records for troubleshooting via /api/repos/[name]/debug endpoint
 
 #### Default Repositories
 

@@ -11,7 +11,7 @@
 | Test Cases      | 8       | Auto-counted from test files (parser)                                                                                                                                                               |
 | Database Tables | 8       | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                                                                                     |
 | Repo Columns    | Updated | Added: total_loc, loc_language_breakdown, test_case_count, test_describe_count, ci_status, ci_last_run, ci_workflow_name, vuln_alert_count, vuln_critical_count, vuln_high_count, vuln_last_checked |
-| API Routes      | 17      | Including auth, repos CRUD, fix operations, sync, and admin utilities                                                                                                                               |
+| API Routes      | 19      | Including auth, repos CRUD, fix operations, sync, debug, rate-limit, and admin utilities                                                                                                            |
 | Utility Files   | 3       | lib/github-errors.ts (new), plus existing parsers and clients                                                                                                                                       |
 | Docs Files      | 2       | GITHUB_OAUTH_ORG_ACCESS.md, OAUTH_ORG_FIX_SUMMARY.md (new)                                                                                                                                          |
 

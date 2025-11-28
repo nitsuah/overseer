@@ -17,6 +17,12 @@
 - [x] OAuth documentation: Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md guides
 - [x] Best practices auto-fix: Fix buttons for Dependabot, Env Template, Docker, Netlify Badge (4 practices with templates)
 - [x] Documentation accuracy audit: Fixed Community Standards count from 8 to 9 (added CODEOWNERS, Copilot Instructions tracking)
+- [x] Coverage sync bug fix: Always update coverage_score to NULL when no coverage found (prevents stale values)
+- [x] Batch sync coverage fix: Added coverage extraction to sync-repos endpoint
+- [x] Metrics parser enhancement: Normalize percentage formats (0.8666 → 86.66%, 86.66% stays 86.66)
+- [x] Testing section display: Separate metric values from long descriptions with detail text
+- [x] Rate limit detection: Created /api/github-rate-limit endpoint for monitoring API usage
+- [x] Debug tooling: Created /api/repos/[name]/debug endpoint for database inspection
 
 ### Core Features Delivered (Earlier in Q4 2025)
 
@@ -56,7 +62,15 @@ C	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
 - [ ] Add pick-and-choose functionality for batch fix operations
 - [ ] Add "Do you really want to fix all?" confirmation with per-doc opt-in
 
-### Phase 8: Security Configuration & Tracking
+### Phase 8: Performance & Rate Limiting
+
+- [ ] Implement smart caching for GitHub API calls using content_hash from doc_status
+- [ ] Add ETag support to skip unchanged file fetches
+- [ ] Add delay batching between repos during sync to reduce rate limit pressure
+- [ ] Display rate limit status in UI with warning when approaching limits
+- [ ] Consider implementing exponential backoff for rate limit retries
+
+### Phase 9: Security Configuration & Tracking
 
 - [ ] Add new "Security Details" section to application detail window.
 - [ ] Track GitHub security policy presence (SECURITY.md existence)
@@ -66,7 +80,7 @@ C	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
 - [ ] Track code scanning alerts configuration
 - [ ] Track secret scanning alerts configuration
 
-### Phase 9: Future Enhancements
+### Phase 10: Future Enhancements
 
 - [ ] Add webhook integration for real-time updates
 - [ ] Token Density Metric (LOC per logical unit with AI-assisted parsing)

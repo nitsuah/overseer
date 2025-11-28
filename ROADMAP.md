@@ -103,6 +103,12 @@
 ## Future: Production Deployment & Security Enhancements 🔐
 
 - [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
+- [ ] Rate Limiting Optimization: Smart caching and batching to reduce API pressure
+  - [ ] Content-hash based caching - Skip unchanged files using doc_status.content_hash
+  - [ ] ETag support - Use GitHub ETag headers to avoid redundant fetches
+  - [ ] Batch delays - Add configurable delays between repo syncs
+  - [ ] Rate limit UI - Display current rate limit status with warnings
+  - [ ] Exponential backoff - Retry with backoff when rate limited
 - [ ] Security in Health Score: Add vulnerability metrics to calculation
 - [ ] Security Detail: Track 6 GitHub security configuration settings
   - [ ] Security policy - Define vulnerability reporting process

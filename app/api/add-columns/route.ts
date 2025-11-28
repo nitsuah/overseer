@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import logger from '@/lib/log';
 import { neon } from '@neondatabase/serverless';
 
 export async function POST() {
@@ -111,7 +112,7 @@ export async function POST() {
 
     return NextResponse.json({ success: true, results });
   } catch (error) {
-    console.error('Migration error:', error);
+    logger.warn('Migration error:', error);
     return NextResponse.json(
       { error: 'Failed to add columns', details: (error as Error).message },
       { status: 500 }

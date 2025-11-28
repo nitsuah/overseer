@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
 import { generateRepoSummary } from '@/lib/ai';
+import logger from '@/lib/log';
 
 export async function POST(
     request: NextRequest,
@@ -64,7 +65,7 @@ export async function POST(
 
         return NextResponse.json({ success: true, summary });
     } catch (error: unknown) {
-        console.error('Error generating summary:', error);
+        logger.warn('Error generating summary:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

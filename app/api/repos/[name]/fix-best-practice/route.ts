@@ -5,6 +5,7 @@ import { getNeonClient } from '@/lib/db';
 import { parseGitHubError, getOrgAuthInstructions } from '@/lib/github-errors';
 import fs from 'fs/promises';
 import path from 'path';
+import logger from '@/lib/log';
 
 export async function POST(
     request: NextRequest,
@@ -129,7 +130,7 @@ export async function POST(
                     branchName = `docs/add-netlify-badge-${Date.now()}`;
                     commitMessage = 'docs: add Netlify deployment status badge to README';
                 } catch (error) {
-                    console.error('Error adding Netlify badge:', error);
+                    logger.warn('Error adding Netlify badge:', error);
                     return NextResponse.json({ error: 'Failed to add Netlify badge' }, { status: 500 });
                 }
                 break;
@@ -159,7 +160,7 @@ export async function POST(
             files: filesToAdd.map(f => f.path)
         });
     } catch (error: unknown) {
-        console.error('Error creating PR for best practice:', error);
+        logger.warn('Error creating PR for best practice:', error);
         
         // Parse the error and provide helpful context
         const errorDetails = parseGitHubError(error);

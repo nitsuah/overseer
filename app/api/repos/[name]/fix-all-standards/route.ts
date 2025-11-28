@@ -4,6 +4,7 @@ import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
 import fs from 'fs/promises';
 import path from 'path';
+import logger from '@/lib/log';
 
 export async function POST(
     request: NextRequest,
@@ -95,7 +96,7 @@ export async function POST(
                     content
                 });
             } catch (error) {
-                console.error(`Template not found for ${standard.standard_type}:`, error);
+                logger.warn(`Template not found for ${standard.standard_type}:`, error);
             }
         }
 
@@ -120,7 +121,7 @@ export async function POST(
             files: filesToAdd.map(f => f.path)
         });
     } catch (error: unknown) {
-        console.error('Error creating PR for standards:', error);
+        logger.warn('Error creating PR for standards:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

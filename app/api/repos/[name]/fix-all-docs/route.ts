@@ -1,5 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
+import logger from '@/lib/log';
 import { auth } from '@/auth';
 import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
@@ -49,7 +50,7 @@ export async function POST(
                     content
                 });
             } catch {
-                console.warn(`Template for ${docType} not found`);
+                logger.warn(`Template for ${docType} not found`);
             }
         }
 
@@ -82,7 +83,7 @@ export async function POST(
 
         return NextResponse.json({ success: true, prUrl, count: filesToCreate.length });
     } catch (error: unknown) {
-        console.error('Error fixing all docs:', error);
+        logger.warn('Error fixing all docs:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

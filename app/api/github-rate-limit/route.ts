@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import logger from '@/lib/log';
 import { auth } from '@/auth';
 import { createOctokitClient } from '@/lib/githubClient';
 
@@ -35,7 +36,7 @@ export async function GET() {
             },
         });
     } catch (error: unknown) {
-        console.error('Rate limit check error:', error);
+        logger.warn('Rate limit check error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

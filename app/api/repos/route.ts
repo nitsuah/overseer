@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import logger from '@/lib/log';
 import { getNeonClient } from '@/lib/db';
 import { auth } from '@/auth';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
@@ -55,7 +56,7 @@ export async function GET() {
 
         return NextResponse.json(repos);
     } catch (error: unknown) {
-        console.error('Error fetching repos:', error);
+        logger.warn('Error fetching repos:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

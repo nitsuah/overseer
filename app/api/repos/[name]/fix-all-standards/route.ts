@@ -46,7 +46,7 @@ export async function POST(
 
         // Filter standards that have templates
         const standardsWithTemplates = [
-            'contributing',
+            'contributing', 
             'code_of_conduct', 
             'security', 
             'license', 
@@ -54,7 +54,8 @@ export async function POST(
             'issue_template', 
             'pr_template',
             'codeowners',
-            'copilot_instructions'
+            'copilot_instructions',
+            'funding'
         ];
         const fixableStandards = csRows.filter(row => 
             standardsWithTemplates.includes(row.standard_type)
@@ -79,6 +80,9 @@ export async function POST(
             } else if (standard.standard_type === 'copilot_instructions') {
                 templatePath = path.join(process.cwd(), 'templates', '.github', 'copilot-instructions.md');
                 targetPath = '.github/copilot-instructions.md';
+            } else if (standard.standard_type === 'funding') {
+                templatePath = path.join(process.cwd(), 'templates', '.github', 'FUNDING.yml');
+                targetPath = '.github/FUNDING.yml';
             } else {
                 templatePath = path.join(process.cwd(), 'templates', `${standard.standard_type.toUpperCase()}.md`);
                 targetPath = `${standard.standard_type.toUpperCase()}.md`;

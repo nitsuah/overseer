@@ -610,25 +610,6 @@ function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoD
 function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) {
   // Capture timestamp once
   const [now] = useState(() => Date.now());
-  
-  const coreDocs = ['roadmap', 'tasks', 'metrics', 'features', 'readme'];
-  const coreDocsPresent = details.docStatuses.filter(
-    (d) => coreDocs.includes(d.doc_type) && d.exists
-  ).length;
-  const docPercentage = Math.round((coreDocsPresent / coreDocs.length) * 100);
-
-  // Build detailed doc tooltip showing status of each doc
-  const docTooltip = coreDocs
-    .map((docType) => {
-      const status = details.docStatuses.find((d) => d.doc_type === docType);
-      const docName = docType.toUpperCase();
-      if (!status || !status.exists) {
-        return `${docName}: missing`;
-      }
-      const health = status.health_state || 'unknown';
-      return `${docName}: ${health}`;
-    })
-    .join('\n');
 
   const testingCount = details.bestPractices.filter(
     (p) => ['testing_framework', 'ci_cd'].includes(p.practice_type) && p.status === 'healthy'

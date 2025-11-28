@@ -331,6 +331,7 @@ export function RepoTableRow({
         {/* Docs Column */}
         <td className="px-6 py-4">
           <DocStatusDisplay
+            repo={repo}
             details={details}
             docHealth={docHealth}
             repoName={repo.name}
@@ -732,6 +733,7 @@ function HealthShields({ details, repo }: { details: RepoDetails; repo: Repo }) 
 }
 
 function DocStatusDisplay({
+  repo,
   details,
   docHealth,
   repoName,
@@ -742,6 +744,7 @@ function DocStatusDisplay({
   onFixAllDocs,
   onSyncSingleRepo,
 }: {
+  repo: Repo;
   details: RepoDetails | undefined;
   docHealth: { score: number } | null;
   repoName: string;
@@ -811,6 +814,41 @@ function DocStatusDisplay({
     details.docStatuses.find((d) => d.doc_type === docType && d.exists)
   );
 
+  // Get expected docs based on repo type for detailed tooltip
+  const repoTypeInfo = repo.repo_type 
+    ? { type: repo.repo_type as RepoType, icon: '', color: '' }
+    : detectRepoType(repo.name, repo.description || '', repo.language, repo.topics || []);
+  const repoType = repoTypeInfo.type;
+  
+  const expectedDocsMap: Record<string, string[]> = {
+    'web-app': ['readme', 'license', 'features', 'roadmap', 'tasks', 'contributing', 'routes'],
+    'game': ['readme', 'license', 'features', 'roadmap', 'tasks', 'contributing'],
+    'library': ['readme', 'license', 'features', 'changelog', 'contributing'],
+    'tool': ['readme', 'license', 'features', 'roadmap', 'tasks'],
+    'bot': ['readme', 'license', 'features', 'roadmap', 'tasks'],
+    'research': ['readme', 'license', 'features'],
+    'unknown': ['readme', 'license', 'features', 'roadmap']
+  };
+  const expectedDocs = expectedDocsMap[repoType] || expectedDocsMap['unknown'];
+  const presentCount = expectedDocs.filter((docType: string) => 
+    details.docStatuses.find((d) => d.doc_type === docType && d.exists)
+  ).length;
+
+  // Build comprehensive doc health breakdown tooltip
+  const docHealthTooltip = [
+    `Repo Type: ${repoType}`,
+    `Score: ${presentCount}/${expectedDocs.length} docs present = ${docHealth?.score}%`,
+    '',
+    'Expected Documents:',
+    ...expectedDocs.map((docType: string) => {
+      const doc = details.docStatuses.find((d) => d.doc_type === docType);
+      const exists = doc && doc.exists;
+      const healthState = doc?.health_state || (exists ? 'healthy' : 'missing');
+      const status = exists ? (healthState === 'healthy' ? '✓' : healthState === 'dormant' ? '~' : '!') : '✗';
+      return `  ${status} ${docType.toUpperCase()}: ${healthState}`;
+    })
+  ].join('\n');
+
   return (
     <div className="flex items-center gap-2">
       <span title={roadmap.title}>
@@ -825,7 +863,10 @@ function DocStatusDisplay({
       <span title={features.title}>
         <Sparkles className={`h-4 w-4 ${features.exists ? features.iconColor : 'opacity-20'}`} />
       </span>
-      <span className={`text-xs font-medium ml-1 ${getDocHealthColor(docHealth?.score || 0)}`}>
+      <span 
+        className={`text-xs font-medium ml-1 ${getDocHealthColor(docHealth?.score || 0)}`}
+        title={docHealthTooltip}
+      >
         {docHealth?.score}%
       </span>
       {isAuthenticated && !allDocsPresent && docHealth && docHealth.score < 100 && (

@@ -145,6 +145,8 @@ export async function POST() {
                 const metricsContent = await github.getFileContent(repo.name, 'METRICS.md');
                 if (metricsContent) {
                     const metricsData = parseMetrics(metricsContent);
+                    // Delete existing metrics to prevent duplicates
+                    await db`DELETE FROM metrics WHERE repo_id = ${repoId}`;
                     for (const metric of metricsData.metrics) {
                         await db`
                         INSERT INTO metrics (repo_id, metric_name, value, unit, timestamp)

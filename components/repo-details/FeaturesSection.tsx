@@ -34,7 +34,7 @@ export function FeaturesSection({ features }: FeaturesSectionProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {getDisplayedItems(features, 'features', expandedSections, 3).map((feature, i) => (
+          {getDisplayedItems(features, 'features', expandedSections, 3).reverse().map((feature, i) => (
             <div key={i} className="bg-slate-800/30 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs font-medium text-blue-400">{feature.category}</span>

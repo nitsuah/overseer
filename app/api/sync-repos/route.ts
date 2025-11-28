@@ -143,6 +143,7 @@ export async function POST() {
 
                 // METRICS.md
                 const metricsContent = await github.getFileContent(repo.name, 'METRICS.md');
+                let coverageScore: number | null = null;
                 if (metricsContent) {
                     const metricsData = parseMetrics(metricsContent);
                     // Delete existing metrics to prevent duplicates
@@ -152,6 +153,10 @@ export async function POST() {
                         INSERT INTO metrics (repo_id, metric_name, value, unit, timestamp)
                         VALUES (${repoId}, ${metric.name}, ${metric.value}, ${metric.unit}, NOW())
                     `;
+                        // Extract coverage metric for repos table
+                        if (metric.name.toLowerCase().includes('coverage') && metric.unit === '%') {
+                            coverageScore = metric.value;
+                        }
                     }
                     await db`
                     INSERT INTO doc_status (repo_id, doc_type, exists, last_checked)
@@ -165,6 +170,13 @@ export async function POST() {
                     ON CONFLICT (repo_id, doc_type) DO UPDATE SET exists = EXCLUDED.exists, last_checked = EXCLUDED.last_checked
                 `;
                 }
+                
+                // Always update coverage_score (set to NULL if no coverage found)
+                await db`
+                    UPDATE repos 
+                    SET coverage_score = ${coverageScore}
+                    WHERE id = ${repoId}
+                `;
 
                 // Other docs
                 const docTypes = ['README.md', 'CHANGELOG.md', 'CONTRIBUTING.md'];

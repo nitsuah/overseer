@@ -273,16 +273,14 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
                 coverageScore = metric.value;
             }
         }
-        
-        // Update repos table with coverage if found
-        if (coverageScore !== null) {
-            await db`
-                UPDATE repos 
-                SET coverage_score = ${coverageScore}
-                WHERE id = ${repoId}
-            `;
-        }
     }
+    
+    // Always update coverage_score (set to NULL if no coverage found)
+    await db`
+        UPDATE repos 
+        SET coverage_score = ${coverageScore}
+        WHERE id = ${repoId}
+    `;
     await db`
         INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, last_checked)
         VALUES (${repoId}, 'metrics', ${!!metricsContent}, ${metricsHealthState}, ${metricsContent ? hashContent(metricsContent) : null}, NOW())

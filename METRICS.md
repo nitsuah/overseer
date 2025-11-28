@@ -4,10 +4,10 @@
 
 | Metric              | Value  | Notes                                                                                                                             |
 | ------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| Code Coverage       | 86.66% | Overall branch coverage (vitest). Breakdown: tasks.ts 87.5%, metrics.ts 85.29%, roadmap.ts 90%                                    |
+| Code Coverage       | 40.69% | Overall branch coverage (vitest). Parser subset: tasks.ts 80%, metrics.ts 70.21%, roadmap.ts 90%                                  |
 | Build Time          | ~6s    | Local dev build                                                                                                                   |
 | Bundle Size         | TBD    | Not measured yet                                                                                                                  |
-| Test Files          | 6      | Includes unit tests and E2E tests                                                                                                 |
+| Test Files          | 4      | Current vitest suite (unit); E2E tracked separately                                                                               |
 | Test Cases          | 8      | Auto-counted from test files (parser)                                                                                             |
 | Database Tables     | 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                   |
 | Repo Columns        | 30+    | Including LOC, test counts, CI status, vulnerabilities, contributor analytics, template health tracking                           |

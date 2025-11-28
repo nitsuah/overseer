@@ -46,19 +46,14 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 ## In Progress
 
 - [ ] Fix Github Auth in PROD - currently failing due to OAuth app misconfiguration? or redirect URI issue? (we have local and prod versions in github, both authorized)
-- [ ] When not logged in the two expected default repos are not shown (overseer, nitsuah-io) might be a routes auth thing? idk
+- [ ] When not logged in the two expected default repos are not shown (overseer, nitsuah-io) might be a routes auth thing? GET `https://ghoverseer.netlify.app/api/auth/signin/github?` 500 (Internal Server Error)
+- [ ] AI fix Community Standards Gaps (Cake Test) - Overseer tracks these but doesn't have them itself at root, will need to add using overseer to test the features (maybe using AI generate to take the template, and the repo info, and create them):
+  - CODE_OF_CONDUCT.md (exists in templates/ only)
+  - SECURITY.md (exists in templates/ only)
+  - Issue Templates (exists in templates/ only)
+  - PR Template (not present)
 
-```text
-GET https://ghoverseer.netlify.app/api/auth/signin/github? 500 (Internal Server Error)
-z	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
-ab	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
-uJ	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
-sf	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
-(anonymous)	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
-i7	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
-sB	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
-C	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
-```
+**Priority**: Medium - Nice to have for dogfooding our own standards and integrating AI further.
 
 ## Todo
 

@@ -72,10 +72,18 @@ export function RepoTableRow({
   onGenerateSummary,
   onSyncSingleRepo,
 }: RepoTableRowProps) {
-  const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
-  const repoType = (repo.repo_type as RepoType) || typeInfo.type;
+  // Centralized repo type resolution - use stored type or detect from metadata
+  const getRepoType = (): RepoType => {
+    if (repo.repo_type) {
+      return repo.repo_type as RepoType;
+    }
+    const detected = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
+    return detected.type;
+  };
   
-  // Get icon based on actual repo_type if set, otherwise use detected type
+  const repoType = getRepoType();
+  
+  // Get icon based on repo type
   const getTypeIcon = (type: RepoType): string => {
     const iconMap: Record<RepoType, string> = {
       'web-app': '🌐',
@@ -412,6 +420,9 @@ export function RepoTableRow({
               commitFrequency={repo.commit_frequency}
               busFactor={repo.bus_factor}
               avgPrMergeTimeHours={repo.avg_pr_merge_time_hours}
+              onSyncSingleRepo={onSyncSingleRepo}
+              syncingRepo={syncingRepo}
+              repoNameForSync={repo.name}
             />
           </td>
         </tr>
@@ -440,17 +451,18 @@ function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoD
     setShowPopup(false);
   };
   
-  // Get repo type for doc health calculation
-  const typeInfo = detectRepoType(repo.name, repo.description, repo.language, repo.topics);
-  const repoType = (repo.repo_type as RepoType) || typeInfo.type;
-  
   // Use state to capture timestamp once on mount
   const [now] = useState(() => Date.now());
   
   // Calculate all scores using useMemo
   const scores = useMemo(() => {
+    // Get repo type for calculations (same logic as component level)
+    const calcRepoType = repo.repo_type 
+      ? (repo.repo_type as RepoType)
+      : detectRepoType(repo.name, repo.description, repo.language, repo.topics).type;
+      
     // Calculate documentation score using the same logic as sync
-    const docHealthCalc = calculateDocHealth(details.docStatuses, repoType);
+    const docHealthCalc = calculateDocHealth(details.docStatuses, calcRepoType);
     const docScore = Math.round(docHealthCalc.score);
 
     // Calculate testing score - same formula as health-score.ts
@@ -523,7 +535,7 @@ function HealthBreakdown({ repo, details, health }: { repo: Repo; details: RepoD
       { label: 'Testing', score: testScore, color: 'blue', weight: '20%' },
       { label: 'Activity', score: activityScore, color: activityColor, weight: '15%' },
     ];
-  }, [repo, details, repoType, now]);
+  }, [repo, details, now]);
 
   // Color mapping for proper Tailwind JIT compilation
   const colorMap: Record<string, { text: string; bg: string; hex: string }> = {
@@ -724,6 +736,10 @@ function DocStatusDisplay({
   onFixAllDocs: () => void;
   onSyncSingleRepo: () => void;
 }) {
+  // Calculate repo type within this component
+  const repoType = repo.repo_type
+    ? (repo.repo_type as RepoType)
+    : detectRepoType(repo.name, repo.description, repo.language, repo.topics).type;
   if (!details) {
     if (!isAuthenticated) {
       return (
@@ -783,12 +799,7 @@ function DocStatusDisplay({
     details.docStatuses.find((d) => d.doc_type === docType && d.exists)
   );
 
-  // Get expected docs based on repo type for detailed tooltip
-  const repoTypeInfo = repo.repo_type 
-    ? { type: repo.repo_type as RepoType, icon: '', color: '' }
-    : detectRepoType(repo.name, repo.description || '', repo.language, repo.topics || []);
-  const repoType = repoTypeInfo.type;
-  
+  // Use centralized repo type (already calculated at component level)
   const expectedDocsMap: Record<string, string[]> = {
     'web-app': ['readme', 'features', 'roadmap', 'tasks'],
     'game': ['readme', 'features', 'roadmap', 'tasks'],

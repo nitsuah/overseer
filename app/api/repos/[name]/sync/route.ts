@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
+import logger from '@/lib/log';
 import { syncRepo } from '@/lib/sync';
 
 export async function POST(
@@ -63,7 +64,7 @@ export async function POST(
 
         return NextResponse.json({ success: true, repo: repoName });
     } catch (error: unknown) {
-        console.error('Error syncing repo:', error);
+        logger.warn('Error syncing repo:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

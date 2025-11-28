@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import logger from '@/lib/log';
 import { getNeonClient } from '@/lib/db';
 
 export async function GET(
@@ -52,7 +53,7 @@ export async function GET(
             },
         }, { status: 200 });
     } catch (error: unknown) {
-        console.error('Debug error:', error);
+    logger.warn('Debug error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

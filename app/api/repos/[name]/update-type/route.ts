@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import logger from '@/lib/log';
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
 
@@ -39,7 +40,7 @@ export async function PATCH(
 
         return NextResponse.json({ success: true, type });
     } catch (error: unknown) {
-        console.error('Error updating repo type:', error);
+        logger.warn('Error updating repo type:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: errorMessage }, { status: 500 });
     }

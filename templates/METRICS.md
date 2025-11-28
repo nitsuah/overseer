@@ -38,7 +38,7 @@ PARSEABLE METRIC NAMES (case-insensitive):
 - "Open Issues" → Health indicator
 - "Health Score" → Overall health
 
-GOOD EXAMPLES - REMOVE WHEN FIRST TIME:
+GOOD EXAMPLES - REMOVE THESE EXAMPLES AFTER FIRST USE:
 ## Core Metrics
 
 | Metric         | Value  | |

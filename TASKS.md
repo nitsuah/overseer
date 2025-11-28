@@ -32,7 +32,20 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ## In Progress
 
-_No active tasks - ready for next assignment._
+- [ ] Fix Github Auth in PROD - currently failing due to OAuth app misconfiguration? or redirect URI issue? (we have local and prod versions in github, both authorized)
+- [ ] When not logged in the two expected default repos are not shown (overseer, nitsuah-io) might be a routes auth thing? idk
+
+```text
+GET https://ghoverseer.netlify.app/api/auth/signin/github? 500 (Internal Server Error)
+z	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
+ab	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
+uJ	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
+sf	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
+(anonymous)	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
+i7	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
+sB	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
+C	@	/_next/static/chunks…4a2ae1e8de70d8.js:1
+```
 
 ## Todo
 

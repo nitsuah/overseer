@@ -29,6 +29,3 @@ async function addIsHiddenColumn() {
 }
 
 addIsHiddenColumn();
-
-
-

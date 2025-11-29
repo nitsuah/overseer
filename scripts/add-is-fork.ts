@@ -21,7 +21,7 @@ async function addIsForkColumn() {
     try {
         const sql = db as any;
         await sql.query('ALTER TABLE repos ADD COLUMN IF NOT EXISTS is_fork BOOLEAN DEFAULT FALSE');
-    logger.info('✅ Column added successfully!');
+        logger.info('✅ Column added successfully!');
     } catch (error: any) {
         logger.warn('❌ Error:', error.message);
         process.exit(1);
@@ -29,6 +29,3 @@ async function addIsForkColumn() {
 }
 
 addIsForkColumn();
-
-
-

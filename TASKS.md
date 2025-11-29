@@ -45,7 +45,7 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ## In Progress
 
-- [ ] Dependency updates - build(deps-dev): bump @types/node from 20.19.25 to 24.10.1, bump dotenv from 16.6.1 to 17.2.3, bump the minor-and-patch group with 8 updates (prs for these are open already, checkout, test, merge)
+- [ ] Dependency updates - build(deps-dev): bump @types/node from 20.19.25 to 24.10.1, bump dotenv from 16.6.1 to 17.2.3, bump the minor-and-patch group with 8 updates
 
 ## Todo
 

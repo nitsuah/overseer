@@ -3,6 +3,7 @@
 import { ListTodo, CheckCircle2, Clock, Circle } from 'lucide-react';
 import { Task } from '@/types/repo';
 import { groupBySubsection, getDisplayedItems } from '@/lib/expandable-row-utils';
+import { parseBoldText } from '@/lib/markdown-utils.tsx';
 import { useState } from 'react';
 
 interface TasksSectionProps {
@@ -52,7 +53,7 @@ export function TasksSection({ tasks }: TasksSectionProps) {
                 {tasksByStatus['in-progress'].map((task, i) => (
                   <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
                     <span className="mt-1.5 w-1 h-1 rounded-full bg-yellow-500 shrink-0" />
-                    <span>{task.title}</span>
+                    <span>{parseBoldText(task.title)}</span>
                   </li>
                 ))}
               </ul>
@@ -80,7 +81,7 @@ export function TasksSection({ tasks }: TasksSectionProps) {
                   {items.map((task, i) => (
                     <li key={i} className="text-xs text-slate-400 flex items-start gap-2">
                       <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-600 shrink-0" />
-                      <span>{task.title}</span>
+                      <span>{parseBoldText(task.title)}</span>
                     </li>
                   ))}
                 </ul>
@@ -115,7 +116,7 @@ export function TasksSection({ tasks }: TasksSectionProps) {
                       className="text-xs text-slate-500 line-through flex items-start gap-2"
                     >
                       <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-700 shrink-0" />
-                      <span>{task.title}</span>
+                      <span>{parseBoldText(task.title)}</span>
                     </li>
                   )
                 )}

@@ -55,7 +55,7 @@ export async function GET(
         // Get features - may not exist yet
         let features: unknown[] = [];
         try {
-            features = await db`SELECT * FROM features WHERE repo_id = ${repo.id} ORDER BY created_at DESC`;
+            features = await db`SELECT * FROM features WHERE repo_id = ${repo.id} ORDER BY created_at ASC`;
         } catch (e) {
             logger.warn('Features table not queried:', e);
         }

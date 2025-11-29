@@ -4,11 +4,13 @@
 
 | Metric              | Value  | Notes                                                                                                                             |
 | ------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| Code Coverage       | 40.69% | Overall branch coverage (vitest). Parser subset: tasks.ts 80%, metrics.ts 70.21%, roadmap.ts 90%                                  |
+| Code Coverage       | 49.78% | Overall branch coverage (vitest). Parser subset: tasks.ts 80%, metrics.ts 70.21%, roadmap.ts 90%                                  |
 | Build Time          | ~6s    | Local dev build                                                                                                                   |
 | Bundle Size         | TBD    | Not measured yet                                                                                                                  |
-| Test Files          | 4      | Current vitest suite (unit); E2E tracked separately                                                                               |
-| Test Cases          | 8      | Auto-counted from test files (parser)                                                                                             |
+| Test Files          | 5      | Vitest unit tests (lib/github.test.ts, lib/parsers/\*.test.ts, tests/osrs-parser.test.ts)                                         |
+| Test Cases          | 11     | Vitest unit tests passing                                                                                                         |
+| E2E Test Files      | 1      | Playwright E2E tests (tests/dashboard.spec.ts)                                                                                    |
+| E2E Test Cases      | 5      | Playwright tests passing (unauthenticated state, performance)                                                                     |
 | Database Tables     | 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                   |
 | Repo Columns        | 30+    | Including LOC, test counts, CI status, vulnerabilities, contributor analytics, template health tracking                           |
 | API Routes          | 20+    | Including auth, repos CRUD, fix operations, sync, debug, rate-limit, and admin utilities                                          |
@@ -25,7 +27,7 @@
 | PR Turnaround | < 1 day    | Typical merge time   |
 | Skipped Tests | 0          | All tests enabled    |
 | Health Score  | 95/100     | Overseer's own score |
-| Last Updated  | 2025-11-27 | Last audit date      |
+| Last Updated  | 2025-11-29 | Last audit date      |
 
 <!--
 AGENT INSTRUCTIONS:

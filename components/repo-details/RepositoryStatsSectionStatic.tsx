@@ -11,9 +11,6 @@ interface RepositoryStatsSectionStaticProps {
   branches?: number;
   totalLoc?: number;
   locLanguageBreakdown?: Record<string, number>;
-  vulnAlertCount?: number;
-  vulnCriticalCount?: number;
-  vulnHighCount?: number;
   contributorCount?: number;
   commitFrequency?: number;
   busFactor?: number;
@@ -31,9 +28,6 @@ export function RepositoryStatsSectionStatic({
   branches,
   totalLoc,
   locLanguageBreakdown,
-  vulnAlertCount,
-  vulnCriticalCount,
-  vulnHighCount,
   contributorCount,
   commitFrequency,
   busFactor,
@@ -103,7 +97,7 @@ export function RepositoryStatsSectionStatic({
             {/* Stars */}
             {stars !== undefined && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Stars</span>
+                <span className="text-slate-400 flex items-center gap-1"><span>⭐</span>Stars</span>
                 <span className="text-slate-200 font-medium">{stars.toLocaleString()}</span>
               </div>
             )}
@@ -111,7 +105,7 @@ export function RepositoryStatsSectionStatic({
           {/* Forks */}
           {forks !== undefined && (
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Forks</span>
+              <span className="text-slate-400 flex items-center gap-1"><span>🔀</span>Forks</span>
               <span className="text-slate-200 font-medium">{forks.toLocaleString()}</span>
             </div>
           )}
@@ -119,7 +113,7 @@ export function RepositoryStatsSectionStatic({
           {/* Branches */}
           {branches !== undefined && (
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Branches</span>
+              <span className="text-slate-400 flex items-center gap-1"><span>🌿</span>Branches</span>
               <span className="text-slate-200 font-medium">{branches}</span>
             </div>
           )}
@@ -127,7 +121,7 @@ export function RepositoryStatsSectionStatic({
           {/* Total Lines of Code */}
           {totalLoc !== undefined && totalLoc > 0 && (
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Lines of Code</span>
+              <span className="text-slate-400 flex items-center gap-1"><span>📝</span>Lines of Code</span>
               <span className="text-slate-200 font-medium">{formatLocNumber(totalLoc)}</span>
             </div>
           )}
@@ -135,8 +129,8 @@ export function RepositoryStatsSectionStatic({
           {/* Language Breakdown */}
           {locLanguageBreakdown && Object.keys(locLanguageBreakdown).length > 0 && (
             <div className="pt-2 border-t border-slate-700/50">
-              <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">
-                Languages
+              <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2 flex items-center gap-1">
+                <span>💬</span>Languages
               </div>
               {Object.entries(locLanguageBreakdown)
                 .sort(([, a], [, b]) => b - a)
@@ -179,28 +173,6 @@ export function RepositoryStatsSectionStatic({
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">Avg PR Merge Time</span>
               <span className="text-slate-200 font-medium">{typeof avgPrMergeTimeHours === 'number' ? avgPrMergeTimeHours.toFixed(1) : avgPrMergeTimeHours}h</span>
-            </div>
-          )}
-
-          {/* Vulnerabilities */}
-          {(vulnAlertCount !== undefined && vulnAlertCount > 0) && (
-            <div className="pt-2 border-t border-slate-700/50">
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-slate-400">Vulnerabilities</span>
-                <span className="text-red-400 font-medium">{vulnAlertCount}</span>
-              </div>
-              {vulnCriticalCount !== undefined && vulnCriticalCount > 0 && (
-                <div className="flex items-center justify-between text-xs ml-2">
-                  <span className="text-slate-500 text-[10px]">Critical</span>
-                  <span className="text-red-400 font-medium">{vulnCriticalCount}</span>
-                </div>
-              )}
-              {vulnHighCount !== undefined && vulnHighCount > 0 && (
-                <div className="flex items-center justify-between text-xs ml-2">
-                  <span className="text-slate-500 text-[10px]">High</span>
-                  <span className="text-orange-400 font-medium">{vulnHighCount}</span>
-                </div>
-              )}
             </div>
           )}
 

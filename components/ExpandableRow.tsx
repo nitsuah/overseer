@@ -130,9 +130,6 @@ export default function ExpandableRow({
             branches={branches}
             totalLoc={totalLoc}
             locLanguageBreakdown={locLanguageBreakdown}
-            vulnAlertCount={vulnAlertCount}
-            vulnCriticalCount={vulnCriticalCount}
-            vulnHighCount={vulnHighCount}
             contributorCount={contributorCount}
             commitFrequency={commitFrequency}
             busFactor={busFactor}
@@ -233,6 +230,9 @@ export default function ExpandableRow({
             {/* Issues */}
             <IssuesSection 
               metrics={metrics}
+              vulnAlertCount={vulnAlertCount}
+              vulnCriticalCount={vulnCriticalCount}
+              vulnHighCount={vulnHighCount}
               isExpanded={row3Expanded}
               onToggleExpanded={() => setRow3Expanded(!row3Expanded)}
             />

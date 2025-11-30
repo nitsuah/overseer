@@ -5,7 +5,7 @@
 ### What Works ✅
 
 - **Local Development** (`localhost:3000`): OAuth works perfectly with separate dev OAuth app
-- **Production** (`ghoverseer.netlify.app`): Should work with production OAuth app (testing pending)
+- **Production** (`ghoverseer.netlify.app`): working!
 
 ### What Doesn't Work ❌
 
@@ -17,7 +17,7 @@ When accessing preview deployments (branch deploys on Netlify), NextAuth OAuth f
 
 ### Evidence
 
-```
+```text
 # Expected OAuth redirect (what should happen):
 redirect_uri=https://fix-gh-auth--ghoverseer.netlify.app/api/auth/callback/github
 
@@ -324,9 +324,9 @@ logger.info('ALL ENV VARS:', {
 });
 ```
 
-2. **Check NextAuth's resolved config** at runtime (in browser console)
-3. **Test with NextAuth debug mode** enabled (already have `debug: true`)
-4. **Review NextAuth v5 changelog** for Netlify-specific behaviors
+1. **Check NextAuth's resolved config** at runtime (in browser console)
+2. **Test with NextAuth debug mode** enabled (already have `debug: true`)
+3. **Review NextAuth v5 changelog** for Netlify-specific behaviors
 
 ## Related Documentation Files
 

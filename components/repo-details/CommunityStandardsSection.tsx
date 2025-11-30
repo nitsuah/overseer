@@ -69,17 +69,15 @@ export function CommunityStandardsSection({
 
   return (
     <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
-      <button
+      <div
+        className="w-full px-4 py-3 hover:bg-slate-700/40 transition-colors border-b border-slate-700/30 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 text-left hover:bg-slate-700/40 transition-colors border-b border-slate-700/30"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <ShieldCheck className="h-4 w-4 text-green-400" />
-            <h4 className="text-sm font-semibold text-slate-200">Community Standards</h4>
-            <span className="text-xs text-slate-500 font-normal">
-              ({communityStandards.length})
-            </span>
+            <h4 className="text-sm font-semibold text-slate-200">Standards</h4>
+            <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
           </div>
           <div className="flex items-center gap-2">
             {isAuthenticated && missingWithTemplates.length > 0 && onFixAllStandards && repoName && (
@@ -94,10 +92,9 @@ export function CommunityStandardsSection({
                 Fix All ({missingWithTemplates.length})
               </button>
             )}
-            <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
           </div>
         </div>
-      </button>
+      </div>
       {isExpanded && (
         <div className="px-4 py-3">
           {communityStandards.length === 0 ? (

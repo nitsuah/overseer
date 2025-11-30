@@ -74,18 +74,30 @@ export function TestingSection({
 
   return (
     <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
-      <button
+      <div
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 text-left hover:bg-slate-700/40 transition-colors border-b border-slate-700/30"
+        className="w-full px-4 py-3 hover:bg-slate-700/40 transition-colors border-b border-slate-700/30 cursor-pointer"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-blue-400" />
             <h4 className="text-sm font-semibold text-slate-200">Testing</h4>
+            <span className="text-slate-500 text-xs ml-1">{isExpanded ? '▼' : '▶'}</span>
           </div>
-          <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
+          {/* Coverage Score - Inline */}
+          {coverageScore !== undefined && (
+            <div className="flex items-center gap-2 flex-1">
+              <div className="flex-1 max-w-[120px] bg-slate-700 rounded-full h-1.5">
+                <div
+                  className="bg-linear-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all"
+                  style={{ width: `${Math.min(coverageScore, 100)}%` }}
+                />
+              </div>
+              <span className="text-xs font-bold text-blue-400 whitespace-nowrap">{coverageScore}%</span>
+            </div>
+          )}
         </div>
-      </button>
+      </div>
       {isExpanded && (
         <div className="px-4 py-3">
           <div className="space-y-3">
@@ -116,22 +128,6 @@ export function TestingSection({
               </div>
             )}
           </>
-        )}
-
-        {/* Coverage Score */}
-        {coverageScore !== undefined && (
-          <div>
-            <div className="flex items-center justify-between mb-2 text-xs">
-              <span className="text-slate-400">Coverage</span>
-              <span className="text-sm font-bold text-blue-400">{coverageScore}%</span>
-            </div>
-            <div className="w-full bg-slate-700 rounded-full h-2">
-              <div
-                className="bg-linear-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all"
-                style={{ width: `${Math.min(coverageScore, 100)}%` }}
-              />
-            </div>
-          </div>
         )}
 
         {/* Additional Testing Metrics from METRICS.md */}

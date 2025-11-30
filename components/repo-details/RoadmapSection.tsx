@@ -105,6 +105,9 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
           {displayedQuarters.map(q => ({ quarter: q, items: quarterGroups[q] })).map((group, i) => {
             const cardKey = `card-${i}`;
             const isCardExpanded = expandedCards.has(cardKey);
+            const isCompleted = group.items.every(item => item.status === 'completed');
+            const headerColor = isCompleted ? 'text-green-400' : 'text-purple-400';
+            const linkColor = isCompleted ? 'text-green-400 hover:text-green-300' : 'text-blue-400 hover:text-blue-300';
             
             return (
               <div key={i} className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
@@ -114,7 +117,7 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-purple-400">{group.quarter}</span>
+                      <span className={`text-sm font-semibold ${headerColor}`}>{group.quarter}</span>
                       <span className="text-[11px] text-slate-500">({group.items.length} items)</span>
                     </div>
                     <span className="text-slate-500 text-xs">{isCardExpanded ? '▼' : '▶'}</span>
@@ -142,7 +145,7 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
                     {group.items.length > 5 && (
                       <button
                         onClick={() => toggleSection(`quarter-${i}`)}
-                        className="text-[10px] text-blue-400 hover:text-blue-300 pl-3"
+                        className={`text-[10px] ${linkColor} pl-3`}
                       >
                         {expandedSections.has(`quarter-${i}`)
                           ? 'Show less'

@@ -42,17 +42,15 @@ export function DocumentationSection({
 
   return (
     <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
-      <button
+      <div
+        className="w-full px-4 py-3 hover:bg-slate-700/40 transition-colors border-b border-slate-700/30 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 text-left hover:bg-slate-700/40 transition-colors border-b border-slate-700/30"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <span className="text-lg">📄</span>
             <h4 className="text-sm font-semibold text-slate-200">Documentation</h4>
-            <span className="text-xs text-slate-500 font-normal">
-              ({docStatuses.length})
-            </span>
+            <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
           </div>
           <div className="flex items-center gap-2">
             {isAuthenticated && missingWithTemplates.length > 0 && onFixAllDocs && repoName && (
@@ -67,10 +65,9 @@ export function DocumentationSection({
                 Fix All ({missingWithTemplates.length})
               </button>
             )}
-            <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
           </div>
         </div>
-      </button>
+      </div>
       {isExpanded && (
         <div className="px-4 py-3">
           {/* Core Docs */}

@@ -130,6 +130,9 @@ export function TasksSection({ tasks }: TasksSectionProps) {
             
             const cardKey = `card-${i}`;
             const isCardExpanded = expandedCards.has(cardKey);
+            const isDone = group.items.every(item => item.status === 'done');
+            const headerColor = isDone ? 'text-green-400' : 'text-blue-400';
+            const linkColor = isDone ? 'text-green-400 hover:text-green-300' : 'text-blue-400 hover:text-blue-300';
             
             return (
               <div key={i} className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
@@ -139,7 +142,7 @@ export function TasksSection({ tasks }: TasksSectionProps) {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-blue-400">{displayName}</span>
+                      <span className={`text-sm font-semibold ${headerColor}`}>{displayName}</span>
                       <span className="text-[11px] text-slate-500">({group.items.length} items)</span>
                     </div>
                     <span className="text-slate-500 text-xs">{isCardExpanded ? '▼' : '▶'}</span>
@@ -167,7 +170,7 @@ export function TasksSection({ tasks }: TasksSectionProps) {
                     {group.items.length > 5 && (
                       <button
                         onClick={() => toggleSection(`subsection-${i}`)}
-                        className="text-[10px] text-blue-400 hover:text-blue-300 pl-3"
+                        className={`text-[10px] ${linkColor} pl-3`}
                       >
                         {expandedSections.has(`subsection-${i}`)
                           ? 'Show less'

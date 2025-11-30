@@ -19,15 +19,19 @@ logger.info('Initializing NextAuth with:', {
     nextauthSecretPresent: !!process.env.NEXTAUTH_SECRET,
     nodeEnv: process.env.NODE_ENV,
     nextauthUrl: process.env.NEXTAUTH_URL,
-    netlifUrl: process.env.URL,
+    netlifyUrl: process.env.URL,
+    deployPrimeUrl: process.env.DEPLOY_PRIME_URL,
+    deployUrl: process.env.DEPLOY_URL,
 });
 
 // Set NEXTAUTH_URL from Netlify URL if available
 // This ensures NextAuth uses the correct public URL even in dev mode
-const publicUrl = process.env.URL || process.env.NEXTAUTH_URL;
+// DEPLOY_PRIME_URL is the URL for this specific deploy (works for previews)
+// URL is the main site URL (production)
+const publicUrl = process.env.DEPLOY_PRIME_URL || process.env.URL || process.env.NEXTAUTH_URL;
 if (publicUrl && !process.env.NEXTAUTH_URL) {
     process.env.NEXTAUTH_URL = publicUrl;
-    logger.info('Set NEXTAUTH_URL from Netlify URL:', publicUrl);
+    logger.info('Set NEXTAUTH_URL from Netlify:', { from: process.env.DEPLOY_PRIME_URL ? 'DEPLOY_PRIME_URL' : 'URL', url: publicUrl });
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({

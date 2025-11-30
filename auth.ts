@@ -89,8 +89,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             logger.info('Redirect callback', { url, baseUrl, env: process.env.NODE_ENV });
             
             // Force use of NEXTAUTH_URL if baseUrl is localhost (dev mode issue)
-            const actualBaseUrl = baseUrl.includes('localhost') && process.env.NEXTAUTH_URL 
-                ? process.env.NEXTAUTH_URL 
+            const isLocalhost = baseUrl.startsWith('http://localhost') || baseUrl.startsWith('https://localhost');
+            const actualBaseUrl = isLocalhost && process.env.NEXTAUTH_URL
+                ? process.env.NEXTAUTH_URL
                 : baseUrl;
             
             // Always redirect to the same domain

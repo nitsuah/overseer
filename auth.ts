@@ -6,6 +6,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     secret: process.env.NEXTAUTH_SECRET,
     basePath: '/api/auth',
     debug: true, // enable verbose logging
+    trustHost: true, // Required for Netlify preview deployments with dynamic URLs
     providers: [
         GitHub({
             clientId: process.env.GITHUB_ID!,

@@ -102,6 +102,14 @@
 - [x] GraphQL Rate Limit Safety: Added null check for optional GraphQL rate limit data
 - [x] TypeScript Build Fixes: Session type extension, array mutation fix, centralized repo detection
 
+## Q1 2026: Autonomous Agents & Conversational UI 🤖
+
+- [ ] **Agent Task Queue:** API endpoint for autonomous AI agents to submit tasks
+- [ ] **Workflow Visualization:** Screen showing branching/execution paths for complex actions
+- [ ] **Unified PR & Task Manager:** Central dashboard for all PRs and TASKS.md entries
+- [ ] **Roadmap Simulation:** AI-powered schedule impact analysis
+- [ ] **Conversational Interface Foundation:** Natural language, chat-driven interface
+
 ## Future: UX Enhancements & Preview Features 🎨
 
 - [ ] Doc Fix Preview Modal: Modal window before PR creation with template preview and pick-and-choose options
@@ -140,14 +148,6 @@
 - [ ] Mobile App (React Native)
 - [ ] Custom AI Model Fine-tuning
 - [ ] Foundation: Dark/Light Mode Toggle
-
-## Q1 2026: Autonomous Agents & Conversational UI 🤖
-
-- [ ] **Agent Task Queue:** API endpoint for autonomous AI agents to submit tasks
-- [ ] **Workflow Visualization:** Screen showing branching/execution paths for complex actions
-- [ ] **Unified PR & Task Manager:** Central dashboard for all PRs and TASKS.md entries
-- [ ] **Roadmap Simulation:** AI-powered schedule impact analysis
-- [ ] **Conversational Interface Foundation:** Natural language, chat-driven interface
 
 ---
 

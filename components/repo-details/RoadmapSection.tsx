@@ -2,7 +2,6 @@
 
 import { Map } from 'lucide-react';
 import { RoadmapItem } from '@/types/repo';
-import { groupByQuarter, getDisplayedItems } from '@/lib/expandable-row-utils';
 import { parseBoldText } from '@/lib/markdown-utils.tsx';
 import { useState } from 'react';
 
@@ -16,16 +15,27 @@ function getStatusDisplay(status: string) {
     case 'in-progress':
       return { icon: '🔵', label: 'In Progress', color: 'text-blue-400' };
     case 'completed':
-      return { icon: '✅', label: 'Completed', color: 'text-green-400' };
+      return { icon: '●', label: 'Completed', color: 'text-green-400' };
     default:
-      return { icon: '⭕', label: 'Planned', color: 'text-slate-400' };
+      return { icon: '○', label: 'Planned', color: 'text-purple-400' };
   }
 }
 
 export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showCompleted, setShowCompleted] = useState(false);
   const [showAllPlanned, setShowAllPlanned] = useState(false);
+
+  const toggleCard = (cardKey: string) => {
+    const newExpanded = new Set(expandedCards);
+    if (newExpanded.has(cardKey)) {
+      newExpanded.delete(cardKey);
+    } else {
+      newExpanded.add(cardKey);
+    }
+    setExpandedCards(newExpanded);
+  };
 
   const toggleSection = (section: string) => {
     const newExpanded = new Set(expandedSections);
@@ -54,7 +64,7 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
     quarterGroups[quarter].push(item);
   });
 
-  const quarters = Object.keys(quarterGroups);
+  const quarters = Object.keys(quarterGroups).reverse();
   
   // When showing completed, show all quarters by default
   const displayedQuarters = (showAllPlanned || showCompleted) ? quarters : quarters.slice(0, 1);
@@ -63,7 +73,7 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-          <Map className="h-4 w-4 text-blue-400" />
+          <Map className="h-4 w-4 text-purple-400" />
           <span>Roadmap</span>
           <span className="text-xs text-slate-500 font-normal">({filteredItems.length} items)</span>
         </h4>
@@ -92,13 +102,27 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {displayedQuarters.map(q => ({ quarter: q, items: quarterGroups[q] })).map((group, i) => (
-            <div key={i} className="bg-slate-800/30 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-medium text-blue-400">{group.quarter}</span>
-                <span className="text-[10px] text-slate-500">({group.items.length} items)</span>
-              </div>
-              <ul className="space-y-1">
+          {displayedQuarters.map(q => ({ quarter: q, items: quarterGroups[q] })).map((group, i) => {
+            const cardKey = `card-${i}`;
+            const isCardExpanded = expandedCards.has(cardKey);
+            
+            return (
+              <div key={i} className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+                <button
+                  onClick={() => toggleCard(cardKey)}
+                  className="w-full px-4 py-3 text-left hover:bg-slate-700/40 transition-colors border-b border-slate-700/30"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-purple-400">{group.quarter}</span>
+                      <span className="text-[11px] text-slate-500">({group.items.length} items)</span>
+                    </div>
+                    <span className="text-slate-500 text-xs">{isCardExpanded ? '▼' : '▶'}</span>
+                  </div>
+                </button>
+                {isCardExpanded && (
+                  <div className="px-4 py-3">
+                    <ul className="space-y-1">
                 {(expandedSections.has(`quarter-${i}`)
                   ? group.items
                   : group.items.slice(0, 5)
@@ -106,7 +130,7 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
                   const statusDisplay = getStatusDisplay(item.status);
                   return (
                     <li key={j} className="text-xs text-slate-300 flex items-start gap-2">
-                      <span className="mt-1 text-[10px]" title={statusDisplay.label}>
+                      <span className={`mt-1 text-[10px] ${statusDisplay.color}`} title={statusDisplay.label}>
                         {statusDisplay.icon}
                       </span>
                       <span className={item.status === 'completed' ? 'line-through text-slate-500' : ''}>
@@ -115,19 +139,22 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
                     </li>
                   );
                 })}
-                {group.items.length > 5 && (
-                  <button
-                    onClick={() => toggleSection(`quarter-${i}`)}
-                    className="text-[10px] text-blue-400 hover:text-blue-300 pl-3"
-                  >
-                    {expandedSections.has(`quarter-${i}`)
-                      ? 'Show less'
-                      : `+${group.items.length - 5} more`}
-                  </button>
+                    {group.items.length > 5 && (
+                      <button
+                        onClick={() => toggleSection(`quarter-${i}`)}
+                        className="text-[10px] text-blue-400 hover:text-blue-300 pl-3"
+                      >
+                        {expandedSections.has(`quarter-${i}`)
+                          ? 'Show less'
+                          : `+${group.items.length - 5} more`}
+                      </button>
+                    )}
+                    </ul>
+                  </div>
                 )}
-              </ul>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

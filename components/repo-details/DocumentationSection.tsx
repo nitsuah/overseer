@@ -3,6 +3,7 @@
 import { CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { DocStatus } from '@/types/repo';
 import { getReadmeFreshness } from '@/lib/expandable-row-utils';
+import { useState } from 'react';
 
 interface DocumentationSectionProps {
   docStatuses: DocStatus[];
@@ -21,6 +22,8 @@ export function DocumentationSection({
   onFixDoc,
   onFixAllDocs
 }: DocumentationSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const coreDocs = docStatuses.filter((d) =>
     ['roadmap', 'tasks', 'metrics', 'features'].includes(d.doc_type)
   );
@@ -38,28 +41,40 @@ export function DocumentationSection({
   const freshness = getReadmeFreshness(readmeLastUpdated);
 
   return (
-    <div className="bg-slate-800/30 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-          <span className="text-lg">📄</span>
-          <span>Documentation</span>
-          <span className="text-xs text-slate-500 font-normal">
-            ({docStatuses.length})
-          </span>
-        </h4>
-        {isAuthenticated && missingWithTemplates.length > 0 && onFixAllDocs && repoName && (
-          <button
-            onClick={() => onFixAllDocs(repoName)}
-            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
-            title="Create PR for all missing documentation"
-          >
-            Fix All ({missingWithTemplates.length})
-          </button>
-        )}
-      </div>
-
-      {/* Core Docs */}
-      <div className="mb-4">
+    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-4 py-3 text-left hover:bg-slate-700/40 transition-colors border-b border-slate-700/30"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📄</span>
+            <h4 className="text-sm font-semibold text-slate-200">Documentation</h4>
+            <span className="text-xs text-slate-500 font-normal">
+              ({docStatuses.length})
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {isAuthenticated && missingWithTemplates.length > 0 && onFixAllDocs && repoName && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFixAllDocs(repoName);
+                }}
+                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
+                title="Create PR for all missing documentation"
+              >
+                Fix All ({missingWithTemplates.length})
+              </button>
+            )}
+            <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
+          </div>
+        </div>
+      </button>
+      {isExpanded && (
+        <div className="px-4 py-3">
+          {/* Core Docs */}
+          <div className="mb-4">
         <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Core</h5>
         <div className="space-y-2">
           {coreDocs
@@ -190,6 +205,8 @@ export function DocumentationSection({
               {freshness.daysSince}d ago ({freshness.label})
             </span>
           </div>
+        </div>
+      )}
         </div>
       )}
     </div>

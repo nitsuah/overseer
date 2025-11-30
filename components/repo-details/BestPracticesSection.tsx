@@ -3,6 +3,7 @@
 import { Shield, CheckCircle2, XCircle, Circle } from 'lucide-react';
 import { BestPractice } from '@/types/repo';
 import { getStatusColor } from '@/lib/expandable-row-utils';
+import { useState } from 'react';
 
 interface BestPracticesSectionProps {
   bestPractices: BestPractice[];
@@ -19,6 +20,8 @@ export function BestPracticesSection({
   onFixPractice,
   onFixAllPractices,
 }: BestPracticesSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
@@ -63,28 +66,41 @@ export function BestPracticesSection({
   );
 
   return (
-    <div className="bg-slate-800/30 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-          <Shield className="h-4 w-4 text-purple-400" />
-          <span>Best Practices</span>
-          <span className="text-xs text-slate-500 font-normal">({bestPractices.length})</span>
-        </h4>
-        {isAuthenticated && missingFixable.length > 0 && onFixAllPractices && repoName && (
-          <button
-            onClick={() => onFixAllPractices(repoName)}
-            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
-            title="Create PRs for all fixable missing practices"
-          >
-            Fix All ({missingFixable.length})
-          </button>
-        )}
-      </div>
+    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-4 py-3 text-left hover:bg-slate-700/40 transition-colors border-b border-slate-700/30"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-purple-400" />
+            <h4 className="text-sm font-semibold text-slate-200">Best Practices</h4>
+            <span className="text-xs text-slate-500 font-normal">({bestPractices.length})</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {isAuthenticated && missingFixable.length > 0 && onFixAllPractices && repoName && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFixAllPractices(repoName);
+                }}
+                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
+                title="Create PRs for all fixable missing practices"
+              >
+                Fix All ({missingFixable.length})
+              </button>
+            )}
+            <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
+          </div>
+        </div>
+      </button>
 
-      {bestPractices.length === 0 ? (
-        <p className="text-xs text-slate-500 italic">No data available</p>
-      ) : (
-        <div className="space-y-2">
+      {isExpanded && (
+        <div className="px-4 py-3">
+          {bestPractices.length === 0 ? (
+            <p className="text-xs text-slate-500 italic">No data available</p>
+          ) : (
+            <div className="space-y-2">
           {bestPractices
             .sort((a, b) => {
               // Define custom order
@@ -133,7 +149,9 @@ export function BestPracticesSection({
               </div>
             </div>
             );
-          })}
+            })}
+        </div>
+      )}
         </div>
       )}
     </div>

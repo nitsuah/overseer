@@ -2,6 +2,7 @@
 
 import { Shield } from 'lucide-react';
 import { BestPractice, Metric } from '@/types/repo';
+import { useState } from 'react';
 
 import { MAX_UNIT_LENGTH } from '../../lib/constants';
 
@@ -20,6 +21,8 @@ export function TestingSection({
   bestPractices,
   metrics = [],
 }: TestingSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const testingPractice = bestPractices.find((p) => p.practice_type === 'testing_framework');
   const testFileCount =
     testingPractice?.details &&
@@ -70,12 +73,22 @@ export function TestingSection({
   };
 
   return (
-    <div className="bg-slate-800/30 rounded-lg p-4">
-      <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-        <Shield className="h-4 w-4 text-blue-400" />
-        <span>Testing</span>
-      </h4>
-      <div className="space-y-3">
+    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-4 py-3 text-left hover:bg-slate-700/40 transition-colors border-b border-slate-700/30"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-blue-400" />
+            <h4 className="text-sm font-semibold text-slate-200">Testing</h4>
+          </div>
+          <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
+        </div>
+      </button>
+      {isExpanded && (
+        <div className="px-4 py-3">
+          <div className="space-y-3">
         {testingStatus && (
           <>
             <div className="flex items-center justify-between text-xs">
@@ -140,7 +153,9 @@ export function TestingSection({
             </div>
           );
         })}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

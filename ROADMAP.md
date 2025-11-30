@@ -1,6 +1,6 @@
 # 🗺️ Overseer Product Roadmap
 
-## Q4 2025: Stability & Core Integration 🚀
+## 2025Q4: 🚀 Stability & Core Integration
 
 - [x] Initial Project Setup (Next.js, Tailwind, Neon DB)
 - [x] GitHub Authentication & Integration
@@ -12,7 +12,7 @@
 - [x] Default Repositories Feature
 - [x] Dynamic OAuth URL Support (Netlify)
 
-## Q4 2025: Feature Audit & Data Integration ✅
+## 2025Q4: ✅ Feature Audit & Data Integration
 
 - [x] Baseline Indicator Integration: Last Commit Date, Open PR/Issue Counts
 - [x] Dashboard Polish: Stats column (Stars, Forks, Branches)
@@ -37,7 +37,7 @@
 - [x] README Freshness Tracking: Days since last update with color-coded staleness
 - [x] Documentation Accuracy: All docs updated to match implementation (100% accuracy)
 
-## Q4 2025: UX Consistency & Quick Wins 🎨
+## 2025Q4: 🎨 UX Consistency & Quick Wins
 
 - [x] Templates for Community Standards: CODE_OF_CONDUCT, SECURITY, Issue templates
 - [x] Fix Buttons: Add automated fixes for best practices/community standards
@@ -48,7 +48,7 @@
 - [x] Foundation: Full E2E Tests and Pre-commit Hooks
 - [x] Template File Hashing: Detect stale/unchanged templates
 
-## Q4 2025: Advanced Metrics & Integrations🚀
+## 2025Q4: 🚀 Advanced Metrics & Integrations
 
 - [x] CI/CD Build Status: Integrate GitHub Actions API for live build status
 - [x] Test Case Counting: Parse test files for actual test case counts
@@ -60,7 +60,7 @@
 - [x] CI/CD Status Display: Show passing/failing status with workflow name and last run in Best Practices section
 - [x] Vulnerability Display: Show alert count with severity-based color coding in Repository Stats
 
-## Q4 2025: Contributor Analytics & Enterprise Features ✅
+## 2025Q4: ✅ Contributor Analytics & Enterprise Features
 
 - [x] Template Health Detection: Content hashing to detect unchanged/stale templates
 - [x] Template Version Tracking: Track which template version docs are based on
@@ -73,14 +73,14 @@
 - [x] Contributor Metrics Display: Show all contributor analytics in Repository Stats
 - [x] Gemini API Integration: Updated to use Gemini 2.5 models (deprecated 1.x models)
 
-## Q4 2025: Documentation & Agent Tooling 📚
+## 2025Q4: 📚 Docs & Agent Tooling
 
 - [x] Agent Instruction Guide (templates/.github/prompts/PM.md): Comprehensive documentation standards for AI agents
 - [x] Anti-Hallucination Guidelines: Format specifications and validation rules to prevent AI errors
 - [x] Documentation Maintenance Workflow: Move/collapse pattern for keeping docs clean
 - [x] Error Handling Documentation Pattern: Comprehensive guide for documenting error handling across all core docs
 
-## Q4 2025: Error Handling & UX Polish 🛡️
+## 2025Q4: 🛡️ Error Handling & UX Polish
 
 - [x] OAuth Error Detection System: Created lib/github-errors.ts with 5 error type classifications
 - [x] Organization Access Restrictions: User-friendly messaging when orgs block OAuth app access
@@ -102,7 +102,7 @@
 - [x] GraphQL Rate Limit Safety: Added null check for optional GraphQL rate limit data
 - [x] TypeScript Build Fixes: Session type extension, array mutation fix, centralized repo detection
 
-## Q4 2025: Detail Panel Redesign & UI Overhaul 🎨
+## 2025Q4: 🎨 Detail Panel Overhaul
 
 - [x] Three-Row Layout Architecture: Reorganized detail panels into logical groupings (Project/Quality/Standards)
 - [x] Synchronized Expand/Collapse: Row 1 (Features/Roadmap/Tasks), Row 2 (Documentation/Best Practices/Testing), Row 3 (Standards/Metrics/Issues)
@@ -119,7 +119,7 @@
 - [x] Bold Text Parsing: Created markdown-utils for **bold** syntax rendering in roadmap/task titles
 - [x] Visual Hierarchy Improvements: Enhanced spacing, borders, shadows, and hover states for better visual flow
 
-## Q1 2026: Autonomous Agents & Conversational UI 🤖
+## 2026Q1: 🤖 Autonomous Agents & Conversational UI
 
 - [ ] **Agent Task Queue:** API endpoint for autonomous AI agents to submit tasks
 - [ ] **Workflow Visualization:** Screen showing branching/execution paths for complex actions
@@ -127,7 +127,7 @@
 - [ ] **Roadmap Simulation:** AI-powered schedule impact analysis
 - [ ] **Conversational Interface Foundation:** Natural language, chat-driven interface
 
-## Q2 2026: UX Enhancements & Preview Features 🎨
+## 2026Q2: 🎨 UX Enhancements & Preview Features
 
 - [ ] Doc Fix Preview Modal: Modal window before PR creation with template preview and pick-and-choose options
   - [ ] Template preview - Show what will be added before creating PR
@@ -135,7 +135,7 @@
   - [ ] Confirmation step - "Do you really want to fix all?" with explicit opt-in per document
   - [ ] Live template rendering - Preview markdown rendering in modal before committing
 
-## Q2 2026: Production Deployment & Security Enhancements 🔐
+## 2026Q2: 🔐 Production Deployment & Security Enhancements
 
 - [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
 - [ ] Rate Limiting Optimization: Smart caching and batching to reduce API pressure
@@ -153,7 +153,7 @@
   - [ ] Code scanning alerts - Automatic vulnerability detection
   - [ ] Secret scanning alerts - Secret detection in commits
 
-## Q3 2026: Advanced Analytics & Enterprise Features 🏗️
+## 2026Q3: 🏗️ Advanced Analytics Features
 
 - [ ] Velocity Tracking: Expand PR/commit analytics with trends
 - [ ] Technical Debt Scoring: Dependency Age Score
@@ -168,7 +168,7 @@
 
 ---
 
-### 🎯 Long-Term Vision Summary: From Diagnosis to Action
+### 🎯 From Diagnosis to Action
 
 The evolution of Overseer moves the tool out of the diagnostic camp and into the prescriptive and active camp.
 

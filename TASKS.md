@@ -4,6 +4,7 @@
 
 ### Recent Completions (November 2025)
 
+- [x] **Dependency Updates**: Bumped @types/node to 24.10.1, dotenv to 17.2.3, and minor-and-patch group packages
 - [x] **Detail Panel Redesign**: Complete UI overhaul with three-row layout, left sidebar (AI Summary + Repo Stats), synchronized expand/collapse
 - [x] **Gradient Backgrounds**: Applied unique color-coded gradients to all sections (purple, orange, blue, green, cyan, amber, red)
 - [x] **Enhanced Health Shields**: Detailed tooltips with component breakdowns for all health metrics
@@ -55,7 +56,7 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ## In Progress
 
-- [ ] Dependency updates - build(deps-dev): bump @types/node from 20.19.25 to 24.10.1, bump dotenv from 16.6.1 to 17.2.3, bump the minor-and-patch group with 8 updates
+_No tasks currently in progress._
 
 ## Todo
 

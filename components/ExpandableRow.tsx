@@ -1,12 +1,12 @@
 "use client";
 
-import { X, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { Task, RoadmapItem, DocStatus, Metric, Feature, BestPractice, CommunityStandard } from '@/types/repo';
 import { RepositoryStatsSectionStatic } from './repo-details/RepositoryStatsSectionStatic';
 import { TestingSection } from './repo-details/TestingSection';
 import { MetricsSection } from './repo-details/MetricsSection';
 import { IssuesSection } from './repo-details/IssuesSection';
+import { AISummarySection } from './repo-details/AISummarySection';
 import { DocumentationSection } from './repo-details/DocumentationSection';
 import { BestPracticesSection } from './repo-details/BestPracticesSection';
 import { CommunityStandardsSection } from './repo-details/CommunityStandardsSection';
@@ -50,6 +50,8 @@ interface ExpandableRowProps {
   onSyncSingleRepo?: () => void;
   syncingRepo?: string | null;
   repoNameForSync?: string;
+  onGenerateSummary?: () => void;
+  generatingSummary?: boolean;
 }
 
 export default function ExpandableRow({
@@ -88,18 +90,37 @@ export default function ExpandableRow({
   onSyncSingleRepo,
   syncingRepo,
   repoNameForSync,
+  onGenerateSummary,
+  generatingSummary = false,
 }: ExpandableRowProps) {
   const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
+  const [aiSummaryKey, setAiSummaryKey] = useState(aiSummary);
+  
+  // Reset dismissed state when a new AI summary is generated
+  if (aiSummary !== aiSummaryKey) {
+    setAiSummaryDismissed(false);
+    setAiSummaryKey(aiSummary);
+  }
   
   const isSyncing = syncingRepo === repoNameForSync;
   const hasNoData = roadmapItems.length === 0 && tasks.length === 0 && features.length === 0;
 
   return (
-    <div className="p-6">
-      {/* Main Layout: Repository Stats (left sidebar) + Content Grid (right) */}
+    <div className="p-6 bg-gradient-to-br from-slate-950/80 via-slate-900/60 to-slate-950/80 border-t border-slate-700/50">
+      {/* Main Layout: Repository Stats + Issues (left sidebar) + Content Grid (right) */}
       <div className="flex gap-6">
-        {/* Left Sidebar: Repository Stats - Always Visible */}
-        <div className="w-64 shrink-0">
+        {/* Left Sidebar: AI Summary + Repository Stats + Issues + Metrics */}
+        <div className="w-96 shrink-0 space-y-6">
+          {/* AI Summary - First in sidebar */}
+          <AISummarySection
+            aiSummary={aiSummaryDismissed ? undefined : aiSummary}
+            repoName={repoName}
+            isAuthenticated={isAuthenticated}
+            generatingSummary={generatingSummary}
+            onGenerateSummary={onGenerateSummary}
+            onDismiss={() => setAiSummaryDismissed(true)}
+          />
+          
           <RepositoryStatsSectionStatic
             stars={stars}
             forks={forks}
@@ -119,6 +140,14 @@ export default function ExpandableRow({
             isAuthenticated={isAuthenticated}
             hasNoData={hasNoData}
           />
+          
+          {/* Issues */}
+          <IssuesSection metrics={metrics} />
+          
+          {/* Metrics */}
+          {metrics && metrics.length > 0 && (
+            <MetricsSection metrics={metrics} />
+          )}
         </div>
 
         {/* Right Content Grid */}
@@ -135,8 +164,8 @@ export default function ExpandableRow({
             <FeaturesSection features={features} />
           </div>
 
-          {/* Second Row: Documentation, Community Standards, Best Practices, Testing, Issues */}
-          <div className="grid grid-cols-5 gap-4">
+          {/* Second Row: Documentation, Community Standards, Best Practices, Testing */}
+          <div className="grid grid-cols-4 gap-4">
             {/* Documentation Status */}
             <DocumentationSection 
               docStatuses={docStatuses} 
@@ -173,38 +202,6 @@ export default function ExpandableRow({
               bestPractices={bestPractices}
               metrics={metrics}
             />
-
-            {/* Issues */}
-            <IssuesSection metrics={metrics} />
-          </div>
-
-          {/* Third Row: Metrics + AI Summary */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Metrics */}
-            {metrics && metrics.length > 0 && (
-              <MetricsSection metrics={metrics} />
-            )}
-
-            {/* AI Summary */}
-            {aiSummary && 
-             aiSummary.trim() &&
-             !aiSummary.startsWith('Summary unavailable') &&
-             !aiSummaryDismissed && (
-              <div className="bg-slate-800/50 rounded-lg border border-slate-700/50 p-5 relative">
-                <button
-                  onClick={() => setAiSummaryDismissed(true)}
-                  className="absolute top-3 right-3 text-slate-400 hover:text-slate-200 transition-colors"
-                  title="Dismiss AI summary"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-                <h3 className="text-sm font-semibold text-purple-300 mb-3 flex items-center gap-2">
-                  <span className="text-lg">🤖</span>
-                  <span>AI Summary</span>
-                </h3>
-                <p className="text-sm text-slate-300 leading-relaxed pr-6">{aiSummary}</p>
-              </div>
-            )}
           </div>
         </div>
       </div>

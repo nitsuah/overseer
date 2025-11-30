@@ -103,7 +103,7 @@ export function calculateDocHealth(
 }
 
 function getExpectedDocs(repoType: string): string[] {
-    const base = ['README.md', 'FEATURES.md'];
+    const base = ['README.md', 'FEATURES.md', 'METRICS.md'];
     switch (repoType) {
         case 'web-app':
             return [...base, 'ROADMAP.md', 'TASKS.md'];
@@ -113,6 +113,10 @@ function getExpectedDocs(repoType: string): string[] {
             return [...base, 'CHANGELOG.md'];
         case 'tool':
             return [...base, 'ROADMAP.md', 'TASKS.md'];
+        case 'bot':
+            return [...base, 'ROADMAP.md', 'TASKS.md'];
+        case 'research':
+            return base;
         default:
             return [...base, 'ROADMAP.md'];
     }

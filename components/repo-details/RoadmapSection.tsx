@@ -22,7 +22,8 @@ function getStatusDisplay(status: string) {
 }
 
 export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [isMainExpanded, setIsMainExpanded] = useState(true); // Main panel expanded by default
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set(['card-0'])); // First card expanded by default
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showCompleted, setShowCompleted] = useState(false);
   const [showAllPlanned, setShowAllPlanned] = useState(false);
@@ -70,39 +71,45 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
   const displayedQuarters = (showAllPlanned || showCompleted) ? quarters : quarters.slice(0, 1);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-          <Map className="h-4 w-4 text-purple-400" />
-          <span>Roadmap</span>
-          <span className="text-xs text-slate-500 font-normal">({filteredItems.length} items)</span>
-        </h4>
+    <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setIsMainExpanded(!isMainExpanded)}
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-700/30 transition-colors"
+      >
         <div className="flex items-center gap-2">
-          {quarters.length > 1 && !showCompleted && (
-            <button
-              onClick={() => setShowAllPlanned(!showAllPlanned)}
-              className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
-            >
-              {showAllPlanned ? 'Show less' : `Show all (${quarters.length - 1} more)`}
-            </button>
-          )}
-          {completedCount > 0 && (
-            <button
-              onClick={() => setShowCompleted(!showCompleted)}
-              className="px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
-            >
-              {showCompleted ? 'Hide completed' : `Completed (${completedCount})`}
-            </button>
-          )}
+          <Map className="h-4 w-4 text-purple-400" />
+          <h4 className="text-sm font-semibold text-slate-200">Roadmap</h4>
+          <span className="text-xs text-slate-500 font-normal">({filteredItems.length} items)</span>
         </div>
-      </div>
-      {roadmapItems.length === 0 ? (
-        <div className="bg-slate-800/30 rounded-lg p-4">
-          <p className="text-xs text-slate-500 italic">No roadmap items</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {displayedQuarters.map(q => ({ quarter: q, items: quarterGroups[q] })).map((group, i) => {
+        <span className="text-slate-500 text-xs">{isMainExpanded ? '▼' : '▶'}</span>
+      </button>
+      {isMainExpanded && (
+        <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            {quarters.length > 1 && !showCompleted && (
+              <button
+                onClick={() => setShowAllPlanned(!showAllPlanned)}
+                className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+              >
+                {showAllPlanned ? 'Show less' : `Show all (${quarters.length - 1} more)`}
+              </button>
+            )}
+            {completedCount > 0 && (
+              <button
+                onClick={() => setShowCompleted(!showCompleted)}
+                className="px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
+              >
+                {showCompleted ? 'Hide completed' : `Completed (${completedCount})`}
+              </button>
+            )}
+          </div>
+          {roadmapItems.length === 0 ? (
+            <div className="bg-slate-800/30 rounded-lg p-4">
+              <p className="text-xs text-slate-500 italic">No roadmap items</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {displayedQuarters.map(q => ({ quarter: q, items: quarterGroups[q] })).map((group, i) => {
             const cardKey = `card-${i}`;
             const isCardExpanded = expandedCards.has(cardKey);
             const isCompleted = group.items.every(item => item.status === 'completed');
@@ -126,38 +133,40 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
                 {isCardExpanded && (
                   <div className="px-4 py-3">
                     <ul className="space-y-1">
-                {(expandedSections.has(`quarter-${i}`)
-                  ? group.items
-                  : group.items.slice(0, 5)
-                ).map((item, j) => {
-                  const statusDisplay = getStatusDisplay(item.status);
-                  return (
-                    <li key={j} className="text-xs text-slate-300 flex items-start gap-2">
-                      <span className={`mt-1 text-[10px] ${statusDisplay.color}`} title={statusDisplay.label}>
-                        {statusDisplay.icon}
-                      </span>
-                      <span className={item.status === 'completed' ? 'line-through text-slate-500' : ''}>
-                        {parseBoldText(item.title)}
-                      </span>
-                    </li>
-                  );
-                })}
-                    {group.items.length > 5 && (
-                      <button
-                        onClick={() => toggleSection(`quarter-${i}`)}
-                        className={`text-[10px] ${linkColor} pl-3`}
-                      >
-                        {expandedSections.has(`quarter-${i}`)
-                          ? 'Show less'
-                          : `+${group.items.length - 5} more`}
-                      </button>
-                    )}
+                      {(expandedSections.has(`quarter-${i}`)
+                        ? group.items
+                        : group.items.slice(0, 5)
+                      ).map((item, j) => {
+                        const statusDisplay = getStatusDisplay(item.status);
+                        return (
+                          <li key={j} className="text-xs text-slate-300 flex items-start gap-2">
+                            <span className={`mt-1 text-[10px] ${statusDisplay.color}`} title={statusDisplay.label}>
+                              {statusDisplay.icon}
+                            </span>
+                            <span className={item.status === 'completed' ? 'line-through text-slate-500' : ''}>
+                              {parseBoldText(item.title)}
+                            </span>
+                          </li>
+                        );
+                      })}
+                      {group.items.length > 5 && (
+                        <button
+                          onClick={() => toggleSection(`quarter-${i}`)}
+                          className={`text-[10px] ${linkColor} pl-3`}
+                        >
+                          {expandedSections.has(`quarter-${i}`)
+                            ? 'Show less'
+                            : `+${group.items.length - 5} more`}
+                        </button>
+                      )}
                     </ul>
                   </div>
                 )}
               </div>
             );
           })}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -22,7 +22,8 @@ function getStatusDisplay(status: string) {
 }
 
 export function TasksSection({ tasks }: TasksSectionProps) {
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [isMainExpanded, setIsMainExpanded] = useState(true); // Main panel expanded by default
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set(['card-0'])); // First card expanded by default
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showDone, setShowDone] = useState(false);
   const [showAllTodo, setShowAllTodo] = useState(false);
@@ -86,39 +87,45 @@ export function TasksSection({ tasks }: TasksSectionProps) {
   const displayedSubsections = (showAllTodo || showDone) ? subsections : subsections.slice(0, 1);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-          <ListTodo className="h-4 w-4 text-blue-400" />
-          <span>Tasks</span>
-          <span className="text-xs text-slate-500 font-normal">({filteredTasks.length} total)</span>
-        </h4>
+    <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setIsMainExpanded(!isMainExpanded)}
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-700/30 transition-colors"
+      >
         <div className="flex items-center gap-2">
-          {subsections.length > 1 && !showDone && (
-            <button
-              onClick={() => setShowAllTodo(!showAllTodo)}
-              className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
-            >
-              {showAllTodo ? 'Show less' : `Show all (${subsections.length - 1} more)`}
-            </button>
-          )}
-          {doneCount > 0 && (
-            <button
-              onClick={() => setShowDone(!showDone)}
-              className="px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
-            >
-              {showDone ? 'Hide done' : `Done (${doneCount})`}
-            </button>
-          )}
+          <ListTodo className="h-4 w-4 text-blue-400" />
+          <h4 className="text-sm font-semibold text-slate-200">Tasks</h4>
+          <span className="text-xs text-slate-500 font-normal">({filteredTasks.length} total)</span>
         </div>
-      </div>
-      {tasks.length === 0 ? (
-        <div className="bg-slate-800/30 rounded-lg p-4">
-          <p className="text-xs text-slate-500 italic">No tasks defined</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {displayedSubsections.map(s => ({ subsection: s, items: subsectionGroups[s] })).map((group, i) => {
+        <span className="text-slate-500 text-xs">{isMainExpanded ? '▼' : '▶'}</span>
+      </button>
+      {isMainExpanded && (
+        <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            {subsections.length > 1 && !showDone && (
+              <button
+                onClick={() => setShowAllTodo(!showAllTodo)}
+                className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+              >
+                {showAllTodo ? 'Show less' : `Show all (${subsections.length - 1} more)`}
+              </button>
+            )}
+            {doneCount > 0 && (
+              <button
+                onClick={() => setShowDone(!showDone)}
+                className="px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
+              >
+                {showDone ? 'Hide done' : `Done (${doneCount})`}
+              </button>
+            )}
+          </div>
+          {tasks.length === 0 ? (
+            <div className="bg-slate-800/30 rounded-lg p-4">
+              <p className="text-xs text-slate-500 italic">No tasks defined</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {displayedSubsections.map(s => ({ subsection: s, items: subsectionGroups[s] })).map((group, i) => {
             // Format display name - handle status-based groups
             let displayName = group.subsection;
             if (group.subsection.endsWith('-tasks')) {
@@ -151,38 +158,40 @@ export function TasksSection({ tasks }: TasksSectionProps) {
                 {isCardExpanded && (
                   <div className="px-4 py-3">
                     <ul className="space-y-1">
-                  {(expandedSections.has(`subsection-${i}`)
-                    ? group.items
-                    : group.items.slice(0, 5)
-                  ).map((item, j) => {
-                  const statusDisplay = getStatusDisplay(item.status);
-                  return (
-                    <li key={j} className="text-xs text-slate-300 flex items-start gap-2">
-                      <span className={`mt-1 text-[10px] ${statusDisplay.color}`} title={statusDisplay.label}>
-                        {statusDisplay.icon}
-                      </span>
-                      <span className={item.status === 'done' ? 'line-through text-slate-500' : ''}>
-                        {parseBoldText(item.title)}
-                      </span>
-                    </li>
-                  );
-                })}
-                    {group.items.length > 5 && (
-                      <button
-                        onClick={() => toggleSection(`subsection-${i}`)}
-                        className={`text-[10px] ${linkColor} pl-3`}
-                      >
-                        {expandedSections.has(`subsection-${i}`)
-                          ? 'Show less'
-                          : `+${group.items.length - 5} more`}
-                      </button>
-                    )}
+                      {(expandedSections.has(`subsection-${i}`)
+                        ? group.items
+                        : group.items.slice(0, 5)
+                      ).map((item, j) => {
+                        const statusDisplay = getStatusDisplay(item.status);
+                        return (
+                          <li key={j} className="text-xs text-slate-300 flex items-start gap-2">
+                            <span className={`mt-1 text-[10px] ${statusDisplay.color}`} title={statusDisplay.label}>
+                              {statusDisplay.icon}
+                            </span>
+                            <span className={item.status === 'done' ? 'line-through text-slate-500' : ''}>
+                              {parseBoldText(item.title)}
+                            </span>
+                          </li>
+                        );
+                      })}
+                      {group.items.length > 5 && (
+                        <button
+                          onClick={() => toggleSection(`subsection-${i}`)}
+                          className={`text-[10px] ${linkColor} pl-3`}
+                        >
+                          {expandedSections.has(`subsection-${i}`)
+                            ? 'Show less'
+                            : `+${group.items.length - 5} more`}
+                        </button>
+                      )}
                     </ul>
                   </div>
                 )}
               </div>
             );
           })}
+            </div>
+          )}
         </div>
       )}
     </div>

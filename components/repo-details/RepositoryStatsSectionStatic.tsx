@@ -3,6 +3,7 @@
 import { formatLocNumber } from '@/lib/expandable-row-utils';
 import { Metric } from '@/types/repo';
 import { RefreshCw } from 'lucide-react';
+import { useState } from 'react';
 
 interface RepositoryStatsSectionStaticProps {
   stars?: number;
@@ -43,6 +44,8 @@ export function RepositoryStatsSectionStatic({
   isAuthenticated = false,
   hasNoData = false,
 }: RepositoryStatsSectionStaticProps) {
+  const [isExpanded, setIsExpanded] = useState(false); // Collapsed by default
+  
   // Filter metrics that should appear in Repo Stats
   const repoStatsKeywords = [
     'last updated',
@@ -66,35 +69,29 @@ export function RepositoryStatsSectionStatic({
   });
   
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 h-full">
-      <div className="w-full px-4 py-3 border-b border-slate-700/30">
+    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50">
+      <div
+        className="w-full px-4 py-3 border-b border-slate-700/30 cursor-pointer hover:bg-slate-700/40 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <span>📊</span>
             <h3 className="text-sm font-semibold text-slate-200">Repository Stats</h3>
+            <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
           </div>
-          {onSyncSingleRepo && (hasNoData || isAuthenticated) && (
-            <button
-              onClick={onSyncSingleRepo}
-              disabled={isSyncing}
-              className="flex items-center gap-1.5 px-2 py-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 text-xs"
-              title="Refresh repository data"
-            >
-              <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Syncing...' : 'Refresh'}
-            </button>
-          )}
         </div>
       </div>
-      <div className="px-4 py-3">
-        <div className="space-y-3">
-          {/* Stars */}
-          {stars !== undefined && (
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Stars</span>
-              <span className="text-slate-200 font-medium">{stars.toLocaleString()}</span>
-            </div>
-          )}
+      {isExpanded && (
+        <div className="px-4 py-3">
+          <div className="space-y-3">
+            {/* Stars */}
+            {stars !== undefined && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Stars</span>
+                <span className="text-slate-200 font-medium">{stars.toLocaleString()}</span>
+              </div>
+            )}
 
           {/* Forks */}
           {forks !== undefined && (
@@ -206,8 +203,27 @@ export function RepositoryStatsSectionStatic({
               ))}
             </div>
           )}
+
+          {/* Refresh Button - At Bottom */}
+          {onSyncSingleRepo && (hasNoData || isAuthenticated) && (
+            <div className="pt-3 border-t border-slate-700/50">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSyncSingleRepo();
+                }}
+                disabled={isSyncing}
+                className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 text-xs font-medium"
+                title="Refresh repository data"
+              >
+                <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span className="truncate">{isSyncing ? 'Syncing...' : 'Refresh Data'}</span>
+              </button>
+            </div>
+          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

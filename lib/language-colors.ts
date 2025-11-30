@@ -3,6 +3,52 @@
  * Based on GitHub's language colors
  */
 
+export function getLanguageIcon(language: string | null): string {
+    if (!language) return '📄';
+
+    const icons: Record<string, string> = {
+        // Popular languages
+        'TypeScript': 'TS',
+        'JavaScript': 'JS',
+        'Python': 'PY',
+        'Java': '☕',
+        'Go': 'GO',
+        'Rust': '🦀',
+        'C++': 'C++',
+        'C': 'C',
+        'C#': 'C#',
+        'PHP': 'PHP',
+        'Ruby': '💎',
+        'Swift': '🐦',
+        'Kotlin': 'KT',
+        'Dart': '🎯',
+
+        // Web technologies
+        'HTML': 'HTML',
+        'CSS': 'CSS',
+        'SCSS': 'SCSS',
+        'Sass': 'SASS',
+        'Less': 'LESS',
+
+        // Data & Config
+        'SQL': 'SQL',
+        'Shell': 'SH',
+        'PowerShell': 'PS',
+        'YAML': 'YML',
+        'JSON': 'JSON',
+        'TOML': 'TOML',
+
+        // Other
+        'Vue': '🖖',
+        'Dockerfile': '🐳',
+        'Makefile': '🔨',
+        'Markdown': 'MD',
+        'Jupyter Notebook': '📓',
+    };
+
+    return icons[language] || language.substring(0, 2).toUpperCase();
+}
+
 export function getLanguageColor(language: string | null): string {
     if (!language) return 'bg-slate-900/30 text-slate-300 border-slate-800';
 

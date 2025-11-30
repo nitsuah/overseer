@@ -50,9 +50,12 @@ export async function POST(
             license: 'LICENSE',
             codeowners: path.join('.github', 'CODEOWNERS'),
             copilot: path.join('.github', 'copilot-instructions.md'),
+            copilot_instructions: path.join('.github', 'copilot-instructions.md'),
             funding: path.join('.github', 'FUNDING.yml'),
             issue_template: path.join('.github', 'ISSUE_TEMPLATE', 'bug_report.md'),
+            issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
             pr_template: path.join('.github', 'pull_request_template.md'),
+            pull_request_template: path.join('.github', 'pull_request_template.md'),
         };
 
         const normalized = String(docType).toLowerCase();

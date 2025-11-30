@@ -31,10 +31,14 @@ export async function POST(request: NextRequest) {
       // Community standards under .github
       codeowners: path.join('.github', 'CODEOWNERS'),
       copilot: path.join('.github', 'copilot-instructions.md'),
+      copilot_instructions: path.join('.github', 'copilot-instructions.md'),
       funding: path.join('.github', 'FUNDING.yml'),
       // Issue/PR templates
       issue_template: path.join('.github', 'ISSUE_TEMPLATE', 'bug_report.md'),
+      // Alias for folder-based issue templates config
+      issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
       pr_template: path.join('.github', 'pull_request_template.md'),
+      pull_request_template: path.join('.github', 'pull_request_template.md'),
       // Best practices with files we can preview
       docker: 'Dockerfile',
       env_template: '.env.example',

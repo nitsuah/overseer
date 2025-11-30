@@ -34,21 +34,31 @@ export async function POST(
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
 
-        // Resolve repo_id from name, then get missing community standards
-        const repoIdRows = await db`SELECT id FROM repos WHERE name = ${repoName} LIMIT 1`;
-        if (repoIdRows.length === 0) {
-            return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
-        }
-        const repoId = repoIdRows[0].id;
+        // Accept optional list of selected standard types from request
+        const body = await request.json().catch(() => ({}));
+        const requestedStandards = body.standardTypes as string[] | undefined;
 
-        const csRows = await db`
-            SELECT standard_type, status 
-            FROM community_standards 
-            WHERE repo_id = ${repoId} AND status = 'missing'
-        `;
+        let csRows: { standard_type: string }[];
+        if (requestedStandards && Array.isArray(requestedStandards) && requestedStandards.length > 0) {
+            csRows = requestedStandards.map(s => ({ standard_type: String(s).toLowerCase() }));
+        } else {
+            // Resolve repo_id from name, then get missing community standards from DB
+            const repoIdRows = await db`SELECT id FROM repos WHERE name = ${repoName} LIMIT 1`;
+            if (repoIdRows.length === 0) {
+                return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
+            }
+            const repoId = repoIdRows[0].id;
 
-        if (csRows.length === 0) {
-            return NextResponse.json({ message: 'No missing standards to fix' }, { status: 200 });
+            const dbRows = await db`
+                SELECT standard_type, status 
+                FROM community_standards 
+                WHERE repo_id = ${repoId} AND status = 'missing'
+            `;
+
+            if (dbRows.length === 0) {
+                return NextResponse.json({ message: 'No missing standards to fix' }, { status: 200 });
+            }
+            csRows = dbRows.map((r: { standard_type: string }) => ({ standard_type: r.standard_type }));
         }
 
         // Filter standards that have templates
@@ -64,9 +74,7 @@ export async function POST(
             'copilot_instructions',
             'funding'
         ];
-        const fixableStandards = csRows.filter(row => 
-            standardsWithTemplates.includes(row.standard_type)
-        );
+        const fixableStandards = csRows.filter(row => standardsWithTemplates.includes(row.standard_type));
 
         if (fixableStandards.length === 0) {
             return NextResponse.json({ 
@@ -90,6 +98,16 @@ export async function POST(
             } else if (standard.standard_type === 'funding') {
                 templatePath = path.join(process.cwd(), 'templates', '.github', 'FUNDING.yml');
                 targetPath = '.github/FUNDING.yml';
+            } else if (standard.standard_type === 'pr_template') {
+                templatePath = path.join(process.cwd(), 'templates', '.github', 'pull_request_template.md');
+                targetPath = '.github/pull_request_template.md';
+            } else if (standard.standard_type === 'issue_template') {
+                // Use a concrete issue template file (bug_report)
+                templatePath = path.join(process.cwd(), 'templates', '.github', 'ISSUE_TEMPLATE', 'bug_report.md');
+                targetPath = '.github/ISSUE_TEMPLATE/bug_report.md';
+            } else if (standard.standard_type === 'license') {
+                templatePath = path.join(process.cwd(), 'templates', 'LICENSE');
+                targetPath = 'LICENSE';
             } else {
                 templatePath = path.join(process.cwd(), 'templates', `${standard.standard_type.toUpperCase()}.md`);
                 targetPath = `${standard.standard_type.toUpperCase()}.md`;
@@ -116,7 +134,7 @@ export async function POST(
             repoName,
             branchName,
             filesToAdd,
-            `docs: add community standards (${filesToAdd.length} files)`
+            `docs: add community standards (${filesToAdd.map(f => f.path).join(', ')})`
         );
 
         return NextResponse.json({ 

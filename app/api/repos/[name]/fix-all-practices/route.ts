@@ -1,0 +1,130 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { GitHubClient } from '@/lib/github';
+import { getNeonClient } from '@/lib/db';
+import fs from 'fs/promises';
+import path from 'path';
+import logger from '@/lib/log';
+
+export async function POST(
+  request: NextRequest,
+  props: { params: Promise<{ name: string }> }
+) {
+  const params = await props.params;
+  let fullName = '';
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { practiceTypes } = await request.json();
+    if (!practiceTypes || !Array.isArray(practiceTypes) || practiceTypes.length === 0) {
+      return NextResponse.json({ error: 'practiceTypes array required' }, { status: 400 });
+    }
+
+    const repoName = params.name;
+    const db = getNeonClient();
+    const repoRows = await db`SELECT full_name FROM repos WHERE name = ${repoName} LIMIT 1`;
+    if (repoRows.length === 0) {
+      return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
+    }
+    fullName = repoRows[0].full_name;
+    const owner = fullName.split('/')[0];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const githubToken = (session as any).accessToken;
+    if (!githubToken) throw new Error('GitHub access token not found in session');
+    const github = new GitHubClient(githubToken, owner);
+
+    const filesToAdd: { path: string; content: string }[] = [];
+    const addedTypes: string[] = [];
+
+    // Aggregate files for each requested practice type
+    for (const practiceType of practiceTypes) {
+      switch (practiceType) {
+        case 'dependabot': {
+          const templatePath = path.join(process.cwd(), 'templates', '.github', 'dependabot.yml');
+          const content = await fs.readFile(templatePath, 'utf-8');
+          filesToAdd.push({ path: '.github/dependabot.yml', content });
+          addedTypes.push('dependabot');
+          break;
+        }
+        case 'env_template': {
+          const templatePath = path.join(process.cwd(), 'templates', '.env.example');
+          const content = await fs.readFile(templatePath, 'utf-8');
+          filesToAdd.push({ path: '.env.example', content });
+          addedTypes.push('env_template');
+          break;
+        }
+        case 'docker': {
+          const dockerfilePath = path.join(process.cwd(), 'templates', 'Dockerfile');
+          const dockerComposePath = path.join(process.cwd(), 'templates', 'docker-compose.yml');
+          const dockerfileContent = await fs.readFile(dockerfilePath, 'utf-8');
+          const dockerComposeContent = await fs.readFile(dockerComposePath, 'utf-8');
+          filesToAdd.push({ path: 'Dockerfile', content: dockerfileContent });
+          filesToAdd.push({ path: 'docker-compose.yml', content: dockerComposeContent });
+          addedTypes.push('docker');
+          break;
+        }
+        case 'netlify_badge': {
+          try {
+            const readme = await github.getFileContent(repoName, 'README.md');
+            if (!readme) {
+              // If README missing, skip gracefully
+              logger.warn('README.md not found for netlify_badge');
+              break;
+            }
+            if (readme.includes('api.netlify.com/api/v1/badges')) {
+              break; // already present
+            }
+            const hasNetlify = await github.getFileContent(repoName, 'netlify.toml');
+            if (!hasNetlify) {
+              logger.warn('netlify.toml not found - cannot add badge with site ID');
+              break;
+            }
+            const lines = readme.split('\n');
+            const badgeMarkdown = `[![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR_SITE_ID/deploy-status)](https://app.netlify.com/sites/YOUR_SITE_NAME/deploys)`;
+            let insertIndex = 0;
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i].trim().startsWith('#')) {
+                insertIndex = i + 1;
+                break;
+              }
+            }
+            lines.splice(insertIndex, 0, '', badgeMarkdown);
+            const newReadme = lines.join('\n');
+            filesToAdd.push({ path: 'README.md', content: newReadme });
+            addedTypes.push('netlify_badge');
+          } catch (error) {
+            logger.warn('Error adding Netlify badge:', error);
+          }
+          break;
+        }
+        default:
+          // Ignore unsupported types in batch
+          break;
+      }
+    }
+
+    if (filesToAdd.length === 0) {
+      return NextResponse.json({ error: 'No files to add' }, { status: 400 });
+    }
+
+    const branchName = `chore/add-best-practices-${Date.now()}`;
+    const commitMessage = `chore: add best practices (${filesToAdd.map(f => f.path).join(', ')})`;
+
+    const prUrl = await github.createPrForFiles(
+      repoName,
+      branchName,
+      filesToAdd,
+      commitMessage
+    );
+
+    return NextResponse.json({ success: true, prUrl, count: filesToAdd.length, addedTypes });
+  } catch (error: unknown) {
+    logger.warn('Error fixing all best practices:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
+}

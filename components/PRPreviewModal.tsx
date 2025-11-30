@@ -2,7 +2,9 @@
 
 import { Modal } from './Modal';
 import { FileText, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { MarkdownPreview } from './MarkdownPreview';
+import { YAMLPreview } from './YAMLPreview';
 
 interface FilePreview {
   path: string;
@@ -31,10 +33,30 @@ export function PRPreviewModal({
   loading = false,
   mode,
 }: PRPreviewModalProps) {
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(
-    new Set(files.map((f) => f.path))
-  );
-  const [activeFile, setActiveFile] = useState<string>(files[0]?.path || '');
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const [activeFile, setActiveFile] = useState<string>('');
+  const [editMode, setEditMode] = useState(false);
+  const [editedContent, setEditedContent] = useState<Map<string, string>>(new Map());
+  const [generatingAI, setGeneratingAI] = useState(false);
+
+  // Reset selection and active file whenever modal opens or files change
+  useEffect(() => {
+    if (!isOpen) return;
+    // Default selection: all files in batch mode, first file in single
+    const initialSelected = new Set<string>();
+    if (mode === 'batch') {
+      files.forEach((f) => initialSelected.add(f.path));
+    } else if (files[0]) {
+      initialSelected.add(files[0].path);
+    }
+    setSelectedFiles(initialSelected);
+    setActiveFile(files[0]?.path || '');
+    setEditMode(false);
+    // Initialize edited content with original content
+    const contentMap = new Map<string, string>();
+    files.forEach((f) => contentMap.set(f.path, f.content));
+    setEditedContent(contentMap);
+  }, [isOpen, files, mode]);
 
   const toggleFile = (path: string) => {
     const newSelected = new Set(selectedFiles);
@@ -47,8 +69,43 @@ export function PRPreviewModal({
   };
 
   const handleConfirm = () => {
-    const selected = files.filter((f) => selectedFiles.has(f.path));
+    const selected = files
+      .filter((f) => selectedFiles.has(f.path))
+      .map((f) => ({
+        ...f,
+        content: editedContent.get(f.path) || f.content,
+      }));
     onConfirm(selected);
+  };
+
+  const handleAIGenerate = async () => {
+    if (!activeFile || !activeFileContent) return;
+    
+    setGeneratingAI(true);
+    try {
+      const res = await fetch('/api/enrich-template', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          repoName,
+          docType: activeFileContent.docType,
+          templateContent: editedContent.get(activeFile) || activeFileContent.content,
+        }),
+      });
+      
+      if (res.ok) {
+        const { enrichedContent } = await res.json();
+        const newContent = new Map(editedContent);
+        newContent.set(activeFile, enrichedContent);
+        setEditedContent(newContent);
+      } else {
+        console.error('Failed to generate AI enrichment');
+      }
+    } catch (error) {
+      console.error('AI generation error:', error);
+    } finally {
+      setGeneratingAI(false);
+    }
   };
 
   const activeFileContent = files.find((f) => f.path === activeFile);
@@ -58,7 +115,7 @@ export function PRPreviewModal({
       isOpen={isOpen}
       onClose={onClose}
       title={`Preview PR for ${repoName}`}
-      size="xl"
+      size="2xl"
     >
       <div className="space-y-4">
         {/* Warning/Info Banner */}
@@ -117,14 +174,63 @@ export function PRPreviewModal({
 
           {/* Preview Pane */}
           <div className="lg:col-span-2">
-            <h3 className="text-sm font-semibold text-slate-300 mb-2">
-              Preview: {activeFileContent?.path || 'Select a file'}
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-slate-300">
+                {editMode ? 'Edit' : 'Preview'}: {activeFileContent?.path || 'Select a file'}
+              </h3>
+              {activeFileContent && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleAIGenerate}
+                    disabled={generatingAI}
+                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:cursor-not-allowed text-white rounded text-xs font-medium transition-colors flex items-center gap-1.5"
+                    title="Use AI to enrich this template with repo-specific details"
+                  >
+                    {generatingAI ? (
+                      <>
+                        <span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-sm">✨</span>
+                        AI Generate
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setEditMode(!editMode)}
+                    className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs font-medium transition-colors"
+                  >
+                    {editMode ? 'Preview' : 'Edit'}
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="bg-slate-950 border border-slate-700 rounded-lg p-4 max-h-96 overflow-y-auto">
               {activeFileContent ? (
-                <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">
-                  {activeFileContent.content}
-                </pre>
+                editMode ? (
+                  <textarea
+                    value={editedContent.get(activeFile) || ''}
+                    onChange={(e) => {
+                      const newContent = new Map(editedContent);
+                      newContent.set(activeFile, e.target.value);
+                      setEditedContent(newContent);
+                    }}
+                    className="w-full h-80 bg-slate-900 text-slate-300 text-xs font-mono p-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500 resize-none"
+                    spellCheck={false}
+                  />
+                ) : activeFile.endsWith('.md') || !activeFile.includes('.') || activeFile.split('/').pop()?.indexOf('.') === -1 ? (
+                  <div className="prose prose-invert prose-sm max-w-none">
+                    <MarkdownPreview content={editedContent.get(activeFile) || ''} />
+                  </div>
+                ) : activeFile.endsWith('.yml') || activeFile.endsWith('.yaml') ? (
+                  <YAMLPreview content={editedContent.get(activeFile) || ''} />
+                ) : (
+                  <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">
+                    {editedContent.get(activeFile)}
+                  </pre>
+                )
               ) : (
                 <p className="text-sm text-slate-500 italic">No file selected</p>
               )}

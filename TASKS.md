@@ -42,7 +42,7 @@
 - [x] Rate limit detection: Created /api/github-rate-limit endpoint for monitoring API usage
 - [x] Debug tooling: Created /api/repos/[name]/debug endpoint for database inspection
 
-### Core Features Delivered (Earlier in Q4 2025)
+### Core Features Delivered (2025Q4)
 
 - [x] Repository dashboard with health scoring, filtering, and expandable details
 - [x] Documentation tracking and automated fixes (single/batch PR creation for 8 doc types)

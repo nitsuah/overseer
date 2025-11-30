@@ -108,17 +108,24 @@ export function BestPracticesSection({
             <div className="space-y-2">
           {bestPractices
             .sort((a, b) => {
-              // Define custom order
+              // Ensure fixable items are always listed at the bottom
+              const fixable = ['dependabot', 'env_template', 'docker', 'netlify_badge'];
+              const isAFixable = fixable.includes(a.practice_type);
+              const isBFixable = fixable.includes(b.practice_type);
+              if (isAFixable && !isBFixable) return 1;
+              if (!isAFixable && isBFixable) return -1;
+              // Within groups, apply a sensible order
               const order = [
                 'branch_protection',
                 'ci_cd',
                 'gitignore',
                 'pre_commit_hooks',
-                'env_template',
-                'dependabot',
                 'testing_framework',
                 'linting',
-                'docker'
+                'docker',
+                'env_template',
+                'dependabot',
+                'netlify_badge',
               ];
               const aIndex = order.indexOf(a.practice_type);
               const bIndex = order.indexOf(b.practice_type);

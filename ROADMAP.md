@@ -110,7 +110,7 @@
 - [ ] **Roadmap Simulation:** AI-powered schedule impact analysis
 - [ ] **Conversational Interface Foundation:** Natural language, chat-driven interface
 
-## Future: UX Enhancements & Preview Features 🎨
+## Q2 2026: UX Enhancements & Preview Features 🎨
 
 - [ ] Doc Fix Preview Modal: Modal window before PR creation with template preview and pick-and-choose options
   - [ ] Template preview - Show what will be added before creating PR
@@ -118,7 +118,7 @@
   - [ ] Confirmation step - "Do you really want to fix all?" with explicit opt-in per document
   - [ ] Live template rendering - Preview markdown rendering in modal before committing
 
-## Future: Production Deployment & Security Enhancements 🔐
+## Q2 2026: Production Deployment & Security Enhancements 🔐
 
 - [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
 - [ ] Rate Limiting Optimization: Smart caching and batching to reduce API pressure
@@ -136,7 +136,7 @@
   - [ ] Code scanning alerts - Automatic vulnerability detection
   - [ ] Secret scanning alerts - Secret detection in commits
 
-## Future: Advanced Analytics & Enterprise Features 🏗️
+## Q3 2026: Advanced Analytics & Enterprise Features 🏗️
 
 - [ ] Velocity Tracking: Expand PR/commit analytics with trends
 - [ ] Technical Debt Scoring: Dependency Age Score

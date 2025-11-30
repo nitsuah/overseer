@@ -21,7 +21,7 @@ export function TestingSection({
   bestPractices,
   metrics = [],
 }: TestingSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   
   const testingPractice = bestPractices.find((p) => p.practice_type === 'testing_framework');
   const testFileCount =

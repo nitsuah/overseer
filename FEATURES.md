@@ -1,6 +1,6 @@
 # Overseer Features
 
-## Core Capabilities
+## 🎯 Core Capabilities
 
 ### 📊 Repository Intelligence
 
@@ -80,7 +80,7 @@
 - **Rate Limit Monitoring**: Check GitHub API rate limit status via /api/github-rate-limit endpoint
 - **Debug Tools**: Inspect database records for troubleshooting via /api/repos/[name]/debug endpoint
 
-#### Default Repositories
+### 🏠 Default Repositories
 
 Overseer includes default repositories that are always synced and displayed:
 
@@ -89,29 +89,24 @@ Overseer includes default repositories that are always synced and displayed:
 
 These ensure the dashboard always has content, even for non-authenticated visitors. Configure in `lib/default-repos.ts`.
 
-## Tracked Documentation
+### 📋 Tracked Documentation
 
 Overseer monitors the following documentation files in each repository:
-
-### Core Docs (Parsed & Displayed)
 
 - **FEATURES.md** - Features organized by category with descriptions
 - **ROADMAP.md** - Quarterly planning and milestones
 - **TASKS.md** - Task tracking by status
 - **METRICS.md** - Custom repository metrics
-
-### Standard Docs (Presence Tracked)
-
 - **README.md** - Project overview and setup
 - **LICENSE.md** - Project license
 - **CHANGELOG.md** - Version history
 - **CONTRIBUTING.md** - Contribution guidelines
 
-## Best Practices & Community Standards
+## ✨ Best Practices & Community Standards
 
 Overseer tracks adherence to development and community standards with 4-state health tracking (Missing, Dormant, Malformed, Healthy):
 
-### 🛡️ Community Standards (10 Checks)
+### 🛡️ Community Standards
 
 - **CODE_OF_CONDUCT.md** - Community behavior guidelines (template available)
 - **CONTRIBUTING.md** - Contribution guidelines
@@ -124,7 +119,7 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **Copilot Instructions** - AI assistant guidance file (template available)
 - **FUNDING.yml** - Funding/sponsorship information (template available)
 
-### ✅ Best Practices (10 Checks)
+### ✅ Best Practices
 
 - **CI/CD Integration** - GitHub Actions workflows
 - **Pre-commit Hooks** - `.pre-commit-config.yaml` present
@@ -137,7 +132,7 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **Dependabot** - Automated dependency updates
 - **Docker** - Dockerfile, docker-compose files, .dockerignore
 
-## Health Score System
+## 💯 Health Score System
 
 Overseer calculates comprehensive health scores (0-100) based on 5 weighted components:
 
@@ -151,34 +146,34 @@ Overseer calculates comprehensive health scores (0-100) based on 5 weighted comp
 
 Health scores are displayed as letter grades (A-F) with detailed component breakdowns available in the expandable detail panel.
 
-## Technology Stack
+## 🛠️ Technology Stack
 
-### Frontend
+### 💻 Frontend
 
 - **Next.js 16** - React framework with App Router
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first styling
 - **Lucide React** - Icon library
 
-### Backend
+### ⚙️ Backend
 
 - **Neon (PostgreSQL)** - Serverless database
 - **Netlify Functions** - Serverless API endpoints
 - **NextAuth v5** - Authentication
 
-### APIs & Services
+### 🔌 APIs & Services
 
 - **GitHub API** - Repository data and operations
 - **Google Gemini** - AI-powered summaries
 - **Octokit** - GitHub API client
 
-## Deployment
+## 🚀 Deployment
 
 - **Platform**: Netlify
 - **Database**: Netlify DB (Neon PostgreSQL)
 - **Functions**: Netlify serverless functions
 - **Scheduled Jobs**: Netlify scheduled functions for auto-sync
 
-## Last Updated
+## 📅 Last Updated
 
 November 26, 2025 - Phase 3 Advanced Metrics Complete

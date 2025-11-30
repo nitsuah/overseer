@@ -87,38 +87,44 @@ export function TasksSection({ tasks }: TasksSectionProps) {
   const displayedSubsections = (showAllTodo || showDone) ? subsections : subsections.slice(0, 1);
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg overflow-hidden">
-      <button
+    <div className="bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-blue-800/20 rounded-lg overflow-hidden border border-blue-500/40 shadow-lg shadow-blue-500/10 hover:border-blue-400/50 transition-colors">
+      <div
         onClick={() => setIsMainExpanded(!isMainExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-700/30 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-blue-900/20 transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-2">
           <ListTodo className="h-4 w-4 text-blue-400" />
           <h4 className="text-sm font-semibold text-slate-200">Tasks</h4>
           <span className="text-xs text-slate-500 font-normal">({filteredTasks.length} total)</span>
         </div>
-        <span className="text-slate-500 text-xs">{isMainExpanded ? '▼' : '▶'}</span>
-      </button>
+        <div className="flex items-center gap-2">
+          {subsections.length > 1 && !showDone && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAllTodo(!showAllTodo);
+              }}
+              className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+            >
+              {showAllTodo ? 'Show less' : `Show all (${subsections.length - 1})`}
+            </button>
+          )}
+          {doneCount > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDone(!showDone);
+              }}
+              className="px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
+            >
+              {showDone ? 'Hide done' : `Done (${doneCount})`}
+            </button>
+          )}
+          <span className="text-slate-500 text-xs">{isMainExpanded ? '▼' : '▶'}</span>
+        </div>
+      </div>
       {isMainExpanded && (
         <div className="p-4 space-y-4">
-          <div className="flex items-center justify-between gap-2">
-            {subsections.length > 1 && !showDone && (
-              <button
-                onClick={() => setShowAllTodo(!showAllTodo)}
-                className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
-              >
-                {showAllTodo ? 'Show less' : `Show all (${subsections.length - 1} more)`}
-              </button>
-            )}
-            {doneCount > 0 && (
-              <button
-                onClick={() => setShowDone(!showDone)}
-                className="px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
-              >
-                {showDone ? 'Hide done' : `Done (${doneCount})`}
-              </button>
-            )}
-          </div>
           {tasks.length === 0 ? (
             <div className="bg-slate-800/30 rounded-lg p-4">
               <p className="text-xs text-slate-500 italic">No tasks defined</p>

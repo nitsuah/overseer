@@ -19,7 +19,7 @@ export function CommunityStandardsSection({
   onFixStandard,
   onFixAllStandards,
 }: CommunityStandardsSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   
   const getStatusIcon = (status: string) => {
     switch (status) {

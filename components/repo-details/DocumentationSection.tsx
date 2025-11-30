@@ -22,7 +22,7 @@ export function DocumentationSection({
   onFixDoc,
   onFixAllDocs
 }: DocumentationSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   
   const coreDocs = docStatuses.filter((d) =>
     ['roadmap', 'tasks', 'metrics', 'features'].includes(d.doc_type)

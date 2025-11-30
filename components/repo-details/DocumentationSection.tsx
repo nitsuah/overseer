@@ -46,6 +46,11 @@ export function DocumentationSection({
 
   const freshness = getReadmeFreshness(readmeLastUpdated);
 
+  const supportedFixTypes = new Set([
+    'roadmap', 'tasks', 'features', 'metrics', 'readme',
+    'code_of_conduct', 'contributing', 'security'
+  ]);
+
   return (
     <div className="bg-gradient-to-br from-amber-900/30 via-slate-800/50 to-amber-800/20 rounded-lg overflow-hidden border border-amber-500/40 shadow-lg shadow-amber-500/10 hover:border-amber-400/50 transition-colors">
       <div
@@ -103,7 +108,7 @@ export function DocumentationSection({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {isAuthenticated && !d.exists && onFixDoc && repoName && (
+                {isAuthenticated && !d.exists && onFixDoc && repoName && supportedFixTypes.has(d.doc_type) && (
                   <button
                     onClick={() => onFixDoc(repoName, d.doc_type)}
                     className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
@@ -144,7 +149,7 @@ export function DocumentationSection({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {isAuthenticated && !d.exists && onFixDoc && repoName && (
+                {isAuthenticated && !d.exists && onFixDoc && repoName && supportedFixTypes.has(d.doc_type) && (
                   <button
                     onClick={() => onFixDoc(repoName, d.doc_type)}
                     className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"

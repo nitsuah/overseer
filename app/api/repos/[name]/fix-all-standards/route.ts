@@ -34,11 +34,17 @@ export async function POST(
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
 
-        // Get missing community standards
+        // Resolve repo_id from name, then get missing community standards
+        const repoIdRows = await db`SELECT id FROM repos WHERE name = ${repoName} LIMIT 1`;
+        if (repoIdRows.length === 0) {
+            return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
+        }
+        const repoId = repoIdRows[0].id;
+
         const csRows = await db`
             SELECT standard_type, status 
             FROM community_standards 
-            WHERE repo_name = ${repoName} AND status = 'missing'
+            WHERE repo_id = ${repoId} AND status = 'missing'
         `;
 
         if (csRows.length === 0) {

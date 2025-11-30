@@ -20,9 +20,13 @@ export async function POST(
 
         const repoName = params.name;
         const db = getNeonClient();
+        
+        // Allow specific docTypes to be passed in the request body
+        const body = await request.json().catch(() => ({}));
+        const requestedDocs = body.docTypes as string[] | undefined;
 
-        // Core docs that should be fixed by this endpoint
-        const coreDocs = ['roadmap', 'tasks', 'metrics', 'features'];
+        // Core docs that should be fixed by this endpoint (if no specific docs requested)
+        const coreDocs = requestedDocs || ['roadmap', 'tasks', 'metrics', 'features'];
         
         // Get existing docs from status table
         const existingDocTypes = new Set(

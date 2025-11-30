@@ -1,6 +1,7 @@
 "use client";
 
 import { Toast } from '@/components/Toast';
+import { PRPreviewModal } from '@/components/PRPreviewModal';
 import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
@@ -29,6 +30,11 @@ export default function Dashboard() {
     fixingDoc,
     syncingRepo,
     generatingSummary,
+    previewModalOpen,
+    previewFiles,
+    previewRepoName,
+    previewMode,
+    setPreviewModalOpen,
     handleAddRepo,
     handleRemoveRepo,
     handleFixAllDocs,
@@ -39,6 +45,7 @@ export default function Dashboard() {
     handleFixAllPractices,
     handleGenerateSummary,
     handleSyncSingleRepo,
+    confirmPRCreation,
   } = useRepoActions(refetch, setRepos, setToastMessage);
 
   const {
@@ -202,6 +209,15 @@ export default function Dashboard() {
         )}
       </div>
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
+      <PRPreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        repoName={previewRepoName}
+        files={previewFiles}
+        onConfirm={confirmPRCreation}
+        loading={fixingDoc}
+        mode={previewMode}
+      />
     </>
   );
 }

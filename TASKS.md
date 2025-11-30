@@ -52,6 +52,11 @@
 - [x] Default repositories feature for non-authenticated users
 - [x] Database schema with comprehensive metric tracking
 
+### Fixed Auth
+
+- [x] Fix Github Auth in PROD
+- [x] When not logged in the two expected default repos are are shown
+
 _For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._
 
 ## In Progress
@@ -60,17 +65,12 @@ _No tasks currently in progress._
 
 ## Todo
 
-### Fix Auth
-
-- [ ] Fix Github Auth in PROD - currently failing due to OAuth app misconfiguration? or redirect URI issue? (we have local and prod versions in github, both authorized) NEXTAUTH manual steps missing?
-- [ ] When not logged in the two expected default repos are not shown (overseer, nitsuah-io) might be a routes auth thing? GET `https://ghoverseer.netlify.app/api/auth/signin/github?` 500 (Internal Server Error) maybe the button for sync all repos when not logged in needs to sync just the two expected default repos? might be locked behind auth currently? or might be a PROD deploy/db thing?
-
 ### Phase 7: UX Improvements
 
-- [ ] Add modal window for doc fix preview before PR creation
-- [ ] Implement template preview in modal with markdown rendering
-- [ ] Add pick-and-choose functionality for batch fix operations
-- [ ] Add "Do you really want to fix all?" confirmation with per-doc opt-in
+- [x] Add modal window for doc fix preview before PR creation
+- [x] Implement template preview in modal with markdown rendering
+- [x] Add pick-and-choose functionality for batch fix operations
+- [x] Add "Do you really want to fix all?" confirmation with per-doc opt-in
 - [ ] AI fix Community Standards Gaps (Cake Test) - Overseer tracks these but doesn't have them itself at root, will need to add them as a test of using overseer to test the features (maybe now we can connect AI generate to take the template, and the repo info, and create them):
   - CODE_OF_CONDUCT.md (exists in templates/ only)
   - SECURITY.md (exists in templates/ only)

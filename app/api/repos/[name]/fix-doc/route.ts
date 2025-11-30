@@ -33,9 +33,32 @@ export async function POST(
             repoName,
             paramsName: params.name
         });
-        
+
+        // Map logical doc types to template filenames
+        const TEMPLATE_FILES: Record<string, string> = {
+            // Core docs
+            readme: 'README.md',
+            roadmap: 'ROADMAP.md',
+            tasks: 'TASKS.md',
+            metrics: 'METRICS.md',
+            features: 'FEATURES.md',
+            // Community standards
+            code_of_conduct: 'CODE_OF_CONDUCT.md',
+            contributing: 'CONTRIBUTING.md',
+            security: 'SECURITY.md',
+        };
+
+        const normalized = String(docType).toLowerCase();
+        const filename = TEMPLATE_FILES[normalized];
+        if (!filename) {
+            return NextResponse.json({ 
+                error: `Unknown doc type: ${docType}. No template mapping found.`,
+                supported: Object.keys(TEMPLATE_FILES)
+            }, { status: 400 });
+        }
+
         // Always use process.cwd() which should be the project root when Next.js runs
-        const templatePath = path.join(process.cwd(), 'templates', `${docType.toUpperCase()}.md`);
+        const templatePath = path.join(process.cwd(), 'templates', filename);
 
         let content = '';
         try {
@@ -83,9 +106,9 @@ export async function POST(
         const prUrl = await github.createPrForFile(
             repoName,
             branchName,
-            `${docType.toUpperCase()}.md`,
+            filename,
             content,
-            `docs: add ${docType.toUpperCase()}.md`
+            `docs: add ${filename}`
         );
 
         return NextResponse.json({ success: true, branch: branchName, prUrl });

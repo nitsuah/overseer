@@ -283,17 +283,6 @@ export function RepoTableRow({
                 {getTypeIcon(repoType)}
               </button>
             )}
-            {/* Language Icon/Label */}
-            {repo.language && (
-              <span
-                className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${getLanguageColor(
-                  repo.language
-                )}`}
-                title={repo.language}
-              >
-                {getLanguageIcon(repo.language)}
-              </span>
-            )}
             {/* Repository Name */}
             <span className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
               {repo.name}
@@ -302,8 +291,21 @@ export function RepoTableRow({
         </td>
         {/* Description */}
         <td className="px-6 py-4 text-sm text-slate-400 hidden xl:table-cell">
-          <div className="truncate max-w-md" title={repo.description || ''}>
-            {repo.description || '—'}
+          <div className="flex items-center gap-2">
+            <div className="truncate max-w-md" title={repo.description || ''}>
+              {repo.description || '—'}
+            </div>
+            {/* Language Icon/Label */}
+            {repo.language && (
+              <span
+                className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0 ${getLanguageColor(
+                  repo.language
+                )}`}
+                title={repo.language}
+              >
+                {getLanguageIcon(repo.language)}
+              </span>
+            )}
           </div>
         </td>
         <td className="px-6 py-4">

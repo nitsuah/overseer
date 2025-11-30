@@ -28,4 +28,7 @@ async function addRepoTypeColumn() {
     }
 }
 
-addRepoTypeColumn();
+addRepoTypeColumn().catch((error: any) => {
+    logger.warn('❌ Unhandled error:', error?.message || error);
+    process.exit(1);
+});

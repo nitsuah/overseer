@@ -37,15 +37,6 @@ export function FeaturesSection({ features, isExpanded: isExpandedProp, onToggle
     setExpandedSections(newExpanded);
   };
 
-  const expandAll = () => {
-    const allCardKeys = displayedFeatures.map((_, i) => `card-${i}`);
-    setExpandedCards(new Set(allCardKeys));
-  };
-
-  const collapseAll = () => {
-    setExpandedCards(new Set());
-  };
-
   // Helper to extract emoji from category name if present
   const getCategoryParts = (category: string): { emoji: string | null; text: string } => {
     // Match emoji at the start of the string
@@ -61,6 +52,15 @@ export function FeaturesSection({ features, isExpanded: isExpandedProp, onToggle
 
   // Display first 9 cards in 3x3 grid by default
   const displayedFeatures = showAllCards ? features : features.slice(0, 9);
+
+  const expandAll = () => {
+    const allCardKeys = displayedFeatures.map((_, i) => `card-${i}`);
+    setExpandedCards(new Set(allCardKeys));
+  };
+
+  const collapseAll = () => {
+    setExpandedCards(new Set());
+  };
 
   return (
     <div className="bg-gradient-to-br from-orange-900/30 via-slate-800/50 to-orange-800/20 rounded-lg overflow-hidden border border-orange-500/40 shadow-lg shadow-orange-500/10 hover:border-orange-400/50 transition-colors">

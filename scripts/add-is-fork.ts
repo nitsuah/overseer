@@ -28,4 +28,7 @@ async function addIsForkColumn() {
     }
 }
 
-addIsForkColumn();
+addIsForkColumn().catch((error: any) => {
+    logger.warn('❌ Unhandled error:', error?.message || error);
+    process.exit(1);
+});

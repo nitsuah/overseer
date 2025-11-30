@@ -28,4 +28,7 @@ async function addIsHiddenColumn() {
     }
 }
 
-addIsHiddenColumn();
+addIsHiddenColumn().catch((error: any) => {
+    logger.warn('❌ Unhandled error:', error?.message || error);
+    process.exit(1);
+});

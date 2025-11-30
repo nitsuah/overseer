@@ -2,9 +2,11 @@ import { neon } from '@neondatabase/serverless';
 
 // Neon serverless Postgres client
 export function getNeonClient() {
-    const databaseUrl = process.env.DATABASE_URL;
+    // Netlify's Neon integration uses NETLIFY_DATABASE_URL
+    // Local development uses DATABASE_URL from .env.local
+    const databaseUrl = process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL;
     if (!databaseUrl) {
-        throw new Error('DATABASE_URL not configured');
+        throw new Error('DATABASE_URL or NETLIFY_DATABASE_URL not configured');
     }
     return neon(databaseUrl);
 }

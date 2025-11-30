@@ -1,7 +1,6 @@
 "use client";
 
 import { Feature } from '@/types/repo';
-import { getDisplayedItems } from '@/lib/expandable-row-utils';
 import { useState } from 'react';
 
 interface FeaturesSectionProps {

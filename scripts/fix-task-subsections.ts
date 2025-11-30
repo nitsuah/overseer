@@ -59,8 +59,10 @@ async function fixTaskSubsections() {
             AND status = ${task.status}
         `;
         
-        if (result.count && result.count > 0) {
-          updated += result.count;
+        // Neon returns an array with a count property
+        const rowCount = (result as unknown as { count?: number }).count;
+        if (rowCount && rowCount > 0) {
+          updated += rowCount;
         }
       }
 

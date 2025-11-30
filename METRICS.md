@@ -12,10 +12,11 @@
 | E2E Test Files      | 1      | Playwright E2E tests (tests/dashboard.spec.ts)                                                                                    |
 | E2E Test Cases      | 5      | Playwright tests passing (unauthenticated state, performance)                                                                     |
 | Database Tables     | 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                   |
-| Repo Columns        | 30+    | Including LOC, test counts, CI status, vulnerabilities, contributor analytics, template health tracking                           |
+| Repo Columns        | 30+    | Including LOC, test counts, CI status, vulnerabilities, contributor analytics, template health tracking, subsection               |
 | API Routes          | 20+    | Including auth, repos CRUD, fix operations, sync, debug, rate-limit, and admin utilities                                          |
-| Utility Files       | 15+    | Including parsers (roadmap, tasks, features, metrics), github-errors.ts, github.ts, ai.ts, sync.ts, and hooks                     |
+| Utility Files       | 15+    | Including parsers (roadmap, tasks, features, metrics), github-errors.ts, github.ts, ai.ts, sync.ts, markdown-utils, and hooks     |
 | Docs Files          | 15+    | Including core docs (README, ROADMAP, TASKS, FEATURES, METRICS, CHANGELOG), OAuth guides, templates, and PM.md agent instructions |
+| Component Files     | 25+    | Dashboard, ExpandableRow, RepoTableRow, detail sections (AI, Stats, Testing, Metrics, Issues, Documentation, etc.)                |
 | Community Standards | 10     | CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING.yml    |
 | Best Practices      | 10     | CI/CD, pre-commit hooks, linting, branch protection, testing, gitignore, Netlify badge, env template, Dependabot, Docker          |
 
@@ -27,7 +28,7 @@
 | PR Turnaround | < 1 day    | Typical merge time   |
 | Skipped Tests | 0          | All tests enabled    |
 | Health Score  | 95/100     | Overseer's own score |
-| Last Updated  | 2025-11-29 | Last audit date      |
+| Last Updated  | 2025-11-30 | Last audit date      |
 
 <!--
 AGENT INSTRUCTIONS:

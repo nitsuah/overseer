@@ -2,7 +2,7 @@
 
 import { ListTodo } from 'lucide-react';
 import { Task } from '@/types/repo';
-import { parseBoldText } from '@/lib/markdown-utils.tsx';
+import { parseBoldText } from '@/lib/markdown-utils';
 import { useState } from 'react';
 
 interface TasksSectionProps {

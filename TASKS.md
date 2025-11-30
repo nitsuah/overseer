@@ -4,6 +4,16 @@
 
 ### Recent Completions (November 2025)
 
+- [x] **Detail Panel Redesign**: Complete UI overhaul with three-row layout, left sidebar (AI Summary + Repo Stats), synchronized expand/collapse
+- [x] **Gradient Backgrounds**: Applied unique color-coded gradients to all sections (purple, orange, blue, green, cyan, amber, red)
+- [x] **Enhanced Health Shields**: Detailed tooltips with component breakdowns for all health metrics
+- [x] **Subsection Support**: Added subsection column to tasks table with migration and parser support
+- [x] **AI Summary Component**: Extracted into dedicated AISummarySection with generate button
+- [x] **Repository Stats Static**: Created component with inline metrics and always-visible refresh button
+- [x] **Bold Text Parsing**: Created markdown-utils for **bold** syntax rendering
+- [x] **Language Icons**: Added getLanguageIcon() helper with compact labels (TS, JS, PY, etc.)
+- [x] **Type & Language Split**: Type icon with repo name, language label with description
+- [x] **Testing Section Enhancement**: Inline coverage progress bar in header
 - [x] **Windows Line Endings Bug Fix**: Fixed markdown parsers to handle CRLF line endings (split(/\r?\n/) instead of split('\n'))
 - [x] **GraphQL Rate Limit Safety**: Added null check for data.resources.graphql in rate-limit endpoint
 - [x] **TypeScript Build Fixes**: Extended Session interface, fixed array mutation, centralized repo type detection

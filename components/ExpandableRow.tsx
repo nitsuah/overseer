@@ -229,7 +229,6 @@ export default function ExpandableRow({
 
             {/* Issues */}
             <IssuesSection 
-              metrics={metrics}
               vulnAlertCount={vulnAlertCount}
               vulnCriticalCount={vulnCriticalCount}
               vulnHighCount={vulnHighCount}

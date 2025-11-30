@@ -1,11 +1,9 @@
 "use client";
 
 import { AlertCircle } from 'lucide-react';
-import { Metric } from '@/types/repo';
 import { useState } from 'react';
 
 interface IssuesSectionProps {
-  metrics: Metric[];
   vulnAlertCount?: number;
   vulnCriticalCount?: number;
   vulnHighCount?: number;
@@ -13,25 +11,14 @@ interface IssuesSectionProps {
   onToggleExpanded?: () => void;
 }
 
-export function IssuesSection({ metrics, vulnAlertCount, vulnCriticalCount, vulnHighCount, isExpanded: isExpandedProp, onToggleExpanded }: IssuesSectionProps) {
+export function IssuesSection({ vulnAlertCount, vulnCriticalCount, vulnHighCount, isExpanded: isExpandedProp, onToggleExpanded }: IssuesSectionProps) {
   const [internalExpanded, setInternalExpanded] = useState(false);
   const isExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
   const setIsExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
   
-  // Filter issue-related metrics
-  const issueMetrics = metrics.filter((m) => {
-    const lowerName = m.name.toLowerCase();
-    return (
-      lowerName.includes('open issues') ||
-      lowerName.includes('critical issue') ||
-      lowerName.includes('high priority issue') ||
-      lowerName.includes('failed build')
-    );
-  });
-
   const hasVulnerabilities = vulnAlertCount !== undefined && vulnAlertCount > 0;
   
-  if (issueMetrics.length === 0 && !hasVulnerabilities) return null;
+  if (!hasVulnerabilities) return null;
 
   return (
     <div className="bg-gradient-to-br from-red-900/30 via-slate-800/50 to-red-800/20 rounded-lg overflow-hidden border border-red-500/40 shadow-lg shadow-red-500/10 hover:border-red-400/50 transition-colors">
@@ -51,37 +38,22 @@ export function IssuesSection({ metrics, vulnAlertCount, vulnCriticalCount, vuln
         <div className="px-4 py-3">
           <div className="space-y-2">
             {/* Vulnerabilities */}
-            {hasVulnerabilities && (
-              <>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 flex items-center gap-1"><span>🔒</span>Vulnerabilities</span>
-                  <span className="text-red-400 font-medium">{vulnAlertCount}</span>
-                </div>
-                {vulnCriticalCount !== undefined && vulnCriticalCount > 0 && (
-                  <div className="flex items-center justify-between text-xs ml-4">
-                    <span className="text-slate-500 text-[10px]">Critical</span>
-                    <span className="text-red-400 font-medium">{vulnCriticalCount}</span>
-                  </div>
-                )}
-                {vulnHighCount !== undefined && vulnHighCount > 0 && (
-                  <div className="flex items-center justify-between text-xs ml-4">
-                    <span className="text-slate-500 text-[10px]">High</span>
-                    <span className="text-orange-400 font-medium">{vulnHighCount}</span>
-                  </div>
-                )}
-                {issueMetrics.length > 0 && <div className="border-t border-slate-700/50 my-2"></div>}
-              </>
-            )}
-            {/* Issue Metrics */}
-            {issueMetrics.map((metric, index) => (
-              <div key={`${metric.name}-${index}`} className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">{metric.name}</span>
-                <span className="text-slate-200 font-medium">
-                  {metric.value}
-                  {metric.unit ?? ''}
-                </span>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 flex items-center gap-1"><span>🔒</span>Vulnerabilities</span>
+              <span className="text-red-400 font-medium">{vulnAlertCount}</span>
+            </div>
+            {vulnCriticalCount !== undefined && vulnCriticalCount > 0 && (
+              <div className="flex items-center justify-between text-xs ml-4">
+                <span className="text-slate-500 text-[10px]">Critical</span>
+                <span className="text-red-400 font-medium">{vulnCriticalCount}</span>
               </div>
-            ))}
+            )}
+            {vulnHighCount !== undefined && vulnHighCount > 0 && (
+              <div className="flex items-center justify-between text-xs ml-4">
+                <span className="text-slate-500 text-[10px]">High</span>
+                <span className="text-orange-400 font-medium">{vulnHighCount}</span>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -18,7 +18,17 @@ logger.info('Initializing NextAuth with:', {
     githubSecretPresent: !!process.env.GITHUB_SECRET,
     nextauthSecretPresent: !!process.env.NEXTAUTH_SECRET,
     nodeEnv: process.env.NODE_ENV,
+    nextauthUrl: process.env.NEXTAUTH_URL,
+    netlifUrl: process.env.URL,
 });
+
+// Set NEXTAUTH_URL from Netlify URL if available
+// This ensures NextAuth uses the correct public URL even in dev mode
+const publicUrl = process.env.URL || process.env.NEXTAUTH_URL;
+if (publicUrl && !process.env.NEXTAUTH_URL) {
+    process.env.NEXTAUTH_URL = publicUrl;
+    logger.info('Set NEXTAUTH_URL from Netlify URL:', publicUrl);
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     secret: process.env.NEXTAUTH_SECRET,
@@ -63,10 +73,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         async redirect({ url, baseUrl }) {
             // Log redirect attempts to debug localhost issue
             logger.info('Redirect callback', { url, baseUrl, env: process.env.NODE_ENV });
+            
+            // Force use of NEXTAUTH_URL if baseUrl is localhost (dev mode issue)
+            const actualBaseUrl = baseUrl.includes('localhost') && process.env.NEXTAUTH_URL 
+                ? process.env.NEXTAUTH_URL 
+                : baseUrl;
+            
             // Always redirect to the same domain
-            if (url.startsWith('/')) return `${baseUrl}${url}`;
-            else if (new URL(url).origin === baseUrl) return url;
-            return baseUrl;
+            if (url.startsWith('/')) return `${actualBaseUrl}${url}`;
+            else if (new URL(url).origin === actualBaseUrl) return url;
+            return actualBaseUrl;
         },
     },
 });

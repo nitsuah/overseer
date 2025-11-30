@@ -7,6 +7,8 @@ import { useState } from 'react';
 
 interface TasksSectionProps {
   tasks: Task[];
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 // Helper to get status icon and color
@@ -21,8 +23,10 @@ function getStatusDisplay(status: string) {
   }
 }
 
-export function TasksSection({ tasks }: TasksSectionProps) {
-  const [isMainExpanded, setIsMainExpanded] = useState(true); // Main panel expanded by default
+export function TasksSection({ tasks, isExpanded: isExpandedProp, onToggleExpanded }: TasksSectionProps) {
+  const [internalExpanded, setInternalExpanded] = useState(true);
+  const isMainExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsMainExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set(['card-0'])); // First card expanded by default
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showDone, setShowDone] = useState(false);
@@ -89,7 +93,7 @@ export function TasksSection({ tasks }: TasksSectionProps) {
   return (
     <div className="bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-blue-800/20 rounded-lg overflow-hidden border border-blue-500/40 shadow-lg shadow-blue-500/10 hover:border-blue-400/50 transition-colors">
       <div
-        onClick={() => setIsMainExpanded(!isMainExpanded)}
+        onClick={setIsMainExpanded}
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-blue-900/20 transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-2">

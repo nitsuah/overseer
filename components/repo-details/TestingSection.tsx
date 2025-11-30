@@ -12,6 +12,8 @@ interface TestingSectionProps {
   testCaseCount?: number;
   bestPractices: BestPractice[];
   metrics?: Metric[];
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 export function TestingSection({
@@ -20,8 +22,12 @@ export function TestingSection({
   testCaseCount,
   bestPractices,
   metrics = [],
+  isExpanded: isExpandedProp,
+  onToggleExpanded,
 }: TestingSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
   
   const testingPractice = bestPractices.find((p) => p.practice_type === 'testing_framework');
   const testFileCount =
@@ -73,10 +79,10 @@ export function TestingSection({
   };
 
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+    <div className="bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-blue-800/20 rounded-lg overflow-hidden border border-blue-500/40 shadow-lg shadow-blue-500/10 hover:border-blue-400/50 transition-colors">
       <div
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 hover:bg-slate-700/40 transition-colors border-b border-slate-700/30 cursor-pointer"
+        onClick={setIsExpanded}
+        className="w-full px-4 py-3 hover:bg-blue-900/20 transition-colors border-b border-blue-500/20 cursor-pointer"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">

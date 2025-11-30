@@ -11,6 +11,8 @@ interface BestPracticesSectionProps {
   isAuthenticated?: boolean;
   onFixPractice?: (repoName: string, practiceType: string) => void;
   onFixAllPractices?: (repoName: string) => void;
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 export function BestPracticesSection({
@@ -19,8 +21,12 @@ export function BestPracticesSection({
   isAuthenticated = true,
   onFixPractice,
   onFixAllPractices,
+  isExpanded: isExpandedProp,
+  onToggleExpanded,
 }: BestPracticesSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
   
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -66,10 +72,10 @@ export function BestPracticesSection({
   );
 
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+    <div className="bg-gradient-to-br from-purple-900/30 via-slate-800/50 to-purple-800/20 rounded-lg overflow-hidden border border-purple-500/40 shadow-lg shadow-purple-500/10 hover:border-purple-400/50 transition-colors">
       <div
-        className="w-full px-4 py-3 hover:bg-slate-700/40 transition-colors border-b border-slate-700/30 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-4 py-3 hover:bg-purple-900/20 transition-colors border-b border-purple-500/20 cursor-pointer"
+        onClick={setIsExpanded}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1">

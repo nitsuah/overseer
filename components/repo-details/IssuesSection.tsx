@@ -6,10 +6,14 @@ import { useState } from 'react';
 
 interface IssuesSectionProps {
   metrics: Metric[];
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
-export function IssuesSection({ metrics }: IssuesSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export function IssuesSection({ metrics, isExpanded: isExpandedProp, onToggleExpanded }: IssuesSectionProps) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
   
   // Filter issue-related metrics
   const issueMetrics = metrics.filter((m) => {
@@ -25,10 +29,10 @@ export function IssuesSection({ metrics }: IssuesSectionProps) {
   if (issueMetrics.length === 0) return null;
 
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+    <div className="bg-gradient-to-br from-red-900/30 via-slate-800/50 to-red-800/20 rounded-lg overflow-hidden border border-red-500/40 shadow-lg shadow-red-500/10 hover:border-red-400/50 transition-colors">
       <div
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 hover:bg-slate-700/40 transition-colors border-b border-slate-700/30 cursor-pointer"
+        onClick={setIsExpanded}
+        className="w-full px-4 py-3 hover:bg-red-900/20 transition-colors border-b border-red-500/20 cursor-pointer"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1">

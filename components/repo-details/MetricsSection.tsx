@@ -6,10 +6,14 @@ import { useState } from 'react';
 
 interface MetricsSectionProps {
   metrics: Metric[];
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
-export function MetricsSection({ metrics }: MetricsSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export function MetricsSection({ metrics, isExpanded: isExpandedProp, onToggleExpanded }: MetricsSectionProps) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
   
   // Filter out metrics that are shown in other sections
   const excludeKeywords = [
@@ -58,14 +62,14 @@ export function MetricsSection({ metrics }: MetricsSectionProps) {
   if (otherMetrics.length === 0) return null;
 
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+    <div className="bg-gradient-to-br from-green-900/30 via-slate-800/50 to-green-800/20 rounded-lg overflow-hidden border border-green-500/40 shadow-lg shadow-green-500/10 hover:border-green-400/50 transition-colors">
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 text-left hover:bg-slate-700/40 transition-colors border-b border-slate-700/30"
+        onClick={setIsExpanded}
+        className="w-full px-4 py-3 text-left hover:bg-green-900/20 transition-colors border-b border-green-500/20"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-cyan-400" />
+            <TrendingUp className="h-4 w-4 text-green-400" />
             <h4 className="text-sm font-semibold text-slate-200">Metrics</h4>
           </div>
           <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>

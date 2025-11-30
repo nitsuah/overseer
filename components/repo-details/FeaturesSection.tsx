@@ -6,10 +6,14 @@ import { useState } from 'react';
 
 interface FeaturesSectionProps {
   features: Feature[];
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
-export function FeaturesSection({ features }: FeaturesSectionProps) {
-  const [isMainExpanded, setIsMainExpanded] = useState(true); // Main panel expanded by default
+export function FeaturesSection({ features, isExpanded: isExpandedProp, onToggleExpanded }: FeaturesSectionProps) {
+  const [internalExpanded, setInternalExpanded] = useState(true);
+  const isMainExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsMainExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showAllCards, setShowAllCards] = useState(false);
@@ -62,7 +66,7 @@ export function FeaturesSection({ features }: FeaturesSectionProps) {
   return (
     <div className="bg-gradient-to-br from-orange-900/30 via-slate-800/50 to-orange-800/20 rounded-lg overflow-hidden border border-orange-500/40 shadow-lg shadow-orange-500/10 hover:border-orange-400/50 transition-colors">
       <div
-        onClick={() => setIsMainExpanded(!isMainExpanded)}
+        onClick={setIsMainExpanded}
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-orange-900/20 transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-2">
@@ -156,7 +160,7 @@ export function FeaturesSection({ features }: FeaturesSectionProps) {
                             : feature.items.slice(0, 3)
                           ).map((item, j) => (
                             <li key={j} className="text-xs text-slate-300 flex items-start gap-2">
-                              <span className="mt-1.5 w-1 h-1 rounded-full bg-blue-500 shrink-0" />
+                              <span className="mt-1.5 w-1 h-1 rounded-full bg-orange-500 shrink-0" />
                               <span>{item}</span>
                             </li>
                           ))}
@@ -166,7 +170,7 @@ export function FeaturesSection({ features }: FeaturesSectionProps) {
                                 e.stopPropagation();
                                 toggleSection(`feature-${i}`);
                               }}
-                              className="text-[10px] text-blue-400 hover:text-blue-300 pl-3"
+                              className="text-[10px] text-orange-400 hover:text-orange-300 pl-3"
                             >
                               {expandedSections.has(`feature-${i}`)
                                 ? 'Show less'

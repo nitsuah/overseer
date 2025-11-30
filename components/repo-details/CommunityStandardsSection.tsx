@@ -10,6 +10,8 @@ interface CommunityStandardsSectionProps {
   isAuthenticated?: boolean;
   onFixStandard?: (repoName: string, standardType: string) => void;
   onFixAllStandards?: (repoName: string) => void;
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 export function CommunityStandardsSection({
@@ -18,8 +20,12 @@ export function CommunityStandardsSection({
   isAuthenticated = true,
   onFixStandard,
   onFixAllStandards,
+  isExpanded: isExpandedProp,
+  onToggleExpanded,
 }: CommunityStandardsSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
   
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -68,10 +74,10 @@ export function CommunityStandardsSection({
   );
 
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+    <div className="bg-gradient-to-br from-green-900/30 via-slate-800/50 to-green-800/20 rounded-lg overflow-hidden border border-green-500/40 shadow-lg shadow-green-500/10 hover:border-green-400/50 transition-colors">
       <div
-        className="w-full px-4 py-3 hover:bg-slate-700/40 transition-colors border-b border-slate-700/30 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-4 py-3 hover:bg-green-900/20 transition-colors border-b border-green-500/20 cursor-pointer"
+        onClick={setIsExpanded}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1">

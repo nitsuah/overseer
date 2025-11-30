@@ -7,6 +7,8 @@ import { useState } from 'react';
 
 interface RoadmapSectionProps {
   roadmapItems: RoadmapItem[];
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 // Helper to get status icon and color
@@ -21,8 +23,10 @@ function getStatusDisplay(status: string) {
   }
 }
 
-export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
-  const [isMainExpanded, setIsMainExpanded] = useState(true); // Main panel expanded by default
+export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onToggleExpanded }: RoadmapSectionProps) {
+  const [internalExpanded, setInternalExpanded] = useState(true);
+  const isMainExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsMainExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set(['card-0'])); // First card expanded by default
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showCompleted, setShowCompleted] = useState(false);
@@ -73,7 +77,7 @@ export function RoadmapSection({ roadmapItems }: RoadmapSectionProps) {
   return (
     <div className="bg-gradient-to-br from-purple-900/30 via-slate-800/50 to-purple-800/20 rounded-lg overflow-hidden border border-purple-500/40 shadow-lg shadow-purple-500/10 hover:border-purple-400/50 transition-colors">
       <div
-        onClick={() => setIsMainExpanded(!isMainExpanded)}
+        onClick={setIsMainExpanded}
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-purple-900/20 transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-2">

@@ -12,6 +12,8 @@ interface DocumentationSectionProps {
   isAuthenticated?: boolean;
   onFixDoc?: (repoName: string, docType: string) => void;
   onFixAllDocs?: (repoName: string) => void;
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 export function DocumentationSection({ 
@@ -20,9 +22,13 @@ export function DocumentationSection({
   repoName,
   isAuthenticated = true,
   onFixDoc,
-  onFixAllDocs
+  onFixAllDocs,
+  isExpanded: isExpandedProp,
+  onToggleExpanded,
 }: DocumentationSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
   
   const coreDocs = docStatuses.filter((d) =>
     ['roadmap', 'tasks', 'metrics', 'features'].includes(d.doc_type)
@@ -41,10 +47,10 @@ export function DocumentationSection({
   const freshness = getReadmeFreshness(readmeLastUpdated);
 
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+    <div className="bg-gradient-to-br from-amber-900/30 via-slate-800/50 to-amber-800/20 rounded-lg overflow-hidden border border-amber-500/40 shadow-lg shadow-amber-500/10 hover:border-amber-400/50 transition-colors">
       <div
-        className="w-full px-4 py-3 hover:bg-slate-700/40 transition-colors border-b border-slate-700/30 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-4 py-3 hover:bg-amber-900/20 transition-colors border-b border-amber-500/20 cursor-pointer"
+        onClick={setIsExpanded}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1">

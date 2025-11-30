@@ -69,9 +69,9 @@ export function RepositoryStatsSectionStatic({
   });
   
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50">
+    <div className="bg-gradient-to-br from-cyan-900/30 via-slate-800/50 to-cyan-800/20 rounded-lg overflow-hidden border border-cyan-500/40 shadow-lg shadow-cyan-500/10 hover:border-cyan-400/50 transition-colors">
       <div
-        className="w-full px-4 py-3 border-b border-slate-700/30 cursor-pointer hover:bg-slate-700/40 transition-colors"
+        className="w-full px-4 py-3 border-b border-cyan-500/20 cursor-pointer hover:bg-cyan-900/20 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between">
@@ -80,6 +80,21 @@ export function RepositoryStatsSectionStatic({
             <h3 className="text-sm font-semibold text-slate-200">Repository Stats</h3>
             <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
           </div>
+          {/* Refresh Button - Always Visible */}
+          {onSyncSingleRepo && (hasNoData || isAuthenticated) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSyncSingleRepo();
+              }}
+              disabled={isSyncing}
+              className="flex items-center justify-center gap-1.5 px-2 py-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 text-xs font-medium ml-2"
+              title="Refresh repository data"
+            >
+              <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Refresh'}</span>
+            </button>
+          )}
         </div>
       </div>
       {isExpanded && (
@@ -201,24 +216,6 @@ export function RepositoryStatsSectionStatic({
                   </span>
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* Refresh Button - At Bottom */}
-          {onSyncSingleRepo && (hasNoData || isAuthenticated) && (
-            <div className="pt-3 border-t border-slate-700/50">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSyncSingleRepo();
-                }}
-                disabled={isSyncing}
-                className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 text-xs font-medium"
-                title="Refresh repository data"
-              >
-                <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
-                <span className="truncate">{isSyncing ? 'Syncing...' : 'Refresh Data'}</span>
-              </button>
             </div>
           )}
           </div>

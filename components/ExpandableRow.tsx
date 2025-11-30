@@ -95,6 +95,9 @@ export default function ExpandableRow({
 }: ExpandableRowProps) {
   const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
   const [aiSummaryKey, setAiSummaryKey] = useState(aiSummary);
+  const [projectSectionsExpanded, setProjectSectionsExpanded] = useState(true);
+  const [row2Expanded, setRow2Expanded] = useState(false); // Documentation, Best Practices, Testing
+  const [row3Expanded, setRow3Expanded] = useState(false); // Standards, Metrics, Issues
   
   // Reset dismissed state when a new AI summary is generated
   if (aiSummary !== aiSummaryKey) {
@@ -140,32 +143,36 @@ export default function ExpandableRow({
             isAuthenticated={isAuthenticated}
             hasNoData={hasNoData}
           />
-          
-          {/* Issues */}
-          <IssuesSection metrics={metrics} />
-          
-          {/* Metrics */}
-          {metrics && metrics.length > 0 && (
-            <MetricsSection metrics={metrics} />
-          )}
         </div>
 
         {/* Right Content Grid */}
         <div className="flex-1 space-y-6">
-          {/* First Row: Roadmap, Tasks, Features */}
+          {/* First Row: Features, Roadmap, Tasks */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Features */}
+            <FeaturesSection 
+              features={features}
+              isExpanded={projectSectionsExpanded}
+              onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
+            />
+
             {/* Roadmap */}
-            <RoadmapSection roadmapItems={roadmapItems} />
+            <RoadmapSection 
+              roadmapItems={roadmapItems}
+              isExpanded={projectSectionsExpanded}
+              onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
+            />
 
             {/* Tasks */}
-            <TasksSection tasks={tasks} />
-
-            {/* Features */}
-            <FeaturesSection features={features} />
+            <TasksSection 
+              tasks={tasks}
+              isExpanded={projectSectionsExpanded}
+              onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
+            />
           </div>
 
-          {/* Second Row: Documentation, Community Standards, Best Practices, Testing */}
-          <div className="grid grid-cols-4 gap-4">
+          {/* Second Row: Documentation, Best Practices, Testing */}
+          <div className="grid grid-cols-3 gap-6">
             {/* Documentation Status */}
             <DocumentationSection 
               docStatuses={docStatuses} 
@@ -174,15 +181,8 @@ export default function ExpandableRow({
               isAuthenticated={isAuthenticated}
               onFixDoc={onFixDoc}
               onFixAllDocs={onFixAllDocs}
-            />
-
-            {/* Community Standards */}
-            <CommunityStandardsSection
-              communityStandards={communityStandards}
-              repoName={repoName}
-              isAuthenticated={isAuthenticated}
-              onFixStandard={onFixStandard}
-              onFixAllStandards={onFixAllStandards}
+              isExpanded={row2Expanded}
+              onToggleExpanded={() => setRow2Expanded(!row2Expanded)}
             />
 
             {/* Best Practices */}
@@ -192,6 +192,8 @@ export default function ExpandableRow({
               isAuthenticated={isAuthenticated}
               onFixPractice={onFixPractice}
               onFixAllPractices={onFixAllPractices}
+              isExpanded={row2Expanded}
+              onToggleExpanded={() => setRow2Expanded(!row2Expanded)}
             />
 
             {/* Testing */}
@@ -201,6 +203,38 @@ export default function ExpandableRow({
               testCaseCount={testCaseCount}
               bestPractices={bestPractices}
               metrics={metrics}
+              isExpanded={row2Expanded}
+              onToggleExpanded={() => setRow2Expanded(!row2Expanded)}
+            />
+          </div>
+
+          {/* Third Row: Standards, Metrics, Issues */}
+          <div className="grid grid-cols-3 gap-6">
+            {/* Community Standards */}
+            <CommunityStandardsSection
+              communityStandards={communityStandards}
+              repoName={repoName}
+              isAuthenticated={isAuthenticated}
+              onFixStandard={onFixStandard}
+              onFixAllStandards={onFixAllStandards}
+              isExpanded={row3Expanded}
+              onToggleExpanded={() => setRow3Expanded(!row3Expanded)}
+            />
+
+            {/* Metrics */}
+            {metrics && metrics.length > 0 && (
+              <MetricsSection 
+                metrics={metrics}
+                isExpanded={row3Expanded}
+                onToggleExpanded={() => setRow3Expanded(!row3Expanded)}
+              />
+            )}
+
+            {/* Issues */}
+            <IssuesSection 
+              metrics={metrics}
+              isExpanded={row3Expanded}
+              onToggleExpanded={() => setRow3Expanded(!row3Expanded)}
             />
           </div>
         </div>

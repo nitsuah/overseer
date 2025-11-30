@@ -2,6 +2,7 @@
 
 import { Shield } from 'lucide-react';
 import { BestPractice, Metric } from '@/types/repo';
+import { useState } from 'react';
 
 import { MAX_UNIT_LENGTH } from '../../lib/constants';
 
@@ -11,6 +12,8 @@ interface TestingSectionProps {
   testCaseCount?: number;
   bestPractices: BestPractice[];
   metrics?: Metric[];
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 export function TestingSection({
@@ -19,7 +22,13 @@ export function TestingSection({
   testCaseCount,
   bestPractices,
   metrics = [],
+  isExpanded: isExpandedProp,
+  onToggleExpanded,
 }: TestingSectionProps) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
+  
   const testingPractice = bestPractices.find((p) => p.practice_type === 'testing_framework');
   const testFileCount =
     testingPractice?.details &&
@@ -70,12 +79,34 @@ export function TestingSection({
   };
 
   return (
-    <div className="bg-slate-800/30 rounded-lg p-4">
-      <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-3">
-        <Shield className="h-4 w-4 text-blue-400" />
-        <span>Testing</span>
-      </h4>
-      <div className="space-y-3">
+    <div className="bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-blue-800/20 rounded-lg overflow-hidden border border-blue-500/40 shadow-lg shadow-blue-500/10 hover:border-blue-400/50 transition-colors">
+      <div
+        onClick={setIsExpanded}
+        className="w-full px-4 py-3 hover:bg-blue-900/20 transition-colors border-b border-blue-500/20 cursor-pointer"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-blue-400" />
+            <h4 className="text-sm font-semibold text-slate-200">Testing</h4>
+            <span className="text-slate-500 text-xs ml-1">{isExpanded ? '▼' : '▶'}</span>
+          </div>
+          {/* Coverage Score - Inline */}
+          {coverageScore !== undefined && (
+            <div className="flex items-center gap-2 flex-1">
+              <div className="flex-1 max-w-[120px] bg-slate-700 rounded-full h-1.5">
+                <div
+                  className="bg-linear-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all"
+                  style={{ width: `${Math.min(coverageScore, 100)}%` }}
+                />
+              </div>
+              <span className="text-xs font-bold text-blue-400 whitespace-nowrap">{coverageScore}%</span>
+            </div>
+          )}
+        </div>
+      </div>
+      {isExpanded && (
+        <div className="px-4 py-3">
+          <div className="space-y-3">
         {testingStatus && (
           <>
             <div className="flex items-center justify-between text-xs">
@@ -105,22 +136,6 @@ export function TestingSection({
           </>
         )}
 
-        {/* Coverage Score */}
-        {coverageScore !== undefined && (
-          <div>
-            <div className="flex items-center justify-between mb-2 text-xs">
-              <span className="text-slate-400">Coverage</span>
-              <span className="text-sm font-bold text-blue-400">{coverageScore}%</span>
-            </div>
-            <div className="w-full bg-slate-700 rounded-full h-2">
-              <div
-                className="bg-linear-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all"
-                style={{ width: `${Math.min(coverageScore, 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
-
         {/* Additional Testing Metrics from METRICS.md */}
         {testingMetrics.map((metric, index) => {
           const detail = getMetricDetail(metric);
@@ -140,7 +155,9 @@ export function TestingSection({
             </div>
           );
         })}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

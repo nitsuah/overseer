@@ -1,12 +1,12 @@
 "use client";
 
-import { X, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { Task, RoadmapItem, DocStatus, Metric, Feature, BestPractice, CommunityStandard } from '@/types/repo';
-import { RepositoryStatsSection } from './repo-details/RepositoryStatsSection';
+import { RepositoryStatsSectionStatic } from './repo-details/RepositoryStatsSectionStatic';
 import { TestingSection } from './repo-details/TestingSection';
 import { MetricsSection } from './repo-details/MetricsSection';
 import { IssuesSection } from './repo-details/IssuesSection';
+import { AISummarySection } from './repo-details/AISummarySection';
 import { DocumentationSection } from './repo-details/DocumentationSection';
 import { BestPracticesSection } from './repo-details/BestPracticesSection';
 import { CommunityStandardsSection } from './repo-details/CommunityStandardsSection';
@@ -50,6 +50,8 @@ interface ExpandableRowProps {
   onSyncSingleRepo?: () => void;
   syncingRepo?: string | null;
   repoNameForSync?: string;
+  onGenerateSummary?: () => void;
+  generatingSummary?: boolean;
 }
 
 export default function ExpandableRow({
@@ -88,137 +90,154 @@ export default function ExpandableRow({
   onSyncSingleRepo,
   syncingRepo,
   repoNameForSync,
+  onGenerateSummary,
+  generatingSummary = false,
 }: ExpandableRowProps) {
   const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
+  const [aiSummaryKey, setAiSummaryKey] = useState(aiSummary);
+  const [projectSectionsExpanded, setProjectSectionsExpanded] = useState(true);
+  const [row2Expanded, setRow2Expanded] = useState(false); // Documentation, Best Practices, Testing
+  const [row3Expanded, setRow3Expanded] = useState(false); // Standards, Metrics, Issues
+  
+  // Reset dismissed state when a new AI summary is generated
+  if (aiSummary !== aiSummaryKey) {
+    setAiSummaryDismissed(false);
+    setAiSummaryKey(aiSummary);
+  }
   
   const isSyncing = syncingRepo === repoNameForSync;
   const hasNoData = roadmapItems.length === 0 && tasks.length === 0 && features.length === 0;
 
   return (
-    <div className="p-6">
-      {/* Sync/Refresh Button - Show when no data or always for convenience */}
-      {onSyncSingleRepo && (hasNoData || isAuthenticated) && (
-        <div className="mb-4 flex justify-end">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onSyncSingleRepo();
-            }}
-            disabled={isSyncing}
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 text-sm"
-            title="Refresh repository data"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? 'Syncing...' : 'Refresh Data'}
-          </button>
-        </div>
-      )}
-      {/* AI Summary - Only show if generated successfully (not error messages) */}
-      {aiSummary && 
-       aiSummary.trim() &&
-       !aiSummary.startsWith('Summary unavailable') &&
-       !aiSummaryDismissed && (
-        <div className="mb-6 bg-linear-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4 relative">
-          <button
-            onClick={() => setAiSummaryDismissed(true)}
-            className="absolute top-2 right-2 text-slate-400 hover:text-slate-200 transition-colors"
-            title="Dismiss AI summary"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <h4 className="text-sm font-semibold text-purple-300 mb-2 flex items-center gap-2">
-            <span className="text-lg">🤖</span>
-            <span>AI Summary</span>
-          </h4>
-          <p className="text-sm text-slate-300 leading-relaxed pr-6">{aiSummary}</p>
-        </div>
-      )}
-
-      {/* First Row: Roadmap, Tasks, Features + Repo Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Roadmap, Tasks, Features (9 cols) */}
-        <div className="lg:col-span-9 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Roadmap */}
-            <RoadmapSection roadmapItems={roadmapItems} />
-
-            {/* Tasks */}
-            <TasksSection tasks={tasks} />
-
-            {/* Features */}
-            <FeaturesSection features={features} />
-          </div>
-        </div>
-
-        {/* Right Column: Repository Stats (3 cols) */}
-        <div className="lg:col-span-3">
-          <RepositoryStatsSection
+    <div className="p-6 bg-gradient-to-br from-slate-950/80 via-slate-900/60 to-slate-950/80 border-t border-slate-700/50">
+      {/* Main Layout: Repository Stats + Issues (left sidebar) + Content Grid (right) */}
+      <div className="flex gap-6">
+        {/* Left Sidebar: AI Summary + Repository Stats + Issues + Metrics */}
+        <div className="w-96 shrink-0 space-y-6">
+          {/* AI Summary - First in sidebar */}
+          <AISummarySection
+            aiSummary={aiSummaryDismissed ? undefined : aiSummary}
+            repoName={repoName}
+            isAuthenticated={isAuthenticated}
+            generatingSummary={generatingSummary}
+            onGenerateSummary={onGenerateSummary}
+            onDismiss={() => setAiSummaryDismissed(true)}
+          />
+          
+          <RepositoryStatsSectionStatic
             stars={stars}
             forks={forks}
             branches={branches}
             totalLoc={totalLoc}
             locLanguageBreakdown={locLanguageBreakdown}
-            vulnAlertCount={vulnAlertCount}
-            vulnCriticalCount={vulnCriticalCount}
-            vulnHighCount={vulnHighCount}
             contributorCount={contributorCount}
             commitFrequency={commitFrequency}
             busFactor={busFactor}
             avgPrMergeTimeHours={avgPrMergeTimeHours}
             metrics={metrics}
+            onSyncSingleRepo={onSyncSingleRepo}
+            isSyncing={isSyncing}
+            isAuthenticated={isAuthenticated}
+            hasNoData={hasNoData}
           />
         </div>
-      </div>
 
-      {/* Second Row: Documentation, Community Standards, Best Practices, Testing, Issues - All in one row */}
-      <div className="grid grid-cols-5 gap-4 mt-6">
-        {/* Documentation Status */}
-        <DocumentationSection 
-          docStatuses={docStatuses} 
-          readmeLastUpdated={readmeLastUpdated}
-          repoName={repoName}
-          isAuthenticated={isAuthenticated}
-          onFixDoc={onFixDoc}
-          onFixAllDocs={onFixAllDocs}
-        />
+        {/* Right Content Grid */}
+        <div className="flex-1 space-y-6">
+          {/* First Row: Features, Roadmap, Tasks */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Features */}
+            <FeaturesSection 
+              features={features}
+              isExpanded={projectSectionsExpanded}
+              onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
+            />
 
-        {/* Community Standards */}
-        <CommunityStandardsSection
-          communityStandards={communityStandards}
-          repoName={repoName}
-          isAuthenticated={isAuthenticated}
-          onFixStandard={onFixStandard}
-          onFixAllStandards={onFixAllStandards}
-        />
+            {/* Roadmap */}
+            <RoadmapSection 
+              roadmapItems={roadmapItems}
+              isExpanded={projectSectionsExpanded}
+              onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
+            />
 
-        {/* Best Practices */}
-        <BestPracticesSection
-          bestPractices={bestPractices}
-          repoName={repoName}
-          isAuthenticated={isAuthenticated}
-          onFixPractice={onFixPractice}
-          onFixAllPractices={onFixAllPractices}
-        />
+            {/* Tasks */}
+            <TasksSection 
+              tasks={tasks}
+              isExpanded={projectSectionsExpanded}
+              onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
+            />
+          </div>
 
-        {/* Testing */}
-        <TestingSection
-          testingStatus={testingStatus}
-          coverageScore={coverageScore}
-          testCaseCount={testCaseCount}
-          bestPractices={bestPractices}
-          metrics={metrics}
-        />
+          {/* Second Row: Documentation, Best Practices, Testing */}
+          <div className="grid grid-cols-3 gap-6">
+            {/* Documentation Status */}
+            <DocumentationSection 
+              docStatuses={docStatuses} 
+              readmeLastUpdated={readmeLastUpdated}
+              repoName={repoName}
+              isAuthenticated={isAuthenticated}
+              onFixDoc={onFixDoc}
+              onFixAllDocs={onFixAllDocs}
+              isExpanded={row2Expanded}
+              onToggleExpanded={() => setRow2Expanded(!row2Expanded)}
+            />
 
-        {/* Issues */}
-        <IssuesSection metrics={metrics} />
-      </div>
+            {/* Best Practices */}
+            <BestPracticesSection
+              bestPractices={bestPractices}
+              repoName={repoName}
+              isAuthenticated={isAuthenticated}
+              onFixPractice={onFixPractice}
+              onFixAllPractices={onFixAllPractices}
+              isExpanded={row2Expanded}
+              onToggleExpanded={() => setRow2Expanded(!row2Expanded)}
+            />
 
-      {/* Metrics Row - if needed separately */}
-      {metrics && metrics.length > 0 && (
-        <div className="mt-6">
-          <MetricsSection metrics={metrics} />
+            {/* Testing */}
+            <TestingSection
+              testingStatus={testingStatus}
+              coverageScore={coverageScore}
+              testCaseCount={testCaseCount}
+              bestPractices={bestPractices}
+              metrics={metrics}
+              isExpanded={row2Expanded}
+              onToggleExpanded={() => setRow2Expanded(!row2Expanded)}
+            />
+          </div>
+
+          {/* Third Row: Standards, Metrics, Issues */}
+          <div className="grid grid-cols-3 gap-6">
+            {/* Community Standards */}
+            <CommunityStandardsSection
+              communityStandards={communityStandards}
+              repoName={repoName}
+              isAuthenticated={isAuthenticated}
+              onFixStandard={onFixStandard}
+              onFixAllStandards={onFixAllStandards}
+              isExpanded={row3Expanded}
+              onToggleExpanded={() => setRow3Expanded(!row3Expanded)}
+            />
+
+            {/* Metrics */}
+            {metrics && metrics.length > 0 && (
+              <MetricsSection 
+                metrics={metrics}
+                isExpanded={row3Expanded}
+                onToggleExpanded={() => setRow3Expanded(!row3Expanded)}
+              />
+            )}
+
+            {/* Issues */}
+            <IssuesSection 
+              vulnAlertCount={vulnAlertCount}
+              vulnCriticalCount={vulnCriticalCount}
+              vulnHighCount={vulnHighCount}
+              isExpanded={row3Expanded}
+              onToggleExpanded={() => setRow3Expanded(!row3Expanded)}
+            />
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

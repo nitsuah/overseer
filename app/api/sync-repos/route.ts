@@ -122,6 +122,17 @@ export async function POST() {
                 const tasksContent = await github.getFileContent(repo.name, 'TASKS.md');
                 if (tasksContent) {
                     const tasksData = parseTasks(tasksContent);
+                    logger.info(`Parsed ${tasksData.tasks.length} tasks from ${repo.name}`);
+                    
+                    // Log first few tasks to verify subsections are being parsed
+                    const sampleTasks = tasksData.tasks.slice(0, 3);
+                    logger.info('Sample tasks:', JSON.stringify(sampleTasks.map(t => ({ 
+                        title: t.title.substring(0, 50), 
+                        status: t.status, 
+                        section: t.section,
+                        subsection: t.subsection 
+                    })), null, 2));
+                    
                     await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
                     
                     // Track seen task IDs to handle duplicates
@@ -139,8 +150,8 @@ export async function POST() {
                         seenTaskIds.add(taskId);
                         
                         await db`
-                        INSERT INTO tasks (repo_id, task_id, title, status, section)
-                        VALUES (${repoId}, ${taskId}, ${task.title}, ${task.status}, ${task.section})
+                        INSERT INTO tasks (repo_id, task_id, title, status, section, subsection)
+                        VALUES (${repoId}, ${taskId}, ${task.title}, ${task.status}, ${task.section}, ${task.subsection})
                     `;
                     }
                     await db`

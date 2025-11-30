@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow access to login page, main dashboard, and API routes without authentication
-  if (pathname.startsWith('/api/auth') || pathname === '/login' || pathname === '/' || pathname.startsWith('/api/repos') || pathname.startsWith('/api/repo-details') || pathname === '/api/migrate' || pathname === '/api/seed-defaults' || pathname === '/api/check-schema' || pathname === '/api/add-columns') {
+  if (pathname.startsWith('/api/auth') || pathname === '/login' || pathname === '/' || pathname.startsWith('/api/repos') || pathname.startsWith('/api/repo-details') || pathname.startsWith('/api/migrate') || pathname === '/api/seed-defaults' || pathname === '/api/check-schema' || pathname === '/api/add-columns') {
     return NextResponse.next();
   }
 

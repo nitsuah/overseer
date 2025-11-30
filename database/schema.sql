@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   description TEXT,
   status TEXT CHECK (status IN ('todo', 'in-progress', 'done')) DEFAULT 'todo',
   section TEXT,
+  subsection TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(repo_id, task_id)
@@ -120,6 +121,7 @@ CREATE INDEX IF NOT EXISTS idx_repos_type ON repos(repo_type);
 CREATE INDEX IF NOT EXISTS idx_repos_hidden ON repos(is_hidden);
 CREATE INDEX IF NOT EXISTS idx_tasks_repo_id ON tasks(repo_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_tasks_subsection ON tasks(subsection);
 CREATE INDEX IF NOT EXISTS idx_roadmap_repo_id ON roadmap_items(repo_id);
 CREATE INDEX IF NOT EXISTS idx_roadmap_status ON roadmap_items(status);
 CREATE INDEX IF NOT EXISTS idx_metrics_repo_id ON metrics(repo_id);

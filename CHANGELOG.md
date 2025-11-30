@@ -11,6 +11,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **UX Roadmap Item:** Doc fix preview modal with template preview and pick-and-choose functionality before PR creation (planned)
 
+## [1.4.0] - 2025-11-30
+
+### Added
+
+- **Detail Panel Redesign:** Complete UI overhaul with three-row layout architecture
+- **Left Sidebar Layout:** AI Summary and Repository Stats consolidated in dedicated sidebar
+- **Synchronized Expand/Collapse:** Row-level state management for project sections (Row 1), quality sections (Row 2), and standards sections (Row 3)
+- **Gradient Backgrounds:** Unique color-coded gradients for all sections (purple AI/Roadmap, orange Features, blue Tasks/Testing, green Standards/Metrics, cyan Repo Stats, amber Documentation, red Issues)
+- **Enhanced Health Shields:** Detailed tooltips showing component breakdowns for Community Standards, Best Practices, Testing, Coverage, and Documentation
+- **Subsection Support:** Added subsection column to tasks table with migration script and parser support
+- **AI Summary Component:** Extracted into dedicated component (AISummarySection) with generate button and dismissible state
+- **Repository Stats Static Component:** Created RepositoryStatsSectionStatic with inline metrics and always-visible refresh button
+- **Bold Text Parsing:** Created lib/markdown-utils.tsx for rendering **bold** markdown syntax in titles
+- **Show More/Less Controls:** Granular controls for showing all quarters/subsections or completed items
+- **Language Icon Mapping:** Created getLanguageIcon() helper with compact 2-3 letter labels
+- **Health Shield Badges:** Coverage percentage and documentation health badges added to row displays
+
+### Changed
+
+- **Testing Section Header:** Moved coverage progress bar inline with section title for better space utilization
+- **Refresh Button Location:** Moved from bottom of detail panel to Repository Stats header (always visible)
+- **Type & Language Display:** Split type icon to Repository column (with name), language label to Description column (at end)
+- **Features/Roadmap/Tasks Display:** Reversed order to show newest first with expandable card-based layout
+- **Default Expansion States:** Row 1 (project) expanded by default, Rows 2-3 (quality/standards) collapsed
+- **Section Organization:** Row 1 = Features/Roadmap/Tasks, Row 2 = Documentation/Best Practices/Testing, Row 3 = Standards/Metrics/Issues
+- **Dashboard Table:** Removed Type and Language columns (moved to inline displays), enhanced row gradients
+- **API Endpoint:** Added subsection field to tasks sync logic in sync-repos and repo sync
+
+### Fixed
+
+- **Array Mutation Warning:** Changed features .reverse() to .slice().reverse()
+- **Doc Health Calculation:** Added bot and research repo types to getExpectedDocs()
+- **Tasks Table Schema:** Added subsection column with proper index
+- **Migration Endpoint:** Created /api/migrate/add_tasks_subsection for database updates
+
 ## [1.3.0] - 2025-11-27
 
 ### Added

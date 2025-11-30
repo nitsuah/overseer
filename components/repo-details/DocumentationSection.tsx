@@ -3,6 +3,7 @@
 import { CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { DocStatus } from '@/types/repo';
 import { getReadmeFreshness } from '@/lib/expandable-row-utils';
+import { useState } from 'react';
 
 interface DocumentationSectionProps {
   docStatuses: DocStatus[];
@@ -11,6 +12,8 @@ interface DocumentationSectionProps {
   isAuthenticated?: boolean;
   onFixDoc?: (repoName: string, docType: string) => void;
   onFixAllDocs?: (repoName: string) => void;
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 export function DocumentationSection({ 
@@ -19,8 +22,14 @@ export function DocumentationSection({
   repoName,
   isAuthenticated = true,
   onFixDoc,
-  onFixAllDocs
+  onFixAllDocs,
+  isExpanded: isExpandedProp,
+  onToggleExpanded,
 }: DocumentationSectionProps) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
+  
   const coreDocs = docStatuses.filter((d) =>
     ['roadmap', 'tasks', 'metrics', 'features'].includes(d.doc_type)
   );
@@ -38,28 +47,37 @@ export function DocumentationSection({
   const freshness = getReadmeFreshness(readmeLastUpdated);
 
   return (
-    <div className="bg-slate-800/30 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-          <span className="text-lg">📄</span>
-          <span>Documentation</span>
-          <span className="text-xs text-slate-500 font-normal">
-            ({docStatuses.length})
-          </span>
-        </h4>
-        {isAuthenticated && missingWithTemplates.length > 0 && onFixAllDocs && repoName && (
-          <button
-            onClick={() => onFixAllDocs(repoName)}
-            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
-            title="Create PR for all missing documentation"
-          >
-            Fix All ({missingWithTemplates.length})
-          </button>
-        )}
+    <div className="bg-gradient-to-br from-amber-900/30 via-slate-800/50 to-amber-800/20 rounded-lg overflow-hidden border border-amber-500/40 shadow-lg shadow-amber-500/10 hover:border-amber-400/50 transition-colors">
+      <div
+        className="w-full px-4 py-3 hover:bg-amber-900/20 transition-colors border-b border-amber-500/20 cursor-pointer"
+        onClick={setIsExpanded}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-1">
+            <span className="text-lg">📄</span>
+            <h4 className="text-sm font-semibold text-slate-200">Documentation</h4>
+            <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {isAuthenticated && missingWithTemplates.length > 0 && onFixAllDocs && repoName && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFixAllDocs(repoName);
+                }}
+                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
+                title="Create PR for all missing documentation"
+              >
+                Fix All ({missingWithTemplates.length})
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-
-      {/* Core Docs */}
-      <div className="mb-4">
+      {isExpanded && (
+        <div className="px-4 py-3">
+          {/* Core Docs */}
+          <div className="mb-4">
         <h5 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Core</h5>
         <div className="space-y-2">
           {coreDocs
@@ -190,6 +208,8 @@ export function DocumentationSection({
               {freshness.daysSince}d ago ({freshness.label})
             </span>
           </div>
+        </div>
+      )}
         </div>
       )}
     </div>

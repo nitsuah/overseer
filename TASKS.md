@@ -4,6 +4,17 @@
 
 ### Recent Completions (November 2025)
 
+- [x] **Dependency Updates**: Bumped @types/node to 24.10.1, dotenv to 17.2.3, and minor-and-patch group packages
+- [x] **Detail Panel Redesign**: Complete UI overhaul with three-row layout, left sidebar (AI Summary + Repo Stats), synchronized expand/collapse
+- [x] **Gradient Backgrounds**: Applied unique color-coded gradients to all sections (purple, orange, blue, green, cyan, amber, red)
+- [x] **Enhanced Health Shields**: Detailed tooltips with component breakdowns for all health metrics
+- [x] **Subsection Support**: Added subsection column to tasks table with migration and parser support
+- [x] **AI Summary Component**: Extracted into dedicated AISummarySection with generate button
+- [x] **Repository Stats Static**: Created component with inline metrics and always-visible refresh button
+- [x] **Bold Text Parsing**: Created markdown-utils for **bold** syntax rendering
+- [x] **Language Icons**: Added getLanguageIcon() helper with compact labels (TS, JS, PY, etc.)
+- [x] **Type & Language Split**: Type icon with repo name, language label with description
+- [x] **Testing Section Enhancement**: Inline coverage progress bar in header
 - [x] **Windows Line Endings Bug Fix**: Fixed markdown parsers to handle CRLF line endings (split(/\r?\n/) instead of split('\n'))
 - [x] **GraphQL Rate Limit Safety**: Added null check for data.resources.graphql in rate-limit endpoint
 - [x] **TypeScript Build Fixes**: Extended Session interface, fixed array mutation, centralized repo type detection
@@ -45,17 +56,14 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ## In Progress
 
-- [ ] Fix Github Auth in PROD - currently failing due to OAuth app misconfiguration? or redirect URI issue? (we have local and prod versions in github, both authorized)
-- [ ] When not logged in the two expected default repos are not shown (overseer, nitsuah-io) might be a routes auth thing? GET `https://ghoverseer.netlify.app/api/auth/signin/github?` 500 (Internal Server Error)
-- [ ] AI fix Community Standards Gaps (Cake Test) - Overseer tracks these but doesn't have them itself at root, will need to add using overseer to test the features (maybe using AI generate to take the template, and the repo info, and create them):
-  - CODE_OF_CONDUCT.md (exists in templates/ only)
-  - SECURITY.md (exists in templates/ only)
-  - Issue Templates (exists in templates/ only)
-  - PR Template (not present)
-
-**Priority**: Medium - Nice to have for dogfooding our own standards and integrating AI further.
+_No tasks currently in progress._
 
 ## Todo
+
+### Fix Auth
+
+- [ ] Fix Github Auth in PROD - currently failing due to OAuth app misconfiguration? or redirect URI issue? (we have local and prod versions in github, both authorized) NEXTAUTH manual steps missing?
+- [ ] When not logged in the two expected default repos are not shown (overseer, nitsuah-io) might be a routes auth thing? GET `https://ghoverseer.netlify.app/api/auth/signin/github?` 500 (Internal Server Error) maybe the button for sync all repos when not logged in needs to sync just the two expected default repos? might be locked behind auth currently? or might be a PROD deploy/db thing?
 
 ### Phase 7: UX Improvements
 
@@ -63,6 +71,13 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 - [ ] Implement template preview in modal with markdown rendering
 - [ ] Add pick-and-choose functionality for batch fix operations
 - [ ] Add "Do you really want to fix all?" confirmation with per-doc opt-in
+- [ ] AI fix Community Standards Gaps (Cake Test) - Overseer tracks these but doesn't have them itself at root, will need to add them as a test of using overseer to test the features (maybe now we can connect AI generate to take the template, and the repo info, and create them):
+  - CODE_OF_CONDUCT.md (exists in templates/ only)
+  - SECURITY.md (exists in templates/ only)
+  - Issue Templates (exists in templates/ only)
+  - PR Template (not present)
+  - AI only provides updates to source files using repo knowledge, no other input that would mess up file format expected
+  - **Priority**: Medium - Nice to have for dogfooding our own standards and integrating AI further.
 
 ### Phase 8: Performance & Rate Limiting
 
@@ -84,7 +99,7 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ### Phase 10: Future Enhancements
 
-- [ ] Add webhook integration for real-time updates
+- [ ] Add webhook integration for real-time updates (get repo after 5 minutes, if panel is expanded, scheduler for refreshes)
 - [ ] Token Density Metric (LOC per logical unit with AI-assisted parsing)
 - [ ] Zombie Branch Detection (stale branches past merge)
 - [ ] Maintenance Mode Detection (activity patterns suggesting abandonment)

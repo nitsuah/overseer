@@ -260,8 +260,8 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             seenTaskIds.add(taskId);
             
             await db`
-                INSERT INTO tasks (repo_id, task_id, title, status, section)
-                VALUES (${repoId}, ${taskId}, ${task.title}, ${task.status}, ${task.section})
+                INSERT INTO tasks (repo_id, task_id, title, status, section, subsection)
+                VALUES (${repoId}, ${taskId}, ${task.title}, ${task.status}, ${task.section}, ${task.subsection})
             `;
         }
     }

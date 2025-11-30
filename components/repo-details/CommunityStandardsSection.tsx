@@ -2,6 +2,7 @@
 
 import { ShieldCheck, CheckCircle2, XCircle, Circle } from 'lucide-react';
 import { CommunityStandard } from '@/types/repo';
+import { useState } from 'react';
 
 interface CommunityStandardsSectionProps {
   communityStandards: CommunityStandard[];
@@ -9,6 +10,8 @@ interface CommunityStandardsSectionProps {
   isAuthenticated?: boolean;
   onFixStandard?: (repoName: string, standardType: string) => void;
   onFixAllStandards?: (repoName: string) => void;
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 export function CommunityStandardsSection({
@@ -17,7 +20,13 @@ export function CommunityStandardsSection({
   isAuthenticated = true,
   onFixStandard,
   onFixAllStandards,
+  isExpanded: isExpandedProp,
+  onToggleExpanded,
 }: CommunityStandardsSectionProps) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
+  const setIsExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
+  
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
@@ -65,29 +74,39 @@ export function CommunityStandardsSection({
   );
 
   return (
-    <div className="bg-slate-800/30 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-green-400" />
-          <span>Community Standards</span>
-          <span className="text-xs text-slate-500 font-normal">
-            ({communityStandards.length})
-          </span>
-        </h4>
-        {isAuthenticated && missingWithTemplates.length > 0 && onFixAllStandards && repoName && (
-          <button
-            onClick={() => onFixAllStandards(repoName)}
-            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
-            title="Create PR for all missing community standards"
-          >
-            Fix All ({missingWithTemplates.length})
-          </button>
-        )}
+    <div className="bg-gradient-to-br from-green-900/30 via-slate-800/50 to-green-800/20 rounded-lg overflow-hidden border border-green-500/40 shadow-lg shadow-green-500/10 hover:border-green-400/50 transition-colors">
+      <div
+        className="w-full px-4 py-3 hover:bg-green-900/20 transition-colors border-b border-green-500/20 cursor-pointer"
+        onClick={setIsExpanded}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-1">
+            <ShieldCheck className="h-4 w-4 text-green-400" />
+            <h4 className="text-sm font-semibold text-slate-200">Standards</h4>
+            <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {isAuthenticated && missingWithTemplates.length > 0 && onFixAllStandards && repoName && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFixAllStandards(repoName);
+                }}
+                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
+                title="Create PR for all missing community standards"
+              >
+                Fix All ({missingWithTemplates.length})
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-      {communityStandards.length === 0 ? (
-        <p className="text-xs text-slate-500 italic">No data available</p>
-      ) : (
-        <div className="space-y-2">
+      {isExpanded && (
+        <div className="px-4 py-3">
+          {communityStandards.length === 0 ? (
+            <p className="text-xs text-slate-500 italic">No data available</p>
+          ) : (
+            <div className="space-y-2">
           {communityStandards
             .sort((a, b) => {
               // Define custom order
@@ -159,7 +178,9 @@ export function CommunityStandardsSection({
                 </div>
               </div>
             );
-          })}
+            })}
+        </div>
+      )}
         </div>
       )}
     </div>

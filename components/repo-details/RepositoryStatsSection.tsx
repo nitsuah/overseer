@@ -2,6 +2,8 @@
 
 import { formatLocNumber } from '@/lib/expandable-row-utils';
 import { Metric } from '@/types/repo';
+import { RefreshCw } from 'lucide-react';
+import { useState } from 'react';
 
 interface RepositoryStatsSectionProps {
   stars?: number;
@@ -17,6 +19,10 @@ interface RepositoryStatsSectionProps {
   busFactor?: number;
   avgPrMergeTimeHours?: number;
   metrics?: Metric[];
+  onSyncSingleRepo?: () => void;
+  isSyncing?: boolean;
+  isAuthenticated?: boolean;
+  hasNoData?: boolean;
 }
 
 export function RepositoryStatsSection({
@@ -33,7 +39,13 @@ export function RepositoryStatsSection({
   busFactor,
   avgPrMergeTimeHours,
   metrics = [],
+  onSyncSingleRepo,
+  isSyncing = false,
+  isAuthenticated = false,
+  hasNoData = false,
 }: RepositoryStatsSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   // Filter metrics that should appear in Repo Stats
   const repoStatsKeywords = [
     'last updated',
@@ -55,13 +67,39 @@ export function RepositoryStatsSection({
     const lowerName = m.name.toLowerCase();
     return repoStatsKeywords.some((keyword) => lowerName.includes(keyword));
   });
+  
   return (
-    <div className="bg-slate-900/50 rounded-lg p-5">
-      <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-        <span>📊</span>
-        Repository Stats
-      </h3>
-      <div className="space-y-3">
+    <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+      <div
+        className="w-full px-4 py-3 hover:bg-slate-700/40 transition-colors border-b border-slate-700/30 cursor-pointer"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2" onClick={() => setIsExpanded(!isExpanded)}>
+            <span>📊</span>
+            <h3 className="text-sm font-semibold text-slate-200">Repository Stats</h3>
+            <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {onSyncSingleRepo && (hasNoData || isAuthenticated) && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSyncSingleRepo();
+                }}
+                disabled={isSyncing}
+                className="flex items-center gap-1.5 px-2 py-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 text-xs"
+                title="Refresh repository data"
+              >
+                <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                {isSyncing ? 'Syncing...' : 'Refresh'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+      {isExpanded && (
+        <div className="px-4 py-3">
+          <div className="space-y-3">
         {/* Stars, Forks, Branches */}
         {stars !== undefined && (
           <div className="flex items-center justify-between text-xs">
@@ -191,7 +229,9 @@ export function RepositoryStatsSection({
             </span>
           </div>
         ))}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

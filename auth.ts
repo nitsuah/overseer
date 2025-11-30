@@ -40,6 +40,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     debug: true, // enable verbose logging
     trustHost: true, // Required for Netlify preview deployments with dynamic URLs
     useSecureCookies: process.env.NODE_ENV === 'production', // Use secure cookies in production
+    // Override to ensure we use the correct URL for previews
+    ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
     providers: [
         GitHub({
             clientId: process.env.GITHUB_ID,

@@ -18,19 +18,6 @@ export function MetricsSection({ metrics, isExpanded: isExpandedProp, onToggleEx
   // Filter out metrics that are shown in other sections
   const excludeKeywords = [
     'coverage',
-    'last updated',
-    'api routes',
-    'database tables',
-    'pr turnaround',
-    'open prs',
-    'outdated dependencies',
-    'prettier violations',
-    'typescript errors',
-    'eslint warnings',
-    'eslint errors',
-    'health score',
-    'lighthouse score',
-    'lighthouse a11y score',
     'skipped tests',
     'test cases',
     'test files',
@@ -70,7 +57,10 @@ export function MetricsSection({ metrics, isExpanded: isExpandedProp, onToggleEx
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-green-400" />
-            <h4 className="text-sm font-semibold text-slate-200">Metrics</h4>
+            <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
+              Metrics
+              <span className="text-xs font-normal text-slate-400 flex items-center gap-1">(<span>⚠️</span>Self-Reported)</span>
+            </h4>
           </div>
           <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
         </div>

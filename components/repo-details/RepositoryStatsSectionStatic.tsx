@@ -40,28 +40,6 @@ export function RepositoryStatsSectionStatic({
 }: RepositoryStatsSectionStaticProps) {
   const [isExpanded, setIsExpanded] = useState(false); // Collapsed by default
   
-  // Filter metrics that should appear in Repo Stats
-  const repoStatsKeywords = [
-    'last updated',
-    'api routes',
-    'database tables',
-    'pr turnaround',
-    'open prs',
-    'outdated dependencies',
-    'prettier violations',
-    'typescript errors',
-    'eslint warnings',
-    'eslint errors',
-    'health score',
-    'lighthouse score',
-    'lighthouse a11y score',
-  ];
-
-  const repoStatsMetrics = metrics.filter((m) => {
-    const lowerName = m.name.toLowerCase();
-    return repoStatsKeywords.some((keyword) => lowerName.includes(keyword));
-  });
-  
   return (
     <div className="bg-gradient-to-br from-cyan-900/30 via-slate-800/50 to-cyan-800/20 rounded-lg overflow-hidden border border-cyan-500/40 shadow-lg shadow-cyan-500/10 hover:border-cyan-400/50 transition-colors">
       <div
@@ -147,7 +125,7 @@ export function RepositoryStatsSectionStatic({
           {/* Contributors */}
           {contributorCount !== undefined && contributorCount > 0 && (
             <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-700/50">
-              <span className="text-slate-400">Contributors</span>
+              <span className="text-slate-400 flex items-center gap-1"><span>🧑‍💻</span>Contributors</span>
               <span className="text-slate-200 font-medium">{contributorCount}</span>
             </div>
           )}
@@ -155,7 +133,7 @@ export function RepositoryStatsSectionStatic({
           {/* Commit Frequency */}
           {commitFrequency !== undefined && (
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Commits/Month</span>
+              <span className="text-slate-400 flex items-center gap-1"><span>📅</span>Commits/Month</span>
               <span className="text-slate-200 font-medium">{typeof commitFrequency === 'number' ? commitFrequency.toFixed(1) : commitFrequency}</span>
             </div>
           )}
@@ -163,7 +141,7 @@ export function RepositoryStatsSectionStatic({
           {/* Bus Factor */}
           {busFactor !== undefined && busFactor > 0 && (
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Bus Factor</span>
+              <span className="text-slate-400 flex items-center gap-1"><span>🚌</span>Bus Factor</span>
               <span className="text-slate-200 font-medium">{busFactor}</span>
             </div>
           )}
@@ -171,23 +149,8 @@ export function RepositoryStatsSectionStatic({
           {/* PR Merge Time */}
           {avgPrMergeTimeHours !== undefined && avgPrMergeTimeHours > 0 && (
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Avg PR Merge Time</span>
+              <span className="text-slate-400 flex items-center gap-1"><span>⏱️</span>Avg PR Merge Time</span>
               <span className="text-slate-200 font-medium">{typeof avgPrMergeTimeHours === 'number' ? avgPrMergeTimeHours.toFixed(1) : avgPrMergeTimeHours}h</span>
-            </div>
-          )}
-
-          {/* Additional Metrics */}
-          {repoStatsMetrics.length > 0 && (
-            <div className="pt-2 border-t border-slate-700/50 space-y-1">
-              {repoStatsMetrics.map((metric, index) => (
-                <div key={`${metric.name}-${index}`} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">{metric.name}</span>
-                  <span className="text-slate-200 font-medium">
-                    {metric.value}
-                    {metric.unit ?? ''}
-                  </span>
-                </div>
-              ))}
             </div>
           )}
           </div>

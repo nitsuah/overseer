@@ -34,6 +34,14 @@ if (publicUrl && !process.env.NEXTAUTH_URL) {
     logger.info('Set NEXTAUTH_URL from Netlify:', { from: process.env.DEPLOY_PRIME_URL ? 'DEPLOY_PRIME_URL' : 'URL', url: publicUrl });
 }
 
+// NextAuth v5 also checks AUTH_URL and AUTH_REDIRECT_PROXY_URL
+// Force these to match NEXTAUTH_URL to prevent prod URL fallback
+if (process.env.NEXTAUTH_URL) {
+    process.env.AUTH_URL = process.env.NEXTAUTH_URL;
+    process.env.AUTH_REDIRECT_PROXY_URL = process.env.NEXTAUTH_URL;
+    logger.info('Forced AUTH_URL to match NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
     secret: process.env.NEXTAUTH_SECRET,
     basePath: '/api/auth',

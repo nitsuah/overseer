@@ -20,7 +20,7 @@
     "list-gemini-models": "tsx scripts/list-models.ts",
     "create-new-tables": "tsx scripts/create-new-tables.ts",
     "test": "vitest",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -9,6 +9,99 @@ body {
   color: rgb(241 245 249);
 }
 
+/* Fancy header embellishments */
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.6), 0 0 0 2px rgba(168,85,247,0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(99,102,241,0), 0 0 0 2px rgba(168,85,247,0); }
+  100% { box-shadow: 0 0 0 0 rgba(99,102,241,0), 0 0 0 0 rgba(168,85,247,0); }
+}
+
+.header-glow {
+  position: relative;
+  background: linear-gradient(90deg,#4f46e5,#7e22ce,#6366f1,#9333ea);
+  background-size: 160% 160%;
+  animation: shimmer 6s linear infinite;
+}
+
+.header-glow:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 15% 50%, rgba(147,51,234,0.25), transparent 60%),
+              radial-gradient(circle at 85% 50%, rgba(79,70,229,0.25), transparent 60%);
+  mix-blend-mode: overlay;
+}
+
+/* Darker purple/black variant to replace the brighter animated gradient */
+.header-dark {
+  position: relative;
+  background: linear-gradient(110deg,#050507,#0d0620 38%,#1a0b36 62%,#07040e 88%);
+  /* Subtle multi-layer depth using radial glows */
+  background-blend-mode: normal;
+}
+.header-dark:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 25% 55%, rgba(128,45,255,0.22), transparent 65%),
+    radial-gradient(circle at 75% 50%, rgba(59,0,128,0.18), transparent 60%),
+    linear-gradient(0deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+  mix-blend-mode: plus-lighter;
+  opacity: 0.85;
+}
+
+/* Darker brand gradient text (less white, more violet) */
+.gradient-text {
+  background: linear-gradient(90deg,#c084fc,#a855f7,#818cf8,#c084fc);
+  background-size: 220% 220%;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 10s linear infinite;
+}
+
+
+.pulse-icon {
+  animation: pulse-ring 3.8s ease-in-out infinite;
+  border-radius: 9999px;
+}
+
+.pill {
+  @apply px-2 py-0.5 rounded-full text-xs font-medium bg-slate-800/70 border border-slate-600/50 backdrop-blur-sm;
+}
+
+.pill-success { @apply text-emerald-300 border-emerald-600/40 bg-emerald-900/30; }
+.pill-warn { @apply text-amber-300 border-amber-600/40 bg-amber-900/30; }
+
+.btn-raised {
+  @apply relative inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition;
+  background: linear-gradient(135deg,#1e293b,#0f172a 40%,#1e293b);
+  box-shadow: 0 4px 12px -2px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+}
+.btn-raised:hover {
+  box-shadow: 0 6px 18px -4px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
+  background: linear-gradient(135deg,#1e293b,#1e1b4b 45%,#1e293b);
+}
+.btn-primary-gradient {
+  background: linear-gradient(90deg,#6366f1,#7e22ce,#6366f1);
+  background-size: 180% 180%;
+  animation: shimmer 7s linear infinite;
+  @apply text-white;
+}
+.btn-danger {
+  background: linear-gradient(90deg,#dc2626,#7f1d1d,#dc2626);
+  background-size: 160% 160%;
+  animation: shimmer 9s linear infinite;
+}
+.btn-danger:hover { filter: brightness(1.15); }
+
 .glass {
   background-color: rgb(15 23 42 / 0.5);
   backdrop-filter: blur(8px);

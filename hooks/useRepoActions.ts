@@ -187,24 +187,45 @@ export function useRepoActions(
   };
 
   const handleFixAllStandards = async (repoName: string) => {
+    // Load previews for missing standards and open modal
     try {
       setFixingDoc(true);
-      const res = await fetch(`/api/repos/${repoName}/fix-all-standards`, { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.message) {
-          setToastMessage(data.message);
-        } else if (data.prUrl) {
-          window.open(data.prUrl, '_blank');
-          setToastMessage(`PR created! Added ${data.count} community standards.`);
-        }
+
+      // Fetch repo details to determine missing standards
+      const detailsRes = await fetch(`/api/repo-details/${repoName}`);
+      if (!detailsRes.ok) {
+        setToastMessage('Failed to load repository details');
+        return;
+      }
+      const details = await detailsRes.json();
+      const missingStandards: string[] = (details.communityStandards || [])
+        .filter((s: { status: string }) => s.status === 'missing')
+        .map((s: { standard_type: string }) => s.standard_type)
+        .filter((t: string) => ['code_of_conduct','contributing','security'].includes(t));
+
+      if (missingStandards.length === 0) {
+        setToastMessage('No fixable missing standards');
+        return;
+      }
+
+      const previewRes = await fetch('/api/preview-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docTypes: missingStandards }),
+      });
+
+      if (previewRes.ok) {
+        const { previews } = await previewRes.json();
+        setPreviewFiles(previews);
+        setPreviewRepoName(repoName);
+        setPreviewMode('batch');
+        setPreviewModalOpen(true);
       } else {
-        const err = await res.json();
-        setToastMessage(err.error || 'Failed to create PR');
+        setToastMessage('Failed to load previews');
       }
     } catch (error) {
-      console.error('Failed to fix all standards:', error);
-      setToastMessage('Failed to create PR');
+      console.error('Failed to fetch previews:', error);
+      setToastMessage('Failed to load previews');
     } finally {
       setFixingDoc(false);
     }
@@ -387,24 +408,44 @@ export function useRepoActions(
       } else {
         // Batch PR - create fix-all-docs endpoint that accepts selected files
         const docs = selectedFiles.filter(f => f.type === 'doc').map(f => f.docType.toLowerCase());
+        // Split docs into core-docs (batchable) and standards (submit individually)
+        const coreDocs = docs.filter((d) => ['readme','roadmap','tasks','metrics','features'].includes(d));
+        const standardDocs = docs.filter((d) => ['code_of_conduct','contributing','security'].includes(d));
         const practices = selectedFiles.filter(f => f.type === 'practice').map(f => String(f.practiceType));
 
         // Docs: single batch PR via fix-all-docs
         let docsMessage = '';
-        if (docs.length > 0) {
+        if (coreDocs.length > 0) {
           const res = await fetch(`/api/repos/${previewRepoName}/fix-all-docs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ docTypes: docs }),
+            body: JSON.stringify({ docTypes: coreDocs }),
           });
           if (res.ok) {
             const data = await res.json();
             if (data.prUrl) window.open(data.prUrl, '_blank');
-            docsMessage = `Added ${docs.length} documentation file(s).`;
+            docsMessage = `Added ${coreDocs.length} documentation file(s).`;
           } else {
             const err = await res.json();
             handlePRError(err);
           }
+        }
+
+        // Standards: submit as individual single-file PRs via fix-doc
+        let standardsSuccess = 0;
+        for (const sd of standardDocs) {
+          try {
+            const res = await fetch(`/api/repos/${previewRepoName}/fix-doc`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ docType: sd }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.prUrl) window.open(data.prUrl, '_blank');
+              standardsSuccess++;
+            }
+          } catch {}
         }
 
         // Practices: create individual PRs (current implementation is one-per-practice)
@@ -424,7 +465,7 @@ export function useRepoActions(
           } catch {}
         }
         
-        setToastMessage([docsMessage, practiceSuccess > 0 ? `Created ${practiceSuccess} best-practice PR(s).` : '']
+        setToastMessage([docsMessage, standardsSuccess > 0 ? `Created ${standardsSuccess} standard PR(s).` : '', practiceSuccess > 0 ? `Created ${practiceSuccess} best-practice PR(s).` : '']
           .filter(Boolean).join(' '));
         setPreviewModalOpen(false);
       }

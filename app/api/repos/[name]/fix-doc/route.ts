@@ -46,6 +46,13 @@ export async function POST(
             code_of_conduct: 'CODE_OF_CONDUCT.md',
             contributing: 'CONTRIBUTING.md',
             security: 'SECURITY.md',
+            changelog: 'CHANGELOG.md',
+            license: 'LICENSE',
+            codeowners: path.join('.github', 'CODEOWNERS'),
+            copilot: path.join('.github', 'copilot-instructions.md'),
+            funding: path.join('.github', 'FUNDING.yml'),
+            issue_template: path.join('.github', 'ISSUE_TEMPLATE', 'bug_report.md'),
+            pr_template: path.join('.github', 'pull_request_template.md'),
         };
 
         const normalized = String(docType).toLowerCase();
@@ -103,12 +110,14 @@ export async function POST(
         // Wait, I should modify lib/github.ts first.
         // But for now I'll write this and then update lib/github.ts
 
+        // Target path equals filename for root files; preserve .github paths
+        const targetPath = filename;
         const prUrl = await github.createPrForFile(
             repoName,
             branchName,
-            filename,
+            targetPath,
             content,
-            `docs: add ${filename}`
+            `docs: add ${normalized.toUpperCase().replace(/_/g, ' ')}`
         );
 
         return NextResponse.json({ success: true, branch: branchName, prUrl });

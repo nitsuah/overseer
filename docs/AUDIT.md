@@ -48,17 +48,19 @@ Documentation and implementation are aligned across the project. Key validations
 
 This matrix shows what Overseer tracks, how we detect it, health indicators, and automated fixes.
 
+Modal-based fixes are reflected directly in the "Automated Fix" column (e.g., "✅ Modal").
+
 | Feature/Metric                     | Detection Method                                | Source                   | Health Indicator                            | Automated Fix             | Status       |
 | ---------------------------------- | ----------------------------------------------- | ------------------------ | ------------------------------------------- | ------------------------- | ------------ |
 | **Documentation**                  |                                                 |                          |                                             |                           |              |
-| ROADMAP.md                         | File existence + parsing                        | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Template PR            | ✅ Complete  |
-| TASKS.md                           | File existence + parsing                        | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Template PR            | ✅ Complete  |
-| METRICS.md                         | File existence + parsing                        | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Template PR            | ✅ Complete  |
-| FEATURES.md                        | File existence + parsing                        | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Template PR            | ✅ Complete  |
-| README.md                          | File existence                                  | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Template PR            | ✅ Complete  |
-| LICENSE.md                         | File existence                                  | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Template PR            | ✅ Complete  |
-| CHANGELOG.md                       | File existence                                  | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Template PR            | ✅ Complete  |
-| CONTRIBUTING.md                    | File existence                                  | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Template PR            | ✅ Complete  |
+| ROADMAP.md                         | File existence + parsing                        | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Modal                  | ✅ Complete  |
+| TASKS.md                           | File existence + parsing                        | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Modal                  | ✅ Complete  |
+| METRICS.md                         | File existence + parsing                        | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Modal                  | ✅ Complete  |
+| FEATURES.md                        | File existence + parsing                        | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Modal                  | ✅ Complete  |
+| README.md                          | File existence                                  | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Modal                  | ✅ Complete  |
+| LICENSE.md                         | File existence                                  | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Modal                  | ✅ Complete  |
+| CHANGELOG.md                       | File existence                                  | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Modal                  | ✅ Complete  |
+| CONTRIBUTING.md                    | File existence                                  | GitHub API               | 4-state (Missing/Dormant/Malformed/Healthy) | ✅ Modal                  | ✅ Complete  |
 | **Testing & Quality**              |                                                 |                          |                                             |                           |              |
 | Testing Framework                  | Config file detection                           | File list scan           | Binary (Healthy/Missing)                    | ❌ No                     | ✅ Displayed |
 | Test Files Count                   | Pattern matching (.test., .spec., tests/)       | File list scan           | Count display                               | ❌ No                     | ✅ Displayed |
@@ -73,20 +75,20 @@ This matrix shows what Overseer tracks, how we detect it, health indicators, and
 | Branch Protection                  | GitHub Branch Protection API                    | GitHub API               | 3-state (Healthy/Dormant/Missing)           | ❌ No                     | ✅ Displayed |
 | Testing Framework                  | Config files (vitest, jest, playwright, etc.)   | File list scan           | Binary (Healthy/Missing)                    | ❌ No                     | ✅ Displayed |
 | .gitignore                         | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ❌ No                     | ✅ Displayed |
-| Netlify Badge                      | Badge URL in README                             | README content           | Binary (Healthy/Missing)                    | ✅ Modify README          | ✅ Displayed |
-| .env.example                       | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
-| Dependabot                         | .github/dependabot.yml                          | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
-| Docker                             | Dockerfile, docker-compose.yml                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
+| Netlify Badge                      | Badge URL in README                             | README content           | Binary (Healthy/Missing)                    | ✅ Modal Modify README    | ✅ Displayed |
+| .env.example                       | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
+| Dependabot                         | .github/dependabot.yml                          | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
+| Docker                             | Dockerfile, docker-compose.yml                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
 | **Community Standards (9 checks)** |                                                 |                          |                                             |                           |              |
-| CODE_OF_CONDUCT.md                 | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
-| CONTRIBUTING.md                    | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
-| SECURITY.md                        | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
-| LICENSE                            | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
-| CHANGELOG.md                       | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
-| Issue Templates                    | .github/ISSUE_TEMPLATE/                         | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
-| PR Templates                       | .github/pull_request_template.md                | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
-| CODEOWNERS                         | .github/CODEOWNERS                              | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
-| Copilot Instructions               | .github/copilot-instructions.md                 | File list scan           | Binary (Healthy/Missing)                    | ✅ Template PR            | ✅ Displayed |
+| CODE_OF_CONDUCT.md                 | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
+| CONTRIBUTING.md                    | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
+| SECURITY.md                        | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
+| LICENSE                            | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
+| CHANGELOG.md                       | File existence                                  | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
+| Issue Templates                    | .github/ISSUE_TEMPLATE/                         | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
+| PR Templates                       | .github/pull_request_template.md                | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
+| CODEOWNERS                         | .github/CODEOWNERS                              | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
+| Copilot Instructions               | .github/copilot-instructions.md                 | File list scan           | Binary (Healthy/Missing)                    | ✅ Modal                  | ✅ Displayed |
 | **Activity Metrics**               |                                                 |                          |                                             |                           |              |
 | Last Commit Date                   | GitHub repo.pushed_at                           | GitHub API               | Color-coded freshness                       | N/A                       | ✅ Complete  |
 | Open PRs Count                     | GitHub PR API                                   | GitHub API               | Count display                               | N/A                       | ✅ Complete  |

@@ -374,12 +374,13 @@ export function RepoTableRow({
               coverageScore={repo.coverage_score}
               readmeLastUpdated={repo.readme_last_updated}
               repoName={repo.name}
-              onFixDoc={onFixDoc}
-              onFixAllDocs={onFixAllDocs}
-              onFixStandard={onFixStandard}
-              onFixAllStandards={onFixAllStandards}
-              onFixPractice={onFixPractice}
-              onFixAllPractices={onFixAllPractices}
+              // Adapt single-arg handlers to two-arg signatures expected downstream
+              onFixDoc={(repoNameArg: string, docType: string) => onFixDoc(docType)}
+              onFixAllDocs={() => onFixAllDocs()}
+              onFixStandard={(repoNameArg: string, standardType: string) => onFixStandard(standardType)}
+              onFixAllStandards={() => onFixAllStandards()}
+              onFixPractice={(repoNameArg: string, practiceType: string) => onFixPractice(practiceType)}
+              onFixAllPractices={() => onFixAllPractices()}
               totalLoc={repo.total_loc}
               locLanguageBreakdown={repo.loc_language_breakdown}
               testCaseCount={repo.test_case_count}

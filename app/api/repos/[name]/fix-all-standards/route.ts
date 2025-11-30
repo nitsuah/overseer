@@ -34,93 +34,106 @@ export async function POST(
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
 
-        // Accept optional list of selected standard types from request
+        // Accept optional list of selected files with content from modal
         const body = await request.json().catch(() => ({}));
-        const requestedStandards = body.standardTypes as string[] | undefined;
+        const filesFromModal = body.files as Array<{path: string; content: string; docType: string}> | undefined;
 
-        let csRows: { standard_type: string }[];
-        if (requestedStandards && Array.isArray(requestedStandards) && requestedStandards.length > 0) {
-            csRows = requestedStandards.map(s => ({ standard_type: String(s).toLowerCase() }));
+        let filesToAdd: { path: string; content: string }[];
+
+        if (filesFromModal && filesFromModal.length > 0) {
+            // Use edited content from modal
+            filesToAdd = filesFromModal.map(f => ({
+                path: f.path,
+                content: f.content
+            }));
         } else {
-            // Resolve repo_id from name, then get missing community standards from DB
-            const repoIdRows = await db`SELECT id FROM repos WHERE name = ${repoName} LIMIT 1`;
-            if (repoIdRows.length === 0) {
-                return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
-            }
-            const repoId = repoIdRows[0].id;
+            // Fallback: use requested types or query DB for missing standards
+            const requestedStandards = body.standardTypes as string[] | undefined;
 
-            const dbRows = await db`
-                SELECT standard_type, status 
-                FROM community_standards 
-                WHERE repo_id = ${repoId} AND status = 'missing'
-            `;
-
-            if (dbRows.length === 0) {
-                return NextResponse.json({ message: 'No missing standards to fix' }, { status: 200 });
-            }
-            csRows = dbRows.map((r: { standard_type: string }) => ({ standard_type: r.standard_type }));
-        }
-
-        // Filter standards that have templates
-        const standardsWithTemplates = [
-            'contributing', 
-            'code_of_conduct', 
-            'security', 
-            'license', 
-            'changelog', 
-            'issue_template', 
-            'pr_template',
-            'codeowners',
-            'copilot_instructions',
-            'funding'
-        ];
-        const fixableStandards = csRows.filter(row => standardsWithTemplates.includes(row.standard_type));
-
-        if (fixableStandards.length === 0) {
-            return NextResponse.json({ 
-                message: 'No fixable standards found' 
-            }, { status: 200 });
-        }
-
-        // Collect files to add
-        const filesToAdd: { path: string; content: string }[] = [];
-        for (const standard of fixableStandards) {
-            let templatePath: string;
-            let targetPath: string;
-
-            // Handle special cases for file paths
-            if (standard.standard_type === 'codeowners') {
-                templatePath = path.join(process.cwd(), 'templates', '.github', 'CODEOWNERS');
-                targetPath = '.github/CODEOWNERS';
-            } else if (standard.standard_type === 'copilot_instructions') {
-                templatePath = path.join(process.cwd(), 'templates', '.github', 'copilot-instructions.md');
-                targetPath = '.github/copilot-instructions.md';
-            } else if (standard.standard_type === 'funding') {
-                templatePath = path.join(process.cwd(), 'templates', '.github', 'FUNDING.yml');
-                targetPath = '.github/FUNDING.yml';
-            } else if (standard.standard_type === 'pr_template') {
-                templatePath = path.join(process.cwd(), 'templates', '.github', 'pull_request_template.md');
-                targetPath = '.github/pull_request_template.md';
-            } else if (standard.standard_type === 'issue_template') {
-                // Use a concrete issue template file (bug_report)
-                templatePath = path.join(process.cwd(), 'templates', '.github', 'ISSUE_TEMPLATE', 'bug_report.md');
-                targetPath = '.github/ISSUE_TEMPLATE/bug_report.md';
-            } else if (standard.standard_type === 'license') {
-                templatePath = path.join(process.cwd(), 'templates', 'LICENSE');
-                targetPath = 'LICENSE';
+            let csRows: { standard_type: string }[];
+            if (requestedStandards && Array.isArray(requestedStandards) && requestedStandards.length > 0) {
+                csRows = requestedStandards.map(s => ({ standard_type: String(s).toLowerCase() }));
             } else {
-                templatePath = path.join(process.cwd(), 'templates', `${standard.standard_type.toUpperCase()}.md`);
-                targetPath = `${standard.standard_type.toUpperCase()}.md`;
+                // Resolve repo_id from name, then get missing community standards from DB
+                const repoIdRows = await db`SELECT id FROM repos WHERE name = ${repoName} LIMIT 1`;
+                if (repoIdRows.length === 0) {
+                    return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
+                }
+                const repoId = repoIdRows[0].id;
+
+                const dbRows = await db`
+                    SELECT standard_type, status 
+                    FROM community_standards 
+                    WHERE repo_id = ${repoId} AND status = 'missing'
+                `;
+
+                if (dbRows.length === 0) {
+                    return NextResponse.json({ message: 'No missing standards to fix' }, { status: 200 });
+                }
+                csRows = dbRows.map((r: Record<string, string>) => ({ standard_type: r.standard_type }));
             }
 
-            try {
-                const content = await fs.readFile(templatePath, 'utf-8');
-                filesToAdd.push({
-                    path: targetPath,
-                    content
-                });
-            } catch (error) {
-                logger.warn(`Template not found for ${standard.standard_type}:`, error);
+            // Filter standards that have templates
+            const standardsWithTemplates = [
+                'contributing', 
+                'code_of_conduct', 
+                'security', 
+                'license', 
+                'changelog', 
+                'issue_template', 
+                'pr_template',
+                'codeowners',
+                'copilot_instructions',
+                'funding'
+            ];
+            const fixableStandards = csRows.filter(row => standardsWithTemplates.includes(row.standard_type));
+
+            if (fixableStandards.length === 0) {
+                return NextResponse.json({ 
+                    message: 'No fixable standards found' 
+                }, { status: 200 });
+            }
+
+            // Collect files to add by reading templates
+            filesToAdd = [];
+            for (const standard of fixableStandards) {
+                let templatePath: string;
+                let targetPath: string;
+
+                // Handle special cases for file paths
+                if (standard.standard_type === 'codeowners') {
+                    templatePath = path.join(process.cwd(), 'templates', '.github', 'CODEOWNERS');
+                    targetPath = '.github/CODEOWNERS';
+                } else if (standard.standard_type === 'copilot_instructions') {
+                    templatePath = path.join(process.cwd(), 'templates', '.github', 'copilot-instructions.md');
+                    targetPath = '.github/copilot-instructions.md';
+                } else if (standard.standard_type === 'funding') {
+                    templatePath = path.join(process.cwd(), 'templates', '.github', 'FUNDING.yml');
+                    targetPath = '.github/FUNDING.yml';
+                } else if (standard.standard_type === 'pr_template') {
+                    templatePath = path.join(process.cwd(), 'templates', '.github', 'pull_request_template.md');
+                    targetPath = '.github/pull_request_template.md';
+                } else if (standard.standard_type === 'issue_template') {
+                    // Use a concrete issue template file (bug_report)
+                    templatePath = path.join(process.cwd(), 'templates', '.github', 'ISSUE_TEMPLATE', 'bug_report.md');
+                    targetPath = '.github/ISSUE_TEMPLATE/bug_report.md';
+                } else if (standard.standard_type === 'license') {
+                    templatePath = path.join(process.cwd(), 'templates', 'LICENSE');
+                    targetPath = 'LICENSE';
+                } else {
+                    templatePath = path.join(process.cwd(), 'templates', `${standard.standard_type.toUpperCase()}.md`);
+                    targetPath = `${standard.standard_type.toUpperCase()}.md`;
+                }
+
+                try {
+                    const content = await fs.readFile(templatePath, 'utf-8');
+                    filesToAdd.push({
+                        path: targetPath,
+                        content
+                    });
+                } catch (error) {
+                    logger.warn(`Template not found for ${standard.standard_type}:`, error);
+                }
             }
         }
 

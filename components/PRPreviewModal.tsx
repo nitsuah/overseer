@@ -38,6 +38,7 @@ export function PRPreviewModal({
   const [editMode, setEditMode] = useState(false);
   const [editedContent, setEditedContent] = useState<Map<string, string>>(new Map());
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [renderKey, setRenderKey] = useState(0);
 
   // Reset selection and active file whenever modal opens or files change
   useEffect(() => {
@@ -79,27 +80,56 @@ export function PRPreviewModal({
   };
 
   const handleAIGenerate = async () => {
-    if (!activeFile || !activeFileContent) return;
+    if (!activeFile || !activeFileContent) {
+      console.log('AI Generate - No active file:', { activeFile, activeFileContent });
+      return;
+    }
     
+    console.log('AI Generate starting for:', activeFile, 'docType:', activeFileContent.docType);
     setGeneratingAI(true);
     try {
+      const payload = {
+        repoName,
+        docType: activeFileContent.docType,
+        templateContent: editedContent.get(activeFile) || activeFileContent.content,
+      };
+      console.log('AI Generate payload:', payload);
+      
       const res = await fetch('/api/enrich-template', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          repoName,
-          docType: activeFileContent.docType,
-          templateContent: editedContent.get(activeFile) || activeFileContent.content,
-        }),
+        body: JSON.stringify(payload),
       });
       
+      console.log('AI Generate response status:', res.status);
+      
       if (res.ok) {
-        const { enrichedContent } = await res.json();
-        const newContent = new Map(editedContent);
-        newContent.set(activeFile, enrichedContent);
-        setEditedContent(newContent);
+        const data = await res.json();
+        console.log('AI Generate success, enriched content length:', data.enrichedContent?.length);
+        const { enrichedContent } = data;
+        
+        // Use state updater function to ensure we get the latest state
+        setEditedContent(prevContent => {
+          const newContent = new Map<string, string>();
+          prevContent.forEach((value, key) => {
+            newContent.set(key, value);
+          });
+          newContent.set(activeFile, enrichedContent);
+          console.log('Updated map, new content for', activeFile, 'length:', enrichedContent?.length);
+          console.log('Map now has', newContent.size, 'entries');
+          return newContent;
+        });
+        
+        // Force re-render
+        setRenderKey(prev => prev + 1);
+        
+        // Switch to edit mode to show the changes
+        if (!editMode) {
+          setEditMode(true);
+        }
       } else {
-        console.error('Failed to generate AI enrichment');
+        const errorData = await res.json();
+        console.error('Failed to generate AI enrichment:', res.status, errorData);
       }
     } catch (error) {
       console.error('AI generation error:', error);
@@ -200,9 +230,13 @@ export function PRPreviewModal({
                   </button>
                   <button
                     onClick={() => setEditMode(!editMode)}
-                    className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs font-medium transition-colors"
+                    className={`px-2 py-1 ${
+                      editMode 
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                        : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                    } rounded text-xs font-medium transition-colors`}
                   >
-                    {editMode ? 'Preview' : 'Edit'}
+                    {editMode ? 'Save' : 'Edit'}
                   </button>
                 </div>
               )}
@@ -211,6 +245,7 @@ export function PRPreviewModal({
               {activeFileContent ? (
                 editMode ? (
                   <textarea
+                    key={`${activeFile}-${renderKey}`}
                     value={editedContent.get(activeFile) || ''}
                     onChange={(e) => {
                       const newContent = new Map(editedContent);
@@ -221,11 +256,11 @@ export function PRPreviewModal({
                     spellCheck={false}
                   />
                 ) : activeFile.endsWith('.md') || !activeFile.includes('.') || activeFile.split('/').pop()?.indexOf('.') === -1 ? (
-                  <div className="prose prose-invert prose-sm max-w-none">
+                  <div key={`${activeFile}-${renderKey}`} className="prose prose-invert prose-sm max-w-none">
                     <MarkdownPreview content={editedContent.get(activeFile) || ''} />
                   </div>
                 ) : activeFile.endsWith('.yml') || activeFile.endsWith('.yaml') ? (
-                  <YAMLPreview content={editedContent.get(activeFile) || ''} />
+                  <YAMLPreview key={`${activeFile}-${renderKey}`} content={editedContent.get(activeFile) || ''} />
                 ) : (
                   <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">
                     {editedContent.get(activeFile)}

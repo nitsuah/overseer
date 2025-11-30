@@ -18,10 +18,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { practiceTypes } = await request.json();
-    if (!practiceTypes || !Array.isArray(practiceTypes) || practiceTypes.length === 0) {
-      return NextResponse.json({ error: 'practiceTypes array required' }, { status: 400 });
-    }
+    const body = await request.json();
+    const filesFromModal = body.files as Array<{path: string; content: string; practiceType: string}> | undefined;
 
     const repoName = params.name;
     const db = getNeonClient();
@@ -37,48 +35,65 @@ export async function POST(
     if (!githubToken) throw new Error('GitHub access token not found in session');
     const github = new GitHubClient(githubToken, owner);
 
-    const filesToAdd: { path: string; content: string }[] = [];
-    const addedTypes: string[] = [];
+    let filesToAdd: { path: string; content: string }[];
+    let addedTypes: string[];
 
-    // Aggregate files for each requested practice type
-    for (const practiceType of practiceTypes) {
-      switch (practiceType) {
-        case 'dependabot': {
-          const templatePath = path.join(process.cwd(), 'templates', '.github', 'dependabot.yml');
-          const content = await fs.readFile(templatePath, 'utf-8');
-          filesToAdd.push({ path: '.github/dependabot.yml', content });
-          addedTypes.push('dependabot');
-          break;
-        }
-        case 'env_template': {
-          const templatePath = path.join(process.cwd(), 'templates', '.env.example');
-          const content = await fs.readFile(templatePath, 'utf-8');
-          filesToAdd.push({ path: '.env.example', content });
-          addedTypes.push('env_template');
-          break;
-        }
-        case 'docker': {
-          const dockerfilePath = path.join(process.cwd(), 'templates', 'Dockerfile');
-          const dockerComposePath = path.join(process.cwd(), 'templates', 'docker-compose.yml');
-          const dockerfileContent = await fs.readFile(dockerfilePath, 'utf-8');
-          const dockerComposeContent = await fs.readFile(dockerComposePath, 'utf-8');
-          filesToAdd.push({ path: 'Dockerfile', content: dockerfileContent });
-          filesToAdd.push({ path: 'docker-compose.yml', content: dockerComposeContent });
-          addedTypes.push('docker');
-          break;
-        }
-        case 'netlify_badge': {
-          try {
-            const readme = await github.getFileContent(repoName, 'README.md');
-            if (!readme) {
-              // If README missing, skip gracefully
-              logger.warn('README.md not found for netlify_badge');
-              break;
-            }
-            if (readme.includes('api.netlify.com/api/v1/badges')) {
-              break; // already present
-            }
-            const hasNetlify = await github.getFileContent(repoName, 'netlify.toml');
+    if (filesFromModal && filesFromModal.length > 0) {
+      // Use edited content from modal
+      filesToAdd = filesFromModal.map(f => ({
+        path: f.path,
+        content: f.content
+      }));
+      addedTypes = filesFromModal.map(f => String(f.practiceType));
+    } else {
+      // Fallback: read templates from disk (old behavior)
+      const { practiceTypes } = body;
+      if (!practiceTypes || !Array.isArray(practiceTypes) || practiceTypes.length === 0) {
+        return NextResponse.json({ error: 'practiceTypes array or files array required' }, { status: 400 });
+      }
+
+      filesToAdd = [];
+      addedTypes = [];
+
+      // Aggregate files for each requested practice type
+      for (const practiceType of practiceTypes) {
+        switch (practiceType) {
+          case 'dependabot': {
+            const templatePath = path.join(process.cwd(), 'templates', '.github', 'dependabot.yml');
+            const content = await fs.readFile(templatePath, 'utf-8');
+            filesToAdd.push({ path: '.github/dependabot.yml', content });
+            addedTypes.push('dependabot');
+            break;
+          }
+          case 'env_template': {
+            const templatePath = path.join(process.cwd(), 'templates', '.env.example');
+            const content = await fs.readFile(templatePath, 'utf-8');
+            filesToAdd.push({ path: '.env.example', content });
+            addedTypes.push('env_template');
+            break;
+          }
+          case 'docker': {
+            const dockerfilePath = path.join(process.cwd(), 'templates', 'Dockerfile');
+            const dockerComposePath = path.join(process.cwd(), 'templates', 'docker-compose.yml');
+            const dockerfileContent = await fs.readFile(dockerfilePath, 'utf-8');
+            const dockerComposeContent = await fs.readFile(dockerComposePath, 'utf-8');
+            filesToAdd.push({ path: 'Dockerfile', content: dockerfileContent });
+            filesToAdd.push({ path: 'docker-compose.yml', content: dockerComposeContent });
+            addedTypes.push('docker');
+            break;
+          }
+          case 'netlify_badge': {
+            try {
+              const readme = await github.getFileContent(repoName, 'README.md');
+              if (!readme) {
+                // If README missing, skip gracefully
+                logger.warn('README.md not found for netlify_badge');
+                break;
+              }
+              if (readme.includes('api.netlify.com/api/v1/badges')) {
+                break; // already present
+              }
+              const hasNetlify = await github.getFileContent(repoName, 'netlify.toml');
             if (!hasNetlify) {
               logger.warn('netlify.toml not found - cannot add badge with site ID');
               break;
@@ -104,6 +119,7 @@ export async function POST(
         default:
           // Ignore unsupported types in batch
           break;
+        }
       }
     }
 

@@ -396,7 +396,11 @@ export function useRepoActions(
           const res = await fetch(`/api/repos/${previewRepoName}/fix-best-practice`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ practiceType: f.practiceType }),
+            body: JSON.stringify({ 
+              practiceType: f.practiceType,
+              content: f.content,
+              path: f.path
+            }),
           });
           if (res.ok) {
             const data = await res.json();
@@ -412,7 +416,11 @@ export function useRepoActions(
           const res = await fetch(`/api/repos/${previewRepoName}/fix-doc`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ docType }),
+            body: JSON.stringify({ 
+              docType,
+              content: f.content,
+              path: f.path
+            }),
           });
         
           if (res.ok) {
@@ -430,12 +438,12 @@ export function useRepoActions(
       } else {
         // Batch PRs: group by category
         const allDocs = selectedFiles.filter(f => f.type === 'doc');
-        const practices = selectedFiles.filter(f => f.type === 'practice').map(f => String(f.practiceType));
+        const practices = selectedFiles.filter(f => f.type === 'practice');
 
         // Split docs into core docs vs community standards
         const CORE_DOCS = new Set(['roadmap','tasks','metrics','features','readme']);
-        const coreDocs = allDocs.filter(f => CORE_DOCS.has(f.docType.toLowerCase())).map(f => f.docType.toLowerCase());
-        const standardDocs = allDocs.filter(f => !CORE_DOCS.has(f.docType.toLowerCase())).map(f => f.docType.toLowerCase());
+        const coreDocs = allDocs.filter(f => CORE_DOCS.has(f.docType.toLowerCase()));
+        const standardDocs = allDocs.filter(f => !CORE_DOCS.has(f.docType.toLowerCase()));
 
         let docsMessage = '';
         let standardsMessage = '';
@@ -445,7 +453,7 @@ export function useRepoActions(
           const res = await fetch(`/api/repos/${previewRepoName}/fix-all-docs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ docTypes: coreDocs }),
+            body: JSON.stringify({ files: coreDocs }),
           });
           if (res.ok) {
             const data = await res.json();
@@ -462,7 +470,7 @@ export function useRepoActions(
           const res = await fetch(`/api/repos/${previewRepoName}/fix-all-standards`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ standardTypes: standardDocs }),
+            body: JSON.stringify({ files: standardDocs }),
           });
           if (res.ok) {
             const data = await res.json();
@@ -480,7 +488,7 @@ export function useRepoActions(
           const res = await fetch(`/api/repos/${previewRepoName}/fix-all-practices`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ practiceTypes: practices }),
+            body: JSON.stringify({ files: practices }),
           });
           if (res.ok) {
             const data = await res.json();

@@ -21,7 +21,7 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { docType } = await request.json();
+        const { docType, content: providedContent, path: providedPath } = await request.json();
         if (!docType) {
             return NextResponse.json({ error: 'Doc type required' }, { status: 400 });
         }
@@ -31,58 +31,67 @@ export async function POST(
         logger.debug('[fix-doc] Request details:', {
             docType,
             repoName,
-            paramsName: params.name
+            paramsName: params.name,
+            hasProvidedContent: !!providedContent,
+            providedPath
         });
 
-        // Map logical doc types to template filenames
-        const TEMPLATE_FILES: Record<string, string> = {
-            // Core docs
-            readme: 'README.md',
-            roadmap: 'ROADMAP.md',
-            tasks: 'TASKS.md',
-            metrics: 'METRICS.md',
-            features: 'FEATURES.md',
-            // Community standards
-            code_of_conduct: 'CODE_OF_CONDUCT.md',
-            contributing: 'CONTRIBUTING.md',
-            security: 'SECURITY.md',
-            changelog: 'CHANGELOG.md',
-            license: 'LICENSE',
-            codeowners: path.join('.github', 'CODEOWNERS'),
-            copilot: path.join('.github', 'copilot-instructions.md'),
-            copilot_instructions: path.join('.github', 'copilot-instructions.md'),
-            funding: path.join('.github', 'FUNDING.yml'),
-            issue_template: path.join('.github', 'ISSUE_TEMPLATE', 'bug_report.md'),
-            issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
-            pr_template: path.join('.github', 'pull_request_template.md'),
-            pull_request_template: path.join('.github', 'pull_request_template.md'),
-        };
+        // If content is provided from modal (edited), use it directly
+        let content = providedContent;
+        let targetPath = providedPath;
 
-        const normalized = String(docType).toLowerCase();
-        const filename = TEMPLATE_FILES[normalized];
-        if (!filename) {
-            return NextResponse.json({ 
-                error: `Unknown doc type: ${docType}. No template mapping found.`,
-                supported: Object.keys(TEMPLATE_FILES)
-            }, { status: 400 });
-        }
+        if (!content) {
+            // Fallback: read from template file
+            // Map logical doc types to template filenames
+            const TEMPLATE_FILES: Record<string, string> = {
+                // Core docs
+                readme: 'README.md',
+                roadmap: 'ROADMAP.md',
+                tasks: 'TASKS.md',
+                metrics: 'METRICS.md',
+                features: 'FEATURES.md',
+                // Community standards
+                code_of_conduct: 'CODE_OF_CONDUCT.md',
+                contributing: 'CONTRIBUTING.md',
+                security: 'SECURITY.md',
+                changelog: 'CHANGELOG.md',
+                license: 'LICENSE',
+                codeowners: path.join('.github', 'CODEOWNERS'),
+                copilot: path.join('.github', 'copilot-instructions.md'),
+                copilot_instructions: path.join('.github', 'copilot-instructions.md'),
+                funding: path.join('.github', 'FUNDING.yml'),
+                issue_template: path.join('.github', 'ISSUE_TEMPLATE', 'bug_report.md'),
+                issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
+                pr_template: path.join('.github', 'pull_request_template.md'),
+                pull_request_template: path.join('.github', 'pull_request_template.md'),
+            };
 
-        // Always use process.cwd() which should be the project root when Next.js runs
-        const templatePath = path.join(process.cwd(), 'templates', filename);
+            const normalized = String(docType).toLowerCase();
+            const filename = TEMPLATE_FILES[normalized];
+            if (!filename) {
+                return NextResponse.json({ 
+                    error: `Unknown doc type: ${docType}. No template mapping found.`,
+                    supported: Object.keys(TEMPLATE_FILES)
+                }, { status: 400 });
+            }
 
-        let content = '';
-        try {
-            content = await fs.readFile(templatePath, 'utf-8');
-        } catch (error) {
-            logger.warn(`[fix-doc] Template not found:`, {
-                docType,
-                templatePath,
-                cwd: process.cwd(),
-                error: error instanceof Error ? error.message : String(error)
-            });
-            return NextResponse.json({ 
-                error: `Template not found for ${docType}. Expected at: ${templatePath}`
-            }, { status: 404 });
+            // Always use process.cwd() which should be the project root when Next.js runs
+            const templatePath = path.join(process.cwd(), 'templates', filename);
+
+            try {
+                content = await fs.readFile(templatePath, 'utf-8');
+                targetPath = filename;
+            } catch (error) {
+                logger.warn(`[fix-doc] Template not found:`, {
+                    docType,
+                    templatePath,
+                    cwd: process.cwd(),
+                    error: error instanceof Error ? error.message : String(error)
+                });
+                return NextResponse.json({ 
+                    error: `Template not found for ${docType}. Expected at: ${templatePath}`
+                }, { status: 404 });
+            }
         }
 
         // Get repo owner and full name
@@ -101,24 +110,14 @@ export async function POST(
         const github = new GitHubClient(githubToken, owner);
 
         // Create a new branch
-        const branchName = `docs/add-${docType.toLowerCase()}-${Date.now()}`;
+        const normalized = String(docType).toLowerCase();
+        const branchName = `docs/add-${normalized}-${Date.now()}`;
 
-        // Get SHA of default branch
-        // Note: We need to extend GitHubClient to support these operations
-        // For now, we'll assume the client has these methods or we'll add them.
-        // Actually, let's just use the octokit instance directly if we can, or extend the client.
-        // Since I can't easily extend the client in this file without modifying lib/github.ts, 
-        // I will modify lib/github.ts first to include createBranch, createFile, createPullRequest.
-
-        // Wait, I should modify lib/github.ts first.
-        // But for now I'll write this and then update lib/github.ts
-
-        // Target path equals filename for root files; preserve .github paths
-        const targetPath = filename;
+        // Use the target path (either from modal or from template mapping)
         const prUrl = await github.createPrForFile(
             repoName,
             branchName,
-            targetPath,
+            targetPath || filename,
             content,
             `docs: add ${normalized.toUpperCase().replace(/_/g, ' ')}`
         );

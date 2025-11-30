@@ -140,3 +140,53 @@ Context: ${contextFiles}`;
         throw new Error('Failed to generate documentation: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
 }
+
+export async function generateAIContent(prompt: string): Promise<string> {
+    if (!genAI) {
+        throw new Error('GEMINI_API_KEY not configured');
+    }
+
+    try {
+        const model = genAI.getGenerativeModel({ 
+            model: 'gemini-2.5-flash',
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 2048,
+            }
+        });
+
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+        
+        if (!text || text.trim().length === 0) {
+            throw new Error('Empty response from Gemini API');
+        }
+        
+        return text;
+    } catch (error) {
+        logger.warn('Gemini API Error:', error);
+        if (error instanceof Error) {
+            logger.warn('Error name:', error.name);
+            logger.warn('Error message:', error.message);
+        }
+        if (typeof error === 'object' && error !== null) {
+            logger.warn('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+        }
+        
+        // Throw with more context
+        if (error instanceof Error) {
+            if (error.message.includes('API_KEY')) {
+                throw new Error('Invalid Gemini API Key');
+            }
+            if (error.message.includes('404') || error.message.includes('not found')) {
+                throw new Error('Gemini model not found - check API version and model name');
+            }
+            if (error.message.includes('quota') || error.message.includes('limit')) {
+                throw new Error('Gemini API quota exceeded');
+            }
+        }
+        
+        throw new Error('Failed to generate AI content: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+}

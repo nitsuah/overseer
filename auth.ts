@@ -25,6 +25,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     basePath: '/api/auth',
     debug: true, // enable verbose logging
     trustHost: true, // Required for Netlify preview deployments with dynamic URLs
+    useSecureCookies: process.env.NODE_ENV === 'production', // Use secure cookies in production
     providers: [
         GitHub({
             clientId: process.env.GITHUB_ID,
@@ -58,6 +59,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             // Extend session with accessToken (type augmentation)
             (session as typeof session & { accessToken?: string }).accessToken = token.accessToken as string;
             return session;
+        },
+        async redirect({ url, baseUrl }) {
+            // Log redirect attempts to debug localhost issue
+            logger.info('Redirect callback', { url, baseUrl, env: process.env.NODE_ENV });
+            // Always redirect to the same domain
+            if (url.startsWith('/')) return `${baseUrl}${url}`;
+            else if (new URL(url).origin === baseUrl) return url;
+            return baseUrl;
         },
     },
 });

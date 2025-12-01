@@ -28,10 +28,13 @@
 
 - **AI Summaries**: Google Gemini 2.0-powered repository summaries
 - **Multi-Provider AI Failover**: Automatic failover across Gemini, OpenAI (GPT-4), and Anthropic (Claude) for high availability
+- **AI Health Endpoint**: `/api/health` monitors all AI providers, auto-discovers available Gemini models when primary model fails
+- **Runtime Model Auto-Discovery**: When Gemini model fails, automatically discovers, tests, and switches to working model (no manual intervention)
+- **Hot Model Swapping**: Runtime model cache (15min TTL) enables automatic model switching mid-session when Google API changes
+- **Self-Healing AI**: System tests default model on each request, discovers alternatives if broken, caches working model across requests
 - **AI Template Enrichment**: Context-aware documentation generation using repo metadata, structure, and content
 - **Smart Repo Type Detection**: Automatically categorizes repos (web-app, game, tool, library, bot, research)
-- **Gemini Health Monitoring**: Automated CI/CD health checks to detect model deprecations
-- **Model Auto-Discovery**: Scripts to find working Gemini models when API changes occur
+- **Gemini Health Monitoring**: Automated CI/CD health checks to detect model deprecations (tests fail when model breaks)
 
 ### 📝 Documentation Management
 
@@ -107,8 +110,6 @@
 - **Responsive Card Width**: Profile card optimized with conditional padding (`pr-2` collapsed, `pr-16` on hover)
 - **Enhanced Filter Visibility**: Lighter backgrounds (`bg-slate-700/60`) vs darker panel selector for better contrast
 - **Authenticated Controls**: Sync all button restricted to logged-in users only
-- **Optimized Table Structure**: 5-column layout with colspan adjustments for expanded detail rows
-- **Status Icon Preservation**: PRs, Issues, Vulnerabilities, CI/CD icons retained without column header
 - **Force Refresh**: Detail panel includes refresh button with animated RefreshCw icon for immediate data reload
 
 ### 🔒 Security & Content Safety

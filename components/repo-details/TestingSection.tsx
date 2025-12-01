@@ -59,9 +59,9 @@ export function TestingSection({
   });
 
   // Hide section if no testing data at all
-  const hasTestingData = 
-    testingStatus || 
-    (coverageScore ?? 0) > 0 || 
+  const hasTestingData =
+    testingStatus ||
+    (coverageScore ?? 0) > 0 ||
     (testCaseCount ?? 0) > 0 ||
     (testFileCount ?? 0) > 0 ||
     testingMetrics.length > 0;

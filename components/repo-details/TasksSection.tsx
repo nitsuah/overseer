@@ -32,6 +32,11 @@ export function TasksSection({ tasks, isExpanded: isExpandedProp, onToggleExpand
   const [showDone, setShowDone] = useState(false);
   const [showAllTodo, setShowAllTodo] = useState(false);
 
+  // Hide section if no tasks
+  if (!tasks || tasks.length === 0) {
+    return null;
+  }
+
   const toggleCard = (cardKey: string) => {
     const newExpanded = new Set(expandedCards);
     if (newExpanded.has(cardKey)) {
@@ -99,7 +104,18 @@ export function TasksSection({ tasks, isExpanded: isExpandedProp, onToggleExpand
         <div className="flex items-center gap-2">
           <ListTodo className="h-4 w-4 text-blue-400" />
           <h4 className="text-sm font-semibold text-slate-200">Tasks</h4>
-          <span className="text-xs text-slate-500 font-normal">({filteredTasks.length} total)</span>
+          <span
+            title={`Tasks: ${tasks.filter(t => t.status === 'done').length}/${filteredTasks.length} completed (${filteredTasks.length} shown)`}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-medium ml-1 ${
+              tasks.filter(t => t.status === 'done').length === filteredTasks.length
+                ? 'bg-green-500/20 text-green-400'
+                : tasks.filter(t => t.status === 'done').length >= filteredTasks.length / 2
+                ? 'bg-blue-500/20 text-blue-400'
+                : 'bg-yellow-500/20 text-yellow-400'
+            }`}
+          >
+            {tasks.filter(t => t.status === 'done').length}/{filteredTasks.length}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           {subsections.length > 1 && !showDone && (
@@ -121,7 +137,7 @@ export function TasksSection({ tasks, isExpanded: isExpandedProp, onToggleExpand
               }}
               className="px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
             >
-              {showDone ? 'Hide done' : `Done (${doneCount})`}
+              {showDone ? 'Hide done' : `Show done (${doneCount})`}
             </button>
           )}
           <span className="text-slate-500 text-xs">{isMainExpanded ? '▼' : '▶'}</span>

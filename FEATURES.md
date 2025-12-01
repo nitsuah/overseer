@@ -6,9 +6,9 @@
 
 - **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, and activity with component breakdown display
 - **Documentation Tracking**: Monitors presence and status of key docs with 4-state health model (Missing, Dormant, Malformed, Healthy)
-- **Template Health Detection**: Content hashing to detect unchanged/stale templates marked as "dormant" state (Phase 4)
-- **Template Version Tracking**: Tracks which template version docs are based on with template_version column (Phase 4)
-- **Malformed Doc Detection**: Identifies docs with template markers like `TODO:` or <50 characters (Phase 4)
+- **Template Health Detection**: Content hashing to detect unchanged/stale templates marked as "dormant" state
+- **Template Version Tracking**: Tracks which template version docs are based on with template_version column
+- **Malformed Doc Detection**: Identifies docs with template markers or <50 characters
 - **Code Coverage Visualization**: Progress bars showing test coverage synced from METRICS.md (self-reported from target repositories)
 - **README Freshness Tracking**: Days since README last updated with color-coded staleness (Fresh/Recent/Aging/Stale)
 - **Activity Monitoring**: Last commit dates, open PRs, open issues with color-coded freshness indicators
@@ -16,18 +16,22 @@
 - **Test Case Counting**: Automatic parsing of test files to count it(), test(), describe() calls
 - **CI/CD Status**: Live build status from GitHub Actions (passing/failing with workflow name and last run)
 - **Vulnerability Tracking**: Open Dependabot alerts with count and severity (critical/high) color-coded display
-- **Contributor Analytics**: Track contributor count, commit frequency (commits/week), bus factor, PR merge time (Phase 5)
-- **Bus Factor Analysis**: Contributor concentration risk using 80/20 rule (Phase 5)
-- **Commit Frequency**: Average commits/week from last 12 weeks (Phase 5)
-- **PR Merge Time**: Average hours from creation to merge for last 30 PRs (Phase 5)
+- **Contributor Analytics**: Track contributor count, commit frequency (commits/week), bus factor, PR merge time
+- **Bus Factor Analysis**: Contributor concentration risk using 80/20 rule
+- **Commit Frequency**: Average commits/week from last 12 weeks
+- **PR Merge Time**: Average hours from creation to merge for last 30 PRs
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
 - **Community Standards**: 10 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING
 
 ### 🤖 AI-Powered Features
 
-- **AI Summaries**: Google Gemini-powered repository summaries
+- **AI Summaries**: Google Gemini 2.0-powered repository summaries
+- **AI Template Enrichment**: Context-aware documentation generation using repo metadata, structure, and content
 - **Smart Repo Type Detection**: Automatically categorizes repos (web-app, game, tool, library, bot, research)
+- **Gemini Health Monitoring**: Automated CI/CD health checks to detect model deprecations
+- **Model Auto-Discovery**: Scripts to find working Gemini models when API changes occur
+- **AI Template Enrichment**: Context-aware doc generation using Gemini 2.0 with repo-specific knowledge
 
 ### 📝 Documentation Management
 
@@ -37,6 +41,9 @@
 - **Auto-Fix Best Practices**: One-click PR creation for missing best practices (4 types: Dependabot, Env Template, Docker, Netlify Badge)
 - **Auto-Fix Community Standards**: One-click PR creation for missing standards (10 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions, FUNDING)
 - **Batch Operations**: Fix all missing docs or all missing standards with single PR
+- **PR Preview Modal**: Interactive file selection and preview before PR creation with pick-and-choose functionality
+- **Diff View**: LCS-based Myers diff algorithm showing accurate line-by-line changes between original and AI-generated content
+- **Inline Edit/Generate Toggle**: Switch between manual template editing and AI-powered generation
 - **Doc Health Scoring**: Percentage-based health scores for documentation completeness
 - **Template Health Detection**: Content hashing to identify unchanged/dormant templates
 - **OAuth Error Handling**: Comprehensive error detection for organization access restrictions with auto-redirect to GitHub authorization
@@ -77,6 +84,28 @@
 - **Vulnerability Warnings**: Color-coded severity indicators (red for critical, orange for high)
 - **Always-Visible Refresh**: Repository Stats header includes refresh button for immediate sync access
 - **Expandable Cards**: Collapsible quarter/subsection cards with show more/less controls
+- **Profile Section Compass Rose**: Pills positioned at NW, W, SW with rotating glow backdrop on profile picture
+- **Dynamic Text Expansion**: Right-to-left pill text reveal (icon first, text expands left) with origin-right scaling
+- **Responsive Card Width**: Profile card optimized with conditional padding (`pr-2` collapsed, `pr-16` on hover)
+- **Color-Coded Filter Dropdowns**: Purple Type, Blue Language, Fuchsia Fork borders with 60% opacity and subtle shadows
+- **Enhanced Filter Visibility**: Lighter backgrounds (`bg-slate-700/60`) vs darker panel selector for better contrast
+- **Clickable Repository Names**: Direct GitHub links in table rows with hover underline styling
+- **Organized Button Layout**: GitHub in Stats, Play in Health, Refresh/Remove in Actions columns
+- **Green Play Button**: Homepage/demo links with filled Play icon in Health column after shields
+- **Purple GitHub Button**: GitHub repo links in Repository Stats section header with consistent theming
+- **Authenticated Controls**: Sync all button restricted to logged-in users only
+- **Optimized Table Structure**: 5-column layout with colspan adjustments for expanded detail rows
+- **Status Icon Preservation**: PRs, Issues, Vulnerabilities, CI/CD icons retained without column header
+
+### 🔒 Security & Content Safety
+
+- **Markdown Sanitization**: `react-markdown` with `rehype-sanitize` plugin for XSS protection
+- **Battle-Tested Rendering**: Replaced custom HTML injection with industry-standard markdown library
+- **GitHub Flavored Markdown**: Full support for tables, task lists, strikethrough, autolinks via `remark-gfm`
+- **Link Security**: All external links include `rel="noopener noreferrer"` attribute
+- **Event Isolation**: Button clicks use `stopPropagation` to prevent unintended interactions
+- **Custom Component Renderers**: Tailwind-styled markdown elements with consistent slate color scheme
+- **Dependency Hygiene**: Removed unused `baseline-browser-mapping` to reduce attack surface
 
 ### 🔄 Synchronization
 

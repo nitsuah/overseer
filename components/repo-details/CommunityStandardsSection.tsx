@@ -80,10 +80,21 @@ export function CommunityStandardsSection({
         onClick={setIsExpanded}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-green-400" />
-            <h4 className="text-sm font-semibold text-slate-200">Standards</h4>
-            <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
+            <h4 className="text-sm font-semibold text-slate-200">Community Standards</h4>
+            <span
+              title={`Community Standards: ${communityStandards.filter(s => s.status === 'healthy').length}/${communityStandards.length} healthy`}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-medium ml-1 ${
+                communityStandards.filter(s => s.status === 'healthy').length / communityStandards.length >= 0.7
+                  ? 'bg-green-500/20 text-green-400'
+                  : communityStandards.filter(s => s.status === 'healthy').length / communityStandards.length >= 0.4
+                  ? 'bg-yellow-500/20 text-yellow-400'
+                  : 'bg-red-500/20 text-red-400'
+              }`}
+            >
+              {communityStandards.filter(s => s.status === 'healthy').length}/{communityStandards.length}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             {isAuthenticated && missingWithTemplates.length > 0 && onFixAllStandards && repoName && (
@@ -93,11 +104,12 @@ export function CommunityStandardsSection({
                   onFixAllStandards(repoName);
                 }}
                 className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
-                title="Create PR for all missing community standards"
+                title="Fix all missing community standards"
               >
                 Fix All ({missingWithTemplates.length})
               </button>
             )}
+            <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
           </div>
         </div>
       </div>

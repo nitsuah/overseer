@@ -17,6 +17,11 @@ export function FeaturesSection({ features, isExpanded: isExpandedProp, onToggle
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showAllCards, setShowAllCards] = useState(false);
 
+  // Hide section if no features
+  if (!features || features.length === 0) {
+    return null;
+  }
+
   const toggleCard = (cardKey: string) => {
     const newExpanded = new Set(expandedCards);
     if (newExpanded.has(cardKey)) {
@@ -71,7 +76,12 @@ export function FeaturesSection({ features, isExpanded: isExpandedProp, onToggle
         <div className="flex items-center gap-2">
           <span className="text-lg">✨</span>
           <h4 className="text-sm font-semibold text-slate-200">Features</h4>
-          <span className="text-xs text-slate-500 font-normal">({features.length} categories)</span>
+          <span
+            title={`Features: ${features.length} categories`}
+            className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-500/20 text-orange-400 ml-1"
+          >
+            {features.length}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <button

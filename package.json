@@ -17,6 +17,8 @@
     "test-query": "tsx scripts/test-query.ts",
     "test-gemini": "tsx scripts/test-gemini.ts",
     "test-gemini-direct": "tsx scripts/test-gemini-direct.ts",
+    "test-gemini-health": "node scripts/test-gemini-health.mjs",
+    "find-gemini-models": "node scripts/test-model-names.mjs",
     "list-gemini-models": "tsx scripts/list-models.ts",
     "create-new-tables": "tsx scripts/create-new-tables.ts",
     "test": "vitest",
@@ -33,7 +35,10 @@
     "next": "16.0.5",
     "next-auth": "^5.0.0-beta.30",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "react-markdown": "^10.1.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@netlify/functions": "^5.1.0",

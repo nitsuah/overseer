@@ -1,6 +1,24 @@
 # 🗺️ Overseer Product Roadmap
 
-## 2025Q4: 🚀 Stability & Core Integration
+## 🎨 UI Polish & Security Hardening
+
+- [x] Profile Section Redesign: Compass rose pill layout (NW, W, SW) with rotating glow
+- [x] Right-to-Left Text Expansion: Icon-first pill animation with origin-right scaling
+- [x] Profile Card Width Optimization: Dynamic padding for compact/expanded states
+- [x] Filter Dropdown Enhancement: Colored borders (purple/blue/fuchsia) with subtle glows
+- [x] Filter Visibility: Lighter backgrounds and increased opacity for better contrast
+- [x] Repository Table Reorganization: Optimized button placement (Health, Actions columns)
+- [x] Clickable Repository Names: Direct GitHub links with hover effects
+- [x] GitHub Link in Stats: Purple-themed button in Repository Stats header
+- [x] Play Button in Health: Green homepage/demo button after shields
+- [x] Authenticated Sync: Sync button visibility restricted to logged-in users
+- [x] Markdown Security: Replaced dangerouslySetInnerHTML with react-markdown + sanitization
+- [x] HTML Sanitization: Integrated rehype-sanitize for XSS protection
+- [x] GitHub Flavored Markdown: Added remark-gfm for tables, task lists, strikethrough
+- [x] Dependency Cleanup: Removed unused baseline-browser-mapping
+- [x] Table Column Cleanup: Removed redundant Links header, optimized colspan
+
+## 🚀 Stability & Core Integration
 
 - [x] Initial Project Setup (Next.js, Tailwind, Neon DB)
 - [x] GitHub Authentication & Integration
@@ -12,7 +30,7 @@
 - [x] Default Repositories Feature
 - [x] Dynamic OAuth URL Support (Netlify)
 
-## 2025Q4: ✅ Feature Audit & Data Integration
+## ✅ Feature Audit & Data Integration
 
 - [x] Baseline Indicator Integration: Last Commit Date, Open PR/Issue Counts
 - [x] Dashboard Polish: Stats column (Stars, Forks, Branches)
@@ -37,7 +55,7 @@
 - [x] README Freshness Tracking: Days since last update with color-coded staleness
 - [x] Documentation Accuracy: All docs updated to match implementation (100% accuracy)
 
-## 2025Q4: 🎨 UX Consistency & Quick Wins
+## 🎨 UX Consistency & Quick Wins
 
 - [x] Templates for Community Standards: CODE_OF_CONDUCT, SECURITY, Issue templates
 - [x] Fix Buttons: Add automated fixes for best practices/community standards
@@ -47,8 +65,12 @@
 - [x] Health State Icons: Display in main table row for each doc type
 - [x] Foundation: Full E2E Tests and Pre-commit Hooks
 - [x] Template File Hashing: Detect stale/unchanged templates
+- [x] PR Preview Modal: Interactive preview with file selection before PR creation
+- [x] AI Template Enrichment: Generate/edit docs with AI using repo context
+- [x] Diff View: Inline diff comparison between original and AI-generated content
+- [x] LCS-Based Diff Algorithm: Accurate change detection using Myers diff
 
-## 2025Q4: 🚀 Advanced Metrics & Integrations
+## 🚀 Advanced Metrics & Integrations
 
 - [x] CI/CD Build Status: Integrate GitHub Actions API for live build status
 - [x] Test Case Counting: Parse test files for actual test case counts
@@ -60,7 +82,7 @@
 - [x] CI/CD Status Display: Show passing/failing status with workflow name and last run in Best Practices section
 - [x] Vulnerability Display: Show alert count with severity-based color coding in Repository Stats
 
-## 2025Q4: ✅ Contributor Analytics & Enterprise Features
+## ✅ Contributor Analytics & Enterprise Features
 
 - [x] Template Health Detection: Content hashing to detect unchanged/stale templates
 - [x] Template Version Tracking: Track which template version docs are based on
@@ -71,22 +93,25 @@
 - [x] Bus Factor Analysis: Contributor concentration risk (80/20 rule)
 - [x] PR Merge Time Tracking: Average cycle time from creation to merge
 - [x] Contributor Metrics Display: Show all contributor analytics in Repository Stats
-- [x] Gemini API Integration: Updated to use Gemini 2.5 models (deprecated 1.x models)
+- [x] Gemini API Integration: Updated to use Gemini 2.0 experimental model
+- [x] Gemini Health Monitoring: CI/CD integration with automated model validation
 
-## 2025Q4: 📚 Docs & Agent Tooling
+## 📚 Docs & Agent Tooling
 
 - [x] Agent Instruction Guide (templates/.github/prompts/PM.md): Comprehensive documentation standards for AI agents
 - [x] Anti-Hallucination Guidelines: Format specifications and validation rules to prevent AI errors
 - [x] Documentation Maintenance Workflow: Move/collapse pattern for keeping docs clean
 - [x] Error Handling Documentation Pattern: Comprehensive guide for documenting error handling across all core docs
 
-## 2025Q4: 🛡️ Error Handling & UX Polish
+## 🛡️ Error Handling & UX Polish (Completed) ✅
 
 - [x] OAuth Error Detection System: Created lib/github-errors.ts with 5 error type classifications
 - [x] Organization Access Restrictions: User-friendly messaging when orgs block OAuth app access
 - [x] Auto-Redirect to Authorization: Opens GitHub OAuth settings automatically when restrictions detected
 - [x] Enhanced API Error Responses: Structured error details with actionable instructions in fix-doc/fix-best-practice
 - [x] Frontend Error Handling: Toast notifications with console guidance in useRepoActions hook
+- [x] Production OAuth Working: Verified authentication flow on Netlify deployment
+- [x] Diff Algorithm Fix: Replaced buggy lookahead with proper LCS-based Myers diff
 - [x] OAuth User Documentation: Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md guides
 - [x] Template Path Debugging: Enhanced logging for troubleshooting template resolution
 - [x] Best Practices Fix Buttons: 4 automated fixes (Dependabot, Env Template, Docker, Netlify Badge)
@@ -102,7 +127,7 @@
 - [x] GraphQL Rate Limit Safety: Added null check for optional GraphQL rate limit data
 - [x] TypeScript Build Fixes: Session type extension, array mutation fix, centralized repo detection
 
-## 2025Q4: 🎨 Detail Panel Overhaul
+## 🎨 Detail Panel Overhaul
 
 - [x] Three-Row Layout Architecture: Reorganized detail panels into logical groupings (Project/Quality/Standards)
 - [x] Synchronized Expand/Collapse: Row 1 (Features/Roadmap/Tasks), Row 2 (Documentation/Best Practices/Testing), Row 3 (Standards/Metrics/Issues)

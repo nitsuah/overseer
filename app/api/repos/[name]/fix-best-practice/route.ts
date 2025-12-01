@@ -20,8 +20,15 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { practiceType } = await request.json();
+        const { practiceType, content: providedContent, path: providedPath } = await request.json();
         const repoName = params.name;
+
+        logger.debug('[fix-best-practice] Request details:', {
+            practiceType,
+            repoName,
+            hasProvidedContent: !!providedContent,
+            providedPath
+        });
 
         // Get repo details
         const db = getNeonClient();
@@ -42,43 +49,50 @@ export async function POST(
         let branchName: string;
         let commitMessage: string;
 
-        // Handle different practice types
-        switch (practiceType) {
-            case 'dependabot': {
-                const templatePath = path.join(process.cwd(), 'templates', '.github', 'dependabot.yml');
-                const content = await fs.readFile(templatePath, 'utf-8');
-                filesToAdd.push({
-                    path: '.github/dependabot.yml',
-                    content
-                });
-                branchName = `chore/add-dependabot-${Date.now()}`;
-                commitMessage = 'chore: add Dependabot configuration for automatic dependency updates';
-                break;
-            }
+        // If content provided from modal, use it directly
+        if (providedContent && providedPath) {
+            filesToAdd.push({ path: providedPath, content: providedContent });
+            branchName = `chore/add-${practiceType}-${Date.now()}`;
+            commitMessage = `chore: add ${practiceType}`;
+        } else {
+            // Fallback: read from template files
+            // Handle different practice types
+            switch (practiceType) {
+                case 'dependabot': {
+                    const templatePath = path.join(process.cwd(), 'templates', '.github', 'dependabot.yml');
+                    const content = await fs.readFile(templatePath, 'utf-8');
+                    filesToAdd.push({
+                        path: '.github/dependabot.yml',
+                        content
+                    });
+                    branchName = `chore/add-dependabot-${Date.now()}`;
+                    commitMessage = 'chore: add Dependabot configuration for automatic dependency updates';
+                    break;
+                }
 
-            case 'env_template': {
-                const templatePath = path.join(process.cwd(), 'templates', '.env.example');
-                const content = await fs.readFile(templatePath, 'utf-8');
-                filesToAdd.push({
-                    path: '.env.example',
-                    content
-                });
-                branchName = `chore/add-env-template-${Date.now()}`;
-                commitMessage = 'chore: add environment variables template';
-                break;
-            }
+                case 'env_template': {
+                    const templatePath = path.join(process.cwd(), 'templates', '.env.example');
+                    const content = await fs.readFile(templatePath, 'utf-8');
+                    filesToAdd.push({
+                        path: '.env.example',
+                        content
+                    });
+                    branchName = `chore/add-env-template-${Date.now()}`;
+                    commitMessage = 'chore: add environment variables template';
+                    break;
+                }
 
-            case 'docker': {
-                const dockerfilePath = path.join(process.cwd(), 'templates', 'Dockerfile');
-                const dockerComposeePath = path.join(process.cwd(), 'templates', 'docker-compose.yml');
-                const dockerfileContent = await fs.readFile(dockerfilePath, 'utf-8');
-                const dockerComposeContent = await fs.readFile(dockerComposeePath, 'utf-8');
-                filesToAdd.push(
-                    {
-                        path: 'Dockerfile',
-                        content: dockerfileContent
-                    },
-                    {
+                case 'docker': {
+                    const dockerfilePath = path.join(process.cwd(), 'templates', 'Dockerfile');
+                    const dockerComposeePath = path.join(process.cwd(), 'templates', 'docker-compose.yml');
+                    const dockerfileContent = await fs.readFile(dockerfilePath, 'utf-8');
+                    const dockerComposeContent = await fs.readFile(dockerComposeePath, 'utf-8');
+                    filesToAdd.push(
+                        {
+                            path: 'Dockerfile',
+                            content: dockerfileContent
+                        },
+                        {
                         path: 'docker-compose.yml',
                         content: dockerComposeContent
                     }
@@ -138,6 +152,7 @@ export async function POST(
 
             default:
                 return NextResponse.json({ error: `Unsupported practice type: ${practiceType}` }, { status: 400 });
+            }
         }
 
         if (filesToAdd.length === 0) {

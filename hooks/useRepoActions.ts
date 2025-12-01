@@ -1,7 +1,16 @@
 // Custom hooks for repository actions
 
 import { useState } from 'react';
-import { Repo } from '@/types/repo';
+import { Repo, BestPractice } from '@/types/repo';
+
+interface FilePreview {
+  path: string;
+  content: string;
+  docType: string;
+  type: 'doc' | 'practice';
+  practiceType?: string;
+  language?: string; // For syntax highlighting in modal
+}
 
 export function useRepoActions(
   refetchRepos: () => Promise<void>,
@@ -12,6 +21,10 @@ export function useRepoActions(
   const [fixingDoc, setFixingDoc] = useState(false);
   const [syncingRepo, setSyncingRepo] = useState<string | null>(null);
   const [generatingSummary, setGeneratingSummary] = useState<string | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewFiles, setPreviewFiles] = useState<FilePreview[]>([]);
+  const [previewRepoName, setPreviewRepoName] = useState('');
+  const [previewMode, setPreviewMode] = useState<'single' | 'batch'>('single');
 
   const handleAddRepo = async (url: string, type: string) => {
     try {
@@ -56,85 +69,103 @@ export function useRepoActions(
     }
   };
 
-  const handleFixAllDocs = async (repoName: string) => {
-    if (!confirm(`Create a single PR to add ALL missing docs to ${repoName}?`)) return;
+  const handleFixAllDocs = async (repoName: string, missingDocs?: string[]) => {
+    // Fetch template previews
     try {
       setFixingDoc(true);
-      const res = await fetch(`/api/repos/${repoName}/fix-all-docs`, { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.prUrl) {
-          window.open(data.prUrl, '_blank');
+      
+      // If no missing docs provided, fetch from repo details
+      let docsToFix: string[] = missingDocs || [];
+      if (!missingDocs) {
+        const detailsRes = await fetch(`/api/repo-details/${repoName}`);
+        if (!detailsRes.ok) {
+          setToastMessage('Failed to load repository details');
+          return;
         }
-        setToastMessage(`PR created! Added ${data.count} files.`);
+        const details = await detailsRes.json();
+        const statuses = details.docStatuses || [];
+        docsToFix = statuses
+          .filter((d: { exists: boolean; doc_type: string }) => !d.exists && ['roadmap', 'tasks', 'metrics', 'features', 'readme'].includes(d.doc_type))
+          .map((d: { doc_type: string }) => d.doc_type);
+      }
+
+      if (docsToFix.length === 0) {
+        setToastMessage('No missing docs to fix');
+        return;
+      }
+
+      const previewRes = await fetch('/api/preview-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docTypes: docsToFix }),
+      });
+
+      if (previewRes.ok) {
+        const { previews } = await previewRes.json();
+        setPreviewFiles(previews);
+        setPreviewRepoName(repoName);
+        setPreviewMode('batch');
+        setPreviewModalOpen(true);
       } else {
-        const err = await res.json();
-        setToastMessage(err.message || `Failed to create PR: ${err.error}`);
+        setToastMessage('Failed to load previews');
       }
     } catch (error) {
-      console.error('Failed to fix all docs:', error);
-      setToastMessage('Failed to create PR');
+      console.error('Failed to fetch previews:', error);
+      setToastMessage('Failed to load previews');
     } finally {
       setFixingDoc(false);
     }
   };
 
   const handleFixDoc = async (repoName: string, docType: string) => {
+    // Show preview modal first
     try {
       setFixingDoc(true);
-      const res = await fetch(`/api/repos/${repoName}/fix-doc`, {
+      const previewRes = await fetch('/api/preview-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ docType }),
+        body: JSON.stringify({ docTypes: [docType] }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.prUrl) {
-          window.open(data.prUrl, '_blank');
-        }
-        setToastMessage(`PR created for ${docType.toUpperCase()}.md!`);
+
+      if (previewRes.ok) {
+        const { previews } = await previewRes.json();
+        setPreviewFiles(previews);
+        setPreviewRepoName(repoName);
+        setPreviewMode('single');
+        setPreviewModalOpen(true);
       } else {
-        const err = await res.json();
-        
-        // Handle OAuth restriction errors specially
-        if (err.type === 'oauth_restriction' && err.helpUrl) {
-          console.error('🔐 OAuth Restriction - Authorization Required');
-          console.log(`\n📋 To fix this:\n1. Click the link that just opened\n2. Find the organization section\n3. Click "Grant" or "Request" access\n4. Come back and try again\n`);
-          
-          // Show error with clickable action
-          setToastMessage(`${err.error || 'Authorization required'} - Opening authorization page...`);
-          
-          // Open the authorization URL directly
-          setTimeout(() => {
-            window.open(err.helpUrl, '_blank');
-          }, 500);
-        } else if (err.type === 'oauth_restriction' && err.instructions) {
-          console.error('OAuth Restriction:', err.instructions);
-          setToastMessage(err.error || 'Failed to create PR - OAuth restriction');
-          
-          // Optionally open help URL
-          if (err.helpUrl) {
-            setTimeout(() => {
-              if (confirm('Need help authorizing the app for this organization? Click OK to view instructions.')) {
-                window.open(err.helpUrl, '_blank');
-              }
-            }, 1000);
-          }
-        } else {
-          setToastMessage(err.error || 'Failed to create PR');
-        }
+        setToastMessage('Failed to load preview');
       }
     } catch (error) {
-      console.error('Failed to fix doc:', error);
-      setToastMessage('Failed to create PR');
+      console.error('Failed to fetch preview:', error);
+      setToastMessage('Failed to load preview');
     } finally {
       setFixingDoc(false);
     }
   };
 
   const handleFixStandard = async (repoName: string, standardType: string) => {
+    // Use the preview modal flow for community standards where templates exist
     try {
       setFixingDoc(true);
+      const previewRes = await fetch('/api/preview-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docTypes: [standardType] }),
+      });
+
+      if (previewRes.ok) {
+        const { previews } = await previewRes.json();
+        if (previews && previews.length > 0) {
+          setPreviewFiles(previews);
+          setPreviewRepoName(repoName);
+          setPreviewMode('single');
+          setPreviewModalOpen(true);
+          return; // Continue via confirmPRCreation
+        }
+      }
+
+      // Fallback direct PR if no preview available
       const res = await fetch(`/api/repos/${repoName}/fix-doc`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -142,13 +173,11 @@ export function useRepoActions(
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.prUrl) {
-          window.open(data.prUrl, '_blank');
-        }
-        setToastMessage(`PR created for ${standardType.toUpperCase()}.md!`);
+        if (data.prUrl) window.open(data.prUrl, '_blank');
+        setToastMessage(`PR created for ${standardType.toUpperCase()}!`);
       } else {
         const err = await res.json();
-        setToastMessage(err.error || 'Failed to create PR');
+        handlePRError(err);
       }
     } catch (error) {
       console.error('Failed to fix standard:', error);
@@ -159,117 +188,175 @@ export function useRepoActions(
   };
 
   const handleFixAllStandards = async (repoName: string) => {
+    // Load previews for ALL missing supported community standards and open modal
     try {
       setFixingDoc(true);
-      const res = await fetch(`/api/repos/${repoName}/fix-all-standards`, { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.message) {
-          setToastMessage(data.message);
-        } else if (data.prUrl) {
-          window.open(data.prUrl, '_blank');
-          setToastMessage(`PR created! Added ${data.count} community standards.`);
-        }
+
+      const detailsRes = await fetch(`/api/repo-details/${repoName}`);
+      if (!detailsRes.ok) {
+        setToastMessage('Failed to load repository details');
+        return;
+      }
+      const details = await detailsRes.json();
+
+      // Supported standards that have template mappings
+      const SUPPORTED_STANDARD_TYPES = [
+        'code_of_conduct',
+        'contributing',
+        'security',
+        'changelog',
+        'license',
+        'codeowners',
+        'copilot_instructions',
+        'funding',
+        'pr_template',
+        'issue_template'
+      ];
+
+      const missingStandards: string[] = (details.communityStandards || [])
+        .filter((s: { status: string }) => s.status === 'missing')
+        .map((s: { standard_type: string }) => s.standard_type)
+        .filter((t: string) => SUPPORTED_STANDARD_TYPES.includes(t));
+
+      if (missingStandards.length === 0) {
+        setToastMessage('No fixable missing standards');
+        return;
+      }
+
+      const previewRes = await fetch('/api/preview-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docTypes: missingStandards }),
+      });
+
+      if (previewRes.ok) {
+        const { previews } = await previewRes.json();
+        setPreviewFiles(previews);
+        setPreviewRepoName(repoName);
+        setPreviewMode('batch');
+        setPreviewModalOpen(true);
       } else {
-        const err = await res.json();
-        setToastMessage(err.error || 'Failed to create PR');
+        setToastMessage('Failed to load previews');
       }
     } catch (error) {
-      console.error('Failed to fix all standards:', error);
-      setToastMessage('Failed to create PR');
+      console.error('Failed to fetch previews:', error);
+      setToastMessage('Failed to load previews');
     } finally {
       setFixingDoc(false);
     }
   };
 
   const handleFixPractice = async (repoName: string, practiceType: string) => {
+    // Generate AI-powered, context-aware best practice fix
     try {
       setFixingDoc(true);
-      const res = await fetch(`/api/repos/${repoName}/fix-best-practice`, {
+      
+      // First, generate the AI content using prompt chain
+      const generateRes = await fetch('/api/repos/generate-best-practice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ practiceType }),
+        body: JSON.stringify({ repoName, practiceType }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.prUrl) {
-          window.open(data.prUrl, '_blank');
-        }
-        setToastMessage(`PR created for ${practiceType}!`);
-      } else {
-        const err = await res.json();
-        
-        // Handle OAuth restriction errors specially
-        if (err.type === 'oauth_restriction' && err.helpUrl) {
-          console.error('🔐 OAuth Restriction - Authorization Required');
-          console.log(`\n📋 To fix this:\n1. Click the link that just opened\n2. Find the organization section\n3. Click "Grant" or "Request" access\n4. Come back and try again\n`);
-          
-          // Show error with clickable action
-          setToastMessage(`${err.error || 'Authorization required'} - Opening authorization page...`);
-          
-          // Open the authorization URL directly
-          setTimeout(() => {
-            window.open(err.helpUrl, '_blank');
-          }, 500);
-        } else if (err.type === 'oauth_restriction' && err.instructions) {
-          console.error('OAuth Restriction:', err.instructions);
-          setToastMessage(err.error || 'Failed to create PR - OAuth restriction');
-          
-          // Optionally open help URL
-          if (err.helpUrl) {
-            setTimeout(() => {
-              if (confirm('Need help authorizing the app for this organization? Click OK to view instructions.')) {
-                window.open(err.helpUrl, '_blank');
-              }
-            }, 1000);
-          }
-        } else {
-          setToastMessage(err.error || 'Failed to create PR');
-        }
+
+      if (!generateRes.ok) {
+        const err = await generateRes.json();
+        setToastMessage(err.error || 'Failed to generate fix');
+        setFixingDoc(false);
+        return;
       }
+
+      const { content } = await generateRes.json();
+      
+      // Show generated content in modal for review
+      const fileName = getFileNameForPractice(practiceType);
+      setPreviewFiles([{
+        path: fileName,
+        content: content,
+        language: getLanguageForPractice(practiceType),
+        docType: practiceType,
+        type: 'practice',
+        practiceType: practiceType,
+      }]);
+      setPreviewRepoName(repoName);
+      setPreviewMode('single');
+      setPreviewModalOpen(true);
+      
+      // Store practice type for PR creation after modal confirm
+      (window as Window & { __pendingPracticeType?: string }).__pendingPracticeType = practiceType;
+      
     } catch (error) {
       console.error('Failed to fix practice:', error);
-      setToastMessage('Failed to create PR');
+      setToastMessage('Failed to generate fix');
     } finally {
       setFixingDoc(false);
     }
   };
 
+  // Helper to get file name for practice type
+  const getFileNameForPractice = (practiceType: string): string => {
+    switch (practiceType) {
+      case 'netlify_badge': return 'README.md';
+      case 'env_template': return '.env.example';
+      case 'docker': return 'Dockerfile';
+      case 'dependabot': return '.github/dependabot.yml';
+      default: return practiceType;
+    }
+  };
+
+  // Helper to get syntax highlighting language
+  const getLanguageForPractice = (practiceType: string): string => {
+    switch (practiceType) {
+      case 'netlify_badge': return 'markdown';
+      case 'env_template': return 'shell';
+      case 'docker': return 'dockerfile';
+      case 'dependabot': return 'yaml';
+      default: return 'text';
+    }
+  };
+
   const handleFixAllPractices = async (repoName: string) => {
+    // Load previews for ALL missing fixable best practices and open modal
     try {
       setFixingDoc(true);
       
+      // Get repo details to check which practices are actually missing
+      const detailsRes = await fetch(`/api/repo-details/${repoName}`);
+      if (!detailsRes.ok) {
+        setToastMessage('Failed to load repository details');
+        return;
+      }
+      const details = await detailsRes.json();
+      const bestPractices: BestPractice[] = details.bestPractices || [];
+
       // Get fixable missing practices
       const fixablePractices = ['dependabot', 'env_template', 'docker', 'netlify_badge'];
-      let successCount = 0;
-      
-      for (const practiceType of fixablePractices) {
-        try {
-          const res = await fetch(`/api/repos/${repoName}/fix-best-practice`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ practiceType }),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.prUrl) {
-              window.open(data.prUrl, '_blank');
-            }
-            successCount++;
-          }
-        } catch (error) {
-          console.error(`Failed to fix ${practiceType}:`, error);
-        }
+      const missingPractices = bestPractices
+        .filter((p: BestPractice) => p.status === 'missing' && fixablePractices.includes(p.practice_type))
+        .map((p: BestPractice) => p.practice_type);
+
+      if (missingPractices.length === 0) {
+        setToastMessage('No fixable missing practices');
+        return;
       }
-      
-      if (successCount > 0) {
-        setToastMessage(`Created ${successCount} PR(s) for best practices!`);
+
+      const previewRes = await fetch('/api/preview-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docTypes: missingPractices }),
+      });
+
+      if (previewRes.ok) {
+        const { previews } = await previewRes.json();
+        setPreviewFiles(previews);
+        setPreviewRepoName(repoName);
+        setPreviewMode('batch');
+        setPreviewModalOpen(true);
       } else {
-        setToastMessage('No PRs created - practices may already exist');
+        setToastMessage('Failed to load previews');
       }
     } catch (error) {
-      console.error('Failed to fix all practices:', error);
-      setToastMessage('Failed to create PRs');
+      console.error('Failed to fetch previews:', error);
+      setToastMessage('Failed to load previews');
     } finally {
       setFixingDoc(false);
     }
@@ -317,11 +404,171 @@ export function useRepoActions(
     }
   };
 
+  const confirmPRCreation = async (selectedFiles: FilePreview[]) => {
+    if (selectedFiles.length === 0) {
+      setToastMessage('No files selected');
+      return;
+    }
+
+    try {
+      setFixingDoc(true);
+      
+      if (selectedFiles.length === 1) {
+        // Single file PR
+        const f = selectedFiles[0];
+        if (f.type === 'practice') {
+          const res = await fetch(`/api/repos/${previewRepoName}/fix-best-practice`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              practiceType: f.practiceType,
+              content: f.content,
+              path: f.path
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.prUrl) window.open(data.prUrl, '_blank');
+            setToastMessage(`PR created for ${String(f.practiceType)}!`);
+            setPreviewModalOpen(false);
+          } else {
+            const err = await res.json();
+            handlePRError(err);
+          }
+        } else {
+          const docType = f.docType.toLowerCase();
+          const res = await fetch(`/api/repos/${previewRepoName}/fix-doc`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              docType,
+              content: f.content,
+              path: f.path
+            }),
+          });
+        
+          if (res.ok) {
+            const data = await res.json();
+            if (data.prUrl) {
+              window.open(data.prUrl, '_blank');
+            }
+            setToastMessage(`PR created for ${docType.toUpperCase()}!`);
+            setPreviewModalOpen(false);
+          } else {
+            const err = await res.json();
+            handlePRError(err);
+          }
+        }
+      } else {
+        // Batch PRs: group by category
+        const allDocs = selectedFiles.filter(f => f.type === 'doc');
+        const practices = selectedFiles.filter(f => f.type === 'practice');
+
+        // Split docs into core docs vs community standards
+        const CORE_DOCS = new Set(['roadmap','tasks','metrics','features','readme']);
+        const coreDocs = allDocs.filter(f => CORE_DOCS.has(f.docType.toLowerCase()));
+        const standardDocs = allDocs.filter(f => !CORE_DOCS.has(f.docType.toLowerCase()));
+
+        let docsMessage = '';
+        let standardsMessage = '';
+
+        // Core docs: single batch PR via fix-all-docs
+        if (coreDocs.length > 0) {
+          const res = await fetch(`/api/repos/${previewRepoName}/fix-all-docs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ files: coreDocs }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.prUrl) window.open(data.prUrl, '_blank');
+            docsMessage = `Created PR with ${coreDocs.length} documentation file(s).`;
+          } else {
+            const err = await res.json();
+            handlePRError(err);
+          }
+        }
+
+        // Community standards: single batch PR via fix-all-standards
+        if (standardDocs.length > 0) {
+          const res = await fetch(`/api/repos/${previewRepoName}/fix-all-standards`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ files: standardDocs }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.prUrl) window.open(data.prUrl, '_blank');
+            standardsMessage = `Created PR with ${standardDocs.length} standard file(s).`;
+          } else {
+            const err = await res.json();
+            handlePRError(err);
+          }
+        }
+
+        // Practices: create a single batch PR when multiple selected
+        let practicesMessage = '';
+        if (practices.length > 0) {
+          const res = await fetch(`/api/repos/${previewRepoName}/fix-all-practices`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ files: practices }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.prUrl) window.open(data.prUrl, '_blank');
+            practicesMessage = `Created PR with ${data.count} best-practice file(s).`;
+          } else {
+            const err = await res.json();
+            handlePRError(err);
+          }
+        }
+
+        setToastMessage([docsMessage, standardsMessage, practicesMessage].filter(Boolean).join(' '));
+        setPreviewModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Failed to create PR:', error);
+      setToastMessage('Failed to create PR');
+    } finally {
+      setFixingDoc(false);
+    }
+  };
+
+  const handlePRError = (err: { type?: string; error?: string; helpUrl?: string; instructions?: string }) => {
+    if (err.type === 'oauth_restriction' && err.helpUrl) {
+      console.error('🔐 OAuth Restriction - Authorization Required');
+      setToastMessage(`${err.error || 'Authorization required'} - Opening authorization page...`);
+      setTimeout(() => {
+        if (err.helpUrl) {
+          window.open(err.helpUrl, '_blank');
+        }
+      }, 500);
+    } else if (err.type === 'oauth_restriction' && err.instructions) {
+      console.error('OAuth Restriction:', err.instructions);
+      setToastMessage(err.error || 'Failed to create PR - OAuth restriction');
+      if (err.helpUrl) {
+        setTimeout(() => {
+          if (confirm('Need help authorizing the app for this organization? Click OK to view instructions.')) {
+            window.open(err.helpUrl!, '_blank');
+          }
+        }, 1000);
+      }
+    } else {
+      setToastMessage(err.error || 'Failed to create PR');
+    }
+  };
+
   return {
     addingRepo,
     fixingDoc,
     syncingRepo,
     generatingSummary,
+    previewModalOpen,
+    previewFiles,
+    previewRepoName,
+    previewMode,
+    setPreviewModalOpen,
     handleAddRepo,
     handleRemoveRepo,
     handleFixAllDocs,
@@ -332,5 +579,6 @@ export function useRepoActions(
     handleFixAllPractices,
     handleGenerateSummary,
     handleSyncSingleRepo,
+    confirmPRCreation,
   };
 }

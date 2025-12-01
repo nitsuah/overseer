@@ -7,9 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2025-12-01
+
 ### Added
 
-- **UX Roadmap Item:** Doc fix preview modal with template preview and pick-and-choose functionality before PR creation (planned)
+- **Profile Section Redesign:** Compass rose pill layout (NW, W, SW positions) with rotating glow animation on profile picture
+- **Pill Text Expansion:** Right-to-left text expansion (icon first, text appears left) with origin-right scaling
+- **Profile Card Width Optimization:** Dynamic padding (`pr-2` collapsed, `pr-16` on hover) for compact default state
+- **Filter Dropdown Enhancement:** Colored borders with subtle glows (purple Type, blue Language, fuchsia Fork) for better visual hierarchy
+- **Filter Visibility Improvements:** Lighter backgrounds (`bg-slate-700/60`) and increased opacity for better contrast
+- **Repository Table Reorganization:** Optimized button placement across Health, Actions columns
+- **Clickable Repository Names:** Repository names now link directly to GitHub with hover underline
+- **GitHub Link in Stats Section:** Added purple-themed GitHub button to Repository Stats header
+- **Play Button in Health Column:** Homepage/demo links now appear as green play button after health shields
+- **Refresh Button in Actions:** Moved from Links column to Actions column for better organization
+- **Authenticated Sync Button:** Sync all button now only appears when user is authenticated
+- **Table Column Cleanup:** Removed redundant Links column header while preserving status icons
+
+### Changed
+
+- **Markdown Rendering Security:** Replaced custom `dangerouslySetInnerHTML` implementation with battle-tested `react-markdown` library
+- **HTML Sanitization:** Integrated `rehype-sanitize` plugin for XSS protection in markdown preview
+- **GitHub Flavored Markdown:** Added `remark-gfm` support for tables, task lists, strikethrough, and autolinks
+- **Dependency Cleanup:** Removed unused `baseline-browser-mapping` package from devDependencies
+- **Filter Styling:** Dropdowns now use colored borders at 60% opacity with softer shadows on hover
+- **Card Padding:** Profile card optimized from `pr-16` → `pr-4` → `pr-2` when collapsed for space reclamation
+- **Button Distribution:** Health column now hosts play button, Actions column hosts refresh/remove buttons
+- **ColSpan Adjustment:** Updated table colspan from 8 → 7 → 5 to match actual visible column count
+
+### Fixed
+
+- **XSS Vulnerability:** Eliminated unsafe HTML injection risk in markdown preview component
+- **Build Errors:** Resolved multiple missing JSX closing tags in Actions column flex containers
+- **Duplicate Buttons:** Removed duplicate play button instances during button reorganization
+- **TypeScript Errors:** Fixed className prop issue in ReactMarkdown component by wrapping in div
+- **Baseline Browser Mapping Warning:** Eliminated deprecation warnings by removing unused dependency
+
+### Security
+
+- **Markdown Content Safety:** All user-generated markdown now passes through `rehype-sanitize` before rendering
+- **Link Security:** All external links include `rel="noopener noreferrer"` for security
+- **Event Propagation:** Added `stopPropagation` to prevent unintended row expansion on button clicks
+
+## [1.5.0] - 2025-11-30
+
+### Added
+
+- **PR Preview Modal:** Interactive file selection and preview before PR creation with pick-and-choose functionality
+- **AI Template Enrichment:** Context-aware documentation generation using Gemini 2.0 with repo-specific knowledge extraction
+- **Diff View Component:** LCS-based Myers diff algorithm for accurate line-by-line change detection between original and AI-generated content
+- **Inline Edit/Generate Toggle:** Switch between manual template editing and AI-powered generation in preview modal
+- **Gemini Health Monitoring:** Automated CI/CD integration with health check script to detect model deprecations
+- **Model Auto-Discovery:** Scripts to find working Gemini models when API changes occur (test-gemini-health, test-model-names)
+- **Enrich Template Endpoint:** New /api/enrich-template route supporting doc-type-specific AI prompts (TASKS, CODE_OF_CONDUCT, etc.)
+
+### Changed
+
+- **Gemini API Model:** Migrated from deprecated gemini-pro to gemini-2.0-flash-exp (experimental 2.0 model)
+- **Netlify Build Process:** Added npm run test-gemini-health to build command for early failure detection
+- **PR Creation Flow:** Now shows preview modal with diff view instead of immediate PR creation
+- **Template Prompts:** Enhanced with structure preservation rules (e.g., TASKS headers, CODE_OF_CONDUCT template compliance)
+
+### Fixed
+
+- **Diff Algorithm:** Replaced buggy lookahead matching with proper LCS-based diff (eliminates false positives for identical lines)
+- **Production OAuth:** Verified and confirmed working authentication flow on Netlify deployment
+- **API Error Rate:** Reduced 500 errors during startup by improving error handling in /api/repos endpoint
 
 ## [1.4.0] - 2025-11-30
 

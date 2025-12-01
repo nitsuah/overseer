@@ -1,10 +1,10 @@
 "use client";
 
 import { Toast } from '@/components/Toast';
+import { PRPreviewModal } from '@/components/PRPreviewModal';
 import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { FilterPanel } from '@/components/dashboard/FilterPanel';
+import Header from '@/components/Header';
 import { RepoTableRow } from '@/components/dashboard/RepoTableRow';
 import { useRepos, useRepoDetails, useRepoExpansion } from '@/hooks/useDashboard';
 import { useRepoActions } from '@/hooks/useRepoActions';
@@ -29,6 +29,11 @@ export default function Dashboard() {
     fixingDoc,
     syncingRepo,
     generatingSummary,
+    previewModalOpen,
+    previewFiles,
+    previewRepoName,
+    previewMode,
+    setPreviewModalOpen,
     handleAddRepo,
     handleRemoveRepo,
     handleFixAllDocs,
@@ -39,6 +44,7 @@ export default function Dashboard() {
     handleFixAllPractices,
     handleGenerateSummary,
     handleSyncSingleRepo,
+    confirmPRCreation,
   } = useRepoActions(refetch, setRepos, setToastMessage);
 
   const {
@@ -110,37 +116,31 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="space-y-4">
-          <DashboardHeader
-            filteredCount={filteredRepos.length}
-            totalCount={repos.length}
-            showAddRepo={showAddRepo}
-            addRepoUrl={addRepoUrl}
-            addRepoType={addRepoType}
-            addingRepo={addingRepo}
-            showFilters={showFilters}
-            syncing={syncing}
-            isAuthenticated={!!session}
-            onAddRepoUrlChange={setAddRepoUrl}
-            onAddRepoTypeChange={setAddRepoType}
-            onAddRepoSubmit={onAddRepoSubmit}
-            onToggleAddRepo={() => setShowAddRepo(!showAddRepo)}
-            onToggleFilters={() => setShowFilters(!showFilters)}
-            onSync={handleSync}
-          />
-          <FilterPanel
-            visible={showFilters}
-            filterType={filterType}
-            filterLanguage={filterLanguage}
-            filterFork={filterFork}
-            languages={languages}
-            onFilterTypeChange={setFilterType}
-            onFilterLanguageChange={setFilterLanguage}
-            onFilterForkChange={setFilterFork}
-            onClearFilters={clearFilters}
-          />
-        </div>
+      <Header
+        repoCount={{ filtered: filteredRepos.length, total: repos.length }}
+        showAddRepo={showAddRepo}
+        addRepoUrl={addRepoUrl}
+        addRepoType={addRepoType}
+        addingRepo={addingRepo}
+        showFilters={showFilters}
+        syncing={syncing}
+        isAuthenticated={!!session}
+        filterType={filterType}
+        filterLanguage={filterLanguage}
+        filterFork={filterFork}
+        languages={languages}
+        onAddRepoUrlChange={setAddRepoUrl}
+        onAddRepoTypeChange={setAddRepoType}
+        onAddRepoSubmit={onAddRepoSubmit}
+        onToggleAddRepo={() => setShowAddRepo(!showAddRepo)}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+        onSync={handleSync}
+        onFilterTypeChange={setFilterType}
+        onFilterLanguageChange={setFilterLanguage}
+        onFilterForkChange={setFilterFork}
+        onClearFilters={clearFilters}
+      />
+      <div className="px-6 py-8 space-y-6">
         {filteredRepos.length === 0 ? (
           <div className="glass rounded-lg p-12 text-center">
             <p className="text-slate-400 text-lg">No repositories found</p>
@@ -153,9 +153,6 @@ export default function Dashboard() {
             <table className="w-full">
               <thead className="bg-slate-800/50 border-b border-slate-700">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                    Links
-                  </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
                     Repository
                   </th>
@@ -202,6 +199,15 @@ export default function Dashboard() {
         )}
       </div>
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
+      <PRPreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        repoName={previewRepoName}
+        files={previewFiles}
+        onConfirm={confirmPRCreation}
+        loading={fixingDoc}
+        mode={previewMode}
+      />
     </>
   );
 }

@@ -15,10 +15,9 @@ export async function generateRepoSummary(
     }
 
     try {
-        // Use gemini-2.5-flash (latest stable fast model)
-        // Old models (gemini-pro, gemini-1.5-*) have been deprecated as of 2025
+        // Use gemini-2.0-flash-exp with v1beta API
         const model = genAI.getGenerativeModel({ 
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash-exp',
             generationConfig: {
                 temperature: 0.7,
                 maxOutputTokens: 1024,
@@ -90,7 +89,7 @@ export async function generateMissingDoc(
 
     try {
         const model = genAI.getGenerativeModel({ 
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash-exp',
             generationConfig: {
                 temperature: 0.7,
                 maxOutputTokens: 2048,
@@ -138,5 +137,75 @@ Context: ${contextFiles}`;
         }
         
         throw new Error('Failed to generate documentation: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+}
+
+export async function generateAIContent(prompt: string): Promise<string> {
+    if (!genAI) {
+        throw new Error('GEMINI_API_KEY not configured');
+    }
+
+    try {
+        // Use gemini-2.0-flash-exp with v1beta API
+        const model = genAI.getGenerativeModel({ 
+            model: 'gemini-2.0-flash-exp',
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 2048,
+            }
+        });
+
+        console.log('[generateAIContent] Sending request to Gemini...');
+        const result = await model.generateContent(prompt);
+        console.log('[generateAIContent] Received result:', { hasResponse: !!result.response });
+        
+        const response = result.response;
+        console.log('[generateAIContent] Response object:', { 
+            hasCandidates: !!response.candidates,
+            candidatesLength: response.candidates?.length,
+            hasText: typeof response.text === 'function'
+        });
+        
+        // Check if response was blocked
+        if (response.candidates && response.candidates.length > 0) {
+            const candidate = response.candidates[0];
+            console.log('[generateAIContent] Candidate:', {
+                finishReason: candidate.finishReason,
+                safetyRatings: candidate.safetyRatings
+            });
+        }
+        
+        const text = response.text();
+        console.log('[generateAIContent] Text length:', text?.length);
+        
+        if (!text || text.trim().length === 0) {
+            throw new Error('Empty response from Gemini API');
+        }
+        
+        return text;
+    } catch (error) {
+        logger.warn('Gemini API Error:', error);
+        if (error instanceof Error) {
+            logger.warn('Error name:', error.name);
+            logger.warn('Error message:', error.message);
+        }
+        if (typeof error === 'object' && error !== null) {
+            logger.warn('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+        }
+        
+        // Throw with more context
+        if (error instanceof Error) {
+            if (error.message.includes('API_KEY')) {
+                throw new Error('Invalid Gemini API Key');
+            }
+            if (error.message.includes('404') || error.message.includes('not found')) {
+                throw new Error('Gemini model not found - check API version and model name');
+            }
+            if (error.message.includes('quota') || error.message.includes('limit')) {
+                throw new Error('Gemini API quota exceeded');
+            }
+        }
+        
+        throw new Error('Failed to generate AI content: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
 }

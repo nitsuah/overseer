@@ -2,56 +2,6 @@
 
 ## Done
 
-### Recent Completions (November 2025)
-
-- [x] **Dependency Updates**: Bumped @types/node to 24.10.1, dotenv to 17.2.3, and minor-and-patch group packages
-- [x] **Detail Panel Redesign**: Complete UI overhaul with three-row layout, left sidebar (AI Summary + Repo Stats), synchronized expand/collapse
-- [x] **Gradient Backgrounds**: Applied unique color-coded gradients to all sections (purple, orange, blue, green, cyan, amber, red)
-- [x] **Enhanced Health Shields**: Detailed tooltips with component breakdowns for all health metrics
-- [x] **Subsection Support**: Added subsection column to tasks table with migration and parser support
-- [x] **AI Summary Component**: Extracted into dedicated AISummarySection with generate button
-- [x] **Repository Stats Static**: Created component with inline metrics and always-visible refresh button
-- [x] **Bold Text Parsing**: Created markdown-utils for **bold** syntax rendering
-- [x] **Language Icons**: Added getLanguageIcon() helper with compact labels (TS, JS, PY, etc.)
-- [x] **Type & Language Split**: Type icon with repo name, language label with description
-- [x] **Testing Section Enhancement**: Inline coverage progress bar in header
-- [x] **Windows Line Endings Bug Fix**: Fixed markdown parsers to handle CRLF line endings (split(/\r?\n/) instead of split('\n'))
-- [x] **GraphQL Rate Limit Safety**: Added null check for data.resources.graphql in rate-limit endpoint
-- [x] **TypeScript Build Fixes**: Extended Session interface, fixed array mutation, centralized repo type detection
-- [x] **UI Improvements Phase 4**: Reversed features order, doc health tooltips, removed duplicate badges
-- [x] **FUNDING.yml Standard**: Added 10th community standard with template and auto-fix support
-- [x] **Refresh Button**: Added force refetch capability in detail panel with animated icon
-- [x] **Duplicate Metrics Fix**: Implemented DELETE before INSERT pattern to prevent metric accumulation
-- [x] Documentation system overhaul: PROMPT.md for agent instructions, full audit, accuracy fixes
-- [x] Advanced metrics integration: LOC, test case counting, CI/CD status, vulnerability tracking
-- [x] Contributor analytics: count, commit frequency, bus factor, PR merge time
-- [x] Template health detection: content hashing, dormant/malformed state detection, version tracking
-- [x] UI/UX enhancements: health breakdown hover, detail panel reorganization, toast notifications
-- [x] Testing infrastructure: Pre-commit hooks, full E2E test suite with Playwright
-- [x] Component refactoring: Extracted hooks (useDashboard, useRepoActions, useRepoFilters), modular components
-- [x] OAuth error handling: Comprehensive error parsing, auto-redirect to GitHub authorization, user-friendly messages
-- [x] Error detection system: Created lib/github-errors.ts with OAuth restriction, permission, rate limit detection
-- [x] Enhanced API error responses: Detailed error types and actionable instructions in fix-doc and fix-best-practice endpoints
-- [x] OAuth documentation: Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md guides
-- [x] Best practices auto-fix: Fix buttons for Dependabot, Env Template, Docker, Netlify Badge (4 practices with templates)
-- [x] Documentation accuracy audit: Fixed Community Standards count from 8 to 10 (added CODEOWNERS, Copilot Instructions, FUNDING)
-- [x] Coverage sync bug fix: Always update coverage_score to NULL when no coverage found (prevents stale values)
-- [x] Batch sync coverage fix: Added coverage extraction to sync-repos endpoint
-- [x] Metrics parser enhancement: Normalize percentage formats (0.8666 → 86.66%, 86.66% stays 86.66)
-- [x] Testing section display: Separate metric values from long descriptions with detail text
-- [x] Rate limit detection: Created /api/github-rate-limit endpoint for monitoring API usage
-- [x] Debug tooling: Created /api/repos/[name]/debug endpoint for database inspection
-
-### Core Features Delivered (Earlier in Q4 2025)
-
-- [x] Repository dashboard with health scoring, filtering, and expandable details
-- [x] Documentation tracking and automated fixes (single/batch PR creation for 8 doc types)
-- [x] AI-powered summaries (Google Gemini 2.5)
-- [x] Best Practices detection (10 checks) and Community Standards tracking (10 checks)
-- [x] Features parser and display system with category organization
-- [x] Default repositories feature for non-authenticated users
-- [x] Database schema with comprehensive metric tracking
-
 _For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._
 
 ## In Progress
@@ -60,28 +10,20 @@ _No tasks currently in progress._
 
 ## Todo
 
-### Fix Auth
+### PR #16 Feedback (Copilot AI Review)
 
-- [ ] Fix Github Auth in PROD - currently failing due to OAuth app misconfiguration? or redirect URI issue? (we have local and prod versions in github, both authorized) NEXTAUTH manual steps missing?
-- [ ] When not logged in the two expected default repos are not shown (overseer, nitsuah-io) might be a routes auth thing? GET `https://ghoverseer.netlify.app/api/auth/signin/github?` 500 (Internal Server Error) maybe the button for sync all repos when not logged in needs to sync just the two expected default repos? might be locked behind auth currently? or might be a PROD deploy/db thing?
+- [ ] **Fix Dynamic Tailwind Classes in Header.tsx** - Lines 202-206: `text-${textColor}` won't work with JIT compiler, needs color mapping or inline styles
+- [ ] **Extract Gemini Model to Constant** - Hardcoded 'gemini-2.0-flash-exp' in 3 places in lib/ai.ts, use the get models output to define @latest (lines 20, 92, 151)
+- [ ] **Add failover for GenAI** with multiple model providers (like claude, gpt-4) for redundancy and add switcher to user profile section
+- [ ] **Refactor TestingSection Null Checks** - Verbose null/undefined checks could use helper function or nullish coalescing
+- [ ] **Consider LICENSE Year Logic** - Use repo creation year instead of current year for copyright notices
 
-### Phase 7: UX Improvements
-
-- [ ] Add modal window for doc fix preview before PR creation
-- [ ] Implement template preview in modal with markdown rendering
-- [ ] Add pick-and-choose functionality for batch fix operations
-- [ ] Add "Do you really want to fix all?" confirmation with per-doc opt-in
-- [ ] AI fix Community Standards Gaps (Cake Test) - Overseer tracks these but doesn't have them itself at root, will need to add them as a test of using overseer to test the features (maybe now we can connect AI generate to take the template, and the repo info, and create them):
-  - CODE_OF_CONDUCT.md (exists in templates/ only)
-  - SECURITY.md (exists in templates/ only)
-  - Issue Templates (exists in templates/ only)
-  - PR Template (not present)
-  - AI only provides updates to source files using repo knowledge, no other input that would mess up file format expected
-  - **Priority**: Medium - Nice to have for dogfooding our own standards and integrating AI further.
+## Todo
 
 ### Phase 8: Performance & Rate Limiting
 
 - [ ] Implement smart caching for GitHub API calls using content_hash from doc_status
+- [ ] **Improve Error Handling in GitHub API Client** - Standardize error messages and logging in lib/github.ts
 - [ ] Add ETag support to skip unchanged file fetches
 - [ ] Add delay batching between repos during sync to reduce rate limit pressure
 - [ ] Display rate limit status in UI with warning when approaching limits

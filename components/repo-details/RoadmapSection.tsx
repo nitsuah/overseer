@@ -32,6 +32,11 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
   const [showCompleted, setShowCompleted] = useState(false);
   const [showAllPlanned, setShowAllPlanned] = useState(false);
 
+  // Hide section if no roadmap items
+  if (!roadmapItems || roadmapItems.length === 0) {
+    return null;
+  }
+
   const toggleCard = (cardKey: string) => {
     const newExpanded = new Set(expandedCards);
     if (newExpanded.has(cardKey)) {
@@ -83,7 +88,18 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
         <div className="flex items-center gap-2">
           <Map className="h-4 w-4 text-purple-400" />
           <h4 className="text-sm font-semibold text-slate-200">Roadmap</h4>
-          <span className="text-xs text-slate-500 font-normal">({filteredItems.length} items)</span>
+          <span
+            title={`Roadmap: ${roadmapItems.filter(i => i.status === 'completed').length}/${filteredItems.length} completed (${filteredItems.length} shown)`}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-medium ml-1 ${
+              roadmapItems.filter(i => i.status === 'completed').length === filteredItems.length
+                ? 'bg-green-500/20 text-green-400'
+                : roadmapItems.filter(i => i.status === 'completed').length >= filteredItems.length / 2
+                ? 'bg-purple-500/20 text-purple-400'
+                : 'bg-yellow-500/20 text-yellow-400'
+            }`}
+          >
+            {roadmapItems.filter(i => i.status === 'completed').length}/{filteredItems.length}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           {quarters.length > 1 && !showCompleted && (
@@ -105,7 +121,7 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
               }}
               className="px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
             >
-              {showCompleted ? 'Hide completed' : `Completed (${completedCount})`}
+              {showCompleted ? 'Hide completed' : `Show completed (${completedCount})`}
             </button>
           )}
           <span className="text-slate-500 text-xs">{isMainExpanded ? '▼' : '▶'}</span>

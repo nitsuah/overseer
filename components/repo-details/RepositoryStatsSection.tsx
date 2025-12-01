@@ -2,7 +2,7 @@
 
 import { formatLocNumber } from '@/lib/expandable-row-utils';
 import { Metric } from '@/types/repo';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Github } from 'lucide-react';
 import { useState } from 'react';
 
 interface RepositoryStatsSectionProps {
@@ -23,6 +23,7 @@ interface RepositoryStatsSectionProps {
   isSyncing?: boolean;
   isAuthenticated?: boolean;
   hasNoData?: boolean;
+  repoUrl?: string;
 }
 
 export function RepositoryStatsSection({
@@ -43,6 +44,7 @@ export function RepositoryStatsSection({
   isSyncing = false,
   isAuthenticated = false,
   hasNoData = false,
+  repoUrl,
 }: RepositoryStatsSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -80,6 +82,18 @@ export function RepositoryStatsSection({
             <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
           </div>
           <div className="flex items-center gap-2">
+            {repoUrl && (
+              <a
+                href={repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2 py-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors text-xs"
+                title="View on GitHub"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Github className="h-3 w-3" />
+              </a>
+            )}
             {onSyncSingleRepo && (hasNoData || isAuthenticated) && (
               <button
                 onClick={(e) => {

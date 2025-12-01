@@ -20,37 +20,51 @@ export async function POST(
 
         const repoName = params.name;
         const db = getNeonClient();
-
-        // Core docs that should be fixed by this endpoint
-        const coreDocs = ['roadmap', 'tasks', 'metrics', 'features'];
         
-        // Get existing docs from status table
-        const existingDocTypes = new Set(
-            (await db`
-                SELECT doc_type 
-                FROM doc_status 
-                WHERE repo_id = (SELECT id FROM repos WHERE name = ${repoName}) 
-                AND exists = true
-            `).map(d => d.doc_type)
-        );
+        // Allow files with content to be passed directly from modal
+        const body = await request.json().catch(() => ({}));
+        const filesFromModal = body.files as Array<{path: string; content: string; docType: string}> | undefined;
 
-        const missingDocs = coreDocs.filter(d => !existingDocTypes.has(d));
+        let filesToCreate: Array<{path: string; content: string}>;
 
-        if (missingDocs.length === 0) {
-            return NextResponse.json({ message: 'No missing docs to fix' });
-        }
+        if (filesFromModal && filesFromModal.length > 0) {
+            // Use edited content from modal
+            filesToCreate = filesFromModal.map(f => ({
+                path: f.path,
+                content: f.content
+            }));
+        } else {
+            // Fallback: read templates from disk (old behavior)
+            const requestedDocs = body.docTypes as string[] | undefined;
+            const coreDocs = requestedDocs || ['roadmap', 'tasks', 'metrics', 'features'];
+            
+            const existingDocTypes = new Set(
+                (await db`
+                    SELECT doc_type 
+                    FROM doc_status 
+                    WHERE repo_id = (SELECT id FROM repos WHERE name = ${repoName}) 
+                    AND exists = true
+                `).map(d => d.doc_type)
+            );
 
-        const filesToCreate = [];
-        for (const docType of missingDocs) {
-            const templatePath = path.join(process.cwd(), 'templates', `${docType.toUpperCase()}.md`);
-            try {
-                const content = await fs.readFile(templatePath, 'utf-8');
-                filesToCreate.push({
-                    path: `${docType.toUpperCase()}.md`,
-                    content
-                });
-            } catch {
-                logger.warn(`Template for ${docType} not found`);
+            const missingDocs = coreDocs.filter(d => !existingDocTypes.has(d));
+
+            if (missingDocs.length === 0) {
+                return NextResponse.json({ message: 'No missing docs to fix' });
+            }
+
+            filesToCreate = [];
+            for (const docType of missingDocs) {
+                const templatePath = path.join(process.cwd(), 'templates', `${docType.toUpperCase()}.md`);
+                try {
+                    const content = await fs.readFile(templatePath, 'utf-8');
+                    filesToCreate.push({
+                        path: `${docType.toUpperCase()}.md`,
+                        content
+                    });
+                } catch {
+                    logger.warn(`Template for ${docType} not found`);
+                }
             }
         }
 

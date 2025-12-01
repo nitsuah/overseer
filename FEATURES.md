@@ -109,8 +109,6 @@
 - **Status Icon Preservation**: PRs, Issues, Vulnerabilities, CI/CD icons retained without column header
 - **Responsive Card Width**: Profile card optimized with conditional padding (`pr-2` collapsed, `pr-16` on hover)
 - **Enhanced Filter Visibility**: Lighter backgrounds (`bg-slate-700/60`) vs darker panel selector for better contrast
-- **Authenticated Controls**: Sync all button restricted to logged-in users only
-- **Force Refresh**: Detail panel includes refresh button with animated RefreshCw icon for immediate data reload
 
 ### 🔒 Security & Content Safety
 

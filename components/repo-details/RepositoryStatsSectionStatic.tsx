@@ -2,7 +2,7 @@
 
 import { formatLocNumber } from '@/lib/expandable-row-utils';
 import { Metric } from '@/types/repo';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Github } from 'lucide-react';
 import { useState } from 'react';
 
 interface RepositoryStatsSectionStaticProps {
@@ -20,6 +20,7 @@ interface RepositoryStatsSectionStaticProps {
   isSyncing?: boolean;
   isAuthenticated?: boolean;
   hasNoData?: boolean;
+  repoUrl?: string;
 }
 
 export function RepositoryStatsSectionStatic({
@@ -36,6 +37,7 @@ export function RepositoryStatsSectionStatic({
   isSyncing = false,
   isAuthenticated = false,
   hasNoData = false,
+  repoUrl,
 }: RepositoryStatsSectionStaticProps) {
   const [isExpanded, setIsExpanded] = useState(true); // Expanded by default
   
@@ -51,6 +53,20 @@ export function RepositoryStatsSectionStatic({
             <h3 className="text-sm font-semibold text-slate-200">Repository Stats</h3>
             <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
           </div>
+          {/* GitHub and Refresh Buttons */}
+          <div className="flex items-center gap-2">
+            {repoUrl && (
+              <a
+                href={repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 px-2 py-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors text-xs font-medium"
+                title="View on GitHub"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Github className="h-3 w-3" />
+              </a>
+            )}
           {/* Refresh Button - Always Visible */}
           {onSyncSingleRepo && (hasNoData || isAuthenticated) && (
             <button
@@ -66,6 +82,7 @@ export function RepositoryStatsSectionStatic({
               <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Refresh'}</span>
             </button>
           )}
+          </div>
         </div>
       </div>
       {isExpanded && (

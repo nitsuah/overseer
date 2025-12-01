@@ -30,6 +30,7 @@ interface ExpandableRowProps {
   coverageScore?: number;
   readmeLastUpdated?: string | null;
   repoName?: string;
+  repoUrl?: string;
   isAuthenticated?: boolean;
   onFixStandard?: (repoName: string, standardType: string) => void;
   onFixAllStandards?: (repoName: string) => void;
@@ -70,6 +71,7 @@ export default function ExpandableRow({
   coverageScore,
   readmeLastUpdated,
   repoName,
+  repoUrl,
   isAuthenticated = true,
   onFixStandard,
   onFixAllStandards,
@@ -139,6 +141,7 @@ export default function ExpandableRow({
             isSyncing={isSyncing}
             isAuthenticated={isAuthenticated}
             hasNoData={hasNoData}
+            repoUrl={repoUrl}
           />
         </div>
 

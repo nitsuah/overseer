@@ -124,6 +124,7 @@ export default function Dashboard() {
         addingRepo={addingRepo}
         showFilters={showFilters}
         syncing={syncing}
+        isAuthenticated={!!session}
         filterType={filterType}
         filterLanguage={filterLanguage}
         filterFork={filterFork}
@@ -152,9 +153,6 @@ export default function Dashboard() {
             <table className="w-full">
               <thead className="bg-slate-800/50 border-b border-slate-700">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                    Links
-                  </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
                     Repository
                   </th>

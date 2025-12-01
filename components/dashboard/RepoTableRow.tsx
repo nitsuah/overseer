@@ -93,34 +93,27 @@ export function RepoTableRow({
         className="bg-gradient-to-r from-slate-900/60 via-slate-800/40 to-slate-900/60 hover:from-slate-800/70 hover:via-slate-700/50 hover:to-slate-800/70 transition-all duration-200 cursor-pointer border-b border-slate-700/30"
         onClick={onToggleExpanded}
       >
-        {/* Links Column - NOW FIRST */}
+        {/* Repository Name with Type and Language */}
         <td className="px-6 py-4">
           <div className="flex items-center gap-2">
-            {isAuthenticated && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSyncSingleRepo();
-                }}
-                className="p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50"
-                title={syncingRepo === repo.name ? 'Syncing...' : 'Refresh repository data'}
-                disabled={syncingRepo === repo.name}
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${syncingRepo === repo.name ? 'animate-spin' : ''}`}
-                />
-              </button>
-            )}
+            {/* Type Icon */}
+            <TypeEditor
+              repoType={repoType}
+              repoName={repo.name}
+              getTypeIcon={getTypeIcon}
+              isAuthenticated={isAuthenticated}
+            />
+            {/* Repository Name */}
             <a
               href={repo.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
-              title="View on GitHub"
+              className="font-medium text-blue-400 hover:text-blue-300 transition-colors hover:underline"
               onClick={(e) => e.stopPropagation()}
             >
-              <Github className="h-4 w-4" />
+              {repo.name}
             </a>
+            {/* Homepage Play Button */}
             {repo.homepage && (
               <a
                 href={repo.homepage}
@@ -130,7 +123,7 @@ export function RepoTableRow({
                 title="Visit Homepage"
                 onClick={(e) => e.stopPropagation()}
               >
-                <ExternalLink className="h-4 w-4" />
+                <Play className="h-4 w-4 fill-current" />
               </a>
             )}
             {repo.open_prs !== undefined && repo.open_prs > 0 && (
@@ -145,6 +138,7 @@ export function RepoTableRow({
                 <GitPullRequest className="h-4 w-4" />
               </a>
             )}
+            {/* Open Issues and Vulnerability Alerts */}
             {repo.open_issues_count !== undefined && repo.open_issues_count > 0 && (
               <a
                 href={`${repo.url}/issues`}
@@ -175,54 +169,7 @@ export function RepoTableRow({
                 </span>
               </a>
             )}
-            {/* CI/CD Status Icon */}
-            {repo.ci_status && repo.ci_status !== 'unknown' && (
-              <a
-                href={`${repo.url}/actions`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`p-1 rounded transition-colors ${
-                  repo.ci_status === 'passing'
-                    ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                    : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                }`}
-                title={`CI/CD ${repo.ci_status === 'passing' ? 'Passing' : 'Failing'}${
-                  repo.ci_workflow_name ? ` - ${repo.ci_workflow_name}` : ''
-                }${repo.ci_last_run ? ` (${new Date(repo.ci_last_run).toLocaleDateString()})` : ''}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {repo.ci_status === 'passing' ? (
-                  <CheckCircle2 className="h-4 w-4" />
-                ) : (
-                  <XCircle className="h-4 w-4" />
-                )}
-              </a>
-            )}
-            {repo.ci_status === 'unknown' && (
-              <div
-                className="p-1 bg-slate-500/20 text-slate-400 rounded"
-                title="CI/CD status unknown"
-              >
-                <HelpCircle className="h-4 w-4" />
-              </div>
-            )}
-          </div>
-        </td>
-        {/* Repository Name with Type and Language */}
-        <td className="px-6 py-4">
-          <div className="flex items-center gap-2">
-            {/* Type Icon */}
-            <TypeEditor
-              repoType={repoType}
-              repoName={repo.name}
-              getTypeIcon={getTypeIcon}
-              isAuthenticated={isAuthenticated}
-            />
-            {/* Repository Name */}
-            <span className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
-              {repo.name}
-            </span>
-          </div>
+        </div>
         </td>
         {/* Description */}
         <td className="px-6 py-4 text-sm text-slate-400 hidden xl:table-cell">
@@ -273,6 +220,53 @@ export function RepoTableRow({
         </td>
         {/* Actions Column - Remove */}
         <td className="px-6 py-4">
+          <div className="flex items-center gap-2">
+            {isAuthenticated && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSyncSingleRepo();
+                }}
+                className="p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50"
+                title={syncingRepo === repo.name ? 'Syncing...' : 'Refresh repository data'}
+                disabled={syncingRepo === repo.name}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${syncingRepo === repo.name ? 'animate-spin' : ''}`}
+                />
+              </button>
+            )}
+            {/* CI/CD Status Icon */}
+            {repo.ci_status && repo.ci_status !== 'unknown' && (
+              <a
+                href={`${repo.url}/actions`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`p-1 rounded transition-colors ${
+                  repo.ci_status === 'passing'
+                    ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                    : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                }`}
+                title={`CI/CD ${repo.ci_status === 'passing' ? 'Passing' : 'Failing'}${
+                  repo.ci_workflow_name ? ` - ${repo.ci_workflow_name}` : ''
+                }${repo.ci_last_run ? ` (${new Date(repo.ci_last_run).toLocaleDateString()})` : ''}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {repo.ci_status === 'passing' ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
+              </a>
+            )}
+            {repo.ci_status === 'unknown' && (
+              <div
+                className="p-1 bg-slate-500/20 text-slate-400 rounded"
+                title="CI/CD status unknown"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </div>
+            )}
           {isAuthenticated ? (
             <button
               onClick={(e) => {
@@ -287,11 +281,12 @@ export function RepoTableRow({
           ) : (
             <div className="text-slate-500 text-sm">—</div>
           )}
+          </div>
         </td>
       </tr>
       {isExpanded && details && (
         <tr>
-          <td colSpan={8} className="p-0 bg-slate-950/90">
+          <td colSpan={5} className="p-0 bg-slate-950/90">
             <ExpandableRow
               tasks={details.tasks}
               roadmapItems={details.roadmapItems}
@@ -309,6 +304,7 @@ export function RepoTableRow({
               coverageScore={repo.coverage_score}
               readmeLastUpdated={repo.readme_last_updated}
               repoName={repo.name}
+              repoUrl={repo.url}
               // Adapt single-arg handlers to two-arg signatures expected downstream
               onFixDoc={(repoNameArg: string, docType: string) => onFixDoc(docType)}
               onFixAllDocs={() => onFixAllDocs()}

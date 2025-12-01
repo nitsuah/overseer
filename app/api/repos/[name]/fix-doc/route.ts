@@ -39,6 +39,7 @@ export async function POST(
         // If content is provided from modal (edited), use it directly
         let content = providedContent;
         let targetPath = providedPath;
+        let templateFilename: string | undefined;
 
         if (!content) {
             // Fallback: read from template file
@@ -67,8 +68,8 @@ export async function POST(
             };
 
             const normalized = String(docType).toLowerCase();
-            const filename = TEMPLATE_FILES[normalized];
-            if (!filename) {
+            templateFilename = TEMPLATE_FILES[normalized];
+            if (!templateFilename) {
                 return NextResponse.json({ 
                     error: `Unknown doc type: ${docType}. No template mapping found.`,
                     supported: Object.keys(TEMPLATE_FILES)
@@ -76,11 +77,11 @@ export async function POST(
             }
 
             // Always use process.cwd() which should be the project root when Next.js runs
-            const templatePath = path.join(process.cwd(), 'templates', filename);
+            const templatePath = path.join(process.cwd(), 'templates', templateFilename);
 
             try {
                 content = await fs.readFile(templatePath, 'utf-8');
-                targetPath = filename;
+                targetPath = templateFilename;
             } catch (error) {
                 logger.warn(`[fix-doc] Template not found:`, {
                     docType,
@@ -117,7 +118,7 @@ export async function POST(
         const prUrl = await github.createPrForFile(
             repoName,
             branchName,
-            targetPath || filename,
+            targetPath || templateFilename || `${normalized}.md`,
             content,
             `docs: add ${normalized.toUpperCase().replace(/_/g, ' ')}`
         );

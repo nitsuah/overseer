@@ -81,9 +81,9 @@ export function MarkdownPreview({ content }: { content: string }) {
     html = html.replace(/^\d+\. (.+)$/gim, '<li class="ml-6 list-decimal text-slate-300">$1</li>');
 
     // Wrap consecutive <li> in <ul> or <ol>
-    html = html.replace(/(<li class="ml-6 list-disc[^>]*>.*?<\/li>\s*)+/gs, '<ul class="my-2">$&</ul>');
-    html = html.replace(/(<li class="ml-6 list-decimal[^>]*>.*?<\/li>\s*)+/gs, '<ol class="my-2">$&</ol>');
-    html = html.replace(/(<li class="ml-4 flex[^>]*>.*?<\/li>\s*)+/gs, '<ul class="my-2">$&</ul>');
+    html = html.replace(/(<li class="ml-6 list-disc[^>]*>.*?<\/li>\s*)+/g, '<ul class="my-2">$&</ul>');
+    html = html.replace(/(<li class="ml-6 list-decimal[^>]*>.*?<\/li>\s*)+/g, '<ol class="my-2">$&</ol>');
+    html = html.replace(/(<li class="ml-4 flex[^>]*>.*?<\/li>\s*)+/g, '<ul class="my-2">$&</ul>');
 
     // Paragraphs: split on double line breaks
     const paragraphs = html.split(/\n\n+/);

@@ -12,6 +12,9 @@ type RepoMetadata = {
   homepage: string | null;
 };
 
+// Anti-hallucination constraint for all AI prompts
+const NO_HALLUCINATION_CONSTRAINT = `\nImportant constraints:\n- Do NOT invent facts, metrics, features, services, credentials, or URLs.\n- If information is unknown, omit the item or use a clearly marked placeholder (e.g., TODO: VALUE_NEEDED).\n- Keep output concise, scannable, and production-ready.`;
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -47,7 +50,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
     }
 
-    const repo = repoRows[0];
+    const repo = repoRows[0] as RepoMetadata;
     console.log('[enrich-template] Repo found:', repo.full_name, 'docType:', docType);
 
     // Build enrichment prompt based on doc type
@@ -136,7 +139,6 @@ Homepage: ${repo.homepage || 'None'}
   const owner = repo.full_name.split('/')[0];
 
   let prompt = '';
-  const noHallucination = `\nImportant constraints:\n- Do NOT invent facts, metrics, features, services, credentials, or URLs.\n- If information is unknown, omit the item or use a clearly marked placeholder (e.g., TODO: VALUE_NEEDED).\n- Keep output concise, scannable, and production-ready.`;
 
   switch (type) {
     case 'codeowners':
@@ -165,7 +167,7 @@ Format:
 - Use /* @username for directory ownership
 - Add blank lines between sections for readability
 
-Return ONLY the complete CODEOWNERS file content, with no markdown code fences or explanations.${noHallucination}`;
+Return ONLY the complete CODEOWNERS file content, with no markdown code fences or explanations.${NO_HALLUCINATION_CONSTRAINT}`;
       break;
 
     case 'roadmap':
@@ -189,7 +191,7 @@ Format:
 - Use top-level heading "Roadmap" and subsections for each time horizon.
 - Use bullets with bold short titles followed by brief descriptions.
 
-Return ONLY the Markdown content for ROADMAP.md.${noHallucination}`;
+Return ONLY the Markdown content for ROADMAP.md.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'tasks':
@@ -210,7 +212,7 @@ Your task:
 2. Keep same sections, format: - [ ] Description (P1/P2/P3, S/M/L)
 3. Language: ${repo.language || 'unknown'}, Topics: ${repo.topics?.join(', ') || 'none'}
 
-Return template with ONLY task text changed.${noHallucination}`;
+Return template with ONLY task text changed.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'metrics':
@@ -231,7 +233,7 @@ Your task:
 3. Add "How to Update" section with specific commands for ${repo.language}
 4. Use placeholder values like "TBD" or "0%" for current values
 
-Return ONLY complete Markdown for METRICS.md with REAL metrics.${noHallucination}`;
+Return ONLY complete Markdown for METRICS.md with REAL metrics.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'features':
@@ -255,7 +257,7 @@ Example (generate YOUR OWN):
 - **Real-time Sync** - WebSocket-based live updates across clients
 - **Batch Processing** - Queue system for handling large file uploads
 
-Return ONLY complete Markdown for FEATURES.md with REAL features.${noHallucination}`;
+Return ONLY complete Markdown for FEATURES.md with REAL features.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'readme':
@@ -272,7 +274,7 @@ Your task:
 2. Keep commands copyable and minimal; avoid filler.
 3. Align content with the project’s language and stack.
 
-Return ONLY the Markdown for README.md.${noHallucination}`;
+Return ONLY the Markdown for README.md.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'contributing':
@@ -288,7 +290,7 @@ Your task:
 1. Include sections: Code of Conduct reference, Issues, PRs, Branching, Commit messages, Testing, Linting, Releases.
 2. Provide concise steps and expectations.
 
-Return ONLY the Markdown for CONTRIBUTING.md.${noHallucination}`;
+Return ONLY the Markdown for CONTRIBUTING.md.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'security':
@@ -304,7 +306,7 @@ Your task:
 1. Define vulnerability disclosure process, supported versions, reporting channels, response expectations.
 2. Keep tone professional; concise actionable steps.
 
-Return ONLY the Markdown for SECURITY.md.${noHallucination}`;
+Return ONLY the Markdown for SECURITY.md.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'changelog':
@@ -320,7 +322,7 @@ Your task:
 1. Provide structure with Unreleased, Added/Changed/Fixed sections.
 2. Populate initial entries consistent with project domain.
 
-Return ONLY the Markdown for CHANGELOG.md.${noHallucination}`;
+Return ONLY the Markdown for CHANGELOG.md.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'bug_report':
@@ -351,7 +353,7 @@ Your task:
 3. Use GitHub markdown formatting with checkboxes where helpful
 4. Tailor environment fields to ${repo.language || 'the tech stack'}
 
-Return ONLY the complete Markdown template with YAML frontmatter.${noHallucination}`;
+Return ONLY the complete Markdown template with YAML frontmatter.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'feature_request':
@@ -379,7 +381,7 @@ Your task:
    - **Implementation Notes**: Technical considerations (optional)
 3. Keep it concise and actionable
 
-Return ONLY the complete Markdown template with YAML frontmatter.${noHallucination}`;
+Return ONLY the complete Markdown template with YAML frontmatter.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'issue_templates':
@@ -392,7 +394,7 @@ Your task:
 1. Output two Markdown files separated by a clear divider line: BUG_REPORT.md and FEATURE_REQUEST.md.
 2. Include fields: title, description, steps, expected/actual, environment for bugs; problem, proposal, alternatives for features.
 
-Return ONLY the combined Markdown content for the two templates.${noHallucination}`;
+Return ONLY the combined Markdown content for the two templates.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'pr_template':
@@ -406,7 +408,7 @@ ${templateContent.trim().length > 0 ? `Current content:\n\`\`\`markdown\n${templ
 Your task:
 1. Create a concise PR template with sections: Summary, Changes, Testing, Screenshots (optional), Checklist.
 
-Return ONLY the Markdown for pull_request_template.md.${noHallucination}`;
+Return ONLY the Markdown for pull_request_template.md.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'copilot_instructions':
@@ -421,7 +423,7 @@ Your task:
 1. Provide clear guardrails: coding style, file paths, tests, commit conventions, and what to avoid.
 2. Include examples of good vs bad changes.
 
-Return ONLY the Markdown for copilot-instructions.md.${noHallucination}`;
+Return ONLY the Markdown for copilot-instructions.md.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'funding':
@@ -437,7 +439,7 @@ Your task:
 1. Provide a valid FUNDING.yml with keys (github, patreon, open_collective) as applicable.
 2. Use placeholder handles where unknown.
 
-Return ONLY the YAML for FUNDING.yml.${noHallucination}`;
+Return ONLY the YAML for FUNDING.yml.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     // Best Practices (templates)
@@ -455,7 +457,7 @@ Your task:
 2. Tailor ecosystem to the repo’s language (${repo.language || 'unknown'}).
 3. Keep YAML concise and valid.
 
-Return ONLY the YAML for .github/dependabot.yml.${noHallucination}`;
+Return ONLY the YAML for .github/dependabot.yml.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'env_example':
@@ -483,7 +485,7 @@ Your task:
 4. Use descriptive placeholder values (e.g., DATABASE_URL=postgresql://user:pass@localhost:5432/dbname)
 5. Add helpful inline comments for complex variables
 
-Return ONLY the plain text for .env.example (no markdown code fences).${noHallucination}`;
+Return ONLY the plain text for .env.example (no markdown code fences).${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'dockerfile':
@@ -511,7 +513,7 @@ Your task:
 3. Add helpful comments explaining each stage
 4. Keep it production-ready but not over-engineered
 
-Return ONLY the Dockerfile content (no markdown code fences).${noHallucination}`;
+Return ONLY the Dockerfile content (no markdown code fences).${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'docker_compose':
@@ -527,7 +529,7 @@ Your task:
 1. Provide services appropriate for ${repo.full_name} (app, db if needed), volumes, ports, and env.
 2. Keep YAML valid and minimal.
 
-Return ONLY the YAML for docker-compose.yml.${noHallucination}`;
+Return ONLY the YAML for docker-compose.yml.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'netlify_badge':
@@ -542,7 +544,7 @@ Your task:
 1. Produce a small Markdown section including Netlify deploy badge, live URL (use homepage if available), and brief deployment notes.
 2. Keep it concise and copy-pasteable.
 
-Return ONLY the Markdown snippet.${noHallucination}`;
+Return ONLY the Markdown snippet.${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'code_of_conduct':
@@ -564,7 +566,7 @@ ONLY make these minimal changes:
 3. Ensure @${owner} is mentioned as contact
 4. Keep ALL sections, headings, and bullet formatting EXACTLY as-is
 
-Return the template with MINIMAL changes (placeholders only).${noHallucination}`;
+Return the template with MINIMAL changes (placeholders only).${NO_HALLUCINATION_CONSTRAINT}`;
   break;
 
     case 'license':

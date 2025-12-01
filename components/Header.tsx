@@ -21,7 +21,7 @@ export default function Header() {
                 <div className="flex flex-col leading-tight">
                     <h1 className="text-xl md:text-2xl font-bold tracking-wide gradient-text flex items-center gap-2">
                         Overseer
-                        <Sparkles className="h-4 w-4 text-fuchsia-300 animate-pulse" />
+                        <Sparkles className="h-4 w-4 text-fuchsia-300 motion-safe:animate-pulse" />
                         <span className="text-white/60 font-normal hidden sm:inline">| Dashboard</span>
                     </h1>
                     <div className="flex items-center gap-2 mt-1">

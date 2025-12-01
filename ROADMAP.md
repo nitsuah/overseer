@@ -8,17 +8,8 @@
 - [ ] **Roadmap Simulation:** AI-powered schedule impact analysis
 - [ ] **Conversational Interface Foundation:** Natural language, chat-driven interface
 
-## 2026Q2: 🎨 UX Enhancements & Preview Features
+## 2026Q2: 🔐 Security Enhancements
 
-- [ ] Doc Fix Preview Modal: Modal window before PR creation with template preview and pick-and-choose options
-  - [ ] Template preview - Show what will be added before creating PR
-  - [ ] Selective fixes - Allow users to choose which docs to fix in batch operations
-  - [ ] Confirmation step - "Do you really want to fix all?" with explicit opt-in per document
-  - [ ] Live template rendering - Preview markdown rendering in modal before committing
-
-## 2026Q2: 🔐 Production Deployment & Security Enhancements
-
-- [ ] GitHub OAuth Production Fix: Resolve callback URL and token handling issues
 - [ ] Rate Limiting Optimization: Smart caching and batching to reduce API pressure
   - [ ] Content-hash based caching - Skip unchanged files using doc_status.content_hash
   - [ ] ETag support - Use GitHub ETag headers to avoid redundant fetches

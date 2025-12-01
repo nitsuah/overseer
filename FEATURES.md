@@ -27,6 +27,7 @@
 ### 🤖 AI-Powered Features
 
 - **AI Summaries**: Google Gemini 2.0-powered repository summaries
+- **Multi-Provider AI Failover**: Automatic failover across Gemini, OpenAI (GPT-4), and Anthropic (Claude) for high availability
 - **AI Template Enrichment**: Context-aware documentation generation using repo metadata, structure, and content
 - **Smart Repo Type Detection**: Automatically categorizes repos (web-app, game, tool, library, bot, research)
 - **Gemini Health Monitoring**: Automated CI/CD health checks to detect model deprecations
@@ -50,6 +51,12 @@
 - **GitHub Error Parsing**: Detects 5 error types (OAuth restrictions, permissions, not found, rate limits, unknown) with user-friendly messages
 - **Authorization Auto-Redirect**: Automatically opens GitHub OAuth settings when org restrictions detected
 - **Error Instructions**: Step-by-step guidance for resolving OAuth and permission issues
+- **Template Path Debugging**: Enhanced logging for troubleshooting template resolution issues
+- **Features Display Order**: Reversed chronological order to show newest features first
+- **Duplicate Metrics Prevention**: DELETE before INSERT strategy to prevent metric accumulation
+- **Windows Line Endings Support**: Parser compatibility with CRLF line endings using split(/\r?\n/)
+- **GraphQL Rate Limit Safety**: Null checks for optional GraphQL rate limit data
+- **TypeScript Build Stability**: Session type extensions, array mutation fixes, centralized repo detection
 
 ### 🎯 Project Tracking
 
@@ -84,6 +91,11 @@
 - **Vulnerability Warnings**: Color-coded severity indicators (red for critical, orange for high)
 - **Always-Visible Refresh**: Repository Stats header includes refresh button for immediate sync access
 - **Expandable Cards**: Collapsible quarter/subsection cards with show more/less controls
+- **Subsection Support in Tasks**: Database schema and parser support for organized task groupings with granular show/hide controls
+- **Show More/Less Controls**: Granular controls to show all quarters/subsections or completed items on demand
+- **AI Summary Component**: Extracted into dedicated component with generate button and dismissible state management
+- **Bold Text Parsing**: Markdown-utils for **bold** syntax rendering in roadmap/task titles
+- **Visual Hierarchy Improvements**: Enhanced spacing, borders, shadows, and hover states for better visual flow
 - **Profile Section Compass Rose**: Pills positioned at NW, W, SW with rotating glow backdrop on profile picture
 - **Dynamic Text Expansion**: Right-to-left pill text reveal (icon first, text expands left) with origin-right scaling
 - **Responsive Card Width**: Profile card optimized with conditional padding (`pr-2` collapsed, `pr-16` on hover)
@@ -96,6 +108,7 @@
 - **Authenticated Controls**: Sync all button restricted to logged-in users only
 - **Optimized Table Structure**: 5-column layout with colspan adjustments for expanded detail rows
 - **Status Icon Preservation**: PRs, Issues, Vulnerabilities, CI/CD icons retained without column header
+- **Force Refresh**: Detail panel includes refresh button with animated RefreshCw icon for immediate data reload
 
 ### 🔒 Security & Content Safety
 
@@ -212,4 +225,4 @@ Health scores are displayed as letter grades (A-F) with detailed component break
 
 ## 📅 Last Updated
 
-November 26, 2025 - Phase 3 Advanced Metrics Complete
+December 1, 2025 - Detail Panel Overhaul & Error Handling Complete

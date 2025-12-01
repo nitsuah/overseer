@@ -26,8 +26,11 @@
 
 ### 🤖 AI-Powered Features
 
-- **AI Summaries**: Google Gemini-powered repository summaries
+- **AI Summaries**: Google Gemini 2.0-powered repository summaries
+- **AI Template Enrichment**: Context-aware documentation generation using repo metadata, structure, and content
 - **Smart Repo Type Detection**: Automatically categorizes repos (web-app, game, tool, library, bot, research)
+- **Gemini Health Monitoring**: Automated CI/CD health checks to detect model deprecations
+- **Model Auto-Discovery**: Scripts to find working Gemini models when API changes occur
 
 ### 📝 Documentation Management
 
@@ -37,6 +40,10 @@
 - **Auto-Fix Best Practices**: One-click PR creation for missing best practices (4 types: Dependabot, Env Template, Docker, Netlify Badge)
 - **Auto-Fix Community Standards**: One-click PR creation for missing standards (10 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions, FUNDING)
 - **Batch Operations**: Fix all missing docs or all missing standards with single PR
+- **PR Preview Modal**: Interactive file selection and preview before PR creation with pick-and-choose functionality
+- **AI Template Enrichment**: Context-aware doc generation using Gemini 2.0 with repo-specific knowledge
+- **Diff View**: LCS-based Myers diff algorithm showing accurate line-by-line changes between original and AI-generated content
+- **Inline Edit/Generate Toggle**: Switch between manual template editing and AI-powered generation
 - **Doc Health Scoring**: Percentage-based health scores for documentation completeness
 - **Template Health Detection**: Content hashing to identify unchanged/dormant templates
 - **OAuth Error Handling**: Comprehensive error detection for organization access restrictions with auto-redirect to GitHub authorization

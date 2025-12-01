@@ -55,12 +55,60 @@ export async function POST(request: NextRequest) {
   }
 }
 
+function mapDocType(input: string): string {
+  const t = (input || '').toLowerCase().trim();
+  console.log('[mapDocType] Input:', input, '-> Normalized:', t);
+  // Map filenames and aliases to canonical types
+  const mapping: Record<string, string> = {
+    'roadmap.md': 'roadmap',
+    'roadmap': 'roadmap',
+    'tasks.md': 'tasks',
+    'tasks': 'tasks',
+    'metrics.md': 'metrics',
+    'metrics': 'metrics',
+    'features.md': 'features',
+    'features': 'features',
+    'readme': 'readme',
+    'readme.md': 'readme',
+    'contributing': 'contributing',
+    'contributing.md': 'contributing',
+    'security': 'security',
+    'security.md': 'security',
+    'changelog': 'changelog',
+    'changelog.md': 'changelog',
+    'codeowners': 'codeowners',
+    '.github/codeowners': 'codeowners',
+    'code_of_conduct': 'code_of_conduct',
+    'code_of_conduct.md': 'code_of_conduct',
+    'issue_templates': 'issue_templates',
+    'pull_request_template.md': 'pr_template',
+    'pr_template': 'pr_template',
+    'copilot_instructions': 'copilot_instructions',
+    '.github/copilot-instructions.md': 'copilot_instructions',
+    'funding': 'funding',
+    'funding.yml': 'funding',
+    'dependabot': 'dependabot',
+    'dependabot.yml': 'dependabot',
+    'env_example': 'env_example',
+    '.env.example': 'env_example',
+    'dockerfile': 'dockerfile',
+    'docker-compose.yml': 'docker_compose',
+    'netlify_badge': 'netlify_badge',
+    'license': 'license',
+    'license.md': 'license',
+  };
+  const result = mapping[t] || t;
+  console.log('[mapDocType] Mapped to:', result);
+  return result;
+}
+
 async function enrichTemplateWithAI(
   docType: string,
   templateContent: string,
   repo: { full_name: string; description: string | null; language: string | null; topics: string[]; homepage: string | null }
 ): Promise<string> {
   console.log('[enrichTemplateWithAI] Starting enrichment for docType:', docType);
+  const type = mapDocType(docType);
   
   const repoInfo = `
 Repository: ${repo.full_name}
@@ -70,25 +118,375 @@ Topics: ${repo.topics?.join(', ') || 'None'}
 Homepage: ${repo.homepage || 'None'}
 `.trim();
 
-  let prompt = '';
+  const owner = repo.full_name.split('/')[0];
 
-  switch (docType.toLowerCase()) {
+  let prompt = '';
+  const noHallucination = `\nImportant constraints:\n- Do NOT invent facts, metrics, features, services, credentials, or URLs.\n- If information is unknown, omit the item or use a clearly marked placeholder (e.g., TODO: VALUE_NEEDED).\n- Keep output concise, scannable, and production-ready.`;
+
+  switch (type) {
     case 'codeowners':
       console.log('[enrichTemplateWithAI] Building CODEOWNERS prompt');
-      prompt = `You are enriching a CODEOWNERS file template for a GitHub repository.
+      prompt = `You are enriching a GitHub CODEOWNERS file for a repository.
 
 ${repoInfo}
 
-Current CODEOWNERS template:
+${templateContent.trim().length > 0 ? `Current template content:\n\`\`\`\n${templateContent}\n\`\`\`` : 'Starting with empty/minimal template.'}
+
+Your task:
+1. Create a complete, production-ready CODEOWNERS file for ${repo.full_name}
+2. Replace any @OWNER_USERNAME placeholders with @${owner}
+3. Define ownership rules based on the repository type and language:
+   - For ${repo.language || 'this'} projects, include appropriate directory patterns
+   - Add rules for common directories: /docs/, /tests/, /.github/, /src/, /lib/, /app/, /components/
+   - Add rules for configuration files: *.json, *.yml, *.yaml, *.toml
+   - Add rules for documentation: *.md files
+4. Include helpful comments explaining each section
+5. Set @${owner} as the default owner for everything not specifically assigned
+
+Format:
+- Use # for comments
+- Use patterns like /path/ for directories
+- Use *.extension for file types
+- Use /* @username for directory ownership
+- Add blank lines between sections for readability
+
+Return ONLY the complete CODEOWNERS file content, with no markdown code fences or explanations.${noHallucination}`;
+      break;
+
+    case 'roadmap':
+  console.log('[enrichTemplateWithAI] Building ROADMAP prompt');
+  prompt = `You are enriching a repository ROADMAP.md.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current template content:\n\`\`\`markdown\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal roadmap template.'}
+
+Your task:
+1. Produce a practical, actionable roadmap tailored to ${repo.full_name}.
+2. Organize into Near Term (0-3 months), Mid Term (3-6 months), and Long Term (6-12 months).
+3. For each item provide: goal, rationale, rough scope, success criteria, and risks.
+4. Align with the repository’s tech stack and domain (language: ${repo.language || 'unknown'}, topics: ${repo.topics?.join(', ') || 'none'}).
+5. Keep it concise and scannable; use headings and bullet lists.
+6. Include a final section for "Completed Milestones" with placeholders if none.
+
+Format:
+- Markdown only (no code fences or extra commentary).
+- Use top-level heading "Roadmap" and subsections for each time horizon.
+- Use bullets with bold short titles followed by brief descriptions.
+
+Return ONLY the Markdown content for ROADMAP.md.${noHallucination}`;
+  break;
+
+    case 'tasks':
+  console.log('[enrichTemplateWithAI] Building TASKS prompt');
+  prompt = `You are enriching a repository TASKS.md (project tasks/backlog).
+
+${repoInfo}
+
+Current template structure:
+\`\`\`markdown
+${templateContent}
+\`\`\`
+
+CRITICAL: PRESERVE section headers (## Todo, ## In Progress, ## Done) and format (- [ ]). ONLY change task descriptions.
+
+Your task:
+1. Replace placeholders with 8-15 real tasks for ${repo.full_name}
+2. Keep same sections, format: - [ ] Description (P1/P2/P3, S/M/L)
+3. Language: ${repo.language || 'unknown'}, Topics: ${repo.topics?.join(', ') || 'none'}
+
+Return template with ONLY task text changed.${noHallucination}`;
+  break;
+
+    case 'metrics':
+  console.log('[enrichTemplateWithAI] Building METRICS prompt');
+  prompt = `You are creating METRICS.md for ${repo.full_name}.
+
+${repoInfo}
+
+IMPORTANT: Generate REAL metric definitions specific to ${repo.language || 'this'} projects. Do NOT copy template placeholders.
+
+Your task:
+1. Define 8-12 key metrics for ${repo.full_name}:
+   - Test coverage, test count, CI/CD status
+   - Code quality (LOC, complexity, vulnerabilities)
+   - Performance metrics relevant to ${repo.language}
+   - Build/deployment metrics
+2. Create a metrics table with columns: Metric | Current | Target | Status
+3. Add "How to Update" section with specific commands for ${repo.language}
+4. Use placeholder values like "TBD" or "0%" for current values
+
+Return ONLY complete Markdown for METRICS.md with REAL metrics.${noHallucination}`;
+  break;
+
+    case 'features':
+  console.log('[enrichTemplateWithAI] Building FEATURES prompt');
+  prompt = `You are creating FEATURES.md for ${repo.full_name}.
+
+${repoInfo}
+
+IMPORTANT: Generate SPECIFIC features for this repository. Do NOT copy generic template text.
+
+Your task:
+1. Generate 15-25 CONCRETE features for ${repo.full_name} based on:
+   - Language: ${repo.language || 'unknown'}
+   - Topics: ${repo.topics?.join(', ') || 'none'}
+   - Description: ${repo.description || 'No description'}
+2. Group by: Core Functionality, Integrations, UI/UX, DevOps/Infrastructure, Security, Developer Experience
+3. Format: - **Feature Name** - One-line description
+
+Example (generate YOUR OWN):
+## Core Functionality
+- **Real-time Sync** - WebSocket-based live updates across clients
+- **Batch Processing** - Queue system for handling large file uploads
+
+Return ONLY complete Markdown for FEATURES.md with REAL features.${noHallucination}`;
+  break;
+
+    case 'readme':
+    case 'readme.md':
+  console.log('[enrichTemplateWithAI] Building README prompt');
+  prompt = `You are enriching README.md.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`markdown\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Produce a clean README with sections: Overview, Features, Tech Stack, Getting Started, Scripts, Environment, Testing, Deployment, Contributing, License.
+2. Keep commands copyable and minimal; avoid filler.
+3. Align content with the project’s language and stack.
+
+Return ONLY the Markdown for README.md.${noHallucination}`;
+  break;
+
+    case 'contributing':
+    case 'contributing.md':
+  console.log('[enrichTemplateWithAI] Building CONTRIBUTING prompt');
+  prompt = `You are enriching CONTRIBUTING.md.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`markdown\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Include sections: Code of Conduct reference, Issues, PRs, Branching, Commit messages, Testing, Linting, Releases.
+2. Provide concise steps and expectations.
+
+Return ONLY the Markdown for CONTRIBUTING.md.${noHallucination}`;
+  break;
+
+    case 'security':
+    case 'security.md':
+  console.log('[enrichTemplateWithAI] Building SECURITY prompt');
+  prompt = `You are enriching SECURITY.md.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`markdown\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Define vulnerability disclosure process, supported versions, reporting channels, response expectations.
+2. Keep tone professional; concise actionable steps.
+
+Return ONLY the Markdown for SECURITY.md.${noHallucination}`;
+  break;
+
+    case 'changelog':
+    case 'changelog.md':
+  console.log('[enrichTemplateWithAI] Building CHANGELOG prompt');
+  prompt = `You are enriching CHANGELOG.md following Keep a Changelog.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`markdown\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Provide structure with Unreleased, Added/Changed/Fixed sections.
+2. Populate initial entries consistent with project domain.
+
+Return ONLY the Markdown for CHANGELOG.md.${noHallucination}`;
+  break;
+
+    case 'issue_templates':
+  console.log('[enrichTemplateWithAI] Building ISSUE TEMPLATES prompt');
+  prompt = `You are generating GitHub issue templates (Bug Report and Feature Request).
+
+${repoInfo}
+
+Your task:
+1. Output two Markdown files separated by a clear divider line: BUG_REPORT.md and FEATURE_REQUEST.md.
+2. Include fields: title, description, steps, expected/actual, environment for bugs; problem, proposal, alternatives for features.
+
+Return ONLY the combined Markdown content for the two templates.${noHallucination}`;
+  break;
+
+    case 'pr_template':
+  console.log('[enrichTemplateWithAI] Building PR TEMPLATE prompt');
+  prompt = `You are enriching a GitHub pull_request_template.md.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`markdown\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Create a concise PR template with sections: Summary, Changes, Testing, Screenshots (optional), Checklist.
+
+Return ONLY the Markdown for pull_request_template.md.${noHallucination}`;
+  break;
+
+    case 'copilot_instructions':
+  console.log('[enrichTemplateWithAI] Building COPILOT INSTRUCTIONS prompt');
+  prompt = `You are enriching .github/copilot-instructions.md for AI assistance.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`markdown\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Provide clear guardrails: coding style, file paths, tests, commit conventions, and what to avoid.
+2. Include examples of good vs bad changes.
+
+Return ONLY the Markdown for copilot-instructions.md.${noHallucination}`;
+  break;
+
+    case 'funding':
+    case 'funding.yml':
+  console.log('[enrichTemplateWithAI] Building FUNDING prompt');
+  prompt = `You are enriching .github/FUNDING.yml.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`yaml\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Provide a valid FUNDING.yml with keys (github, patreon, open_collective) as applicable.
+2. Use placeholder handles where unknown.
+
+Return ONLY the YAML for FUNDING.yml.${noHallucination}`;
+  break;
+
+    // Best Practices (templates)
+    case 'dependabot':
+    case 'dependabot.yml':
+  console.log('[enrichTemplateWithAI] Building DEPENDABOT prompt');
+  prompt = `You are enriching .github/dependabot.yml for ${repo.full_name}.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`yaml\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Produce a valid Dependabot config with updates for npm (or relevant ecosystem), schedule (weekly), and security updates.
+2. Tailor ecosystem to the repo’s language (${repo.language || 'unknown'}).
+3. Keep YAML concise and valid.
+
+Return ONLY the YAML for .github/dependabot.yml.${noHallucination}`;
+  break;
+
+    case 'env_example':
+    case '.env.example':
+  console.log('[enrichTemplateWithAI] Building ENV EXAMPLE prompt');
+  prompt = `You are enriching .env.example.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Provide a sensible list of env variables with placeholder values for ${repo.full_name}.
+2. Group by sections (Database, Auth, API keys, Runtime).
+3. Keep comments minimal and helpful.
+
+Return ONLY the plain text for .env.example (no code fences).${noHallucination}`;
+  break;
+
+    case 'dockerfile':
+  console.log('[enrichTemplateWithAI] Building DOCKERFILE prompt');
+  prompt = `You are enriching Dockerfile for ${repo.full_name}.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`Dockerfile\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Provide a production-ready Dockerfile aligned with the project’s language (${repo.language || 'unknown'}), using multi-stage where appropriate.
+2. Include sensible defaults (NODE_ENV, build cache, non-root user where feasible).
+
+Return ONLY the Dockerfile content.${noHallucination}`;
+  break;
+
+    case 'docker_compose':
+    case 'docker-compose.yml':
+  console.log('[enrichTemplateWithAI] Building DOCKER COMPOSE prompt');
+  prompt = `You are enriching docker-compose.yml.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current content:\n\`\`\`yaml\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
+
+Your task:
+1. Provide services appropriate for ${repo.full_name} (app, db if needed), volumes, ports, and env.
+2. Keep YAML valid and minimal.
+
+Return ONLY the YAML for docker-compose.yml.${noHallucination}`;
+  break;
+
+    case 'netlify_badge':
+  console.log('[enrichTemplateWithAI] Building NETLIFY BADGE prompt');
+  prompt = `You are enriching a README snippet to include a Netlify badge and deployment info.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current README section:\n\`\`\`markdown\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal snippet.'}
+
+Your task:
+1. Produce a small Markdown section including Netlify deploy badge, live URL (use homepage if available), and brief deployment notes.
+2. Keep it concise and copy-pasteable.
+
+Return ONLY the Markdown snippet.${noHallucination}`;
+  break;
+
+    case 'code_of_conduct':
+  console.log('[enrichTemplateWithAI] Building CODE_OF_CONDUCT prompt');
+  prompt = `You are enriching CODE_OF_CONDUCT.md for ${repo.full_name}.
+
+${repoInfo}
+
+Current template:
+\`\`\`markdown
+${templateContent}
+\`\`\`
+
+CRITICAL: This is a standard Contributor Covenant template. PRESERVE ALL structure and text.
+
+ONLY make these minimal changes:
+1. Replace "TODO: EMAIL_ADDRESS" with a real email if available, or keep the GitHub contact
+2. Replace any [Project Name] placeholders with "${repo.full_name}"
+3. Ensure @${owner} is mentioned as contact
+4. Keep ALL sections, headings, and bullet formatting EXACTLY as-is
+
+Return the template with MINIMAL changes (placeholders only).${noHallucination}`;
+  break;
+
+    case 'license':
+      console.log('[enrichTemplateWithAI] Building LICENSE prompt');
+      prompt = `You are filling in placeholders in an MIT LICENSE template.
+
+${repoInfo}
+
+Current template:
 \`\`\`
 ${templateContent}
 \`\`\`
 
-Task: Replace placeholder @OWNER_USERNAME with the actual repository owner username from the full_name.
-Keep all the existing structure and comments intact.
-Only modify the @OWNER_USERNAME placeholders - replace them with @${repo.full_name.split('/')[0]}
+Your task:
+1. Replace [year] with the current year: 2025
+2. Replace [fullname] with the repository owner: ${owner}
+3. Keep ALL other license text exactly as-is - do not modify the MIT License terms
+4. Do NOT add any extra text, explanations, or markdown formatting
 
-Return ONLY the updated CODEOWNERS file content, with no additional explanation or markdown formatting.`;
+Return ONLY the complete LICENSE file with placeholders filled in.`;
       break;
 
     default:
@@ -99,11 +497,20 @@ Return ONLY the updated CODEOWNERS file content, with no additional explanation 
 
   try {
     console.log('[enrichTemplateWithAI] Calling generateAIContent...');
+    console.log('[enrichTemplateWithAI] Prompt preview:', prompt.substring(0, 500));
     const enriched = await generateAIContent(prompt);
     console.log('[enrichTemplateWithAI] AI response received, length:', enriched?.length);
+    console.log('[enrichTemplateWithAI] AI response preview:', enriched?.substring(0, 300));
     // Strip markdown code fences if present
-    const cleaned = enriched.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '').trim();
+    // Normalize line endings to avoid CRLF/LF diff issues
+    const cleaned = enriched
+      .replace(/^```[\w]*\n?/, '')
+      .replace(/\n?```$/, '')
+      .replace(/\r\n/g, '\n')
+      .trim();
     console.log('[enrichTemplateWithAI] After cleaning, length:', cleaned?.length);
+    console.log('[enrichTemplateWithAI] Template length:', templateContent?.length);
+    console.log('[enrichTemplateWithAI] Are they identical?', cleaned === templateContent);
     return cleaned;
   } catch (error) {
     logger.warn(`AI enrichment failed for ${docType}:`, error);

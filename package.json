@@ -17,6 +17,8 @@
     "test-query": "tsx scripts/test-query.ts",
     "test-gemini": "tsx scripts/test-gemini.ts",
     "test-gemini-direct": "tsx scripts/test-gemini-direct.ts",
+    "test-gemini-health": "node scripts/test-gemini-health.mjs",
+    "find-gemini-models": "node scripts/test-model-names.mjs",
     "list-gemini-models": "tsx scripts/list-models.ts",
     "create-new-tables": "tsx scripts/create-new-tables.ts",
     "test": "vitest",

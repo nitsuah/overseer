@@ -4,11 +4,11 @@
 
 | Metric              | Value  | Notes                                                                                                                             |
 | ------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| Code Coverage       | 49.78% | Overall branch coverage (vitest). Parser subset: tasks.ts 80%, metrics.ts 70.21%, roadmap.ts 90%                                  |
+| Code Coverage       | 49.78% | Overall statement coverage (vitest). Branch: 44.55%. Parser subset: tasks.ts 80%, metrics.ts 70.21%, roadmap.ts 90%               |
 | Build Time          | ~6s    | Local dev build                                                                                                                   |
 | Bundle Size         | TBD    | Not measured yet                                                                                                                  |
-| Test Files          | 5      | Vitest unit tests (lib/github.test.ts, lib/parsers/\*.test.ts, tests/osrs-parser.test.ts)                                         |
-| Test Cases          | 11     | Vitest unit tests passing                                                                                                         |
+| Test Files          | 6      | Vitest unit tests (lib/parsers/\*.test.ts, tests/osrs-parser.test.ts, tests/gemini-health.test.ts)                                |
+| Test Cases          | 12     | Vitest unit tests passing                                                                                                         |
 | E2E Test Files      | 1      | Playwright E2E tests (tests/dashboard.spec.ts)                                                                                    |
 | E2E Test Cases      | 5      | Playwright tests passing (unauthenticated state, performance)                                                                     |
 | Database Tables     | 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                   |

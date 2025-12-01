@@ -15,10 +15,9 @@ export async function generateRepoSummary(
     }
 
     try {
-        // Use gemini-2.5-flash (latest stable fast model)
-        // Old models (gemini-pro, gemini-1.5-*) have been deprecated as of 2025
+        // Use gemini-2.0-flash-exp with v1beta API
         const model = genAI.getGenerativeModel({ 
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash-exp',
             generationConfig: {
                 temperature: 0.7,
                 maxOutputTokens: 1024,
@@ -90,7 +89,7 @@ export async function generateMissingDoc(
 
     try {
         const model = genAI.getGenerativeModel({ 
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash-exp',
             generationConfig: {
                 temperature: 0.7,
                 maxOutputTokens: 2048,
@@ -147,17 +146,37 @@ export async function generateAIContent(prompt: string): Promise<string> {
     }
 
     try {
+        // Use gemini-2.0-flash-exp with v1beta API
         const model = genAI.getGenerativeModel({ 
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash-exp',
             generationConfig: {
                 temperature: 0.7,
                 maxOutputTokens: 2048,
             }
         });
 
+        console.log('[generateAIContent] Sending request to Gemini...');
         const result = await model.generateContent(prompt);
+        console.log('[generateAIContent] Received result:', { hasResponse: !!result.response });
+        
         const response = result.response;
+        console.log('[generateAIContent] Response object:', { 
+            hasCandidates: !!response.candidates,
+            candidatesLength: response.candidates?.length,
+            hasText: typeof response.text === 'function'
+        });
+        
+        // Check if response was blocked
+        if (response.candidates && response.candidates.length > 0) {
+            const candidate = response.candidates[0];
+            console.log('[generateAIContent] Candidate:', {
+                finishReason: candidate.finishReason,
+                safetyRatings: candidate.safetyRatings
+            });
+        }
+        
         const text = response.text();
+        console.log('[generateAIContent] Text length:', text?.length);
         
         if (!text || text.trim().length === 0) {
             throw new Error('Empty response from Gemini API');

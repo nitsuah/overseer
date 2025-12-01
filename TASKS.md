@@ -57,6 +57,19 @@
 - [x] Fix Github Auth in PROD
 - [x] When not logged in the two expected default repos are are shown
 
+### Phase 7: UX Improvements
+
+- [x] Add modal window for doc fix preview before PR creation
+- [x] Implement template preview in modal with markdown rendering
+- [x] Add pick-and-choose functionality for batch fix operations
+- [x] Add "Do you really want to fix all?" confirmation with per-doc opt-in
+- [x] AI Template Enrichment: Generate context-aware docs using Gemini 2.0
+- [x] Diff View Implementation: LCS-based Myers diff for accurate change detection
+- [x] Inline Edit/AI Generate Toggle: Switch between manual editing and AI generation
+- [x] PR Preview with Diff: View changes before creating PR
+- [x] Production OAuth: Verified working on Netlify deployment
+- [x] Gemini Model Migration: Updated to gemini-2.0-flash-exp with health monitoring
+
 _For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._
 
 ## In Progress
@@ -64,20 +77,6 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 _No tasks currently in progress._
 
 ## Todo
-
-### Phase 7: UX Improvements
-
-- [x] Add modal window for doc fix preview before PR creation
-- [x] Implement template preview in modal with markdown rendering
-- [x] Add pick-and-choose functionality for batch fix operations
-- [x] Add "Do you really want to fix all?" confirmation with per-doc opt-in
-- [ ] AI fix Community Standards Gaps (Cake Test) - Overseer tracks these but doesn't have them itself at root, will need to add them as a test of using overseer to test the features (maybe now we can connect AI generate to take the template, and the repo info, and create them):
-  - CODE_OF_CONDUCT.md (exists in templates/ only)
-  - SECURITY.md (exists in templates/ only)
-  - Issue Templates (exists in templates/ only)
-  - PR Template (not present)
-  - AI only provides updates to source files using repo knowledge, no other input that would mess up file format expected
-  - **Priority**: Medium - Nice to have for dogfooding our own standards and integrating AI further.
 
 ### Phase 8: Performance & Rate Limiting
 

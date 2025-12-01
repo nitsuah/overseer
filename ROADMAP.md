@@ -47,6 +47,10 @@
 - [x] Health State Icons: Display in main table row for each doc type
 - [x] Foundation: Full E2E Tests and Pre-commit Hooks
 - [x] Template File Hashing: Detect stale/unchanged templates
+- [x] PR Preview Modal: Interactive preview with file selection before PR creation
+- [x] AI Template Enrichment: Generate/edit docs with AI using repo context
+- [x] Diff View: Inline diff comparison between original and AI-generated content
+- [x] LCS-Based Diff Algorithm: Accurate change detection using Myers diff
 
 ## 2025Q4: 🚀 Advanced Metrics & Integrations
 
@@ -71,7 +75,8 @@
 - [x] Bus Factor Analysis: Contributor concentration risk (80/20 rule)
 - [x] PR Merge Time Tracking: Average cycle time from creation to merge
 - [x] Contributor Metrics Display: Show all contributor analytics in Repository Stats
-- [x] Gemini API Integration: Updated to use Gemini 2.5 models (deprecated 1.x models)
+- [x] Gemini API Integration: Updated to use Gemini 2.0 experimental model
+- [x] Gemini Health Monitoring: CI/CD integration with automated model validation
 
 ## 2025Q4: 📚 Docs & Agent Tooling
 
@@ -80,13 +85,15 @@
 - [x] Documentation Maintenance Workflow: Move/collapse pattern for keeping docs clean
 - [x] Error Handling Documentation Pattern: Comprehensive guide for documenting error handling across all core docs
 
-## 2025Q4: 🛡️ Error Handling & UX Polish
+## 2025Q4: 🛡️ Error Handling & UX Polish (Completed) ✅
 
 - [x] OAuth Error Detection System: Created lib/github-errors.ts with 5 error type classifications
 - [x] Organization Access Restrictions: User-friendly messaging when orgs block OAuth app access
 - [x] Auto-Redirect to Authorization: Opens GitHub OAuth settings automatically when restrictions detected
 - [x] Enhanced API Error Responses: Structured error details with actionable instructions in fix-doc/fix-best-practice
 - [x] Frontend Error Handling: Toast notifications with console guidance in useRepoActions hook
+- [x] Production OAuth Working: Verified authentication flow on Netlify deployment
+- [x] Diff Algorithm Fix: Replaced buggy lookahead with proper LCS-based Myers diff
 - [x] OAuth User Documentation: Created GITHUB_OAUTH_ORG_ACCESS.md and OAUTH_ORG_FIX_SUMMARY.md guides
 - [x] Template Path Debugging: Enhanced logging for troubleshooting template resolution
 - [x] Best Practices Fix Buttons: 4 automated fixes (Dependabot, Env Template, Docker, Netlify Badge)

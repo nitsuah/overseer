@@ -5,6 +5,7 @@ import { FileText, Check } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { MarkdownPreview } from './MarkdownPreview';
 import { YAMLPreview } from './YAMLPreview';
+import { DiffView } from './DiffView';
 
 interface FilePreview {
   path: string;
@@ -39,6 +40,7 @@ export function PRPreviewModal({
   const [editedContent, setEditedContent] = useState<Map<string, string>>(new Map());
   const [generatingAI, setGeneratingAI] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
+  const [diffView, setDiffView] = useState(false);
 
   // Reset selection and active file whenever modal opens or files change
   useEffect(() => {
@@ -52,7 +54,9 @@ export function PRPreviewModal({
     }
     setSelectedFiles(initialSelected);
     setActiveFile(files[0]?.path || '');
+    // Default to preview mode with content view
     setEditMode(false);
+    setDiffView(false);
     // Initialize edited content with original content
     const contentMap = new Map<string, string>();
     files.forEach((f) => contentMap.set(f.path, f.content));
@@ -123,10 +127,8 @@ export function PRPreviewModal({
         // Force re-render
         setRenderKey(prev => prev + 1);
         
-        // Switch to edit mode to show the changes
-        if (!editMode) {
-          setEditMode(true);
-        }
+        // After AI generate, show the diff view to highlight changes
+        setDiffView(true);
       } else {
         const errorData = await res.json();
         console.error('Failed to generate AI enrichment:', res.status, errorData);
@@ -145,7 +147,7 @@ export function PRPreviewModal({
       isOpen={isOpen}
       onClose={onClose}
       title={`Preview PR for ${repoName}`}
-      size="2xl"
+      size="6xl"
     >
       <div className="space-y-4">
         {/* Warning/Info Banner */}
@@ -229,7 +231,29 @@ export function PRPreviewModal({
                     )}
                   </button>
                   <button
-                    onClick={() => setEditMode(!editMode)}
+                    onClick={() => setDiffView(!diffView)}
+                    className={`px-2 py-1 ${
+                      diffView
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                    } rounded text-xs font-medium transition-colors`}
+                    title="View changes compared to original template"
+                    disabled={generatingAI}
+                  >
+                    {diffView ? '📝 Content' : '📊 Diff'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Toggle edit mode; when saving (turning edit off), switch to diff view
+                      if (editMode) {
+                        setEditMode(false);
+                        setDiffView(true);
+                      } else {
+                        setEditMode(true);
+                        setDiffView(false);
+                      }
+                    }}
+                    disabled={generatingAI}
                     className={`px-2 py-1 ${
                       editMode 
                         ? 'bg-blue-600 hover:bg-blue-700 text-white' 
@@ -241,9 +265,36 @@ export function PRPreviewModal({
                 </div>
               )}
             </div>
-            <div className="bg-slate-950 border border-slate-700 rounded-lg p-4 max-h-96 overflow-y-auto">
+            <div className="relative bg-slate-950 border border-slate-700 rounded-lg p-4 max-h-[600px] overflow-y-auto">
+              {generatingAI && (
+                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-10">
+                  <div className="flex items-center gap-3 text-slate-200">
+                    <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                    <span className="text-xs">Generating AI content...</span>
+                  </div>
+                </div>
+              )}
               {activeFileContent ? (
-                editMode ? (
+                diffView ? (
+                  (() => {
+                    const modifiedContent = editedContent.get(activeFile) ?? activeFileContent.content;
+                    const isSame = modifiedContent === activeFileContent.content;
+                    console.log('DiffView render:', {
+                      file: activeFile,
+                      originalLen: activeFileContent.content.length,
+                      modifiedLen: modifiedContent.length,
+                      isSame,
+                    });
+                    return (
+                      <DiffView
+                        key={`${activeFile}-${renderKey}-diff`}
+                        original={activeFileContent.content}
+                        modified={modifiedContent}
+                        filename={activeFile}
+                      />
+                    );
+                  })()
+                ) : editMode ? (
                   <textarea
                     key={`${activeFile}-${renderKey}`}
                     value={editedContent.get(activeFile) || ''}
@@ -252,8 +303,9 @@ export function PRPreviewModal({
                       newContent.set(activeFile, e.target.value);
                       setEditedContent(newContent);
                     }}
-                    className="w-full h-80 bg-slate-900 text-slate-300 text-xs font-mono p-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500 resize-none"
+                    className="w-full h-[550px] bg-slate-900 text-slate-300 text-xs font-mono p-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500 resize-none"
                     spellCheck={false}
+                    disabled={generatingAI}
                   />
                 ) : activeFile.endsWith('.md') || !activeFile.includes('.') || activeFile.split('/').pop()?.indexOf('.') === -1 ? (
                   <div key={`${activeFile}-${renderKey}`} className="prose prose-invert prose-sm max-w-none">
@@ -290,7 +342,7 @@ export function PRPreviewModal({
             )}
             <button
               onClick={handleConfirm}
-              disabled={loading || selectedFiles.size === 0}
+              disabled={loading || generatingAI || selectedFiles.size === 0}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading ? (

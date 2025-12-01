@@ -7,9 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2025-11-30
+
 ### Added
 
-- **UX Roadmap Item:** Doc fix preview modal with template preview and pick-and-choose functionality before PR creation (planned)
+- **PR Preview Modal:** Interactive file selection and preview before PR creation with pick-and-choose functionality
+- **AI Template Enrichment:** Context-aware documentation generation using Gemini 2.0 with repo-specific knowledge extraction
+- **Diff View Component:** LCS-based Myers diff algorithm for accurate line-by-line change detection between original and AI-generated content
+- **Inline Edit/Generate Toggle:** Switch between manual template editing and AI-powered generation in preview modal
+- **Gemini Health Monitoring:** Automated CI/CD integration with health check script to detect model deprecations
+- **Model Auto-Discovery:** Scripts to find working Gemini models when API changes occur (test-gemini-health, test-model-names)
+- **Enrich Template Endpoint:** New /api/enrich-template route supporting doc-type-specific AI prompts (TASKS, CODE_OF_CONDUCT, etc.)
+
+### Changed
+
+- **Gemini API Model:** Migrated from deprecated gemini-pro to gemini-2.0-flash-exp (experimental 2.0 model)
+- **Netlify Build Process:** Added npm run test-gemini-health to build command for early failure detection
+- **PR Creation Flow:** Now shows preview modal with diff view instead of immediate PR creation
+- **Template Prompts:** Enhanced with structure preservation rules (e.g., TASKS headers, CODE_OF_CONDUCT template compliance)
+
+### Fixed
+
+- **Diff Algorithm:** Replaced buggy lookahead matching with proper LCS-based diff (eliminates false positives for identical lines)
+- **Production OAuth:** Verified and confirmed working authentication flow on Netlify deployment
+- **API Error Rate:** Reduced 500 errors during startup by improving error handling in /api/repos endpoint
 
 ## [1.4.0] - 2025-11-30
 

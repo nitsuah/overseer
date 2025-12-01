@@ -111,7 +111,7 @@ NETLIFY_SITE_ID=
 NETLIFY_AUTH_TOKEN=
 ```
 
-**Note on Gemini API**: As of late 2025, Google deprecated Gemini 1.x models. The codebase uses `gemini-2.5-flash`. Test with `npm run test-gemini` to verify your API key works.
+**Note on Gemini API**: As of November 2025, Google deprecated Gemini 1.x models. The codebase uses `gemini-2.0-flash-exp`. Test with `npm run test-gemini-health` to verify your API key works. If the model breaks in the future, run `npm run find-gemini-models` to discover working alternatives.
 
 ## Project Structure
 

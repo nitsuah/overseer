@@ -99,20 +99,22 @@ export function TestingSection({
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-blue-400" />
             <h4 className="text-sm font-semibold text-slate-200">Testing</h4>
-            <span className="text-slate-500 text-xs ml-1">{isExpanded ? '▼' : '▶'}</span>
+            {coverageScore != null && (
+              <span
+                title={`Testing: ${coverageScore}% coverage`}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-medium ml-1 ${
+                  coverageScore >= 80
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : coverageScore >= 50
+                    ? 'bg-yellow-500/20 text-yellow-400'
+                    : 'bg-red-500/20 text-red-400'
+                }`}
+              >
+                {coverageScore}%
+              </span>
+            )}
           </div>
-          {/* Coverage Score - Inline */}
-          {coverageScore !== undefined && (
-            <div className="flex items-center gap-2 flex-1">
-              <div className="flex-1 max-w-[120px] bg-slate-700 rounded-full h-1.5">
-                <div
-                  className="bg-linear-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all"
-                  style={{ width: `${Math.min(coverageScore, 100)}%` }}
-                />
-              </div>
-              <span className="text-xs font-bold text-blue-400 whitespace-nowrap">{coverageScore}%</span>
-            </div>
-          )}
+          <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
         </div>
       </div>
       {isExpanded && (

@@ -86,9 +86,9 @@ body {
   @apply px-2 py-0.5 rounded-full text-xs font-medium bg-slate-800/70 border border-slate-600/50 backdrop-blur-sm;
 }
 
-.pill-success { @apply text-emerald-300 border-emerald-600/40 bg-emerald-900/30; }
-.pill-warn { @apply text-amber-300 border-amber-600/40 bg-amber-900/30; }
-.pill-error { @apply text-red-300 border-red-600/40 bg-red-900/30; }
+.pill-success { @apply text-emerald-300 border-emerald-600/50 bg-emerald-900/60; }
+.pill-warn { @apply text-amber-300 border-amber-600/50 bg-amber-900/60; }
+.pill-error { @apply text-red-300 border-red-600/50 bg-red-900/60; }
 
 .btn-raised {
   @apply relative inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition;

@@ -58,10 +58,21 @@ export function DocumentationSection({
         onClick={setIsExpanded}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex items-center gap-2">
             <span className="text-lg">📄</span>
             <h4 className="text-sm font-semibold text-slate-200">Documentation</h4>
-            <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
+            <span
+              title={`Documentation: ${[...coreDocs, ...standardDocs].filter(d => d.exists).length}/5 core docs present`}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-medium ml-1 ${
+                [...coreDocs, ...standardDocs].filter(d => d.exists).length === 5
+                  ? 'bg-slate-500/20 text-slate-400'
+                  : [...coreDocs, ...standardDocs].filter(d => d.exists).length >= 3
+                  ? 'bg-yellow-500/20 text-yellow-400'
+                  : 'bg-red-500/20 text-red-400'
+              }`}
+            >
+              {[...coreDocs, ...standardDocs].filter(d => d.exists).length}/5
+            </span>
           </div>
           <div className="flex items-center gap-2">
             {isAuthenticated && missingWithTemplates.length > 0 && onFixAllDocs && repoName && (
@@ -76,6 +87,7 @@ export function DocumentationSection({
                 Fix All ({missingWithTemplates.length})
               </button>
             )}
+            <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
           </div>
         </div>
       </div>

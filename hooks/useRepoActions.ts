@@ -9,6 +9,7 @@ interface FilePreview {
   docType: string;
   type: 'doc' | 'practice';
   practiceType?: string;
+  language?: string; // For syntax highlighting in modal
 }
 
 export function useRepoActions(
@@ -246,47 +247,70 @@ export function useRepoActions(
   };
 
   const handleFixPractice = async (repoName: string, practiceType: string) => {
-    // Show a preview modal for best practices when a template exists
+    // Generate AI-powered, context-aware best practice fix
     try {
       setFixingDoc(true);
-      const previewRes = await fetch('/api/preview-templates', {
+      
+      // First, generate the AI content using prompt chain
+      const generateRes = await fetch('/api/repos/generate-best-practice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ docTypes: [practiceType] }),
+        body: JSON.stringify({ repoName, practiceType }),
       });
 
-      if (previewRes.ok) {
-        const { previews } = await previewRes.json();
-        if (previews && previews.length > 0) {
-          setPreviewFiles(previews);
-          setPreviewRepoName(repoName);
-          setPreviewMode('single');
-          setPreviewModalOpen(true);
-          return; // Wait for modal confirm to proceed
-        }
+      if (!generateRes.ok) {
+        const err = await generateRes.json();
+        setToastMessage(err.error || 'Failed to generate fix');
+        setFixingDoc(false);
+        return;
       }
 
-      // Fallback: no preview template found, proceed directly
-      const res = await fetch(`/api/repos/${repoName}/fix-best-practice`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ practiceType }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.prUrl) {
-          window.open(data.prUrl, '_blank');
-        }
-        setToastMessage(`PR created for ${practiceType}!`);
-      } else {
-        const err = await res.json();
-        handlePRError(err);
-      }
+      const { content } = await generateRes.json();
+      
+      // Show generated content in modal for review
+      const fileName = getFileNameForPractice(practiceType);
+      setPreviewFiles([{
+        path: fileName,
+        content: content,
+        language: getLanguageForPractice(practiceType),
+        docType: practiceType,
+        type: 'practice',
+        practiceType: practiceType,
+      }]);
+      setPreviewRepoName(repoName);
+      setPreviewMode('single');
+      setPreviewModalOpen(true);
+      
+      // Store practice type for PR creation after modal confirm
+      (window as Window & { __pendingPracticeType?: string }).__pendingPracticeType = practiceType;
+      
     } catch (error) {
       console.error('Failed to fix practice:', error);
-      setToastMessage('Failed to create PR');
+      setToastMessage('Failed to generate fix');
     } finally {
       setFixingDoc(false);
+    }
+  };
+
+  // Helper to get file name for practice type
+  const getFileNameForPractice = (practiceType: string): string => {
+    switch (practiceType) {
+      case 'netlify_badge': return 'README.md';
+      case 'env_template': return '.env.example';
+      case 'docker': return 'Dockerfile';
+      case 'dependabot': return '.github/dependabot.yml';
+      default: return practiceType;
+    }
+  };
+
+  // Helper to get syntax highlighting language
+  const getLanguageForPractice = (practiceType: string): string => {
+    switch (practiceType) {
+      case 'netlify_badge': return 'markdown';
+      case 'env_template': return 'shell';
+      case 'docker': return 'dockerfile';
+      case 'dependabot': return 'yaml';
+      default: return 'text';
     }
   };
 

@@ -6,9 +6,9 @@
 
 - **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, and activity with component breakdown display
 - **Documentation Tracking**: Monitors presence and status of key docs with 4-state health model (Missing, Dormant, Malformed, Healthy)
-- **Template Health Detection**: Content hashing to detect unchanged/stale templates marked as "dormant" state (Phase 4)
-- **Template Version Tracking**: Tracks which template version docs are based on with template_version column (Phase 4)
-- **Malformed Doc Detection**: Identifies docs with template markers like `TODO:` or <50 characters (Phase 4)
+- **Template Health Detection**: Content hashing to detect unchanged/stale templates marked as "dormant" state
+- **Template Version Tracking**: Tracks which template version docs are based on with template_version column
+- **Malformed Doc Detection**: Identifies docs with template markers or <50 characters
 - **Code Coverage Visualization**: Progress bars showing test coverage synced from METRICS.md (self-reported from target repositories)
 - **README Freshness Tracking**: Days since README last updated with color-coded staleness (Fresh/Recent/Aging/Stale)
 - **Activity Monitoring**: Last commit dates, open PRs, open issues with color-coded freshness indicators
@@ -16,10 +16,10 @@
 - **Test Case Counting**: Automatic parsing of test files to count it(), test(), describe() calls
 - **CI/CD Status**: Live build status from GitHub Actions (passing/failing with workflow name and last run)
 - **Vulnerability Tracking**: Open Dependabot alerts with count and severity (critical/high) color-coded display
-- **Contributor Analytics**: Track contributor count, commit frequency (commits/week), bus factor, PR merge time (Phase 5)
-- **Bus Factor Analysis**: Contributor concentration risk using 80/20 rule (Phase 5)
-- **Commit Frequency**: Average commits/week from last 12 weeks (Phase 5)
-- **PR Merge Time**: Average hours from creation to merge for last 30 PRs (Phase 5)
+- **Contributor Analytics**: Track contributor count, commit frequency (commits/week), bus factor, PR merge time
+- **Bus Factor Analysis**: Contributor concentration risk using 80/20 rule
+- **Commit Frequency**: Average commits/week from last 12 weeks
+- **PR Merge Time**: Average hours from creation to merge for last 30 PRs
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
 - **Community Standards**: 10 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING
@@ -31,6 +31,7 @@
 - **Smart Repo Type Detection**: Automatically categorizes repos (web-app, game, tool, library, bot, research)
 - **Gemini Health Monitoring**: Automated CI/CD health checks to detect model deprecations
 - **Model Auto-Discovery**: Scripts to find working Gemini models when API changes occur
+- **AI Template Enrichment**: Context-aware doc generation using Gemini 2.0 with repo-specific knowledge
 
 ### 📝 Documentation Management
 
@@ -41,7 +42,6 @@
 - **Auto-Fix Community Standards**: One-click PR creation for missing standards (10 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions, FUNDING)
 - **Batch Operations**: Fix all missing docs or all missing standards with single PR
 - **PR Preview Modal**: Interactive file selection and preview before PR creation with pick-and-choose functionality
-- **AI Template Enrichment**: Context-aware doc generation using Gemini 2.0 with repo-specific knowledge
 - **Diff View**: LCS-based Myers diff algorithm showing accurate line-by-line changes between original and AI-generated content
 - **Inline Edit/Generate Toggle**: Switch between manual template editing and AI-powered generation
 - **Doc Health Scoring**: Percentage-based health scores for documentation completeness

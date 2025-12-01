@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, CheckCircle2, XCircle, Circle } from 'lucide-react';
+import { CheckCircle2, XCircle, Circle } from 'lucide-react';
 import { BestPractice } from '@/types/repo';
 import { getStatusColor } from '@/lib/expandable-row-utils';
 import { useState } from 'react';
@@ -65,9 +65,10 @@ export function BestPracticesSection({
       .join(' ');
   };
 
-  // Calculate fixable missing practices
-  // // TODO: Fix Gen AI prompt for netlify_badge & readme, env_template & readme, docker & language/contributing, dependabot/language/readme/contributing?)
-  const fixablePractices = ['dependabot', 'env_template', 'docker', 'netlify_badge']; 
+  // Calculate fixable missing practices with AI-powered context-aware fixes
+  // See docs/BEST_PRACTICES_AI_STRATEGY.md for implementation details
+  // Each practice uses: template + README + language + (CONTRIBUTING/existing files)
+  const fixablePractices = ['dependabot', 'env_template', 'docker', 'netlify_badge'];
   const missingFixable = bestPractices.filter(
     (p) => p.status === 'missing' && fixablePractices.includes(p.practice_type)
   );
@@ -79,10 +80,21 @@ export function BestPracticesSection({
         onClick={setIsExpanded}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-1">
-            <Shield className="h-4 w-4 text-purple-400" />
+          <div className="flex items-center gap-2">
+            <span className="text-lg">⚡</span>
             <h4 className="text-sm font-semibold text-slate-200">Best Practices</h4>
-            <span className="text-slate-500 text-xs ml-2">{isExpanded ? '▼' : '▶'}</span>
+            <span
+              title={`Best Practices: ${bestPractices.filter(p => p.status === 'healthy').length}/${bestPractices.length} healthy`}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-medium ml-1 ${
+                bestPractices.filter(p => p.status === 'healthy').length / bestPractices.length >= 0.7
+                  ? 'bg-purple-500/20 text-purple-400'
+                  : bestPractices.filter(p => p.status === 'healthy').length / bestPractices.length >= 0.4
+                  ? 'bg-yellow-500/20 text-yellow-400'
+                  : 'bg-red-500/20 text-red-400'
+              }`}
+            >
+              {bestPractices.filter(p => p.status === 'healthy').length}/{bestPractices.length}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             {isAuthenticated && missingFixable.length > 0 && onFixAllPractices && repoName && (
@@ -92,11 +104,12 @@ export function BestPracticesSection({
                   onFixAllPractices(repoName);
                 }}
                 className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
-                title="Create PRs for all fixable missing practices"
+                title="Fix all missing best practices"
               >
                 Fix All ({missingFixable.length})
               </button>
             )}
+            <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
           </div>
         </div>
       </div>
@@ -153,7 +166,7 @@ export function BestPracticesSection({
                   <button
                     onClick={() => onFixPractice(repoName, practice.practice_type)}
                     className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
-                    title={`Create PR for ${getLabel(practice.practice_type)}`}
+                    title={`AI-powered context-aware fix for ${getLabel(practice.practice_type)}`}
                   >
                     Fix
                   </button>

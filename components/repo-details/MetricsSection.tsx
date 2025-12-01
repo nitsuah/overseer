@@ -59,8 +59,14 @@ export function MetricsSection({ metrics, isExpanded: isExpandedProp, onToggleEx
             <TrendingUp className="h-4 w-4 text-green-400" />
             <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
               Metrics
-              <span className="text-xs font-normal text-slate-400 flex items-center gap-1">(<span>⚠️</span>Self-Reported)</span>
+              <span title="Self-Reported" className="text-xs font-normal text-slate-400">⚠️</span>
             </h4>
+            <span
+              title={`Metrics: ${otherMetrics.length} tracked`}
+              className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-500/20 text-green-400 ml-1"
+            >
+              {otherMetrics.length}
+            </span>
           </div>
           <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
         </div>

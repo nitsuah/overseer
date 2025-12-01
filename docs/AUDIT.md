@@ -43,11 +43,6 @@ This matrix shows what Overseer tracks, how we detect it, health indicators, and
 
 Modal-based fixes are reflected directly in the "Automated Fix" column (e.g., "✅ Modal").
 
-4-state (Missing/Dormant/Malformed/Healthy)
-3-state (Healthy/Dormant/Missing)
-binary (Healthy/Missing)
-git-workflow (Pass/Fail/Unknown with workflow name)
-
 | Feature/Metric               | Detection Method                                | Source         | Health Indicator | Automated | AI Improve |
 | ---------------------------- | ----------------------------------------------- | -------------- | ---------------- | --------- | ---------- |
 | **Core Docs**                |                                                 |                |                  |           |            |
@@ -70,7 +65,7 @@ git-workflow (Pass/Fail/Unknown with workflow name)
 | Branch Protection            | GitHub Branch Protection API                    | GitHub API     | 3-state          | ❌ No     | ❌ No      |
 | Testing Framework            | Config files (vitest, jest, playwright, etc.)   | File list scan | binary           | ❌ No     | ❌ No      |
 | .gitignore                   | File existence                                  | File list scan | binary           | ❌ No     | ❌ No      |
-| Netlify Badge                | Badge URL in README                             | README content | binary           | ⚠️ Mod.md | ❌ No      |
+| Netlify Badge                | Badge URL in README                             | README content | binary           | ✅ AI     | ❌ No      |
 | .env.example                 | File existence                                  | File list scan | binary           | ✅ AI     | ❌ No      |
 | Dependabot                   | .github/dependabot.yml                          | File list scan | binary           | ✅ AI     | ❌ No      |
 | Docker                       | Dockerfile, docker-compose.yml                  | File list scan | binary           | ✅ AI     | ❌ No      |
@@ -110,6 +105,7 @@ git-workflow (Pass/Fail/Unknown with workflow name)
 - Percentage: 0-100% score
 - Count: Numeric count
 - Color-coded: Visual indicator based on thresholds
+- git-workflow (Pass/Fail/Unknown with workflow name)
 
 **Automated Fix:**
 

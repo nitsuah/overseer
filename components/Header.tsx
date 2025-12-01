@@ -89,19 +89,12 @@ export default function Header(props: HeaderProps = {}) {
                 <div className="flex flex-col leading-tight">
                     {/* Zaazzed Title */}
                     <h1 className="text-xl md:text-2xl font-black tracking-wider flex items-center gap-2">
-                        <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(192,132,252,0.5)] hover:drop-shadow-[0_0_15px_rgba(192,132,252,0.8)] transition-all duration-300">
-                            Overseer
+                        <span className="bg-gradient-to-r from-sky-300 to-blue-400 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(125,211,252,0.6)] hover:drop-shadow-[0_0_18px_rgba(125,211,252,0.9)] transition-all duration-300">
+                            Repo
                         </span>
-                        <Sparkles className="h-5 w-5 text-fuchsia-400 motion-safe:animate-pulse drop-shadow-[0_0_8px_rgba(232,121,249,0.8)]" />
-                        <span className="bg-gradient-to-r from-sky-300/70 to-blue-300/70 bg-clip-text text-transparent font-semibold hidden sm:inline drop-shadow-[0_0_6px_rgba(125,211,252,0.3)]">
-                            | Repos
+                        <span className="bg-gradient-to-r from-purple-400 to-fuchsia-400 bg-clip-text text-transparent font-semibold drop-shadow-[0_0_12px_rgba(192,132,252,0.6)] hover:drop-shadow-[0_0_18px_rgba(192,132,252,0.9)] transition-all duration-300">
+                            | Seer
                         </span>
-                        {repoCount && (
-                            <span className="pill relative overflow-hidden text-sky-300 font-bold shadow-lg shadow-sky-500/20 ml-2">
-                                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent motion-safe:animate-[shimmer_3s_infinite]"></span>
-                                <span className="relative">{repoCount.filtered}/{repoCount.total}</span>
-                            </span>
-                        )}
                     </h1>
                 </div>
             </div>
@@ -250,6 +243,12 @@ export default function Header(props: HeaderProps = {}) {
                                     <span className={hasActiveFilters ? 'text-purple-400' : 'text-slate-300 group-hover/filter:text-blue-400'}>
                                         Filters
                                     </span>
+                                    {repoCount && (
+                                        <span className="pill relative overflow-hidden text-sky-300 font-bold shadow-lg shadow-sky-500/20 ml-1 text-[10px]">
+                                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent motion-safe:animate-[shimmer_3s_infinite]"></span>
+                                            <span className="relative">{repoCount.filtered}/{repoCount.total}</span>
+                                        </span>
+                                    )}
                                     {hasActiveFilters && (
                                         <span className="absolute -top-1 -right-1 flex h-2 w-2">
                                             <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
@@ -279,15 +278,18 @@ export default function Header(props: HeaderProps = {}) {
                     /* Enhanced Profile Section with Integrated Sign Out and Status Pills */
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 rounded-lg opacity-25 group-hover:opacity-40 blur transition duration-300"></div>
-                        <div className={`relative flex items-center bg-slate-900/90 rounded-lg pl-4 pr-4 group-hover:pr-2 py-2.5 border border-slate-700/50 backdrop-blur-sm transition-all duration-300 ease-out overflow-visible ${
-                            showStatusPills ? 'gap-3' : 'gap-0'
+                        <div className={`relative flex items-center bg-slate-900/90 rounded-lg py-3 border border-slate-700/50 backdrop-blur-sm transition-all duration-300 ease-out overflow-visible gap-0 pl-4 pr-16 ${
+                            showStatusPills ? 'min-w-[280px]' : 'min-w-[200px]'
                         }`}>
-                            {/* Ultra Zaazzed Status Pills - Hidden by default, fan out on profile click */}
-                            <div className={`flex flex-col items-end gap-1.5 transition-all duration-500 ease-out origin-right ${
-                                showStatusPills 
-                                    ? 'opacity-100 scale-100 translate-x-0 w-auto' 
-                                    : 'opacity-0 scale-50 translate-x-8 pointer-events-none w-0 absolute'
-                            }`}>
+                            
+                            {/* Profile Picture with attached status pills */}
+                            <div className="relative shrink-0">
+                                {/* Auth Pill - NW position */}
+                                <div className={`absolute right-full top-0 mr-1 -mt-4 transition-all duration-500 ease-out origin-bottom-right ${
+                                    showStatusPills 
+                                        ? 'opacity-100 scale-100' 
+                                        : 'opacity-0 scale-50 pointer-events-none'
+                                }`}>
                                 <span 
                                     className={`pill relative overflow-hidden ${session ? 'pill-success' : 'pill-warn'} shadow-lg ${session ? 'shadow-emerald-500/30' : 'shadow-amber-500/30'} font-bold group/auth cursor-pointer transition-all duration-300 ease-out ${session ? '' : 'pl-2'}`}
                                 >
@@ -308,6 +310,14 @@ export default function Header(props: HeaderProps = {}) {
                                         )}
                                     </span>
                                 </span>
+                            </div>
+
+                            {/* Gemini Pill - W position */}
+                            <div className={`absolute right-full top-1/2 -translate-y-1/2 mr-1 transition-all duration-500 ease-out origin-right ${
+                                showStatusPills 
+                                    ? 'opacity-100 scale-100' 
+                                    : 'opacity-0 scale-50 pointer-events-none'
+                            }`}>
                                 <span 
                                     className={`pill relative overflow-hidden flex items-center gap-1 font-bold shadow-lg group/gemini cursor-pointer transition-all duration-300 ease-out ${!geminiStatus.healthy && !geminiStatus.loading ? 'pl-2' : ''} ${
                                         geminiStatus.loading 
@@ -336,6 +346,14 @@ export default function Header(props: HeaderProps = {}) {
                                         )}
                                     </span>
                                 </span>
+                            </div>
+
+                            {/* Version Pill - SW position */}
+                            <div className={`absolute right-full bottom-0 mr-1 -mb-4 transition-all duration-500 ease-out origin-bottom-right ${
+                                showStatusPills 
+                                    ? 'opacity-100 scale-100' 
+                                    : 'opacity-0 scale-50 pointer-events-none'
+                            }`}>
                                 <span 
                                     className="pill relative overflow-hidden text-sky-300 font-bold shadow-lg shadow-sky-500/30 group/version cursor-pointer transition-all duration-300 ease-out"
                                 >
@@ -352,10 +370,10 @@ export default function Header(props: HeaderProps = {}) {
                             {session.user?.image ? (
                                 <button 
                                     onClick={() => setShowStatusPills(!showStatusPills)}
-                                    className="relative shrink-0 cursor-pointer focus:outline-none"
+                                    className="relative cursor-pointer focus:outline-none"
                                     title="Toggle status indicators"
                                 >
-                                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-full opacity-30 group-hover:opacity-50 blur transition duration-300"></div>
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 rounded-full opacity-40 group-hover:opacity-60 blur transition duration-300 motion-safe:animate-[spin_8s_linear_infinite]"></div>
                                     <div className="relative">
                                         <Image
                                             src={session.user.image}
@@ -364,33 +382,33 @@ export default function Header(props: HeaderProps = {}) {
                                             height={44}
                                             className="rounded-full ring-2 ring-purple-500/60 shadow-lg shadow-purple-900/50"
                                         />
-                                        <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 ring-2 ring-slate-900 shadow-lg shadow-emerald-500/50" />
                                     </div>
                                 </button>
                             ) : (
-                                <div className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                                <div className="h-11 w-11 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center text-sm font-bold text-white shadow-lg">
                                     {session.user?.name?.charAt(0) ?? 'U'}
                                 </div>
                             )}
-                            <div className="flex flex-col min-w-0 transition-all duration-300 flex-1">
-                                <span className="text-sm font-semibold bg-gradient-to-r from-purple-300 to-fuchsia-300 bg-clip-text text-transparent">
+                        </div>
+                            <div className="flex flex-col justify-center transition-all duration-300 flex-1 min-w-0 pl-3 pr-14">
+                                <span className="text-sm font-semibold bg-gradient-to-r from-purple-300 to-fuchsia-300 bg-clip-text text-transparent whitespace-nowrap">
                                     {session.user?.name ?? 'User'}
                                 </span>
                                 {session.user?.email && (
-                                    <span className="text-[11px] text-slate-400 truncate max-w-[160px]">
+                                    <span className="text-[11px] text-slate-400 truncate">
                                         {session.user.email}
                                     </span>
                                 )}
                             </div>
                             
                             {/* Sign Out Button - Overlays right side on hover */}
-                            <div className="absolute right-0 top-0 bottom-0 flex items-center pr-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto">
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto">
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         signOut();
                                     }}
-                                    className="shrink-0 p-3 rounded-lg bg-red-500/90 text-white hover:bg-red-600 transition-all hover:scale-110 transform shadow-lg"
+                                    className="shrink-0 p-3 rounded-lg bg-red-500/95 text-white hover:bg-red-600 transition-all hover:scale-105 transform shadow-xl backdrop-blur-sm"
                                 >
                                     <LogOut className="h-5 w-5" />
                                 </button>

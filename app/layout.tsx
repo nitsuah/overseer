@@ -22,7 +22,7 @@ export default async function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.className} bg-slate-950 text-white antialiased`}>
         <SessionProvider session={session}>
-          <main className="w-full max-w-[1800px] mx-auto">{children}</main>
+          <main className="w-full">{children}</main>
         </SessionProvider>
       </body>
     </html>

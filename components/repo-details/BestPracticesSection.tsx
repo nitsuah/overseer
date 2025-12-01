@@ -66,7 +66,8 @@ export function BestPracticesSection({
   };
 
   // Calculate fixable missing practices
-  const fixablePractices = ['dependabot', 'env_template', 'docker', 'netlify_badge'];
+  // // TODO: Fix Gen AI prompt for netlify_badge & readme, env_template & readme, docker & language/contributing, dependabot/language/readme/contributing?)
+  const fixablePractices = ['dependabot', 'env_template', 'docker', 'netlify_badge']; 
   const missingFixable = bestPractices.filter(
     (p) => p.status === 'missing' && fixablePractices.includes(p.practice_type)
   );

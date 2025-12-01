@@ -4,6 +4,8 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { Github, Shield, Sparkles, LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { useGeminiStatus } from "@/hooks/useGeminiStatus";
+import { getLanguageColor } from "@/lib/language-colors";
+import { useState } from "react";
 import { RepoType } from "@/lib/repo-type";
 
 interface HeaderProps {
@@ -60,13 +62,13 @@ export default function Header(props: HeaderProps = {}) {
         onClearFilters,
     } = props;
 
+    const [showStatusPills, setShowStatusPills] = useState(false);
     const hasActiveFilters = filterType && (filterType !== 'all' || filterLanguage !== 'all' || filterFork !== 'all');
 
     if (status === "loading") return null;
 
     return (
-        <header className="header-dark relative flex items-center justify-between py-4 text-white shadow-lg border-b border-white/10">
-        <div className="w-full flex items-center justify-between px-5">
+        <header className="header-dark relative flex items-center justify-between py-4 px-6 text-white shadow-lg border-b border-white/10">
             {/* Left Cluster */}
             <div className="flex items-center gap-4">
                 {/* Super Zaazzed Icon */}
@@ -78,8 +80,9 @@ export default function Header(props: HeaderProps = {}) {
                 >
                     <div className="absolute -inset-2 bg-gradient-to-tr from-indigo-600 via-purple-600 to-fuchsia-600 rounded-full opacity-50 group-hover/icon:opacity-75 blur-lg motion-safe:animate-pulse"></div>
                     <div className="relative pulse-icon p-[3px] bg-gradient-to-tr from-indigo-500 via-purple-500 to-fuchsia-500 shadow-2xl shadow-purple-500/50 group-hover/icon:shadow-purple-400/70 transition-shadow duration-300">
-                        <div className="rounded-full bg-gradient-to-br from-slate-900 to-slate-950 p-2.5 group-hover/icon:scale-110 active:scale-95 transition-transform duration-300">
+                        <div className="rounded-full bg-gradient-to-br from-slate-900 to-slate-950 p-2.5 group-hover/icon:scale-110 active:scale-95 transition-transform duration-300 relative">
                             <Shield className={`h-7 w-7 text-indigo-300 drop-shadow-[0_0_8px_rgba(165,180,252,0.8)] group-hover/icon:drop-shadow-[0_0_12px_rgba(165,180,252,1)] transition-transform duration-500 ${syncing ? 'animate-spin' : ''}`} />
+                            <Sparkles className="h-3 w-3 text-fuchsia-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 motion-safe:animate-pulse drop-shadow-[0_0_4px_rgba(232,121,249,0.8)]" />
                         </div>
                     </div>
                 </button>
@@ -103,8 +106,10 @@ export default function Header(props: HeaderProps = {}) {
                 </div>
             </div>
 
-            {/* Middle - Repo Controls */}
-            {session && onToggleAddRepo && (
+            {/* Right Cluster */}
+            <div className="flex items-center gap-3">
+                {/* Repo Controls */}
+                {session && onToggleAddRepo && (
                 <div className="flex items-center gap-2">
                     {/* Compact Add Repo */}
                     <div className="relative group/add">
@@ -182,11 +187,11 @@ export default function Header(props: HeaderProps = {}) {
                                     <select
                                         value={filterType}
                                         onChange={(e) => onFilterTypeChange?.(e.target.value as RepoType | 'all')}
-                                        className="px-2 py-1 bg-slate-900/50 border border-slate-700 rounded text-slate-300 focus:outline-none text-xs"
+                                        className="px-3 py-1.5 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 rounded-lg text-slate-100 hover:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent shadow-lg shadow-purple-500/10 transition-all duration-200 text-sm font-medium cursor-pointer"
                                     >
-                                        <option value="all">Type</option>
+                                        <option value="all" className="bg-slate-800">Type</option>
                                         {repoTypes.map((t) => (
-                                            <option key={t} value={t}>
+                                            <option key={t} value={t} className="bg-slate-800">
                                                 {t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' ')}
                                             </option>
                                         ))}
@@ -194,35 +199,41 @@ export default function Header(props: HeaderProps = {}) {
                                     <select
                                         value={filterLanguage}
                                         onChange={(e) => onFilterLanguageChange?.(e.target.value)}
-                                        className="px-2 py-1 bg-slate-900/50 border border-slate-700 rounded text-slate-300 focus:outline-none text-xs"
+                                        className="px-3 py-1.5 bg-gradient-to-br from-slate-800 to-slate-900 border border-blue-500/30 rounded-lg text-slate-100 hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent shadow-lg shadow-blue-500/10 transition-all duration-200 text-sm font-medium cursor-pointer"
                                     >
-                                        <option value="all">Language</option>
-                                        {languages.sort().map((lang) => (
-                                            <option key={lang} value={lang}>
-                                                {lang}
-                                            </option>
-                                        ))}
+                                        <option value="all" className="bg-slate-800">Language</option>
+                                        {languages.sort().map((lang) => {
+                                            const colorClass = getLanguageColor(lang);
+                                            // Extract text color from the full class string
+                                            const textColorMatch = colorClass.match(/text-(\w+-\d+)/);
+                                            const textColor = textColorMatch ? textColorMatch[1] : 'slate-300';
+                                            return (
+                                                <option key={lang} value={lang} className={`bg-slate-800 text-${textColor} font-semibold`}>
+                                                    {lang}
+                                                </option>
+                                            );
+                                        })}
                                     </select>
                                     <select
                                         value={filterFork}
                                         onChange={(e) => onFilterForkChange?.(e.target.value as 'all' | 'no-forks' | 'forks-only')}
-                                        className="px-2 py-1 bg-slate-900/50 border border-slate-700 rounded text-slate-300 focus:outline-none text-xs"
+                                        className="px-3 py-1.5 bg-gradient-to-br from-slate-800 to-slate-900 border border-fuchsia-500/30 rounded-lg text-slate-100 hover:border-fuchsia-500/50 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50 focus:border-transparent shadow-lg shadow-fuchsia-500/10 transition-all duration-200 text-sm font-medium cursor-pointer"
                                     >
-                                        <option value="all">Fork</option>
-                                        <option value="no-forks">No Forks</option>
-                                        <option value="forks-only">Forks Only</option>
+                                        <option value="all" className="bg-slate-800">Fork</option>
+                                        <option value="no-forks" className="bg-slate-800">No Forks</option>
+                                        <option value="forks-only" className="bg-slate-800">Forks Only</option>
                                     </select>
                                     {hasActiveFilters && (
                                         <button
                                             onClick={onClearFilters}
-                                            className="px-1.5 py-0.5 text-xs text-slate-400 hover:text-slate-200"
+                                            className="px-2 py-1 text-sm text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded transition-colors font-medium"
                                         >
                                             Clear
                                         </button>
                                     )}
                                     <button
                                         onClick={onToggleFilters}
-                                        className="p-1 text-slate-400 hover:text-slate-200"
+                                        className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 rounded transition-colors"
                                     >
                                         <X className="h-3 w-3" />
                                     </button>
@@ -264,78 +275,86 @@ export default function Header(props: HeaderProps = {}) {
                 </button>
             )}
 
-            {/* Right Cluster */}
-            <div className="flex items-center gap-3">
-                {/* Ultra Zaazzed Status Pills - Icon Only with Hover Text, Stacked Vertically */}
-                <div className="flex flex-col items-end gap-1.5">
-                    <span 
-                        className={`pill relative overflow-hidden ${session ? 'pill-success' : 'pill-warn'} shadow-lg ${session ? 'shadow-emerald-500/30' : 'shadow-amber-500/30'} font-bold group/auth cursor-pointer transition-all duration-300 ease-out ${session ? '' : 'pl-2'}`}
-                    >
-                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent motion-safe:animate-[shimmer_2s_infinite]"></span>
-                        <span className="relative flex items-center">
-                            {session ? (
-                                <>
-                                    <span className="w-0 group-hover/auth:w-auto overflow-hidden transition-all duration-300 ease-out">
-                                        <span className="mr-1.5 whitespace-nowrap inline-block">Auth: OK</span>
-                                    </span>
-                                    <CheckCircle className="h-3.5 w-3.5 drop-shadow-[0_0_4px_rgba(52,211,153,0.8)]" />
-                                </>
-                            ) : (
-                                <>
-                                    <span className="mr-1.5 whitespace-nowrap">Auth: Guest</span>
-                                    <AlertCircle className="h-3.5 w-3.5" />
-                                </>
-                            )}
-                        </span>
-                    </span>
-                    <span 
-                        className={`pill relative overflow-hidden flex items-center gap-1 font-bold shadow-lg group/gemini cursor-pointer transition-all duration-300 ease-out ${!geminiStatus.healthy && !geminiStatus.loading ? 'pl-2' : ''} ${
-                            geminiStatus.loading 
-                                ? 'text-slate-400 shadow-slate-500/20' 
-                                : geminiStatus.healthy 
-                                    ? 'pill-success shadow-emerald-500/30' 
-                                    : 'pill-error shadow-red-500/30'
-                        }`}
-                    >
-                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent motion-safe:animate-[shimmer_2s_infinite]"></span>
-                        <span className="relative flex items-center">
-                            {!geminiStatus.healthy && !geminiStatus.loading ? (
-                                <>
-                                    <span className="mr-1.5 whitespace-nowrap">Gemini: Error</span>
-                                    <Zap className="h-3.5 w-3.5" />
-                                </>
-                            ) : (
-                                <>
-                                    <span className="w-0 group-hover/gemini:w-auto overflow-hidden transition-all duration-300 ease-out">
-                                        <span className="mr-1.5 whitespace-nowrap inline-block">
-                                            {geminiStatus.loading ? 'Gemini: ...' : 'Gemini: OK'}
-                                        </span>
-                                    </span>
-                                    <Zap className={`h-3.5 w-3.5 ${geminiStatus.healthy ? 'motion-safe:animate-pulse drop-shadow-[0_0_4px_rgba(52,211,153,0.8)]' : ''}`} />
-                                </>
-                            )}
-                        </span>
-                    </span>
-                    <span 
-                        className="pill relative overflow-hidden text-sky-300 font-bold shadow-lg shadow-sky-500/30 group/version cursor-pointer transition-all duration-300 ease-out"
-                    >
-                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent motion-safe:animate-[shimmer_2s_infinite]"></span>
-                        <span className="relative flex items-center drop-shadow-[0_0_4px_rgba(125,211,252,0.6)]">
-                            <span className="w-0 group-hover/version:w-auto overflow-hidden transition-all duration-300 ease-out">
-                                <span className="mr-1.5 whitespace-nowrap inline-block">v0.1.x</span>
-                            </span>
-                            <Tag className="h-3.5 w-3.5" />
-                        </span>
-                    </span>
-                </div>
-
                 {session ? (
-                    /* Enhanced Profile Section with Integrated Sign Out */
+                    /* Enhanced Profile Section with Integrated Sign Out and Status Pills */
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 rounded-lg opacity-25 group-hover:opacity-40 blur transition duration-300"></div>
-                        <div className="relative flex items-center gap-3 bg-slate-900/90 rounded-lg pl-4 pr-4 group-hover:pr-2 py-2.5 border border-slate-700/50 backdrop-blur-sm transition-all duration-300 ease-out overflow-hidden">
+                        <div className={`relative flex items-center bg-slate-900/90 rounded-lg pl-4 pr-4 group-hover:pr-2 py-2.5 border border-slate-700/50 backdrop-blur-sm transition-all duration-300 ease-out overflow-visible ${
+                            showStatusPills ? 'gap-3' : 'gap-0'
+                        }`}>
+                            {/* Ultra Zaazzed Status Pills - Hidden by default, fan out on profile click */}
+                            <div className={`flex flex-col items-end gap-1.5 transition-all duration-500 ease-out origin-right ${
+                                showStatusPills 
+                                    ? 'opacity-100 scale-100 translate-x-0 w-auto' 
+                                    : 'opacity-0 scale-50 translate-x-8 pointer-events-none w-0 absolute'
+                            }`}>
+                                <span 
+                                    className={`pill relative overflow-hidden ${session ? 'pill-success' : 'pill-warn'} shadow-lg ${session ? 'shadow-emerald-500/30' : 'shadow-amber-500/30'} font-bold group/auth cursor-pointer transition-all duration-300 ease-out ${session ? '' : 'pl-2'}`}
+                                >
+                                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent motion-safe:animate-[shimmer_2s_infinite]"></span>
+                                    <span className="relative flex items-center">
+                                        {session ? (
+                                            <>
+                                                <span className="w-0 group-hover/auth:w-auto overflow-hidden transition-all duration-300 ease-out">
+                                                    <span className="mr-1.5 whitespace-nowrap inline-block">Auth: OK</span>
+                                                </span>
+                                                <CheckCircle className="h-3.5 w-3.5 drop-shadow-[0_0_4px_rgba(52,211,153,0.8)]" />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="mr-1.5 whitespace-nowrap">Auth: Guest</span>
+                                                <AlertCircle className="h-3.5 w-3.5" />
+                                            </>
+                                        )}
+                                    </span>
+                                </span>
+                                <span 
+                                    className={`pill relative overflow-hidden flex items-center gap-1 font-bold shadow-lg group/gemini cursor-pointer transition-all duration-300 ease-out ${!geminiStatus.healthy && !geminiStatus.loading ? 'pl-2' : ''} ${
+                                        geminiStatus.loading 
+                                            ? 'text-slate-400 shadow-slate-500/20' 
+                                            : geminiStatus.healthy 
+                                                ? 'pill-success shadow-emerald-500/30' 
+                                                : 'pill-error shadow-red-500/30'
+                                    }`}
+                                >
+                                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent motion-safe:animate-[shimmer_2s_infinite]"></span>
+                                    <span className="relative flex items-center">
+                                        {!geminiStatus.healthy && !geminiStatus.loading ? (
+                                            <>
+                                                <span className="mr-1.5 whitespace-nowrap">Gemini: Error</span>
+                                                <Zap className="h-3.5 w-3.5" />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="w-0 group-hover/gemini:w-auto overflow-hidden transition-all duration-300 ease-out">
+                                                    <span className="mr-1.5 whitespace-nowrap inline-block">
+                                                        {geminiStatus.loading ? 'Gemini: ...' : 'Gemini: OK'}
+                                                    </span>
+                                                </span>
+                                                <Zap className={`h-3.5 w-3.5 ${geminiStatus.healthy ? 'motion-safe:animate-pulse drop-shadow-[0_0_4px_rgba(52,211,153,0.8)]' : ''}`} />
+                                            </>
+                                        )}
+                                    </span>
+                                </span>
+                                <span 
+                                    className="pill relative overflow-hidden text-sky-300 font-bold shadow-lg shadow-sky-500/30 group/version cursor-pointer transition-all duration-300 ease-out"
+                                >
+                                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent motion-safe:animate-[shimmer_2s_infinite]"></span>
+                                    <span className="relative flex items-center drop-shadow-[0_0_4px_rgba(125,211,252,0.6)]">
+                                        <span className="w-0 group-hover/version:w-auto overflow-hidden transition-all duration-300 ease-out">
+                                            <span className="mr-1.5 whitespace-nowrap inline-block">v0.1.x</span>
+                                        </span>
+                                        <Tag className="h-3.5 w-3.5" />
+                                    </span>
+                                </span>
+                            </div>
+
                             {session.user?.image ? (
-                                <div className="relative shrink-0">
+                                <button 
+                                    onClick={() => setShowStatusPills(!showStatusPills)}
+                                    className="relative shrink-0 cursor-pointer focus:outline-none"
+                                    title="Toggle status indicators"
+                                >
                                     <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-full opacity-30 group-hover:opacity-50 blur transition duration-300"></div>
                                     <div className="relative">
                                         <Image
@@ -347,13 +366,13 @@ export default function Header(props: HeaderProps = {}) {
                                         />
                                         <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 ring-2 ring-slate-900 shadow-lg shadow-emerald-500/50" />
                                     </div>
-                                </div>
+                                </button>
                             ) : (
                                 <div className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center text-sm font-bold text-white shadow-lg">
                                     {session.user?.name?.charAt(0) ?? 'U'}
                                 </div>
                             )}
-                            <div className="flex flex-col min-w-0 transition-all duration-300">
+                            <div className="flex flex-col min-w-0 transition-all duration-300 flex-1">
                                 <span className="text-sm font-semibold bg-gradient-to-r from-purple-300 to-fuchsia-300 bg-clip-text text-transparent">
                                     {session.user?.name ?? 'User'}
                                 </span>
@@ -364,16 +383,16 @@ export default function Header(props: HeaderProps = {}) {
                                 )}
                             </div>
                             
-                            {/* Sign Out Button - Slides in on Hover */}
-                            <div className="flex items-center overflow-hidden transition-all duration-300 ease-out w-0 group-hover:w-10 opacity-0 group-hover:opacity-100">
+                            {/* Sign Out Button - Overlays right side on hover */}
+                            <div className="absolute right-0 top-0 bottom-0 flex items-center pr-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto">
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         signOut();
                                     }}
-                                    className="shrink-0 p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors hover:scale-110 transform"
+                                    className="shrink-0 p-3 rounded-lg bg-red-500/90 text-white hover:bg-red-600 transition-all hover:scale-110 transform shadow-lg"
                                 >
-                                    <LogOut className="h-4 w-4" />
+                                    <LogOut className="h-5 w-5" />
                                 </button>
                             </div>
                         </div>
@@ -388,7 +407,6 @@ export default function Header(props: HeaderProps = {}) {
                     </button>
                 )}
             </div>
-        </div>
         </header>
     );
 }

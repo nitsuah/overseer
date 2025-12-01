@@ -21,6 +21,15 @@ body {
   100% { box-shadow: 0 0 0 0 rgba(99,102,241,0), 0 0 0 0 rgba(168,85,247,0); }
 }
 
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .pulse-icon,
+  .motion-safe\:animate-pulse,
+  .motion-safe\:animate-\[shimmer_2s_infinite\] {
+    animation: none !important;
+  }
+}
+
 .header-glow {
   position: relative;
   background: linear-gradient(90deg,#4f46e5,#7e22ce,#6366f1,#9333ea);
@@ -79,6 +88,7 @@ body {
 
 .pill-success { @apply text-emerald-300 border-emerald-600/40 bg-emerald-900/30; }
 .pill-warn { @apply text-amber-300 border-amber-600/40 bg-amber-900/30; }
+.pill-error { @apply text-red-300 border-red-600/40 bg-red-900/30; }
 
 .btn-raised {
   @apply relative inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition;

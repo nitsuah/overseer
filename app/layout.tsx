@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { auth } from "@/auth";
 import { SessionProvider } from "next-auth/react";
-import Header from "@/components/Header";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,8 +22,7 @@ export default async function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.className} bg-slate-950 text-white antialiased`}>
         <SessionProvider session={session}>
-          <Header />
-          <main className="w-full max-w-[1800px] mx-auto px-6 py-8">{children}</main>
+          <main className="w-full max-w-[1800px] mx-auto">{children}</main>
         </SessionProvider>
       </body>
     </html>

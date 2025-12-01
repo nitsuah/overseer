@@ -89,6 +89,13 @@ function mapDocType(input: string): string {
     'code_of_conduct': 'code_of_conduct',
     'code_of_conduct.md': 'code_of_conduct',
     'issue_templates': 'issue_templates',
+    '.github/issue_template/': 'issue_templates',
+    'bug_report': 'bug_report',
+    'bug_report.md': 'bug_report',
+    '.github/issue_template/bug_report.md': 'bug_report',
+    'feature_request': 'feature_request',
+    'feature_request.md': 'feature_request',
+    '.github/issue_template/feature_request.md': 'feature_request',
     'pull_request_template.md': 'pr_template',
     'pr_template': 'pr_template',
     'copilot_instructions': 'copilot_instructions',
@@ -316,6 +323,65 @@ Your task:
 Return ONLY the Markdown for CHANGELOG.md.${noHallucination}`;
   break;
 
+    case 'bug_report':
+  console.log('[enrichTemplateWithAI] Building BUG REPORT template prompt');
+  prompt = `You are creating a GitHub bug report issue template for ${repo.full_name}.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current template:
+\`\`\`markdown
+${templateContent}
+\`\`\`` : 'Starting from minimal template.'}
+
+Your task:
+1. Create a structured bug report template with YAML frontmatter:
+   - name: "Bug Report"
+   - about: "Report a bug in ${repo.full_name}"
+   - title: "[BUG] "
+   - labels: bug
+2. Include sections:
+   - **Description**: What happened?
+   - **Steps to Reproduce**: Numbered list
+   - **Expected Behavior**: What should happen
+   - **Actual Behavior**: What actually happens
+   - **Environment**: OS, ${repo.language || 'language'} version, browser (if web app)
+   - **Screenshots**: Optional
+   - **Additional Context**: Any other info
+3. Use GitHub markdown formatting with checkboxes where helpful
+4. Tailor environment fields to ${repo.language || 'the tech stack'}
+
+Return ONLY the complete Markdown template with YAML frontmatter.${noHallucination}`;
+  break;
+
+    case 'feature_request':
+  console.log('[enrichTemplateWithAI] Building FEATURE REQUEST template prompt');
+  prompt = `You are creating a GitHub feature request issue template for ${repo.full_name}.
+
+${repoInfo}
+
+${templateContent.trim().length > 0 ? `Current template:
+\`\`\`markdown
+${templateContent}
+\`\`\`` : 'Starting from minimal template.'}
+
+Your task:
+1. Create a structured feature request template with YAML frontmatter:
+   - name: "Feature Request"
+   - about: "Suggest a feature for ${repo.full_name}"
+   - title: "[FEATURE] "
+   - labels: enhancement
+2. Include sections:
+   - **Problem**: What problem does this solve?
+   - **Proposed Solution**: Describe the feature
+   - **Alternatives Considered**: Other approaches
+   - **Use Cases**: Who benefits and how
+   - **Implementation Notes**: Technical considerations (optional)
+3. Keep it concise and actionable
+
+Return ONLY the complete Markdown template with YAML frontmatter.${noHallucination}`;
+  break;
+
     case 'issue_templates':
   console.log('[enrichTemplateWithAI] Building ISSUE TEMPLATES prompt');
   prompt = `You are generating GitHub issue templates (Bug Report and Feature Request).
@@ -395,33 +461,57 @@ Return ONLY the YAML for .github/dependabot.yml.${noHallucination}`;
     case 'env_example':
     case '.env.example':
   console.log('[enrichTemplateWithAI] Building ENV EXAMPLE prompt');
-  prompt = `You are enriching .env.example.
+  prompt = `You are creating .env.example for ${repo.full_name}.
 
 ${repoInfo}
 
 ${templateContent.trim().length > 0 ? `Current content:\n\`\`\`\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
 
 Your task:
-1. Provide a sensible list of env variables with placeholder values for ${repo.full_name}.
-2. Group by sections (Database, Auth, API keys, Runtime).
-3. Keep comments minimal and helpful.
+1. Create environment variables appropriate for a ${repo.language || 'unknown language'} project
+2. Based on common patterns for ${repo.language}:
+   - Node.js/TypeScript: PORT, NODE_ENV, DATABASE_URL, API keys
+   - Python: FLASK_ENV/DJANGO_SETTINGS, DATABASE_URL, SECRET_KEY
+   - Go: PORT, DATABASE_URL, environment flags
+   - Ruby: RAILS_ENV, DATABASE_URL, SECRET_KEY_BASE
+3. Include sections with comments:
+   # Application
+   # Database
+   # Authentication & Security
+   # External APIs
+   # Runtime Configuration
+4. Use descriptive placeholder values (e.g., DATABASE_URL=postgresql://user:pass@localhost:5432/dbname)
+5. Add helpful inline comments for complex variables
 
-Return ONLY the plain text for .env.example (no code fences).${noHallucination}`;
+Return ONLY the plain text for .env.example (no markdown code fences).${noHallucination}`;
   break;
 
     case 'dockerfile':
   console.log('[enrichTemplateWithAI] Building DOCKERFILE prompt');
-  prompt = `You are enriching Dockerfile for ${repo.full_name}.
+  prompt = `You are creating a production-ready Dockerfile for ${repo.full_name}.
 
 ${repoInfo}
 
 ${templateContent.trim().length > 0 ? `Current content:\n\`\`\`Dockerfile\n${templateContent}\n\`\`\`` : 'Starting from an empty/minimal template.'}
 
 Your task:
-1. Provide a production-ready Dockerfile aligned with the project’s language (${repo.language || 'unknown'}), using multi-stage where appropriate.
-2. Include sensible defaults (NODE_ENV, build cache, non-root user where feasible).
+1. Create a Dockerfile optimized for ${repo.language || 'the primary language'}:
+   - **Node.js/TypeScript**: Multi-stage with node:alpine, npm ci, production build, non-root user
+   - **Python**: python:slim base, pip install with --no-cache-dir, requirements.txt, non-root user
+   - **Go**: Multi-stage with golang:alpine for build, scratch/alpine for runtime
+   - **Ruby**: ruby:alpine, bundle install with --without development test
+   - **Java**: openjdk/maven multi-stage, JAR execution
+2. Best practices:
+   - Use multi-stage builds to minimize image size
+   - Copy dependency files first for better caching
+   - Set appropriate environment variables (NODE_ENV=production, etc.)
+   - Run as non-root user
+   - EXPOSE appropriate port
+   - Use HEALTHCHECK if applicable
+3. Add helpful comments explaining each stage
+4. Keep it production-ready but not over-engineered
 
-Return ONLY the Dockerfile content.${noHallucination}`;
+Return ONLY the Dockerfile content (no markdown code fences).${noHallucination}`;
   break;
 
     case 'docker_compose':
@@ -489,7 +579,7 @@ ${templateContent}
 \`\`\`
 
 Your task:
-1. Replace [year] with the current year: 2025
+1. Replace [year] with the current year: ${new Date().getFullYear()}
 2. Replace [fullname] with the repository owner: ${owner}
 3. Keep ALL other license text exactly as-is - do not modify the MIT License terms
 4. Do NOT add any extra text, explanations, or markdown formatting

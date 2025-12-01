@@ -32,6 +32,11 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
   const [showCompleted, setShowCompleted] = useState(false);
   const [showAllPlanned, setShowAllPlanned] = useState(false);
 
+  // Hide section if no roadmap items
+  if (!roadmapItems || roadmapItems.length === 0) {
+    return null;
+  }
+
   const toggleCard = (cardKey: string) => {
     const newExpanded = new Set(expandedCards);
     if (newExpanded.has(cardKey)) {

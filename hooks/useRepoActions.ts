@@ -516,7 +516,9 @@ export function useRepoActions(
       console.error('🔐 OAuth Restriction - Authorization Required');
       setToastMessage(`${err.error || 'Authorization required'} - Opening authorization page...`);
       setTimeout(() => {
-        window.open(err.helpUrl!, '_blank');
+        if (err.helpUrl) {
+          window.open(err.helpUrl, '_blank');
+        }
       }, 500);
     } else if (err.type === 'oauth_restriction' && err.instructions) {
       console.error('OAuth Restriction:', err.instructions);

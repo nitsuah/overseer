@@ -32,6 +32,11 @@ export function TasksSection({ tasks, isExpanded: isExpandedProp, onToggleExpand
   const [showDone, setShowDone] = useState(false);
   const [showAllTodo, setShowAllTodo] = useState(false);
 
+  // Hide section if no tasks
+  if (!tasks || tasks.length === 0) {
+    return null;
+  }
+
   const toggleCard = (cardKey: string) => {
     const newExpanded = new Set(expandedCards);
     if (newExpanded.has(cardKey)) {

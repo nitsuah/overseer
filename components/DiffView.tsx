@@ -129,7 +129,7 @@ function computeDiff(original: string, modified: string): DiffLine[] {
 function computeLCS(a: string[], b: string[]): Array<{ oldIdx: number; newIdx: number }> {
   const m = a.length;
   const n = b.length;
-  const dp: number[][] = Array(m + 1).fill(0).map(() => Array(n + 1).fill(0));
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
   
   // Build LCS length matrix
   for (let i = 1; i <= m; i++) {

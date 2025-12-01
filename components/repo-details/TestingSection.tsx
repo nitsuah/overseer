@@ -58,6 +58,17 @@ export function TestingSection({
     return testingKeywords.some((keyword) => lowerName.includes(keyword));
   });
 
+  // Hide section if no testing data at all
+  const hasTestingData = testingStatus || 
+                          (coverageScore !== undefined && coverageScore !== null && coverageScore > 0) || 
+                          (testCaseCount !== undefined && testCaseCount !== null && testCaseCount > 0) ||
+                          (testFileCount !== undefined && testFileCount !== null && testFileCount > 0) ||
+                          testingMetrics.length > 0;
+  
+  if (!hasTestingData) {
+    return null;
+  }
+
   // Helper to format metric display value
   const formatMetricValue = (metric: Metric) => {
     // If unit is already included or is a long description, just show the value

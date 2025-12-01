@@ -143,8 +143,8 @@ export default function ExpandableRow({
         </div>
 
         {/* Right Content Grid */}
-        <div className="flex-1 space-y-6">
-          {/* First Row: Features, Roadmap, Tasks */}
+        <div className="flex-1">
+          {/* Single 3x3 Grid: All sections in order */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Features */}
             <FeaturesSection 
@@ -166,10 +166,7 @@ export default function ExpandableRow({
               isExpanded={projectSectionsExpanded}
               onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
             />
-          </div>
 
-          {/* Second Row: Documentation, Best Practices, Testing */}
-          <div className="grid grid-cols-3 gap-6">
             {/* Documentation Status */}
             <DocumentationSection 
               docStatuses={docStatuses} 
@@ -203,10 +200,7 @@ export default function ExpandableRow({
               isExpanded={row2Expanded}
               onToggleExpanded={() => setRow2Expanded(!row2Expanded)}
             />
-          </div>
 
-          {/* Third Row: Standards, Metrics, Issues */}
-          <div className="grid grid-cols-3 gap-6">
             {/* Community Standards */}
             <CommunityStandardsSection
               communityStandards={communityStandards}

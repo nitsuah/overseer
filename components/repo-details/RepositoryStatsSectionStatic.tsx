@@ -32,13 +32,12 @@ export function RepositoryStatsSectionStatic({
   commitFrequency,
   busFactor,
   avgPrMergeTimeHours,
-  metrics = [],
   onSyncSingleRepo,
   isSyncing = false,
   isAuthenticated = false,
   hasNoData = false,
 }: RepositoryStatsSectionStaticProps) {
-  const [isExpanded, setIsExpanded] = useState(false); // Collapsed by default
+  const [isExpanded, setIsExpanded] = useState(true); // Expanded by default
   
   return (
     <div className="bg-gradient-to-br from-cyan-900/30 via-slate-800/50 to-cyan-800/20 rounded-lg overflow-hidden border border-cyan-500/40 shadow-lg shadow-cyan-500/10 hover:border-cyan-400/50 transition-colors">

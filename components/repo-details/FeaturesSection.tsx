@@ -17,6 +17,11 @@ export function FeaturesSection({ features, isExpanded: isExpandedProp, onToggle
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showAllCards, setShowAllCards] = useState(false);
 
+  // Hide section if no features
+  if (!features || features.length === 0) {
+    return null;
+  }
+
   const toggleCard = (cardKey: string) => {
     const newExpanded = new Set(expandedCards);
     if (newExpanded.has(cardKey)) {

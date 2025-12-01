@@ -32,25 +32,28 @@
 - **Smart Repo Type Detection**: Automatically categorizes repos (web-app, game, tool, library, bot, research)
 - **Gemini Health Monitoring**: Automated CI/CD health checks to detect model deprecations
 - **Model Auto-Discovery**: Scripts to find working Gemini models when API changes occur
-- **AI Template Enrichment**: Context-aware doc generation using Gemini 2.0 with repo-specific knowledge
 
 ### 📝 Documentation Management
 
-- **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, and community standards templates
-- **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Overseer compliance and avoiding hallucination
+- **PR Preview Modal**: Interactive file selection and preview before PR creation with pick-and-choose functionality
+- **AI Template Enrichment**: Context-aware documentation generation using repo metadata, structure, and content
+- **Diff View**: LCS-based Myers diff algorithm showing accurate line-by-line changes between original and AI-generated content
+- **Inline Edit/Generate Toggle**: Switch between manual template editing and AI-powered generation
 - **Auto-Fix Missing Docs**: One-click PR creation for missing documentation (8 doc types)
 - **Auto-Fix Best Practices**: One-click PR creation for missing best practices (4 types: Dependabot, Env Template, Docker, Netlify Badge)
 - **Auto-Fix Community Standards**: One-click PR creation for missing standards (10 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions, FUNDING)
 - **Batch Operations**: Fix all missing docs or all missing standards with single PR
-- **PR Preview Modal**: Interactive file selection and preview before PR creation with pick-and-choose functionality
-- **Diff View**: LCS-based Myers diff algorithm showing accurate line-by-line changes between original and AI-generated content
-- **Inline Edit/Generate Toggle**: Switch between manual template editing and AI-powered generation
+- **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, and community standards templates
+- **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Overseer compliance and avoiding hallucination
 - **Doc Health Scoring**: Percentage-based health scores for documentation completeness
 - **Template Health Detection**: Content hashing to identify unchanged/dormant templates
 - **OAuth Error Handling**: Comprehensive error detection for organization access restrictions with auto-redirect to GitHub authorization
 - **GitHub Error Parsing**: Detects 5 error types (OAuth restrictions, permissions, not found, rate limits, unknown) with user-friendly messages
 - **Authorization Auto-Redirect**: Automatically opens GitHub OAuth settings when org restrictions detected
 - **Error Instructions**: Step-by-step guidance for resolving OAuth and permission issues
+
+### 🛠️ Developer Experience
+
 - **Template Path Debugging**: Enhanced logging for troubleshooting template resolution issues
 - **Features Display Order**: Reversed chronological order to show newest features first
 - **Duplicate Metrics Prevention**: DELETE before INSERT strategy to prevent metric accumulation
@@ -68,43 +71,41 @@
 - **Vulnerability Alerts**: Real-time security alert tracking
 - **Expandable Details**: Rich detail panels with organized information
 
-### 🔐 Authentication & Security
-
-- **GitHub OAuth**: Secure authentication with GitHub
-- **Dynamic URL Support**: Works on localhost, Netlify production, and preview deployments
-- **Access Token Management**: Secure token handling for GitHub API
-
 ### 🎨 User Interface
 
-- **Modern Dashboard**: Clean, dark-mode interface with glassmorphism effects and gradient backgrounds
+- **Modern Dashboard**: Clean, dark-mode interface with glass-morphic effects and gradient backgrounds
 - **Three-Row Detail Layout**: Organized information architecture (Project/Quality/Standards)
 - **Left Sidebar**: AI Summary and Repository Stats consolidated for quick access
 - **Synchronized Expand/Collapse**: Row-level state management for coordinated section control
 - **Color-Coded Sections**: Unique gradients for visual organization (purple AI/Roadmap, orange Features, blue Tasks/Testing, green Standards/Metrics, cyan Repo Stats, amber Documentation, red Issues)
-- **Responsive Design**: Adapts to different screen sizes with mobile-friendly controls
-- **Filtering & Sorting**: Filter by type, language, fork status with advanced controls
-- **Visual Indicators**: Icons, badges, and color-coding for quick scanning
 - **Enhanced Health Shields**: Tooltips with detailed component breakdowns (Community, Best Practices, Testing, Coverage, Documentation)
+- **Profile Section Compass Rose**: Pills positioned at NW, W, SW with rotating glow backdrop on profile picture
+- **Dynamic Text Expansion**: Right-to-left pill text reveal (icon first, text expands left) with origin-right scaling
+- **Color-Coded Filter Dropdowns**: Purple Type, Blue Language, Fuchsia Fork borders with 60% opacity and subtle shadows
+- **Clickable Repository Names**: Direct GitHub links in table rows with hover underline styling
+- **Filtering & Sorting**: Filter by type, language, fork status with advanced controls
+- **Responsive Design**: Adapts to different screen sizes with mobile-friendly controls
+- **Visual Indicators**: Icons, badges, and color-coding for quick scanning
 - **Repository Stats**: Stars, forks, branches, LOC, vulnerabilities, contributor analytics displayed in compact sidebar
 - **CI/CD Badges**: Prominent passing/failing status indicators in Best Practices section
 - **Test Metrics**: Test file and test case counts with inline coverage progress bars
 - **Vulnerability Warnings**: Color-coded severity indicators (red for critical, orange for high)
-- **Always-Visible Refresh**: Repository Stats header includes refresh button for immediate sync access
 - **Expandable Cards**: Collapsible quarter/subsection cards with show more/less controls
-- **Subsection Support in Tasks**: Database schema and parser support for organized task groupings with granular show/hide controls
 - **Show More/Less Controls**: Granular controls to show all quarters/subsections or completed items on demand
 - **AI Summary Component**: Extracted into dedicated component with generate button and dismissible state management
 - **Bold Text Parsing**: Markdown-utils for **bold** syntax rendering in roadmap/task titles
+- **Always-Visible Refresh**: Repository Stats header includes refresh button for immediate sync access
+- **Force Refresh**: Detail panel includes refresh button with animated RefreshCw icon for immediate data reload
+- **Subsection Support in Tasks**: Database schema and parser support for organized task groupings with granular show/hide controls
 - **Visual Hierarchy Improvements**: Enhanced spacing, borders, shadows, and hover states for better visual flow
-- **Profile Section Compass Rose**: Pills positioned at NW, W, SW with rotating glow backdrop on profile picture
-- **Dynamic Text Expansion**: Right-to-left pill text reveal (icon first, text expands left) with origin-right scaling
-- **Responsive Card Width**: Profile card optimized with conditional padding (`pr-2` collapsed, `pr-16` on hover)
-- **Color-Coded Filter Dropdowns**: Purple Type, Blue Language, Fuchsia Fork borders with 60% opacity and subtle shadows
-- **Enhanced Filter Visibility**: Lighter backgrounds (`bg-slate-700/60`) vs darker panel selector for better contrast
-- **Clickable Repository Names**: Direct GitHub links in table rows with hover underline styling
 - **Organized Button Layout**: GitHub in Stats, Play in Health, Refresh/Remove in Actions columns
 - **Green Play Button**: Homepage/demo links with filled Play icon in Health column after shields
 - **Purple GitHub Button**: GitHub repo links in Repository Stats section header with consistent theming
+- **Authenticated Controls**: Sync all button restricted to logged-in users only
+- **Optimized Table Structure**: 5-column layout with colspan adjustments for expanded detail rows
+- **Status Icon Preservation**: PRs, Issues, Vulnerabilities, CI/CD icons retained without column header
+- **Responsive Card Width**: Profile card optimized with conditional padding (`pr-2` collapsed, `pr-16` on hover)
+- **Enhanced Filter Visibility**: Lighter backgrounds (`bg-slate-700/60`) vs darker panel selector for better contrast
 - **Authenticated Controls**: Sync all button restricted to logged-in users only
 - **Optimized Table Structure**: 5-column layout with colspan adjustments for expanded detail rows
 - **Status Icon Preservation**: PRs, Issues, Vulnerabilities, CI/CD icons retained without column header

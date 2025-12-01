@@ -149,24 +149,22 @@ export function PRPreviewModal({
       title={`Preview PR for ${repoName}`}
       size="6xl"
     >
-      <div className="space-y-4">
-        {/* Warning/Info Banner */}
-        <div className="bg-blue-900/30 border border-blue-500/40 rounded-lg p-4">
-          <p className="text-sm text-blue-200">
-            {mode === 'batch'
-              ? `You are about to create a PR with ${files.length} file(s). Review and select which files to include.`
-              : 'Review the file content before creating the PR.'}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="flex flex-col h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 overflow-hidden">
           {/* File List */}
-          <div className="lg:col-span-1 space-y-2">
-            <h3 className="text-sm font-semibold text-slate-300 mb-2">
-              Files to Add ({selectedFiles.size}/{files.length})
+          <div className="lg:col-span-1 flex flex-col overflow-hidden">
+            <h3 className="text-sm font-semibold text-slate-300 mb-2 flex-shrink-0">
+              Files to Add
             </h3>
-            <div className="space-y-1 max-h-96 overflow-y-auto">
-              {files.map((file) => (
+            {/* Warning/Info Banner */}
+            <div className="bg-blue-900/30 border border-blue-500/40 rounded-lg p-4 mb-4 flex-shrink-0">
+              <p className="text-sm text-blue-200">
+                {mode === 'batch'
+                  ? `You are about to create a PR with (${selectedFiles.size}/${files.length}) file(s).`
+                  : 'Review the file content before creating the PR.'}
+              </p>
+            </div>
+            <div className="space-y-1 overflow-y-auto">{files.map((file) => (
                 <div
                   key={file.path}
                   className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
@@ -205,8 +203,8 @@ export function PRPreviewModal({
           </div>
 
           {/* Preview Pane */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-2">
+          <div className="lg:col-span-2 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between mb-2 flex-shrink-0">
               <h3 className="text-sm font-semibold text-slate-300">
                 {editMode ? 'Edit' : 'Preview'}: {activeFileContent?.path || 'Select a file'}
               </h3>
@@ -265,7 +263,9 @@ export function PRPreviewModal({
                 </div>
               )}
             </div>
-            <div className="relative bg-slate-950 border border-slate-700 rounded-lg p-4 max-h-[600px] overflow-y-auto">
+
+            {/* Preview Pane */}
+            <div className="flex-1 overflow-y-auto bg-slate-800 rounded-lg border border-slate-700 p-4">
               {generatingAI && (
                 <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-10">
                   <div className="flex items-center gap-3 text-slate-200">
@@ -303,7 +303,7 @@ export function PRPreviewModal({
                       newContent.set(activeFile, e.target.value);
                       setEditedContent(newContent);
                     }}
-                    className="w-full h-[550px] bg-slate-900 text-slate-300 text-xs font-mono p-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500 resize-none"
+                    className="w-full h-full min-h-[400px] bg-slate-900 text-slate-300 text-xs font-mono p-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500 resize-none"
                     spellCheck={false}
                     disabled={generatingAI}
                   />
@@ -324,22 +324,19 @@ export function PRPreviewModal({
             </div>
           </div>
         </div>
-
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-700">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Cancel
-          </button>
+        <div className="flex items-right justify-between pt-4 border-t border-slate-700 flex-shrink-0">
           <div className="flex items-center gap-3">
             {mode === 'batch' && (
               <p className="text-xs text-slate-400">
                 {selectedFiles.size} file{selectedFiles.size !== 1 ? 's' : ''} selected
               </p>
             )}
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >Cancel</button>
             <button
               onClick={handleConfirm}
               disabled={loading || generatingAI || selectedFiles.size === 0}

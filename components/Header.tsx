@@ -199,11 +199,8 @@ export default function Header(props: HeaderProps = {}) {
                                         <option value="all" className="bg-slate-900 text-slate-300">Language</option>
                                         {languages.sort().map((lang) => {
                                             const colorClass = getLanguageColor(lang);
-                                            // Extract text color from the full class string
-                                            const textColorMatch = colorClass.match(/text-(\w+-\d+)/);
-                                            const textColor = textColorMatch ? textColorMatch[1] : 'slate-300';
                                             return (
-                                                <option key={lang} value={lang} className={`bg-slate-900 text-${textColor} font-semibold`}>
+                                                <option key={lang} value={lang} className={`bg-slate-900 ${colorClass} font-semibold`}>
                                                     {lang}
                                                 </option>
                                             );
@@ -365,7 +362,7 @@ export default function Header(props: HeaderProps = {}) {
                                     <span className="relative flex items-center drop-shadow-[0_0_4px_rgba(125,211,252,0.6)]">
                                         <Tag className="h-3.5 w-3.5" />
                                         <span className="w-0 group-hover/version:w-auto overflow-hidden transition-all duration-300 ease-out">
-                                            <span className="ml-1.5 whitespace-nowrap inline-block">v0.1.x</span>
+                                            <span className="ml-1.5 whitespace-nowrap inline-block">v0.1.7</span>
                                         </span>
                                     </span>
                                 </span>

@@ -10,6 +10,7 @@ type RepoMetadata = {
   language: string | null;
   topics: string[];
   homepage: string | null;
+  created_at: string;
 };
 
 // Anti-hallucination constraint for all AI prompts
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Get repo details for context
     const db = getNeonClient();
     const repoRows = await db`
-      SELECT full_name, description, language, topics, homepage
+      SELECT full_name, description, language, topics, homepage, created_at
       FROM repos
       WHERE name = ${repoName}
       LIMIT 1
@@ -571,6 +572,8 @@ Return the template with MINIMAL changes (placeholders only).${NO_HALLUCINATION_
 
     case 'license':
       console.log('[enrichTemplateWithAI] Building LICENSE prompt');
+      // Extract year from repo creation date
+      const createdYear = new Date(repo.created_at).getFullYear();
       prompt = `You are filling in placeholders in an MIT LICENSE template.
 
 ${repoInfo}
@@ -581,7 +584,7 @@ ${templateContent}
 \`\`\`
 
 Your task:
-1. Replace [year] with the current year: ${new Date().getFullYear()}
+1. Replace [year] with the repository creation year: ${createdYear}
 2. Replace [fullname] with the repository owner: ${owner}
 3. Keep ALL other license text exactly as-is - do not modify the MIT License terms
 4. Do NOT add any extra text, explanations, or markdown formatting

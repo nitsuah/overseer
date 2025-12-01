@@ -60,10 +60,11 @@ Context-aware AI prompt chaining for generating repo-specific best practice fixe
 
 **Prompt Structure**:
 
-```
+```markdown
 You are updating a README.md to add a Netlify deployment status badge.
 
 REPO CONTEXT:
+
 - Name: {repo_name}
 - Language: {language}
 
@@ -74,6 +75,7 @@ TEMPLATE SNIPPET:
 {netlify_badge_template}
 
 TASK: Insert the Netlify badge near other badges or at the top of the README.
+
 - Preserve existing formatting and style
 - Place it logically with other status badges
 - Use placeholder: [![Netlify Status](https://api.netlify.com/api/v1/badges/{SITE_ID}/deploy-status)](https://app.netlify.com/sites/{SITE_NAME}/deploys)
@@ -92,10 +94,11 @@ TASK: Insert the Netlify badge near other badges or at the top of the README.
 
 **Prompt Structure**:
 
-```
+```markdown
 You are creating a .env.example file for environment variable documentation.
 
 REPO CONTEXT:
+
 - Language: {language}
 - README mentions: {env_vars_from_readme}
 - Existing .env vars: {existing_env_vars}
@@ -104,6 +107,7 @@ TEMPLATE:
 {env_template}
 
 TASK: Create a comprehensive .env.example that:
+
 - Includes all discovered variables
 - Adds helpful comments
 - Groups related vars logically
@@ -123,10 +127,11 @@ TASK: Create a comprehensive .env.example that:
 
 **Prompt Structure**:
 
-```
+```markdown
 You are creating Docker configuration for a {language} project.
 
 REPO CONTEXT:
+
 - Language: {language}
 - README build instructions: {build_steps}
 - CONTRIBUTING setup: {contributing_setup}
@@ -136,6 +141,7 @@ TEMPLATES:
 {docker_compose_template}
 
 TASK: Generate Docker files that:
+
 - Use appropriate base image for {language}
 - Match project's build/run process
 - Include necessary dependencies
@@ -155,10 +161,11 @@ TASK: Generate Docker files that:
 
 **Prompt Structure**:
 
-```
+```markdown
 You are creating a Dependabot configuration for dependency updates.
 
 REPO CONTEXT:
+
 - Language: {language}
 - Package managers detected: {package_managers}
 - Update frequency preference: {from_contributing_or_default}
@@ -167,6 +174,7 @@ TEMPLATE:
 {dependabot_template}
 
 TASK: Generate .github/dependabot.yml that:
+
 - Configures all detected package managers
 - Sets appropriate update intervals
 - Follows repo conventions from CONTRIBUTING.md

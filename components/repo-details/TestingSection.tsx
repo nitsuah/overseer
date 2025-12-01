@@ -59,11 +59,12 @@ export function TestingSection({
   });
 
   // Hide section if no testing data at all
-  const hasTestingData = testingStatus || 
-                          (coverageScore !== undefined && coverageScore !== null && coverageScore > 0) || 
-                          (testCaseCount !== undefined && testCaseCount !== null && testCaseCount > 0) ||
-                          (testFileCount !== undefined && testFileCount !== null && testFileCount > 0) ||
-                          testingMetrics.length > 0;
+  const hasTestingData =
+    testingStatus ||
+    (coverageScore ?? 0) > 0 ||
+    (testCaseCount ?? 0) > 0 ||
+    (testFileCount ?? 0) > 0 ||
+    testingMetrics.length > 0;
   
   if (!hasTestingData) {
     return null;
@@ -128,7 +129,7 @@ export function TestingSection({
             </div>
 
             {/* Test File Count */}
-            {typeof testFileCount === 'number' && (
+            {(testFileCount ?? 0) > 0 && (
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mt-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-blue-300">Test Files</span>
@@ -138,7 +139,7 @@ export function TestingSection({
             )}
 
             {/* Test Case Count */}
-            {testCaseCount !== undefined && testCaseCount > 0 && (
+            {(testCaseCount ?? 0) > 0 && (
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-blue-300">Test Cases</span>

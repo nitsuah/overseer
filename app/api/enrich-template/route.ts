@@ -4,6 +4,14 @@ import { getNeonClient } from '@/lib/db';
 import { generateAIContent } from '@/lib/ai';
 import logger from '@/lib/log';
 
+type RepoMetadata = {
+  full_name: string;
+  description: string | null;
+  language: string | null;
+  topics: string[];
+  homepage: string | null;
+};
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -105,7 +113,7 @@ function mapDocType(input: string): string {
 async function enrichTemplateWithAI(
   docType: string,
   templateContent: string,
-  repo: { full_name: string; description: string | null; language: string | null; topics: string[]; homepage: string | null }
+  repo: RepoMetadata
 ): Promise<string> {
   console.log('[enrichTemplateWithAI] Starting enrichment for docType:', docType);
   const type = mapDocType(docType);

@@ -1,6 +1,6 @@
 # Overseer Feature Audit
 
-Last Updated: November 30, 2025
+Last Updated: December 1, 2025
 
 ## Summary
 
@@ -12,30 +12,11 @@ Documentation and implementation are aligned across the project. Key validations
 - Centralized server-side logging via `lib/log.ts`; server routes and scripts use `logger` consistently.
 - `.env.template` exists and is referenced in README and CONTRIBUTING; Dependabot and Docker are configured;
 - ⚠️ Deploy Badge in README includes Netlify badge section but needs ability to update existing if present.
-- METRICS reflect current test suite: 4 test files, 8 tests; coverage is self-reported via METRICS.md.
+- METRICS reflect current test suite: 7 test files, 12 tests; coverage is self-reported via METRICS.md.
+- **Security Enhancement**: Markdown rendering now uses react-markdown with rehype-sanitize plugin for XSS protection ✅
+- **Authentication UI**: Sync All button restricted to authenticated users only ✅
 
-## Recent Improvements (November 27, 2025)
-
-**Phase 5 Complete** - Bug Fixes & Debugging Tools:
-
-- ✅ **Coverage Sync Bug** - Fixed coverage_score always updating to NULL when no coverage (prevents stale values)
-- ✅ **Batch Sync Coverage** - Added coverage extraction to sync-repos endpoint (was missing)
-- ✅ **Metrics Parser Enhancement** - Normalize percentage formats (0.8666 → 86.66%, 86.66% stays 86.66)
-- ✅ **Testing Display Improvements** - Separate metric values from long descriptions with detail text
-- ✅ **Rate Limit Detection** - Created /api/github-rate-limit endpoint for monitoring API usage
-- ✅ **Debug Endpoint** - Created /api/repos/[name]/debug for database inspection and troubleshooting
-- ✅ **Template Content Pollution Fix** - Identified that template instructions can be parsed as metrics
-
-**Phase 4 Complete** - OAuth Error Handling & UX Improvements:
-
-- ✅ **OAuth Error Detection** - Created lib/github-errors.ts to parse and classify GitHub API errors (5 types)
-- ✅ **Organization Access Restrictions** - Detects when orgs block OAuth app access with user-friendly messaging
-- ✅ **Auto-Redirect to Authorization** - Opens GitHub OAuth settings page when restrictions detected
-- ✅ **Enhanced Error Responses** - API endpoints return structured error details with actionable instructions
-- ✅ **Frontend Error Handling** - useRepoActions hook shows toast notifications and console guidance
-- ✅ **OAuth Documentation** - Created comprehensive user guides (GITHUB_OAUTH_ORG_ACCESS.md, OAUTH_ORG_FIX_SUMMARY.md)
-- ✅ **Template Path Debugging** - Added logging to fix-doc endpoint for troubleshooting template resolution
-- ✅ **UX Roadmap Planning** - Identified need for modal preview before PR creation with pick-and-choose functionality
+_For historical improvements and version history, see CHANGELOG.md._
 
 ## Feature Detection & Display Matrix
 

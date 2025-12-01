@@ -84,6 +84,28 @@
 - **Vulnerability Warnings**: Color-coded severity indicators (red for critical, orange for high)
 - **Always-Visible Refresh**: Repository Stats header includes refresh button for immediate sync access
 - **Expandable Cards**: Collapsible quarter/subsection cards with show more/less controls
+- **Profile Section Compass Rose**: Pills positioned at NW, W, SW with rotating glow backdrop on profile picture
+- **Dynamic Text Expansion**: Right-to-left pill text reveal (icon first, text expands left) with origin-right scaling
+- **Responsive Card Width**: Profile card optimized with conditional padding (`pr-2` collapsed, `pr-16` on hover)
+- **Color-Coded Filter Dropdowns**: Purple Type, Blue Language, Fuchsia Fork borders with 60% opacity and subtle shadows
+- **Enhanced Filter Visibility**: Lighter backgrounds (`bg-slate-700/60`) vs darker panel selector for better contrast
+- **Clickable Repository Names**: Direct GitHub links in table rows with hover underline styling
+- **Organized Button Layout**: GitHub in Stats, Play in Health, Refresh/Remove in Actions columns
+- **Green Play Button**: Homepage/demo links with filled Play icon in Health column after shields
+- **Purple GitHub Button**: GitHub repo links in Repository Stats section header with consistent theming
+- **Authenticated Controls**: Sync all button restricted to logged-in users only
+- **Optimized Table Structure**: 5-column layout with colspan adjustments for expanded detail rows
+- **Status Icon Preservation**: PRs, Issues, Vulnerabilities, CI/CD icons retained without column header
+
+### 🔒 Security & Content Safety
+
+- **Markdown Sanitization**: `react-markdown` with `rehype-sanitize` plugin for XSS protection
+- **Battle-Tested Rendering**: Replaced custom HTML injection with industry-standard markdown library
+- **GitHub Flavored Markdown**: Full support for tables, task lists, strikethrough, autolinks via `remark-gfm`
+- **Link Security**: All external links include `rel="noopener noreferrer"` attribute
+- **Event Isolation**: Button clicks use `stopPropagation` to prevent unintended interactions
+- **Custom Component Renderers**: Tailwind-styled markdown elements with consistent slate color scheme
+- **Dependency Hygiene**: Removed unused `baseline-browser-mapping` to reduce attack surface
 
 ### 🔄 Synchronization
 

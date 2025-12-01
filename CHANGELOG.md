@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2025-12-01
+
+### Added
+
+- **Profile Section Redesign:** Compass rose pill layout (NW, W, SW positions) with rotating glow animation on profile picture
+- **Pill Text Expansion:** Right-to-left text expansion (icon first, text appears left) with origin-right scaling
+- **Profile Card Width Optimization:** Dynamic padding (`pr-2` collapsed, `pr-16` on hover) for compact default state
+- **Filter Dropdown Enhancement:** Colored borders with subtle glows (purple Type, blue Language, fuchsia Fork) for better visual hierarchy
+- **Filter Visibility Improvements:** Lighter backgrounds (`bg-slate-700/60`) and increased opacity for better contrast
+- **Repository Table Reorganization:** Optimized button placement across Health, Actions columns
+- **Clickable Repository Names:** Repository names now link directly to GitHub with hover underline
+- **GitHub Link in Stats Section:** Added purple-themed GitHub button to Repository Stats header
+- **Play Button in Health Column:** Homepage/demo links now appear as green play button after health shields
+- **Refresh Button in Actions:** Moved from Links column to Actions column for better organization
+- **Authenticated Sync Button:** Sync all button now only appears when user is authenticated
+- **Table Column Cleanup:** Removed redundant Links column header while preserving status icons
+
+### Changed
+
+- **Markdown Rendering Security:** Replaced custom `dangerouslySetInnerHTML` implementation with battle-tested `react-markdown` library
+- **HTML Sanitization:** Integrated `rehype-sanitize` plugin for XSS protection in markdown preview
+- **GitHub Flavored Markdown:** Added `remark-gfm` support for tables, task lists, strikethrough, and autolinks
+- **Dependency Cleanup:** Removed unused `baseline-browser-mapping` package from devDependencies
+- **Filter Styling:** Dropdowns now use colored borders at 60% opacity with softer shadows on hover
+- **Card Padding:** Profile card optimized from `pr-16` → `pr-4` → `pr-2` when collapsed for space reclamation
+- **Button Distribution:** Health column now hosts play button, Actions column hosts refresh/remove buttons
+- **ColSpan Adjustment:** Updated table colspan from 8 → 7 → 5 to match actual visible column count
+
+### Fixed
+
+- **XSS Vulnerability:** Eliminated unsafe HTML injection risk in markdown preview component
+- **Build Errors:** Resolved multiple missing JSX closing tags in Actions column flex containers
+- **Duplicate Buttons:** Removed duplicate play button instances during button reorganization
+- **TypeScript Errors:** Fixed className prop issue in ReactMarkdown component by wrapping in div
+- **Baseline Browser Mapping Warning:** Eliminated deprecation warnings by removing unused dependency
+
+### Security
+
+- **Markdown Content Safety:** All user-generated markdown now passes through `rehype-sanitize` before rendering
+- **Link Security:** All external links include `rel="noopener noreferrer"` for security
+- **Event Propagation:** Added `stopPropagation` to prevent unintended row expansion on button clicks
+
 ## [1.5.0] - 2025-11-30
 
 ### Added

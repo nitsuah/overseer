@@ -10,9 +10,20 @@ _No tasks currently in progress._
 
 ## Todo
 
+### PR #16 Feedback (Copilot AI Review)
+
+- [ ] **Fix Dynamic Tailwind Classes in Header.tsx** - Lines 202-206: `text-${textColor}` won't work with JIT compiler, needs color mapping or inline styles
+- [ ] **Extract Gemini Model to Constant** - Hardcoded 'gemini-2.0-flash-exp' in 3 places in lib/ai.ts, use the get models output to define @latest (lines 20, 92, 151)
+- [ ] **Add failover for GenAI** with multiple model providers (like claude, gpt-4) for redundancy and add switcher to user profile section
+- [ ] **Refactor TestingSection Null Checks** - Verbose null/undefined checks could use helper function or nullish coalescing
+- [ ] **Consider LICENSE Year Logic** - Use repo creation year instead of current year for copyright notices
+
+## Todo
+
 ### Phase 8: Performance & Rate Limiting
 
 - [ ] Implement smart caching for GitHub API calls using content_hash from doc_status
+- [ ] **Improve Error Handling in GitHub API Client** - Standardize error messages and logging in lib/github.ts
 - [ ] Add ETag support to skip unchanged file fetches
 - [ ] Add delay batching between repos during sync to reduce rate limit pressure
 - [ ] Display rate limit status in UI with warning when approaching limits

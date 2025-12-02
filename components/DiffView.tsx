@@ -105,7 +105,7 @@ export function DiffView({ original, modified, filename }: DiffViewProps) {
               <span className="select-none inline-block w-4">
                 {line.type === 'add' ? '+' : line.type === 'remove' ? '-' : ' '}
               </span>
-              <span className="whitespace-pre">{line.content || ' '}</span>
+              <span className="whitespace-pre-wrap break-all">{line.content || ' '}</span>
             </div>
           );
         })}
@@ -124,7 +124,8 @@ function computeDiff(original: string, modified: string): DiffLine[] {
   const modifiedLines = modified.split('\n');
   
   // Use Myers diff algorithm (LCS-based)
-  const lcs = computeLCS(originalLines, modifiedLines);
+  // Set ignoreWhitespace to true to treat lines with only whitespace differences as unchanged
+  const lcs = computeLCS(originalLines, modifiedLines, true);
   const diff: DiffLine[] = [];
   
   let oi = 0, mi = 0;
@@ -199,13 +200,25 @@ function computeDiff(original: string, modified: string): DiffLine[] {
   return collapseContext(diff);
 }
 
-function computeLCS(a: string[], b: string[]): Array<{ oldIdx: number; newIdx: number }> {
+/**
+ * Computes the Longest Common Subsequence (LCS) between two arrays of strings.
+ * Optionally ignores whitespace differences by trimming lines before comparison.
+ * Note: When ignoreWhitespace is true, whitespace-only changes will be treated as unchanged.
+ * @param a - The first array of lines.
+ * @param b - The second array of lines.
+ * @param ignoreWhitespace - If true, trims lines before comparison. Default: false.
+ */
+function computeLCS(
+  a: string[],
+  b: string[],
+  ignoreWhitespace: boolean = false
+): Array<{ oldIdx: number; newIdx: number }> {
   const m = a.length;
   const n = b.length;
   
-  // Normalize lines for comparison (trim whitespace)
-  const aNorm = a.map(line => line.trim());
-  const bNorm = b.map(line => line.trim());
+  // Normalize lines for comparison if requested
+  const aNorm = ignoreWhitespace ? a.map(line => line.trim()) : a;
+  const bNorm = ignoreWhitespace ? b.map(line => line.trim()) : b;
   
   const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
   

@@ -325,7 +325,7 @@ export function PRPreviewModal({
           </div>
         </div>
         {/* Action Buttons */}
-        <div className="flex items-right justify-between pt-4 border-t border-slate-700 flex-shrink-0">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-700 flex-shrink-0">
           <div className="flex items-center gap-3">
             {mode === 'batch' && (
               <p className="text-xs text-slate-400">

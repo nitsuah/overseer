@@ -6,7 +6,7 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ## In Progress
 
-_No tasks currently in progress._
+- [ ] Fix Modal content/markdown view and DiffView overflow issues (ScrollPane adjustments made doesnt work, edit mode is perfect)
 
 ## Todo
 

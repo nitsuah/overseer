@@ -30,7 +30,7 @@ export function DiffView({ original, modified, filename }: DiffViewProps) {
   };
 
   return (
-    <div className="font-mono text-xs">
+    <div className="font-mono text-xs w-full overflow-x-auto">
       {/* Diff header */}
       <div className="bg-slate-800 border-b border-slate-600 px-2 py-1 text-slate-400">
         <div>diff --git a/{filename} b/{filename}</div>
@@ -105,7 +105,7 @@ export function DiffView({ original, modified, filename }: DiffViewProps) {
               <span className="select-none inline-block w-4">
                 {line.type === 'add' ? '+' : line.type === 'remove' ? '-' : ' '}
               </span>
-              <span className="whitespace-pre-wrap break-all">{line.content || ' '}</span>
+              <span className="whitespace-pre">{line.content || ' '}</span>
             </div>
           );
         })}

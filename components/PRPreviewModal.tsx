@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { MarkdownPreview } from './MarkdownPreview';
 import { YAMLPreview } from './YAMLPreview';
 import { DiffView } from './DiffView';
+import { ScrollPane } from './ScrollPane';
 
 interface FilePreview {
   path: string;
@@ -130,11 +131,13 @@ export function PRPreviewModal({
         // After AI generate, show the diff view to highlight changes
         setDiffView(true);
       } else {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
         console.error('Failed to generate AI enrichment:', res.status, errorData);
+        alert(`AI generation failed: ${errorData.error || res.statusText || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('AI generation error:', error);
+      console.error('Error during AI generation:', error);
+      alert(`Error during AI generation: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setGeneratingAI(false);
     }
@@ -150,7 +153,7 @@ export function PRPreviewModal({
       size="6xl"
     >
       <div className="flex flex-col h-full">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 overflow-hidden min-h-0">
           {/* File List */}
           <div className="lg:col-span-1 flex flex-col overflow-hidden">
             <h3 className="text-sm font-semibold text-slate-300 mb-2 flex-shrink-0">
@@ -203,7 +206,7 @@ export function PRPreviewModal({
           </div>
 
           {/* Preview Pane */}
-          <div className="lg:col-span-2 flex flex-col overflow-hidden">
+          <div className="lg:col-span-2 flex flex-col overflow-hidden min-h-0 h-full">
             <div className="flex items-center justify-between mb-2 flex-shrink-0">
               <h3 className="text-sm font-semibold text-slate-300">
                 {editMode ? 'Edit' : 'Preview'}: {activeFileContent?.path || 'Select a file'}
@@ -265,7 +268,7 @@ export function PRPreviewModal({
             </div>
 
             {/* Preview Pane */}
-            <div className="flex-1 overflow-y-auto bg-slate-800 rounded-lg border border-slate-700 p-4">
+            <div className="flex-1 min-h-0 overflow-hidden bg-slate-800 rounded-lg border border-slate-700 p-4 relative flex flex-col">
               {generatingAI && (
                 <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-10">
                   <div className="flex items-center gap-3 text-slate-200">
@@ -286,12 +289,14 @@ export function PRPreviewModal({
                       isSame,
                     });
                     return (
-                      <DiffView
-                        key={`${activeFile}-${renderKey}-diff`}
-                        original={activeFileContent.content}
-                        modified={modifiedContent}
-                        filename={activeFile}
-                      />
+                      <ScrollPane className="flex flex-col">
+                        <DiffView
+                          key={`${activeFile}-${renderKey}-diff`}
+                          original={activeFileContent.content}
+                          modified={modifiedContent}
+                          filename={activeFile}
+                        />
+                      </ScrollPane>
                     );
                   })()
                 ) : editMode ? (
@@ -303,20 +308,26 @@ export function PRPreviewModal({
                       newContent.set(activeFile, e.target.value);
                       setEditedContent(newContent);
                     }}
-                    className="w-full h-full min-h-[400px] bg-slate-900 text-slate-300 text-xs font-mono p-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500 resize-none"
+                    className="w-full h-full min-h-[400px] bg-slate-900 text-slate-300 text-xs font-mono p-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500 resize-none overflow-auto"
                     spellCheck={false}
                     disabled={generatingAI}
                   />
                 ) : activeFile.endsWith('.md') || !activeFile.includes('.') || activeFile.split('/').pop()?.indexOf('.') === -1 ? (
-                  <div key={`${activeFile}-${renderKey}`} className="prose prose-invert prose-sm max-w-none">
-                    <MarkdownPreview content={editedContent.get(activeFile) || ''} />
-                  </div>
+                  <ScrollPane className="flex flex-col">
+                    <div key={`${activeFile}-${renderKey}`} className="prose prose-invert prose-sm max-w-none">
+                      <MarkdownPreview content={editedContent.get(activeFile) || ''} />
+                    </div>
+                  </ScrollPane>
                 ) : activeFile.endsWith('.yml') || activeFile.endsWith('.yaml') ? (
-                  <YAMLPreview key={`${activeFile}-${renderKey}`} content={editedContent.get(activeFile) || ''} />
+                  <ScrollPane className="flex flex-col">
+                    <YAMLPreview key={`${activeFile}-${renderKey}`} content={editedContent.get(activeFile) || ''} />
+                  </ScrollPane>
                 ) : (
-                  <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">
-                    {editedContent.get(activeFile)}
-                  </pre>
+                  <ScrollPane className="flex flex-col">
+                    <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">
+                      {editedContent.get(activeFile)}
+                    </pre>
+                  </ScrollPane>
                 )
               ) : (
                 <p className="text-sm text-slate-500 italic">No file selected</p>
@@ -325,7 +336,7 @@ export function PRPreviewModal({
           </div>
         </div>
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-700 flex-shrink-0">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-700 shrink-0">
           <div className="flex items-center gap-3">
             {mode === 'batch' && (
               <p className="text-xs text-slate-400">

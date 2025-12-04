@@ -13,6 +13,95 @@ interface DiffLine {
   hiddenLines?: DiffLine[]; // For expandable context headers
 }
 
+// Helper function to find character-level differences between two strings
+function getInlineChanges(oldStr: string, newStr: string): { oldParts: Array<{text: string, changed: boolean}>, newParts: Array<{text: string, changed: boolean}> } {
+  const oldParts: Array<{text: string, changed: boolean}> = [];
+  const newParts: Array<{text: string, changed: boolean}> = [];
+  
+  let i = 0, j = 0;
+  const oldLen = oldStr.length;
+  const newLen = newStr.length;
+  
+  // Find common prefix
+  while (i < oldLen && j < newLen && oldStr[i] === newStr[j]) {
+    i++;
+    j++;
+  }
+  const prefix = oldStr.substring(0, i);
+  
+  // Find common suffix
+  let oldEnd = oldLen;
+  let newEnd = newLen;
+  while (oldEnd > i && newEnd > j && oldStr[oldEnd - 1] === newStr[newEnd - 1]) {
+    oldEnd--;
+    newEnd--;
+  }
+  const suffix = oldStr.substring(oldEnd);
+  
+  // Extract changed parts
+  const oldChanged = oldStr.substring(i, oldEnd);
+  const newChanged = newStr.substring(j, newEnd);
+  
+  // Build old parts
+  if (prefix) oldParts.push({text: prefix, changed: false});
+  if (oldChanged) oldParts.push({text: oldChanged, changed: true});
+  if (suffix) oldParts.push({text: suffix, changed: false});
+  
+  // Build new parts
+  if (prefix) newParts.push({text: prefix, changed: false});
+  if (newChanged) newParts.push({text: newChanged, changed: true});
+  if (suffix) newParts.push({text: suffix, changed: false});
+  
+  return { oldParts, newParts };
+}
+
+function highlightInlineChanges(content: string, type: 'add' | 'remove', allLines: DiffLine[], currentIdx: number) {
+  // Find the corresponding line of opposite type (for replacements)
+  let oppositeContent = '';
+  let hasOpposite = false;
+  
+  if (type === 'remove') {
+    // Look for the next add line (must be immediately after, not separated by context)
+    if (currentIdx + 1 < allLines.length && allLines[currentIdx + 1].type === 'add') {
+      oppositeContent = allLines[currentIdx + 1].content || '';
+      hasOpposite = true;
+    }
+  } else if (type === 'add') {
+    // Look for the previous remove line (must be immediately before)
+    if (currentIdx > 0 && allLines[currentIdx - 1].type === 'remove') {
+      oppositeContent = allLines[currentIdx - 1].content || '';
+      hasOpposite = true;
+    }
+  }
+  
+  // If no opposite line (pure addition or deletion), just return plain content
+  if (!hasOpposite) {
+    return content;
+  }
+  
+  // For replacements, highlight the changed characters
+  const { oldParts, newParts } = getInlineChanges(
+    type === 'remove' ? content : oppositeContent,
+    type === 'add' ? content : oppositeContent
+  );
+  
+  const parts = type === 'remove' ? oldParts : newParts;
+  
+  return (
+    <>
+      {parts.map((part, idx) => 
+        part.changed ? (
+          <span key={idx} className={type === 'remove' ? 'bg-red-600/50' : 'bg-green-600/50'}>
+            {part.text}
+          </span>
+        ) : (
+          <span key={idx}>{part.text}</span>
+        )
+      )}
+    </>
+  );
+}
+
 export function DiffView({ original, modified, filename }: DiffViewProps) {
   const diffLines = computeDiff(original, modified);
   const [expandedSections, setExpandedSections] = React.useState<Set<number>>(new Set());
@@ -73,7 +162,7 @@ export function DiffView({ original, modified, filename }: DiffViewProps) {
                       )}
                     </span>
                     <span className="select-none inline-block w-4"> </span>
-                    <span className="whitespace-pre">{hiddenLine.content || ' '}</span>
+                    <span className="whitespace-pre-wrap break-all">{hiddenLine.content || ' '}</span>
                   </div>
                 ))}
               </React.Fragment>
@@ -105,7 +194,13 @@ export function DiffView({ original, modified, filename }: DiffViewProps) {
               <span className="select-none inline-block w-4">
                 {line.type === 'add' ? '+' : line.type === 'remove' ? '-' : ' '}
               </span>
-              <span className="whitespace-pre">{line.content || ' '}</span>
+              {line.type === 'add' || line.type === 'remove' ? (
+                <span className="whitespace-pre-wrap break-all">
+                  {highlightInlineChanges(line.content || '', line.type, diffLines, idx)}
+                </span>
+              ) : (
+                <span className="whitespace-pre-wrap break-all">{line.content || ' '}</span>
+              )}
             </div>
           );
         })}

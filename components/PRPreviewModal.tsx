@@ -257,9 +257,9 @@ export function PRPreviewModal({
                 </div>
               )}
             </div>
-            <div className="relative bg-slate-950 border border-slate-700 rounded-lg p-4 max-h-[600px] overflow-y-auto">
+            <div className={`relative bg-slate-950 border border-slate-700 rounded-lg p-4 max-h-[600px] ${generatingAI ? 'overflow-hidden' : 'overflow-y-auto'}`}>
               {generatingAI && (
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-10">
+                <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
                   <div className="flex items-center gap-3 text-slate-200">
                     <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
                     <span className="text-xs">Generating AI content...</span>

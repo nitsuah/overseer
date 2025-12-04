@@ -7,10 +7,12 @@ interface DiffViewProps {
 }
 
 interface DiffLine {
-  type: 'add' | 'remove' | 'context' | 'header';
+  type: 'add' | 'remove' | 'context' | 'header' | 'modified';
   content: string;
   lineNum?: { old?: number; new?: number };
-  hiddenLines?: DiffLine[]; // For expandable context headers
+  hiddenLines?: DiffLine[];
+  oldContent?: string; // For modified lines, store both old and new
+  newContent?: string;
 }
 
 // Helper function to find character-level differences between two strings
@@ -91,12 +93,48 @@ function highlightInlineChanges(content: string, type: 'add' | 'remove', allLine
     <>
       {parts.map((part, idx) => 
         part.changed ? (
-          <span key={idx} className={type === 'remove' ? 'bg-red-600/50' : 'bg-green-600/50'}>
+          <span 
+            key={idx} 
+            className={type === 'remove' ? 'bg-red-900/20 line-through opacity-70' : 'bg-green-900/20 font-medium'}
+          >
             {part.text}
           </span>
         ) : (
           <span key={idx}>{part.text}</span>
         )
+      )}
+    </>
+  );
+}
+
+/**
+ * Renders a modified line showing inline deletions and additions.
+ * Uses the same character-level diff algorithm to show what changed.
+ */
+function renderModifiedLine(oldContent: string, newContent: string): React.ReactNode {
+  const { oldParts, newParts } = getInlineChanges(oldContent, newContent);
+  
+  // Combine old (with strikethrough) and new (with highlight) parts
+  // Show new parts first, then strikethrough old parts after
+  return (
+    <>
+      {newParts.map((part, idx) => (
+        <span 
+          key={`new-${idx}`} 
+          className={part.changed ? 'bg-green-900/20 font-medium' : ''}
+        >
+          {part.text}
+        </span>
+      ))}
+      {oldParts.map((part, idx) => 
+        part.changed ? (
+          <span 
+            key={`old-${idx}`} 
+            className="bg-red-900/20 text-red-300 line-through opacity-70"
+          >
+            {part.text}
+          </span>
+        ) : null // Don't show unchanged parts from old
       )}
     </>
   );
@@ -177,6 +215,8 @@ export function DiffView({ original, modified, filename }: DiffViewProps) {
                   ? 'bg-green-900/30 text-green-300'
                   : line.type === 'remove'
                   ? 'bg-red-900/30 text-red-300'
+                  : line.type === 'modified'
+                  ? 'bg-green-900/30 text-green-300'
                   : line.type === 'header'
                   ? 'bg-blue-900/30 text-blue-300'
                   : 'text-slate-400'
@@ -192,9 +232,13 @@ export function DiffView({ original, modified, filename }: DiffViewProps) {
                 )}
               </span>
               <span className="select-none inline-block w-4">
-                {line.type === 'add' ? '+' : line.type === 'remove' ? '-' : ' '}
+                {line.type === 'add' ? '+' : line.type === 'remove' ? '-' : line.type === 'modified' ? '+' : ' '}
               </span>
-              {line.type === 'add' || line.type === 'remove' ? (
+              {line.type === 'modified' ? (
+                <span className="whitespace-pre-wrap break-all">
+                  {renderModifiedLine(line.oldContent || '', line.newContent || '')}
+                </span>
+              ) : line.type === 'add' || line.type === 'remove' ? (
                 <span className="whitespace-pre-wrap break-all">
                   {highlightInlineChanges(line.content || '', line.type, diffLines, idx)}
                 </span>
@@ -282,8 +326,20 @@ function computeDiff(original: string, modified: string): DiffLine[] {
               new: addLine.lineNum?.new 
             },
           });
+        } else if (removeLine && addLine) {
+          // Both exist but differ - create a modified line for inline diff
+          diff.push({
+            type: 'modified',
+            content: addLine.content, // Use new content as primary
+            oldContent: removeLine.content,
+            newContent: addLine.content,
+            lineNum: { 
+              old: removeLine.lineNum?.old, 
+              new: addLine.lineNum?.new 
+            },
+          });
         } else {
-          // Show as actual changes
+          // Only one exists - show as pure add or remove
           if (removeLine) diff.push(removeLine);
           if (addLine) diff.push(addLine);
         }

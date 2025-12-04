@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [showAddRepo, setShowAddRepo] = useState(false);
   const [addRepoUrl, setAddRepoUrl] = useState('');
   const [addRepoType, setAddRepoType] = useState<RepoType>('unknown');
+  const [expandedHealth, setExpandedHealth] = useState(false);
 
   const {
     addingRepo,
@@ -181,6 +182,8 @@ export default function Dashboard() {
                     syncingRepo={syncingRepo}
                     generatingSummary={generatingSummary}
                     isAuthenticated={!!session}
+                    expandedHealth={expandedHealth}
+                    onToggleHealth={() => setExpandedHealth(!expandedHealth)}
                     onToggleExpanded={() => handleToggleExpanded(repo.name)}
                     onRemove={() => handleRemoveRepo(repo.name)}
                     onFixAllDocs={() => handleFixAllDocs(repo.name)}

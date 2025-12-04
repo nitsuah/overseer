@@ -130,11 +130,13 @@ export function PRPreviewModal({
         // After AI generate, show the diff view to highlight changes
         setDiffView(true);
       } else {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
         console.error('Failed to generate AI enrichment:', res.status, errorData);
+        alert(`AI generation failed: ${errorData.error || res.statusText || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('AI generation error:', error);
+      console.error('Error during AI generation:', error);
+      alert(`Error during AI generation: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setGeneratingAI(false);
     }
@@ -149,24 +151,14 @@ export function PRPreviewModal({
       title={`Preview PR for ${repoName}`}
       size="6xl"
     >
-      <div className="space-y-4">
-        {/* Warning/Info Banner */}
-        <div className="bg-blue-900/30 border border-blue-500/40 rounded-lg p-4">
-          <p className="text-sm text-blue-200">
-            {mode === 'batch'
-              ? `You are about to create a PR with ${files.length} file(s). Review and select which files to include.`
-              : 'Review the file content before creating the PR.'}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="flex flex-col h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
           {/* File List */}
           <div className="lg:col-span-1 space-y-2">
             <h3 className="text-sm font-semibold text-slate-300 mb-2">
               Files to Add ({selectedFiles.size}/{files.length})
             </h3>
-            <div className="space-y-1 max-h-96 overflow-y-auto">
-              {files.map((file) => (
+            <div className="space-y-1 max-h-[calc(90vh-220px)] overflow-y-auto">{files.map((file) => (
                 <div
                   key={file.path}
                   className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
@@ -255,7 +247,7 @@ export function PRPreviewModal({
                     }}
                     disabled={generatingAI}
                     className={`px-2 py-1 ${
-                      editMode 
+                      editMode
                         ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                         : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
                     } rounded text-xs font-medium transition-colors`}
@@ -265,9 +257,9 @@ export function PRPreviewModal({
                 </div>
               )}
             </div>
-            <div className="relative bg-slate-950 border border-slate-700 rounded-lg p-4 max-h-[600px] overflow-y-auto">
+            <div className={`relative bg-slate-950 border border-slate-700 rounded-lg p-4 max-h-[600px] ${generatingAI ? 'overflow-hidden' : 'overflow-y-auto'}`}>
               {generatingAI && (
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-10">
+                <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
                   <div className="flex items-center gap-3 text-slate-200">
                     <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
                     <span className="text-xs">Generating AI content...</span>
@@ -324,22 +316,28 @@ export function PRPreviewModal({
             </div>
           </div>
         </div>
-
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-700">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Cancel
-          </button>
+        <div className="flex items-center justify-between pt-4 border-t border-slate-700 flex-shrink-0">
           <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
             {mode === 'batch' && (
               <p className="text-xs text-slate-400">
                 {selectedFiles.size} file{selectedFiles.size !== 1 ? 's' : ''} selected
               </p>
             )}
+          </div>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-blue-300">
+              {mode === 'batch'
+                ? 'Review and select files to include'
+                : 'Review the file content'}
+            </p>
             <button
               onClick={handleConfirm}
               disabled={loading || generatingAI || selectedFiles.size === 0}

@@ -2,11 +2,11 @@
 
 ## Done
 
+- [x] Fix Modal content/markdown view and DiffView overflow issues
+
 _For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._
 
 ## In Progress
-
-_No tasks currently in progress._
 
 ## Todo
 

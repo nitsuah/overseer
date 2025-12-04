@@ -11,9 +11,11 @@ interface HealthBreakdownProps {
   repo: Repo;
   details: RepoDetails;
   health: { grade: string; color: string };
+  expanded: boolean;
+  onToggle: () => void;
 }
 
-export function HealthBreakdown({ repo, details, health }: HealthBreakdownProps) {
+export function HealthBreakdown({ repo, details, health, expanded, onToggle }: HealthBreakdownProps) {
   const [showPopup, setShowPopup] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const spanRef = React.useRef<HTMLSpanElement>(null);
@@ -135,7 +137,12 @@ export function HealthBreakdown({ repo, details, health }: HealthBreakdownProps)
         ref={spanRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`text-lg font-bold ${health.color} cursor-help`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        className={`text-lg font-bold ${health.color} cursor-pointer hover:opacity-80 transition-opacity`}
+        title="Click to toggle health details"
       >
         {health.grade}
       </span>

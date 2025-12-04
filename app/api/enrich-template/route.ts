@@ -92,6 +92,7 @@ function mapDocType(input: string): string {
     '.github/codeowners': 'codeowners',
     'code_of_conduct': 'code_of_conduct',
     'code_of_conduct.md': 'code_of_conduct',
+    'issue_template': 'bug_report',
     'issue_templates': 'issue_templates',
     '.github/issue_template/': 'issue_templates',
     'bug_report': 'bug_report',

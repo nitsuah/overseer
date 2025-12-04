@@ -42,6 +42,8 @@ interface RepoTableRowProps {
   syncingRepo: string | null;
   generatingSummary: string | null;
   isAuthenticated?: boolean;
+  expandedHealth: boolean;
+  onToggleHealth: () => void;
   onToggleExpanded: () => void;
   onRemove: () => void;
   onFixAllDocs: () => void;
@@ -62,6 +64,8 @@ export function RepoTableRow({
   syncingRepo,
   generatingSummary,
   isAuthenticated = true,
+  expandedHealth,
+  onToggleHealth,
   onToggleExpanded,
   onRemove,
   onFixAllDocs,
@@ -73,6 +77,7 @@ export function RepoTableRow({
   onGenerateSummary,
   onSyncSingleRepo,
 }: RepoTableRowProps) {
+  
   // Centralized repo type resolution - use stored type or detect from metadata
   const getRepoType = (): RepoType => {
     if (repo.repo_type) {
@@ -193,8 +198,16 @@ export function RepoTableRow({
         <td className="px-6 py-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              {details && <HealthBreakdown repo={repo} details={details} health={health} />}
               {details && (
+                <HealthBreakdown 
+                  repo={repo} 
+                  details={details} 
+                  health={health}
+                  expanded={expandedHealth}
+                  onToggle={onToggleHealth}
+                />
+              )}
+              {details && expandedHealth && (
                 <>
                   {/* Health Shields */}
                   <HealthShields details={details} repo={repo} docHealth={docHealth} />

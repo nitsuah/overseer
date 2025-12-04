@@ -2,11 +2,11 @@
 
 ## Done
 
+- [x] Fix Modal content/markdown view and DiffView overflow issues
+
 _For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._
 
 ## In Progress
-
-- [ ] Fix Modal content/markdown view and DiffView overflow issues (ScrollPane adjustments made doesnt work, edit mode is perfect)
 
 ## Todo
 

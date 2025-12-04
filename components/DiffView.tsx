@@ -105,7 +105,7 @@ export function DiffView({ original, modified, filename }: DiffViewProps) {
               <span className="select-none inline-block w-4">
                 {line.type === 'add' ? '+' : line.type === 'remove' ? '-' : ' '}
               </span>
-              <span className="whitespace-pre">{line.content || ' '}</span>
+              <span className="whitespace-pre-wrap break-words">{line.content || ' '}</span>
             </div>
           );
         })}

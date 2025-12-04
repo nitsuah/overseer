@@ -163,7 +163,7 @@ export function PRPreviewModal({
             <div className="bg-blue-900/30 border border-blue-500/40 rounded-lg p-4 mb-4 flex-shrink-0">
               <p className="text-sm text-blue-200">
                 {mode === 'batch'
-                  ? `You are about to create a PR with (${selectedFiles.size}/${files.length}) file(s).`
+                  ? `You are about to create a PR with ${selectedFiles.size}/${files.length} file(s).`
                   : 'Review the file content before creating the PR.'}
               </p>
             </div>

@@ -70,9 +70,9 @@ This guarantees the body consumes remaining space without pushing the footer off
 
 ## Example Class Stack (Preview Column)
 
-```
+```js
 <div class="flex flex-col h-full min-h-0">
-  <div class="flex items-center justify-between flex-shrink-0">...actions...</div>
+  <div class="flex items-center justify-between shrink-0">...actions...</div>
   <div class="flex-1 min-h-0 h-[calc(90vh-180px)] overflow-hidden bg-slate-800 rounded border flex flex-col">
     <!-- Non-edit -->
     <div class="h-full min-h-0 overflow-y-auto"> ...content component... </div>

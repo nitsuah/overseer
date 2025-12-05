@@ -96,11 +96,10 @@ export function TasksSection({ tasks, isExpanded: isExpandedProp, onToggleExpand
   const displayedSubsections = (showAllTodo || showDone) ? subsections : subsections.slice(0, 1);
 
   return (
-    <div className="bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-blue-800/20 rounded-lg overflow-hidden border border-blue-500/40 shadow-lg shadow-blue-500/10 hover:border-blue-400/50 transition-colors">
+    <div className="bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-blue-800/20 rounded-lg overflow-hidden border border-blue-500/40 shadow-lg shadow-blue-500/10 hover:border-blue-400/50 transition-colors" data-tour="tasks-section">
       <div
         onClick={setIsMainExpanded}
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-purple-900/20 transition-colors cursor-pointer"
-        data-tour="tasks-section"
       >
         <div className="flex items-center gap-2">
           <ListTodo className="h-4 w-4 text-blue-400" />

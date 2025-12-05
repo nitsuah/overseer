@@ -5,8 +5,9 @@
 - [ ] **Agent Task Queue:** API endpoint for autonomous AI agents to submit tasks
 - [ ] **Workflow Visualization:** Screen showing branching/execution paths for complex actions
 - [ ] **Unified PR & Task Manager:** Central dashboard for all PRs and TASKS.md entries
-- [ ] **Roadmap Simulation:** AI-powered schedule impact analysis
+- [ ] **Roadmap Simulation:** AI-powered schedule impact analysis of planned work
 - [ ] **Conversational Interface Foundation:** Natural language, chat-driven interface
+- [ ] **AI Doc Improvement:** Add "Improve" buttons to existing documentation with AI-powered enhancement modal (ROADMAP, TASKS, METRICS, FEATURES, README)
 
 ## 2026Q2: 🔐 Security Enhancements
 

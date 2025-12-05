@@ -117,7 +117,6 @@ export function HealthBreakdown({ repo, details, health, expanded, onToggle }: H
       { label: 'Testing', score: testScore, color: 'blue', weight: '25%' },
       { label: 'Documentation', score: docScore, color: 'slate', weight: '20%' },
       { label: 'Activity', score: activityScore, color: activityColor, weight: '10%' },
- 
     ];
   }, [repo, details, now]);
 

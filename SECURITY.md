@@ -13,7 +13,7 @@ We release patches for security vulnerabilities in the following versions:
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-If you discover a security vulnerability, please report it using [GitHub Security Advisories](https://github.com/ghoverseer/ghoverseer/security/advisories) or by emailing the maintainers at [nitsuahlabs@gmail.com](nitsuahlabs@gmail.com). You can expect:
+If you discover a security vulnerability, please report it using [GitHub Security Advisories](https://github.com/ghoverseer/ghoverseer/security/advisories) or by emailing the maintainers at [nitsuahlabs@gmail.com](mailto:nitsuahlabs@gmail.com). You can expect:
 
 1. **Acknowledgment**: We'll acknowledge receipt of your vulnerability report within 48 hours.
 2. **Updates**: We'll send you regular updates about our progress.

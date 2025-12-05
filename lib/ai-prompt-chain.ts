@@ -265,11 +265,11 @@ ${context.readme || 'No README found.'}
 TEMPLATE SNIPPET:
 ${context.template}
 
-TASK: Insert the Netlify badge near other badges or at the top of the README.
+TASK: Insert a deployment status badge near other badges or at the top of the README.
 - Preserve existing formatting and style
 - Place it logically with other status badges (if any exist)
-- Use placeholder: [![Netlify Status](https://api.netlify.com/api/v1/badges/SITE_ID_HERE/deploy-status)](https://app.netlify.com/sites/SITE_NAME_HERE/deploys)
-- The user will replace SITE_ID_HERE and SITE_NAME_HERE with their actual Netlify site details
+- Use platform-agnostic placeholder: [![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](DEPLOYMENT_URL_HERE)
+- The user will replace DEPLOYMENT_URL_HERE with their actual deployment URL (works with Netlify, Vercel, Railway, Render, Fly.io, Heroku, etc.)
 - Return ONLY the modified README content, no explanations`;
 }
 

@@ -3,12 +3,29 @@
 ## Done
 
 - [x] Fix Modal content/markdown view and DiffView overflow issues
+- [x] Added tutorial tour steps for Documentation, Features, Tasks, and Roadmap sections
+- [x] Update Health Breakdown weights: Documentation 20%, Testing 25%, Best Practices 25%, Community Standards 10%, Activity 10%
 
 _For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._
 
 ## In Progress
 
 ## Todo
+
+### v0.1.7.2: Fix all Best practices
+
+Ensure all have modal and generate works, ensure prompts follow best practices from template and knowledge from repo on language and framework (primarily README and CONTRIBUTING.md):
+
+- [ ] Branch Protection (need more info on dormant/etc. setting breakdown into templates?)
+- [ ] Ci Cd
+- [ ] Gitignore
+- [ ] Pre Commit Hooks
+- [ ] Testing Framework
+- [ ] Linting
+- [ ] Docker
+- [ ] Env Template
+- [ ] Dependabot
+- [ ] Deploy Badge
 
 ### v0.1.8: Performance & Rate Limiting
 

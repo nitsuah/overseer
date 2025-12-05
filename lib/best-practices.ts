@@ -161,13 +161,23 @@ export async function checkBestPractices(
         }
     });
 
-    // 7. Netlify Badge (if README provided)
+    // 7. Deploy Badge (if README provided)
     if (readmeContent) {
-        const hasNetlifyBadge = readmeContent.includes('api.netlify.com/api/v1/badges');
+        // Check for common deployment badges
+        const deployBadgePatterns = [
+            'api.netlify.com/api/v1/badges',  // Netlify
+            'vercel.com',                      // Vercel
+            'img.shields.io/badge/Deployed',   // Generic deploy badge
+            'railway.app',                     // Railway
+            'render.com',                      // Render
+            'fly.io',                          // Fly.io
+            'heroku.com',                      // Heroku
+        ];
+        const hasDeployBadge = deployBadgePatterns.some(pattern => readmeContent.includes(pattern));
         practices.push({
-            type: 'netlify_badge',
-            status: hasNetlifyBadge ? 'healthy' : 'missing',
-            details: { exists: hasNetlifyBadge }
+            type: 'deploy_badge',
+            status: hasDeployBadge ? 'healthy' : 'missing',
+            details: { exists: hasDeployBadge }
         });
     }
 

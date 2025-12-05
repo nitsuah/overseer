@@ -83,7 +83,8 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
     <div className="bg-gradient-to-br from-purple-900/30 via-slate-800/50 to-purple-800/20 rounded-lg overflow-hidden border border-purple-500/40 shadow-lg shadow-purple-500/10 hover:border-purple-400/50 transition-colors">
       <div
         onClick={setIsMainExpanded}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-purple-900/20 transition-colors cursor-pointer"
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-700/50 transition-colors cursor-pointer"
+        data-tour="roadmap-section"
       >
         <div className="flex items-center gap-2">
           <Map className="h-4 w-4 text-purple-400" />

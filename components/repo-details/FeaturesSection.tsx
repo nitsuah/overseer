@@ -72,6 +72,7 @@ export function FeaturesSection({ features, isExpanded: isExpandedProp, onToggle
       <div
         onClick={setIsMainExpanded}
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-orange-900/20 transition-colors cursor-pointer"
+        data-tour="features-section"
       >
         <div className="flex items-center gap-2">
           <span className="text-lg">✨</span>

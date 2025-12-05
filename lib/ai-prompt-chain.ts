@@ -5,7 +5,7 @@
 
 import { GitHubClient } from './github';
 
-export type BestPracticeType = 'netlify_badge' | 'env_template' | 'docker' | 'dependabot';
+export type BestPracticeType = 'deploy_badge' | 'env_template' | 'docker' | 'dependabot';
 
 export interface PromptChainContext {
   repoName: string;
@@ -44,8 +44,8 @@ export async function fetchRepoContext(
       if (readmeContent) {
         context.readme = readmeContent;
       
-      // Extract badges from README for netlify_badge
-      if (practiceType === 'netlify_badge') {
+      // Extract badges from README for deploy_badge
+      if (practiceType === 'deploy_badge') {
         context.badges = extractBadges(readmeContent);
       }
       
@@ -239,8 +239,8 @@ export async function enrichContext(
  */
 export function buildPracticePrompt(context: EnrichedContext): string {
   switch (context.practiceType) {
-    case 'netlify_badge':
-      return buildNetlifyBadgePrompt(context);
+    case 'deploy_badge':
+      return buildDeployBadgePrompt(context);
     case 'env_template':
       return buildEnvTemplatePrompt(context);
     case 'docker':
@@ -250,8 +250,8 @@ export function buildPracticePrompt(context: EnrichedContext): string {
   }
 }
 
-function buildNetlifyBadgePrompt(context: EnrichedContext): string {
-  return `You are updating a README.md to add a Netlify deployment status badge.
+function buildDeployBadgePrompt(context: EnrichedContext): string {
+  return `You are updating a README.md to add a deployment status badge.
 
 REPO CONTEXT:
 - Name: ${context.repoName}

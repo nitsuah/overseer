@@ -2,6 +2,7 @@
 
 import { Toast } from '@/components/Toast';
 import { PRPreviewModal } from '@/components/PRPreviewModal';
+import GuidedTour from '@/components/GuidedTour';
 import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Header from '@/components/Header';
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [addRepoUrl, setAddRepoUrl] = useState('');
   const [addRepoType, setAddRepoType] = useState<RepoType>('unknown');
   const [expandedHealth, setExpandedHealth] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   const {
     addingRepo,
@@ -140,6 +142,7 @@ export default function Dashboard() {
         onFilterLanguageChange={setFilterLanguage}
         onFilterForkChange={setFilterFork}
         onClearFilters={clearFilters}
+        onStartTour={() => setShowTour(true)}
       />
       <div className="px-6 py-8 space-y-6">
         {filteredRepos.length === 0 ? (
@@ -201,6 +204,7 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      {showTour && <GuidedTour onClose={() => setShowTour(false)} />}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
       <PRPreviewModal
         isOpen={previewModalOpen}

@@ -126,7 +126,7 @@ export async function POST(
 
                     // Add generic deployment badge placeholder at the top of README (after title if exists)
                     const lines = readme.split('\n');
-                    const badgeMarkdown = `[![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](DEPLOYMENT_URL_HERE)\n`;
+                    const badgeMarkdown = `[![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](https://your-deployment-url.com)\n`;
                     
                     // Find first non-empty line (usually title)
                     let insertIndex = 0;

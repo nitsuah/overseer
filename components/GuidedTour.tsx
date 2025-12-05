@@ -97,6 +97,20 @@ const tourSteps: TourStep[] = [
     position: 'left',
   },
   {
+    id: 'metrics',
+    title: 'Custom Metrics',
+    description: 'Track custom repository metrics from METRICS.md. Self-reported data for project-specific measurements.',
+    target: '[data-tour="metrics"]',
+    position: 'left',
+  },
+  {
+    id: 'issues',
+    title: 'Security Issues',
+    description: 'Monitor vulnerability alerts from Dependabot. Shows critical and high severity issues.',
+    target: '[data-tour="issues"]',
+    position: 'left',
+  },
+  {
     id: 'add-repo',
     title: 'Add Repository',
     description: 'Manually add repositories to track. Enter owner/repo format and select the repository type.',
@@ -270,50 +284,238 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       }
     }
     
-    if (step.id === 'features' || step.id === 'roadmap' || step.id === 'tasks') {
-      // Keep first row expanded, just highlight sections
+    if (step.id === 'features') {
+      // First step in row 1 - ensure row is expanded
+      const featuresSection = document.querySelector('[data-tour="features-section"]');
+      if (featuresSection) {
+        // Check if expanded by looking for the content div with isMainExpanded
+        const isExpanded = featuresSection.querySelector('.grid.grid-cols-3');
+        if (!isExpanded) {
+          // Need to expand - click the section header
+          const clickableHeader = featuresSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+          if (clickableHeader) {
+            clickableHeader.click();
+            setTimeout(() => {
+              updateHighlight();
+              startAutoAdvance();
+            }, 400);
+            return;
+          }
+        }
+      }
       updateHighlight(); // eslint-disable-line react-hooks/set-state-in-effect
       startAutoAdvance();  
       return;
     }
     
+    if (step.id === 'roadmap' || step.id === 'tasks') {
+      // Stay on row 1, just highlight different sections
+      updateHighlight();  
+      startAutoAdvance();  
+      return;
+    }
+    
     if (step.id === 'documentation') {
-      // Collapse first row and expand second row
-      if (firstRow) {
-        // Check if first row is expanded (has the detail panel)
-        const isFirstRowExpanded = firstRow.nextElementSibling?.classList.contains('bg-slate-800');
-        if (isFirstRowExpanded) {
-          firstRow.click(); // Collapse first row
-        }
-      }
+      // Transition from row 1 to row 2
+      // Step 1: Collapse row 1 (Features/Roadmap/Tasks)
+      const featuresSection = document.querySelector('[data-tour="features-section"]');
+      const isFeaturesExpanded = featuresSection?.querySelector('.grid.grid-cols-3');
       
-      // Expand second row if not already expanded
-      if (secondRow) {
-        const isSecondRowExpanded = secondRow.nextElementSibling?.classList.contains('bg-slate-800');
-        if (!isSecondRowExpanded) {
+      if (isFeaturesExpanded) {
+        const clickableHeader = featuresSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+        if (clickableHeader) {
+          clickableHeader.click();
+          // Wait for collapse animation
           setTimeout(() => {
-            secondRow.click(); // Expand second row
+            // Step 2: Expand row 2 (Documentation/Best Practices/Testing)
+            const documentationSection = document.querySelector('[data-tour="documentation"]');
+            if (documentationSection) {
+              // Check for the content area (p-4 div that appears when expanded)
+              const isDocExpanded = documentationSection.querySelector('.space-y-3');
+              if (!isDocExpanded) {
+                const docClickableHeader = documentationSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+                if (docClickableHeader) {
+                  docClickableHeader.click();
+                  setTimeout(() => {
+                    // Give DOM time to update before highlighting
+                    setTimeout(() => {
+                      updateHighlight();
+                      startAutoAdvance();
+                    }, 100);
+                  }, 400);
+                  return;
+                }
+              }
+            }
             setTimeout(() => {
               updateHighlight();
               startAutoAdvance();
-            }, 400);
+            }, 100);
           }, 400);
           return;
         }
       }
       
-      // Wait for animations
+      // If row 1 already collapsed, just expand row 2
+      const documentationSection = document.querySelector('[data-tour="documentation"]');
+      if (documentationSection) {
+        const isDocExpanded = documentationSection.querySelector('.space-y-3');
+        if (!isDocExpanded) {
+          const clickableHeader = documentationSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+          if (clickableHeader) {
+            clickableHeader.click();
+            setTimeout(() => {
+              setTimeout(() => {
+                updateHighlight();
+                startAutoAdvance();
+              }, 100);
+            }, 400);
+            return;
+          }
+        }
+      }
+      
       setTimeout(() => {
         updateHighlight();
         startAutoAdvance();
-      }, 400);
+      }, 100);
       return;
     }
     
-    if (step.id === 'best-practices' || step.id === 'testing' || step.id === 'community') {
-      // Keep second row expanded, just highlight sections
+    if (step.id === 'best-practices' || step.id === 'testing') {
+      // Stay on row 2, just highlight different sections
+      // Add small delay to ensure DOM is ready
+      setTimeout(() => {
+        updateHighlight();  
+        startAutoAdvance();
+      }, 100);
+      return;
+    }
+    
+    if (step.id === 'community') {
+      // Transition from row 2 to row 3
+      // Step 1: Collapse row 2 (Documentation/Best Practices/Testing)
+      const documentationSection = document.querySelector('[data-tour="documentation"]');
+      const isDocExpanded = documentationSection?.querySelector('.space-y-3');
+      
+      if (isDocExpanded) {
+        const clickableHeader = documentationSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+        if (clickableHeader) {
+          clickableHeader.click();
+          // Wait for collapse animation
+          setTimeout(() => {
+            // Step 2: Expand row 3 (Community/Metrics/Issues)
+            const communitySection = document.querySelector('[data-tour="community"]');
+            if (communitySection) {
+              // Check for the content area
+              const isCommunityExpanded = communitySection.querySelector('.space-y-2');
+              if (!isCommunityExpanded) {
+                const communityClickableHeader = communitySection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+                if (communityClickableHeader) {
+                  communityClickableHeader.click();
+                  setTimeout(() => {
+                    // Give DOM time to update before highlighting
+                    setTimeout(() => {
+                      updateHighlight();
+                      startAutoAdvance();
+                    }, 100);
+                  }, 400);
+                  return;
+                }
+              }
+            }
+            setTimeout(() => {
+              updateHighlight();
+              startAutoAdvance();
+            }, 100);
+          }, 400);
+          return;
+        }
+      }
+      
+      // If row 2 already collapsed, just expand row 3
+      const communitySection = document.querySelector('[data-tour="community"]');
+      if (communitySection) {
+        const isCommunityExpanded = communitySection.querySelector('.space-y-2');
+        if (!isCommunityExpanded) {
+          const clickableHeader = communitySection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+          if (clickableHeader) {
+            clickableHeader.click();
+            setTimeout(() => {
+              setTimeout(() => {
+                updateHighlight();
+                startAutoAdvance();
+              }, 100);
+            }, 400);
+            return;
+          }
+        }
+      }
+      
+      setTimeout(() => {
+        updateHighlight();
+        startAutoAdvance();
+      }, 100);
+      return;
+    }
+    
+    if (step.id === 'metrics') {
+      // Check if metrics section exists (conditional rendering)
+      const metricsSection = document.querySelector('[data-tour="metrics"]');
+      if (!metricsSection) {
+        // Skip to next step if metrics don't exist
+        setTimeout(() => {
+          setCurrentStep(prev => prev + 1);
+        }, 100);
+        return;
+      }
+      
+      // Stay on row 3, just highlight metrics section
+      setTimeout(() => {
+        updateHighlight();  
+        startAutoAdvance();
+      }, 100);
+      return;
+    }
+    
+    if (step.id === 'issues') {
+      // Check if issues section exists (conditional rendering)
+      const issuesSection = document.querySelector('[data-tour="issues"]');
+      if (!issuesSection) {
+        // Skip to next step if issues don't exist
+        setTimeout(() => {
+          setCurrentStep(prev => prev + 1);
+        }, 100);
+        return;
+      }
+      
+      // Stay on row 3, just highlight issues section
+      setTimeout(() => {
+        updateHighlight();  
+        startAutoAdvance();
+      }, 100);
+      return;
+    }
+    
+    if (step.id === 'add-repo' || step.id === 'filters' || step.id === 'sync-all') {
+      // Collapse row 3 before moving to controls
+      const communitySection = document.querySelector('[data-tour="community"]');
+      const isCommunityExpanded = communitySection?.querySelector('.space-y-2');
+      
+      if (isCommunityExpanded && step.id === 'add-repo') {
+        const clickableHeader = communitySection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+        if (clickableHeader) {
+          clickableHeader.click();
+          setTimeout(() => {
+            updateHighlight();
+            startAutoAdvance();
+          }, 400);
+          return;
+        }
+      }
+      
       updateHighlight();  
-      startAutoAdvance();  
+      startAutoAdvance();
       return;
     }
     

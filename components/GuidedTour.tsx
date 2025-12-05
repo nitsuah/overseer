@@ -138,6 +138,13 @@ const tourSteps: TourStep[] = [
     target: '[data-tour="version-info"]',
     position: 'bottom',
   },
+  {
+    id: 'profile-close',
+    title: 'Tour Complete!',
+    description: 'Click the profile picture to collapse the status pills and finish the tour. You can always click it again to view your authentication status, AI availability, and version info.',
+    target: 'button[title="Toggle status indicators"]',
+    position: 'bottom',
+  },
 ];
 
 interface GuidedTourProps {
@@ -149,21 +156,42 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
   const [isAutoAdvancing, setIsAutoAdvancing] = useState(false);
+  const [countdown, setCountdown] = useState(3);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const step = tourSteps[currentStep];
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === tourSteps.length - 1;
 
   const startAutoAdvance = useCallback(() => {
-    // Auto-advance after 4 seconds (except for first and last steps)
+    // Auto-advance after 3 seconds (except for first and last steps)
     if (!isFirstStep && !isLastStep) {
       setIsAutoAdvancing(true);
+      setCountdown(3);
+      
+      // Countdown timer
+      countdownIntervalRef.current = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            if (countdownIntervalRef.current) {
+              clearInterval(countdownIntervalRef.current);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      // Auto-advance timer
       autoAdvanceTimerRef.current = setTimeout(() => {
         setCurrentStep(prev => prev + 1);
         setIsAutoAdvancing(false);
-      }, 4000);
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+        }
+      }, 3000);
     }
   }, [isFirstStep, isLastStep]);
 
@@ -216,17 +244,22 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
   }, [step.target, step.id, step.position]);
 
   useEffect(() => {
-    // Clear any existing auto-advance timer
+    // Clear any existing timers
     if (autoAdvanceTimerRef.current) {
       clearTimeout(autoAdvanceTimerRef.current);
       autoAdvanceTimerRef.current = null;
     }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
 
     // Handle row expansion/collapse and section navigation
     const firstRow = document.querySelector('tbody tr:first-child') as HTMLElement;
+    const secondRow = document.querySelector('tbody tr:nth-child(2)') as HTMLElement;
     
     if (step.id === 'repo-name' || step.id === 'health-score' || step.id === 'docs-column' || step.id === 'actions') {
-      // Ensure row is expanded for initial steps
+      // Ensure first row is expanded for initial steps
       if (firstRow && !document.querySelector('.grid')) {
         firstRow.click();
         setTimeout(() => {
@@ -238,24 +271,38 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     }
     
     if (step.id === 'features' || step.id === 'roadmap' || step.id === 'tasks') {
-      // Keep row expanded, just highlight sections
+      // Keep first row expanded, just highlight sections
       updateHighlight(); // eslint-disable-line react-hooks/set-state-in-effect
       startAutoAdvance();  
       return;
     }
     
     if (step.id === 'documentation') {
-      // Collapse Features/Roadmap/Tasks sections to show Documentation/Best Practices/Testing
-      const featuresHeader = document.querySelector('[data-tour="features-section"]') as HTMLElement;
-      const roadmapHeader = document.querySelector('[data-tour="roadmap-section"]') as HTMLElement;
-      const tasksHeader = document.querySelector('[data-tour="tasks-section"]') as HTMLElement;
+      // Collapse first row and expand second row
+      if (firstRow) {
+        // Check if first row is expanded (has the detail panel)
+        const isFirstRowExpanded = firstRow.nextElementSibling?.classList.contains('bg-slate-800');
+        if (isFirstRowExpanded) {
+          firstRow.click(); // Collapse first row
+        }
+      }
       
-      // Click headers to collapse them if they're expanded
-      if (featuresHeader) featuresHeader.click();
-      if (roadmapHeader) roadmapHeader.click();
-      if (tasksHeader) tasksHeader.click();
+      // Expand second row if not already expanded
+      if (secondRow) {
+        const isSecondRowExpanded = secondRow.nextElementSibling?.classList.contains('bg-slate-800');
+        if (!isSecondRowExpanded) {
+          setTimeout(() => {
+            secondRow.click(); // Expand second row
+            setTimeout(() => {
+              updateHighlight();
+              startAutoAdvance();
+            }, 400);
+          }, 400);
+          return;
+        }
+      }
       
-      // Wait for collapse animations, then update highlight
+      // Wait for animations
       setTimeout(() => {
         updateHighlight();
         startAutoAdvance();
@@ -263,10 +310,17 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       return;
     }
     
+    if (step.id === 'best-practices' || step.id === 'testing' || step.id === 'community') {
+      // Keep second row expanded, just highlight sections
+      updateHighlight();  
+      startAutoAdvance();  
+      return;
+    }
+    
     // Show profile pills when reaching status indicator steps
     if (step.id === 'auth-status' || step.id === 'gemini-status' || step.id === 'version-info') {
-      const profilePicture = document.querySelector('[alt="User Avatar"]');
-      if (profilePicture && !document.querySelector('[data-tour="auth-status"]')) {
+      const profilePicture = document.querySelector('button[title="Toggle status indicators"]');
+      if (profilePicture && !document.querySelector('[data-tour="auth-status"]')?.getBoundingClientRect().width) {
         (profilePicture as HTMLElement).click();
         setTimeout(() => {
           updateHighlight();
@@ -274,6 +328,13 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
         }, 500);
         return;
       }
+    }
+    
+    // Final step - highlight profile picture for collapse action
+    if (step.id === 'profile-close') {
+      updateHighlight();  
+      // Don't auto-advance on final step
+      return;
     }
     
     // Tour component intentionally updates highlight on step changes
@@ -286,18 +347,31 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       if (autoAdvanceTimerRef.current) {
         clearTimeout(autoAdvanceTimerRef.current);
       }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
     };
   }, [currentStep, step.id, updateHighlight, startAutoAdvance]);
 
   const handleNext = () => {
-    // Clear auto-advance timer when manually navigating
+    // Clear timers when manually navigating
     if (autoAdvanceTimerRef.current) {
       clearTimeout(autoAdvanceTimerRef.current);
       autoAdvanceTimerRef.current = null;
-      setIsAutoAdvancing(false);
     }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    setIsAutoAdvancing(false);
     
     if (isLastStep) {
+      // Close profile pills on final step
+      const profilePicture = document.querySelector('button[title="Toggle status indicators"]');
+      const statusPillsVisible = document.querySelector('[data-tour="auth-status"]')?.getBoundingClientRect().width;
+      if (profilePicture && statusPillsVisible) {
+        (profilePicture as HTMLElement).click();
+      }
       onClose();
     } else {
       setCurrentStep(currentStep + 1);
@@ -305,12 +379,16 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
   };
 
   const handlePrevious = () => {
-    // Clear auto-advance timer when manually navigating
+    // Clear timers when manually navigating
     if (autoAdvanceTimerRef.current) {
       clearTimeout(autoAdvanceTimerRef.current);
       autoAdvanceTimerRef.current = null;
-      setIsAutoAdvancing(false);
     }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    setIsAutoAdvancing(false);
     
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
@@ -398,7 +476,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
             />
           </div>
           {isAutoAdvancing && (
-            <p className="text-xs text-slate-400 mt-2 italic">Auto-advancing in 4 seconds...</p>
+            <p className="text-xs text-slate-400 mt-2 italic">Auto-advancing in {countdown} second{countdown !== 1 ? 's' : ''}...</p>
           )}
         </div>
 
@@ -430,6 +508,10 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
                   if (autoAdvanceTimerRef.current) {
                     clearTimeout(autoAdvanceTimerRef.current);
                     autoAdvanceTimerRef.current = null;
+                  }
+                  if (countdownIntervalRef.current) {
+                    clearInterval(countdownIntervalRef.current);
+                    countdownIntervalRef.current = null;
                   }
                   setIsAutoAdvancing(false);
                 }}

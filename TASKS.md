@@ -2,8 +2,10 @@
 
 ## Done
 
+- [x] **Guided Tour System**: Interactive 16-step tour with spotlight overlay, auto-advance (4s), and data-tour attributes
+- [x] **Tour Navigation**: Welcome → Table columns → Expanded sections (Features/Roadmap/Tasks/Documentation/Best Practices/Testing/Community) → Controls → Status pills
+- [x] **Row Expansion Logic**: Smart expand/collapse for proper section visibility during tour steps
 - [x] Fix Modal content/markdown view and DiffView overflow issues
-- [x] Added tutorial tour steps for Documentation, Features, Tasks, and Roadmap sections
 - [x] Update Health Breakdown weights: Documentation 20%, Testing 25%, Best Practices 25%, Community Standards 10%, Activity 10%
 
 _For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._

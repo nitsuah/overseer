@@ -1,10 +1,10 @@
 # Contributing to Overseer
 
-Thank you for your interest in contributing to Overseer! This document provides guidelines and instructions for contributing.
+Thank you for contributing. This guide covers setup, standards, and workflow.
 
 ## Code of Conduct
 
-Be respectful, constructive, and professional in all interactions.
+Be respectful, constructive, and professional.
 
 ## How to Contribute
 

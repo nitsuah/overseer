@@ -5,29 +5,22 @@
 
 ## Mission Statement
 
-🛡️ Overseer Mission: The "Meta-Repository" Standard
+Overseer bridges human intent and AI execution through enforced documentation standards (ROADMAP, TASKS, METRICS, FEATURES).
 
-We believe that a healthy codebase is self-documenting, standardized, and AI-ready.
+**Key Outcomes:**
 
-Overseer is not just a dashboard; it is an intelligence layer that sits above your Git repositories. Its mission is to bridge the gap between human developer intent and AI agent execution. By enforcing a strict documentation standard (ROADMAP, TASKS, METRICS) and visualizing the flow from "Strategy" to "Shipped Code," Overseer eliminates the context-switching tax of modern development.
-
-We aim to:
-
-- Standardize Context: Ensure every repo provides the necessary context windows for both humans and AI agents to contribute immediately.
-- Visualize Momentum: Move beyond "commits" and track the true velocity of ideas turning into features.
-- Automate Governance: Use AI to act as a gentle guardian, ensuring roadmap items are defined and documentation is never stale, without interfering with the granular code workflow.
-
-Overseer gives you the input/output controls of a project manager, committed directly to the git history you already own.
+- **Standardized Context**: Every repo provides necessary context for immediate contribution
+- **Visible Momentum**: Track velocity from strategy to shipped code
+- **Automated Governance**: AI maintains documentation health without blocking workflow
 
 ## Features
 
-- 📊 **Unified Dashboard** - See all your repos at a glance with health scores and filtering
-- 📝 **Standardized Documentation** - ROADMAP.md, TASKS.md, METRICS.md parsing and tracking
-- 🤖 **AI-Powered Summaries** - Generate repository descriptions using Google Gemini
-- 🔧 **Automated Doc Fixes** - One-click PR creation for missing documentation
-- 🔗 **GitHub Integration** - OAuth authentication and full repo metadata sync
-- 📈 **Health Metrics** - Documentation coverage, testing status, and composite health scores
-- ➕ **Custom Repos** - Track any public GitHub repository, not just your own
+- 📊 **Repository Intelligence** - Health scoring, doc tracking, activity monitoring
+- 🤖 **AI Automation** - Gemini 2.0 summaries, context-aware doc generation
+- 🔧 **One-Click Fixes** - PR creation for docs, best practices, community standards
+- 🎯 **Interactive Onboarding** - 16-step guided tour with spotlight highlighting
+- 🔗 **GitHub Integration** - OAuth auth, full metadata sync, rate limit monitoring, custom repo paths
+- 📈 **Composite Metrics** - Testing, coverage, vulnerabilities, contributor analytics
 
 ## Tech Stack
 

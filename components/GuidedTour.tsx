@@ -613,6 +613,15 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
         <div 
           className="absolute inset-0 bg-black/75" 
           onClick={handleSkip}
+          role="button"
+          aria-label="Skip tour"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleSkip();
+            }
+          }}
           style={{
             // Cut out a hole for the highlighted element
             ...(highlightRect && step.id !== 'welcome' ? {

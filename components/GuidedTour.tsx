@@ -303,6 +303,10 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
           }
         }
       }
+      // We intentionally call updateHighlight() here after checking for expansion,
+      // because the highlight must occur only after the DOM has updated to show the expanded section.
+      // Calling it outside this block would risk highlighting the wrong element.
+      // The eslint-disable is necessary to avoid false positives from the linter.
       updateHighlight(); // eslint-disable-line react-hooks/set-state-in-effect
       startAutoAdvance();  
       return;

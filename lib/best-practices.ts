@@ -165,13 +165,15 @@ export async function checkBestPractices(
     if (readmeContent) {
         // Check for common deployment badges
         const deployBadgePatterns = [
-            'api.netlify.com/api/v1/badges',  // Netlify
-            'vercel.com',                      // Vercel
-            'img.shields.io/badge/Deployed',   // Generic deploy badge
-            'railway.app',                     // Railway
-            'render.com',                      // Render
-            'fly.io',                          // Fly.io
-            'heroku.com',                      // Heroku
+            'api.netlify.com/api/v1/badges',      // Netlify
+            'vercel.com/button',                  // Vercel deploy button
+            'img.shields.io/badge/Deployed',      // Generic deploy badge
+            'img.shields.io/badge/vercel',        // Vercel shields.io badge
+            'img.shields.io.*vercel',             // Any shields.io Vercel badge
+            'railway.app',                        // Railway
+            'render.com',                         // Render
+            'fly.io',                             // Fly.io
+            'heroku.com',                         // Heroku
         ];
         const hasDeployBadge = deployBadgePatterns.some(pattern => readmeContent.includes(pattern));
         practices.push({

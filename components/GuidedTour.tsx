@@ -526,7 +526,8 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     // Show profile pills when reaching status indicator steps
     if (step.id === 'auth-status' || step.id === 'gemini-status' || step.id === 'version-info') {
       const profilePicture = document.querySelector('button[title="Toggle status indicators"]');
-      if (profilePicture && !document.querySelector('[data-tour="auth-status"]')?.getBoundingClientRect().width) {
+      const authStatusElem = document.querySelector('[data-tour="auth-status"]');
+      if (profilePicture && authStatusElem && authStatusElem.getBoundingClientRect().width === 0) {
         (profilePicture as HTMLElement).click();
         setTimeout(() => {
           updateHighlight();
@@ -613,6 +614,15 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
         <div 
           className="absolute inset-0 bg-black/75" 
           onClick={handleSkip}
+          role="button"
+          aria-label="Skip tour"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleSkip();
+            }
+          }}
           style={{
             // Cut out a hole for the highlighted element
             ...(highlightRect && step.id !== 'welcome' ? {

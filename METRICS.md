@@ -18,7 +18,7 @@
 | Docs Files          | 15+    | Including core docs (README, ROADMAP, TASKS, FEATURES, METRICS, CHANGELOG), OAuth guides, templates, and PM.md agent instructions        |
 | Component Files     | 30     | Dashboard, ExpandableRow, RepoTableRow, Header, GuidedTour, MarkdownPreview, detail sections (AI, Stats, Testing, Metrics, Issues, etc.) |
 | Community Standards | 10     | CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING.yml           |
-| Best Practices      | 10     | CI/CD, pre-commit hooks, linting, branch protection, testing, gitignore, Netlify badge, env template, Dependabot, Docker                 |
+| Best Practices      | 10     | CI/CD, pre-commit hooks, linting, branch protection, testing, gitignore, deployment badge, env template, Dependabot, Docker               |
 
 ## Health
 

@@ -337,7 +337,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
               // Check for the content area (p-4 div that appears when expanded)
               const isDocExpanded = documentationSection.querySelector('.space-y-3');
               if (!isDocExpanded) {
-                const docClickableHeader = documentationSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+                const docClickableHeader = documentationSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement | null;
                 if (docClickableHeader) {
                   docClickableHeader.click();
                   setTimeout(() => {
@@ -365,7 +365,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       if (documentationSection) {
         const isDocExpanded = documentationSection.querySelector('.space-y-3');
         if (!isDocExpanded) {
-          const clickableHeader = documentationSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+          const clickableHeader = documentationSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement | null;
           if (clickableHeader) {
             clickableHeader.click();
             setTimeout(() => {
@@ -402,8 +402,8 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       const documentationSection = document.querySelector('[data-tour="documentation"]');
       const isDocExpanded = documentationSection?.querySelector('.space-y-3');
       
-      if (isDocExpanded) {
-        const clickableHeader = documentationSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+      if (isDocExpanded && documentationSection) {
+        const clickableHeader = documentationSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement | null;
         if (clickableHeader) {
           clickableHeader.click();
           // Wait for collapse animation
@@ -506,8 +506,8 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       const communitySection = document.querySelector('[data-tour="community"]');
       const isCommunityExpanded = communitySection?.querySelector('.space-y-2');
       
-      if (isCommunityExpanded && step.id === 'add-repo') {
-        const clickableHeader = communitySection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
+      if (isCommunityExpanded && step.id === 'add-repo' && communitySection) {
+        const clickableHeader = communitySection.querySelector('div[class*="cursor-pointer"]') as HTMLElement | null;
         if (clickableHeader) {
           clickableHeader.click();
           setTimeout(() => {

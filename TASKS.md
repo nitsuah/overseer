@@ -2,7 +2,7 @@
 
 ## Done
 
-- [x] **Guided Tour System**: Interactive 16-step tour with spotlight overlay, auto-advance (4s), and data-tour attributes
+- [x] **Guided Tour System**: Interactive 16-step tour with spotlight overlay, auto-advance (3s), and data-tour attributes
 - [x] **Tour Navigation**: Welcome → Table columns → Expanded sections (Features/Roadmap/Tasks/Documentation/Best Practices/Testing/Community) → Controls → Status pills
 - [x] **Row Expansion Logic**: Smart expand/collapse for proper section visibility during tour steps
 - [x] Fix Modal content/markdown view and DiffView overflow issues

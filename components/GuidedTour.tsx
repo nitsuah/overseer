@@ -526,7 +526,8 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     // Show profile pills when reaching status indicator steps
     if (step.id === 'auth-status' || step.id === 'gemini-status' || step.id === 'version-info') {
       const profilePicture = document.querySelector('button[title="Toggle status indicators"]');
-      if (profilePicture && !document.querySelector('[data-tour="auth-status"]')?.getBoundingClientRect().width) {
+      const authStatusElem = document.querySelector('[data-tour="auth-status"]');
+      if (profilePicture && authStatusElem && authStatusElem.getBoundingClientRect().width === 0) {
         (profilePicture as HTMLElement).click();
         setTimeout(() => {
           updateHighlight();

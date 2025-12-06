@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Guided Tour System:** 16-step interactive onboarding with spotlight overlay highlighting key features
-- **Auto-Advance Tour:** 4-second timer between steps with manual navigation override
+- **Auto-Advance Tour:** 3-second timer between steps with manual navigation override
 - **Smart Row Expansion:** Automatic expand/collapse during tour for Features, Roadmap, Tasks, Documentation, Best Practices, Testing, Community sections
 - **Spotlight Effect:** CSS clip-path polygon creating visual cutout with 75% dark overlay
 - **Data-Tour Attributes:** Comprehensive element targeting system for tour step positioning

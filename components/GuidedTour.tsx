@@ -321,7 +321,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       const featuresSection = document.querySelector('[data-tour="features-section"]');
       const isFeaturesExpanded = featuresSection?.querySelector('.grid.grid-cols-3');
       
-      if (isFeaturesExpanded) {
+      if (isFeaturesExpanded && featuresSection) {
         const clickableHeader = featuresSection.querySelector('div[class*="cursor-pointer"]') as HTMLElement;
         if (clickableHeader) {
           clickableHeader.click();

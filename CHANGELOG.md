@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2025-12-05
+
+### Added
+
+- **Guided Tour System:** 16-step interactive onboarding with spotlight overlay highlighting key features
+- **Auto-Advance Tour:** 3-second timer between steps with manual navigation override
+- **Smart Row Expansion:** Automatic expand/collapse during tour for Features, Roadmap, Tasks, Documentation, Best Practices, Testing, Community sections
+- **Spotlight Effect:** CSS clip-path polygon creating visual cutout with 75% dark overlay
+- **Data-Tour Attributes:** Comprehensive element targeting system for tour step positioning
+- **Tour Navigation Controls:** Skip tour, manual next/previous with pause on interaction
+
+### Changed
+
+- **Section Highlighting:** Moved data-tour attributes from header divs to wrapper divs for full card highlighting
+- **Deploy Badge Prompt:** Updated AI prompt from Netlify-specific to platform-agnostic badge format
+- **Tour Flow:** Organized steps into logical groups (columns → expanded sections → controls → status)
+
+### Fixed
+
+- **ESLint Warnings:** Added eslint-disable comments for intentional setState in useEffect
+- **Hook Declaration Order:** Converted functions to useCallback to prevent "variable before declaration" errors
+- **Email Link in SECURITY.md:** Fixed malformed link to use proper mailto: syntax
+- **HealthBreakdown Formatting:** Removed unnecessary blank line at end of metrics array
+
 ## [1.6.0] - 2025-12-01
 
 ### Added

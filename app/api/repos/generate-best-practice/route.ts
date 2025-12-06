@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
 function getTemplateFileName(practiceType: string): string {
   switch (practiceType) {
-    case 'netlify_badge':
+    case 'deploy_badge':
       return 'README.md'; // Will extract badge snippet
     case 'env_template':
       return '.env.example';
@@ -113,8 +113,8 @@ function getTemplateFileName(practiceType: string): string {
 
 function getDefaultTemplate(practiceType: string): string {
   switch (practiceType) {
-    case 'netlify_badge':
-      return '[![Netlify Status](https://api.netlify.com/api/v1/badges/SITE_ID/deploy-status)](https://app.netlify.com/sites/SITE_NAME/deploys)';
+    case 'deploy_badge':
+      return '[![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](DEPLOYMENT_URL_HERE)';
     
     case 'env_template':
       return `# Environment Variables

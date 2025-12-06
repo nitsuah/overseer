@@ -295,7 +295,7 @@ export function useRepoActions(
   // Helper to get file name for practice type
   const getFileNameForPractice = (practiceType: string): string => {
     switch (practiceType) {
-      case 'netlify_badge': return 'README.md';
+      case 'deploy_badge': return 'README.md';
       case 'env_template': return '.env.example';
       case 'docker': return 'Dockerfile';
       case 'dependabot': return '.github/dependabot.yml';
@@ -306,7 +306,7 @@ export function useRepoActions(
   // Helper to get syntax highlighting language
   const getLanguageForPractice = (practiceType: string): string => {
     switch (practiceType) {
-      case 'netlify_badge': return 'markdown';
+      case 'deploy_badge': return 'markdown';
       case 'env_template': return 'shell';
       case 'docker': return 'dockerfile';
       case 'dependabot': return 'yaml';
@@ -329,7 +329,7 @@ export function useRepoActions(
       const bestPractices: BestPractice[] = details.bestPractices || [];
 
       // Get fixable missing practices
-      const fixablePractices = ['dependabot', 'env_template', 'docker', 'netlify_badge'];
+      const fixablePractices = ['dependabot', 'env_template', 'docker', 'deploy_badge'];
       const missingPractices = bestPractices
         .filter((p: BestPractice) => p.status === 'missing' && fixablePractices.includes(p.practice_type))
         .map((p: BestPractice) => p.practice_type);

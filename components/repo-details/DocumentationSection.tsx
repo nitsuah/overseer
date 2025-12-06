@@ -52,7 +52,7 @@ export function DocumentationSection({
   ]);
 
   return (
-    <div className="bg-gradient-to-br from-amber-900/30 via-slate-800/50 to-amber-800/20 rounded-lg overflow-hidden border border-amber-500/40 shadow-lg shadow-amber-500/10 hover:border-amber-400/50 transition-colors">
+    <div className="bg-gradient-to-br from-amber-900/30 via-slate-800/50 to-amber-800/20 rounded-lg overflow-hidden border border-amber-500/40 shadow-lg shadow-amber-500/10 hover:border-amber-400/50 transition-colors" data-tour="documentation">
       <div
         className="w-full px-4 py-3 hover:bg-amber-900/20 transition-colors border-b border-amber-500/20 cursor-pointer"
         onClick={setIsExpanded}

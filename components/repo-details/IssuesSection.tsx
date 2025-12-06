@@ -21,7 +21,7 @@ export function IssuesSection({ vulnAlertCount, vulnCriticalCount, vulnHighCount
   if (!hasVulnerabilities) return null;
 
   return (
-    <div className="bg-gradient-to-br from-red-900/30 via-slate-800/50 to-red-800/20 rounded-lg overflow-hidden border border-red-500/40 shadow-lg shadow-red-500/10 hover:border-red-400/50 transition-colors">
+    <div className="bg-gradient-to-br from-red-900/30 via-slate-800/50 to-red-800/20 rounded-lg overflow-hidden border border-red-500/40 shadow-lg shadow-red-500/10 hover:border-red-400/50 transition-colors" data-tour="issues">
       <div
         onClick={setIsExpanded}
         className="w-full px-4 py-3 hover:bg-red-900/20 transition-colors border-b border-red-500/20 cursor-pointer"

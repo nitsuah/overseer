@@ -80,7 +80,7 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
   const displayedQuarters = (showAllPlanned || showCompleted) ? quarters : quarters.slice(0, 1);
 
   return (
-    <div className="bg-gradient-to-br from-purple-900/30 via-slate-800/50 to-purple-800/20 rounded-lg overflow-hidden border border-purple-500/40 shadow-lg shadow-purple-500/10 hover:border-purple-400/50 transition-colors">
+    <div className="bg-gradient-to-br from-purple-900/30 via-slate-800/50 to-purple-800/20 rounded-lg overflow-hidden border border-purple-500/40 shadow-lg shadow-purple-500/10 hover:border-purple-400/50 transition-colors" data-tour="roadmap-section">
       <div
         onClick={setIsMainExpanded}
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-purple-900/20 transition-colors cursor-pointer"

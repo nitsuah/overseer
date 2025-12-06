@@ -115,6 +115,7 @@ export function RepoTableRow({
               rel="noopener noreferrer"
               className="font-medium text-blue-400 hover:text-blue-300 transition-colors hover:underline"
               onClick={(e) => e.stopPropagation()}
+              data-tour="repo-name"
             >
               {repo.name}
             </a>
@@ -217,7 +218,7 @@ export function RepoTableRow({
           </div>
         </td>
         {/* Docs Column */}
-        <td className="px-6 py-4">
+        <td className="px-6 py-4" data-tour="docs">
           <DocStatusDisplay
             repo={repo}
             details={details}
@@ -232,7 +233,7 @@ export function RepoTableRow({
           />
         </td>
         {/* Actions Column - Remove */}
-        <td className="px-6 py-4">
+        <td className="px-6 py-4" data-tour="actions">
           <div className="flex items-center gap-2">
             {isAuthenticated && (
               <button

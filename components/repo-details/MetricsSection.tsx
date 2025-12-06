@@ -49,7 +49,7 @@ export function MetricsSection({ metrics, isExpanded: isExpandedProp, onToggleEx
   if (otherMetrics.length === 0) return null;
 
   return (
-    <div className="bg-gradient-to-br from-green-900/30 via-slate-800/50 to-green-800/20 rounded-lg overflow-hidden border border-green-500/40 shadow-lg shadow-green-500/10 hover:border-green-400/50 transition-colors">
+    <div className="bg-gradient-to-br from-green-900/30 via-slate-800/50 to-green-800/20 rounded-lg overflow-hidden border border-green-500/40 shadow-lg shadow-green-500/10 hover:border-green-400/50 transition-colors" data-tour="metrics">
       <button
         onClick={setIsExpanded}
         className="w-full px-4 py-3 text-left hover:bg-green-900/20 transition-colors border-b border-green-500/20"

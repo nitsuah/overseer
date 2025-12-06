@@ -180,7 +180,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
   const isLastStep = currentStep === tourSteps.length - 1;
 
   const startAutoAdvance = useCallback(() => {
-    // Auto-advance after 3 seconds (except for first and last steps)
+    // Auto-advance after a 3-second countdown (displayed in 1-second intervals), except for first and last steps
     if (!isFirstStep && !isLastStep) {
       setIsAutoAdvancing(true);
       setCountdown(3);

@@ -211,12 +211,15 @@ export class GitHubClient {
     owner?: string
   ): Promise<string> {
     const repoOwner = owner || this.owner;
+    console.log('[createPrForFiles] Starting with:', { repo, repoOwner, branchName, fileCount: files.length });
+    
     // 1. Get default branch SHA
     const { data: repoData } = await this.octokit.repos.get({
       owner: repoOwner,
       repo,
     });
     const defaultBranch = repoData.default_branch;
+    console.log('[createPrForFiles] Got repo data, default branch:', defaultBranch);
 
     const { data: refData } = await this.octokit.git.getRef({
       owner: repoOwner,
@@ -224,6 +227,7 @@ export class GitHubClient {
       ref: `heads/${defaultBranch}`,
     });
     const sha = refData.object.sha;
+    console.log('[createPrForFiles] Got ref SHA:', sha);
 
     // 2. Create new branch
     await this.octokit.git.createRef({
@@ -232,27 +236,80 @@ export class GitHubClient {
       ref: `refs/heads/${branchName}`,
       sha,
     });
+    console.log('[createPrForFiles] Created branch:', branchName);
 
-    // 3. Create/Update files
-    for (const file of files) {
-      await this.octokit.repos.createOrUpdateFileContents({
-        owner: repoOwner,
-        repo,
-        path: file.path,
-        message: `docs: add ${file.path}`,
-        content: Buffer.from(file.content).toString('base64'),
-        branch: branchName,
-      });
-    }
+    // 3. Create/Update files using Git Tree API for better nested directory support
+    const { data: baseCommit } = await this.octokit.git.getCommit({
+      owner: repoOwner,
+      repo,
+      commit_sha: sha,
+    });
+    console.log('[createPrForFiles] Got base commit, tree SHA:', baseCommit.tree.sha);
+
+    // Create blobs for each file
+    const blobs = await Promise.all(
+      files.map(async (file) => {
+        const normalizedPath = file.path.replace(/^\/+/, '').replace(/\\/g, '/');
+        console.log('[createPrForFiles] Creating blob for:', normalizedPath);
+        const { data: blob } = await this.octokit.git.createBlob({
+          owner: repoOwner,
+          repo,
+          content: Buffer.from(file.content).toString('base64'),
+          encoding: 'base64',
+        });
+        console.log('[createPrForFiles] Blob created:', blob.sha);
+        return { path: normalizedPath, sha: blob.sha };
+      })
+    );
+
+    console.log('[createPrForFiles] All blobs created:', blobs.map(b => b.path));
+
+    // Create tree with all files
+    const treeItems = blobs.map(blob => ({
+      path: blob.path,
+      mode: '100644' as const,
+      type: 'blob' as const,
+      sha: blob.sha,
+    }));
+    console.log('[createPrForFiles] Creating tree with items:', treeItems);
+    
+    const { data: newTree } = await this.octokit.git.createTree({
+      owner: repoOwner,
+      repo,
+      base_tree: baseCommit.tree.sha,
+      tree: treeItems,
+    });
+    console.log('[createPrForFiles] Tree created:', newTree.sha);
+
+    // Create commit
+    const { data: newCommit } = await this.octokit.git.createCommit({
+      owner: repoOwner,
+      repo,
+      message: message.split('\n')[0], // Use first line as commit message
+      tree: newTree.sha,
+      parents: [sha],
+    });
+
+    // Update branch reference
+    await this.octokit.git.updateRef({
+      owner: repoOwner,
+      repo,
+      ref: `heads/${branchName}`,
+      sha: newCommit.sha,
+    });
 
     // 4. Create PR
+    const messageParts = message.split('\n\n');
+    const title = messageParts[0]; // First line/paragraph as title
+    const body = messageParts.length > 1 ? messageParts.slice(1).join('\n\n') : `Automated PR to add files:\n\n${files.map(f => `- ${f.path}`).join('\n')}`;
+    
     const { data: prData } = await this.octokit.pulls.create({
       owner: repoOwner,
       repo,
-      title: message,
+      title: title,
       head: branchName,
       base: defaultBranch,
-      body: `Automated PR to add missing documentation:\n\n${files.map(f => `- ${f.path}`).join('\n')}`,
+      body: body,
     });
 
     return prData.html_url;

@@ -370,7 +370,9 @@ ${context.template}
 TASK: Generate .github/dependabot.yml that:
 - Configures all detected package managers: ${context.packageManagers?.join(', ') || 'npm (default)'}
 - Sets appropriate update intervals (weekly is good default)
-- Includes security updates
+- Each package-ecosystem + directory combination must be UNIQUE (no duplicates)
+- Security updates are automatic - do NOT create separate entries for security
+- Increase open-pull-requests-limit to handle both regular and security updates
 - Uses sensible defaults
 - Return ONLY the dependabot.yml file content`;
 }

@@ -18,7 +18,11 @@ const PRACTICE_TYPES = [
   'linting',
 ] as const;
 
-// Fallback content for deploy_badge when README cannot be fetched
+/**
+ * Fallback content shown when deploy_badge is requested but the repository's README.md
+ * cannot be fetched from GitHub (e.g., repo doesn't exist, network error, or no README).
+ * Contains example badge snippets with placeholders that should be replaced with actual values.
+ */
 const DEPLOY_BADGE_FALLBACK = `# Deployment Badge Preview
 
 ⚠️ Could not fetch existing README.md
@@ -108,9 +112,6 @@ export async function POST(request: NextRequest) {
               const existingReadme = Buffer.from(data.content, 'base64').toString('utf-8');
               originalContent = existingReadme; // Store original for diff
               
-              console.log('[deploy_badge] Fetched README length:', existingReadme.length);
-              console.log('[deploy_badge] First 200 chars:', existingReadme.substring(0, 200));
-              
               // Insert deployment badge after title (first # line)
               // If no heading is found, insert after first non-empty line or at top
               const lines = existingReadme.split('\n');
@@ -136,9 +137,8 @@ export async function POST(request: NextRequest) {
                 }
               }
               
-              console.log('[deploy_badge] Inserting badge at line index:', insertIndex, 'foundHeading:', foundHeading);
-              
               // Insert badge section with actual repo owner/name
+              // Note: Workflow name 'deploy.yml' is hardcoded - consider making configurable
               const badgeSection = [
                 '',
                 '<!-- Deployment Status -->',
@@ -148,12 +148,12 @@ export async function POST(request: NextRequest) {
               
               lines.splice(insertIndex, 0, ...badgeSection);
               content = lines.join('\n');
-              
-              console.log('[deploy_badge] Modified README length:', content.length);
-              console.log('[deploy_badge] First 300 chars after insert:', content.substring(0, 300));
             }
           } catch (error) {
-            console.warn('Could not fetch README for deploy_badge:', error);
+            console.warn(
+              `Could not fetch README for deploy_badge (repo: ${repoName}, badge type: ${normalized}):`,
+              error
+            );
           }
         }
         

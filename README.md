@@ -16,11 +16,11 @@ Overseer bridges human intent and AI execution through enforced documentation st
 ## Features
 
 - 📊 **Repository Intelligence** - Health scoring, doc tracking, activity monitoring
-- 🤖 **AI Automation** - Gemini 2.0 summaries, context-aware doc generation
-- 🔧 **One-Click Fixes** - PR creation for docs, best practices, community standards
+- 🤖 **AI Automation** - Gemini 2.0 summaries, context-aware doc generation with multi-stage RAG
+- 🔧 **One-Click Fixes** - PR creation for docs, 9 best practices, 10 community standards
 - 🎯 **Interactive Onboarding** - 16-step guided tour with spotlight highlighting
 - 🔗 **GitHub Integration** - OAuth auth, full metadata sync, rate limit monitoring, custom repo paths
-- 📈 **Composite Metrics** - Testing, coverage, vulnerabilities, contributor analytics
+- 📈 **Composite Metrics** - Testing (60%+ coverage), vulnerabilities, contributor analytics
 
 ## Tech Stack
 
@@ -29,7 +29,7 @@ Overseer bridges human intent and AI execution through enforced documentation st
 - **Database:** Neon Postgres (serverless)
 - **Auth:** NextAuth v5 with GitHub OAuth
 - **APIs:** GitHub REST API via Octokit, Google Gemini AI
-- **Testing:** Vitest + Testing Library
+- **Testing:** Vitest (92 tests, 60% coverage) + Playwright E2E
 
 ## Getting Started
 

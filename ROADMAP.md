@@ -1,12 +1,22 @@
 # 🗺️ Overseer Product Roadmap
 
+## 2025Q4: Foundation & UX (Completed) ✅
+
+- [x] **Guided Tour System:** Interactive 16-step onboarding with spotlight, auto-advance, row expansion
+- [x] **PR Preview Modal:** File selection, diff view, inline edit/generate toggle
+- [x] **AI Template Enrichment:** Context-aware doc generation with Gemini 2.0
+- [x] **OAuth Error Handling:** Auto-redirect, error parsing, user-friendly messaging
+- [x] **Repository Intelligence:** Modify Health scoring, doc tracking, activity monitoring
+- [x] **Auto-Fix System:** One-click PR creation for docs, best practices, community standards
+
 ## 2026Q1: 🤖 Autonomous Agents & Conversational UI
 
 - [ ] **Agent Task Queue:** API endpoint for autonomous AI agents to submit tasks
 - [ ] **Workflow Visualization:** Screen showing branching/execution paths for complex actions
 - [ ] **Unified PR & Task Manager:** Central dashboard for all PRs and TASKS.md entries
-- [ ] **Roadmap Simulation:** AI-powered schedule impact analysis
+- [ ] **Roadmap Simulation:** AI-powered schedule impact analysis of planned work
 - [ ] **Conversational Interface Foundation:** Natural language, chat-driven interface
+- [ ] **AI Doc Improvement:** Add "Improve" buttons to existing documentation with AI-powered enhancement modal (ROADMAP, TASKS, METRICS, FEATURES, README)
 
 ## 2026Q2: 🔐 Security Enhancements
 
@@ -40,18 +50,16 @@
 
 ---
 
-### 🎯 From Diagnosis to Action
+### 🎯 Evolution: Diagnosis → Action
 
-The evolution of Overseer moves the tool out of the diagnostic camp and into the prescriptive and active camp.
+**Architecture:** Lightweight. GitHub repos (code + markdown) = source of truth. Zero manual overhead.
 
-The core efficiency is the **lightweight architecture**: by relying on **GitHub Repositories** (code, markdown docs) as the source of truth, Overseer avoids the manual overhead of traditional project trackers.
+**End State:** Conversational interface for multi-step governance:
 
-The ultimate goal is to evolve the dashboard into a **Conversational Interface** where users can delegate complex, multi-step governance tasks through natural language, such as:
+- _"Run hygiene check on payment service, fix stale docs, assign highest priority vuln to Alice"_
+- _"Impact on Q3 if Mobile App delays one month?"_
 
-- _"Overseer, run a full hygiene check on the core payment service, fix any stale documentation, and assign the highest priority vulnerability fix to Alice."_
-- _"What is the impact on Q3's deadline if we delay the Mobile App feature by one month?"_
-
-This transition establishes Overseer as the central **Workflow Orchestrator** and **Intelligence Layer** for engineering health.
+Overseer = Workflow orchestrator + intelligence layer for engineering health.
 
 <!--
 AGENT INSTRUCTIONS:

@@ -91,10 +91,10 @@ export function TestingSection({
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-blue-800/20 rounded-lg overflow-hidden border border-blue-500/40 shadow-lg shadow-blue-500/10 hover:border-blue-400/50 transition-colors">
+    <div className="bg-gradient-to-br from-sky-900/30 via-slate-800/50 to-sky-800/20 rounded-lg overflow-hidden border border-sky-500/40 shadow-lg shadow-sky-500/10 hover:border-sky-400/50 transition-colors" data-tour="testing">
       <div
         onClick={setIsExpanded}
-        className="w-full px-4 py-3 hover:bg-blue-900/20 transition-colors border-b border-blue-500/20 cursor-pointer"
+        className="w-full px-4 py-3 hover:bg-sky-900/20 transition-colors border-b border-blue-500/20 cursor-pointer"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">

@@ -68,7 +68,7 @@ export function FeaturesSection({ features, isExpanded: isExpandedProp, onToggle
   };
 
   return (
-    <div className="bg-gradient-to-br from-orange-900/30 via-slate-800/50 to-orange-800/20 rounded-lg overflow-hidden border border-orange-500/40 shadow-lg shadow-orange-500/10 hover:border-orange-400/50 transition-colors">
+    <div className="bg-gradient-to-br from-orange-900/30 via-slate-800/50 to-orange-800/20 rounded-lg overflow-hidden border border-orange-500/40 shadow-lg shadow-orange-500/10 hover:border-orange-400/50 transition-colors" data-tour="features-section">
       <div
         onClick={setIsMainExpanded}
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-orange-900/20 transition-colors cursor-pointer"

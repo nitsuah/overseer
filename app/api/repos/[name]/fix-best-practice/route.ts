@@ -102,7 +102,7 @@ export async function POST(
                 break;
             }
 
-            case 'netlify_badge': {
+            case 'deploy_badge': {
                 // Special case: modify existing README
                 try {
                     const readme = await github.getFileContent(repoName, 'README.md');
@@ -110,20 +110,23 @@ export async function POST(
                         return NextResponse.json({ error: 'README.md not found' }, { status: 404 });
                     }
 
-                    // Check if badge already exists
-                    if (readme.includes('api.netlify.com/api/v1/badges')) {
-                        return NextResponse.json({ message: 'Netlify badge already exists in README' }, { status: 200 });
+                    // Check if deploy badge already exists
+                    const deployBadgePatterns = [
+                        'api.netlify.com/api/v1/badges',
+                        'vercel.com',
+                        'img.shields.io/badge/Deployed',
+                        'railway.app',
+                        'render.com',
+                        'fly.io',
+                        'heroku.com',
+                    ];
+                    if (deployBadgePatterns.some(pattern => readme.includes(pattern))) {
+                        return NextResponse.json({ message: 'Deploy badge already exists in README' }, { status: 200 });
                     }
 
-                    // Check if netlify.toml exists
-                    const hasNetlify = await github.getFileContent(repoName, 'netlify.toml');
-                    if (!hasNetlify) {
-                        return NextResponse.json({ error: 'netlify.toml not found - cannot determine site ID' }, { status: 400 });
-                    }
-
-                    // Add badge at the top of README (after title if exists)
+                    // Add generic deployment badge placeholder at the top of README (after title if exists)
                     const lines = readme.split('\n');
-                    const badgeMarkdown = `[![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR_SITE_ID/deploy-status)](https://app.netlify.com/sites/YOUR_SITE_NAME/deploys)\n`;
+                    const badgeMarkdown = `[![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](https://your-deployment-url.com)\n`;
                     
                     // Find first non-empty line (usually title)
                     let insertIndex = 0;
@@ -141,11 +144,11 @@ export async function POST(
                         path: 'README.md',
                         content: newReadme
                     });
-                    branchName = `docs/add-netlify-badge-${Date.now()}`;
-                    commitMessage = 'docs: add Netlify deployment status badge to README';
+                    branchName = `docs/add-deploy-badge-${Date.now()}`;
+                    commitMessage = 'docs: add deployment status badge to README';
                 } catch (error) {
-                    logger.warn('Error adding Netlify badge:', error);
-                    return NextResponse.json({ error: 'Failed to add Netlify badge' }, { status: 500 });
+                    logger.warn('Error adding deploy badge:', error);
+                    return NextResponse.json({ error: 'Failed to add deploy badge' }, { status: 500 });
                 }
                 break;
             }

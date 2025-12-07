@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Github, Shield, Sparkles, LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw } from "lucide-react";
+import { Github, Shield, Sparkles, LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle } from "lucide-react";
 import Image from "next/image";
 import { useGeminiStatus } from "@/hooks/useGeminiStatus";
 import { getLanguageColor } from "@/lib/language-colors";
@@ -31,6 +31,7 @@ interface HeaderProps {
   onFilterLanguageChange?: (language: string) => void;
   onFilterForkChange?: (fork: 'all' | 'no-forks' | 'forks-only') => void;
   onClearFilters?: () => void;
+  onStartTour?: () => void;
 }
 
 const repoTypes: RepoType[] = ['web-app', 'game', 'tool', 'library', 'bot', 'research', 'unknown'];
@@ -62,6 +63,7 @@ export default function Header(props: HeaderProps = {}) {
         onFilterLanguageChange,
         onFilterForkChange,
         onClearFilters,
+        onStartTour,
     } = props;
 
     const [showStatusPills, setShowStatusPills] = useState(false);
@@ -107,7 +109,7 @@ export default function Header(props: HeaderProps = {}) {
                 {session && onToggleAddRepo && (
                 <div className="flex items-center gap-2">
                     {/* Compact Add Repo */}
-                    <div className="relative group/add">
+                    <div className="relative group/add" data-tour="add-repo">
                         <div className={`absolute -inset-0.5 bg-gradient-to-r from-emerald-600 to-green-600 rounded-lg opacity-0 group-hover/add:opacity-20 blur transition-all duration-300 ${showAddRepo ? 'opacity-30' : ''}`}></div>
                         <div className={`relative flex items-center gap-2 bg-slate-800/90 border rounded-lg transition-all duration-300 ${
                             showAddRepo 
@@ -237,6 +239,7 @@ export default function Header(props: HeaderProps = {}) {
                                         onToggleFilters?.();
                                     }}
                                     className="flex items-center gap-1.5 text-sm font-medium transition-colors relative"
+                                    data-tour="filters"
                                 >
                                     <Filter className={`h-4 w-4 ${hasActiveFilters ? 'text-purple-400' : 'text-slate-300 group-hover/filter:text-blue-400'}`} />
                                     <span className={hasActiveFilters ? 'text-purple-400' : 'text-slate-300 group-hover/filter:text-blue-400'}>
@@ -267,6 +270,7 @@ export default function Header(props: HeaderProps = {}) {
                     onClick={onSync}
                     disabled={syncing}
                     className="flex items-center gap-1.5 px-3 py-2 btn-primary-gradient disabled:bg-slate-800 disabled:cursor-not-allowed rounded-lg transition-colors font-medium shadow-lg text-sm"
+                    data-tour="sync-all"
                 >
                     <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
                     {syncing ? 'Syncing...' : 'Sync'}
@@ -286,7 +290,7 @@ export default function Header(props: HeaderProps = {}) {
                                 showStatusPills 
                                     ? 'opacity-100 scale-100' 
                                     : 'opacity-0 scale-50 pointer-events-none'
-                            }`}>
+                            }`} data-tour="auth-status">
                                 <span 
                                     className={`pill relative overflow-hidden flex items-center gap-1 font-bold shadow-lg group/auth cursor-pointer transition-all duration-300 ease-out ${!session ? 'pl-2' : ''} ${
                                         session 
@@ -318,7 +322,7 @@ export default function Header(props: HeaderProps = {}) {
                                 showStatusPills 
                                     ? 'opacity-100 scale-100' 
                                     : 'opacity-0 scale-50 pointer-events-none'
-                            }`}>
+                            }`} data-tour="gemini-status">
                                 <span 
                                     className={`pill relative overflow-hidden flex items-center gap-1 font-bold shadow-lg group/gemini cursor-pointer transition-all duration-300 ease-out ${!geminiStatus.healthy && !geminiStatus.loading ? 'pl-2' : ''} ${
                                         geminiStatus.loading 
@@ -349,12 +353,12 @@ export default function Header(props: HeaderProps = {}) {
                                 </span>
                             </div>
 
-                            {/* Version Pill - Bottom */}
+                            {/* Version Pill - Bottom Left */}
                             <div className={`absolute left-4 bottom-2 transition-all duration-500 ease-out origin-right ${
                                 showStatusPills 
                                     ? 'opacity-100 scale-100' 
                                     : 'opacity-0 scale-50 pointer-events-none'
-                            }`}>
+                            }`} data-tour="version-info">
                                 <span 
                                     className="pill relative overflow-hidden flex items-center gap-1 text-sky-300 font-bold shadow-lg shadow-sky-500/30 group/version cursor-pointer transition-all duration-300 ease-out"
                                 >
@@ -366,6 +370,30 @@ export default function Header(props: HeaderProps = {}) {
                                         </span>
                                     </span>
                                 </span>
+                            </div>
+
+                            {/* Tour Pill - Bottom Right */}
+                            <div className={`absolute right-16 bottom-2 transition-all duration-500 ease-out origin-left ${
+                                showStatusPills 
+                                    ? 'opacity-100 scale-100' 
+                                    : 'opacity-0 scale-50 pointer-events-none'
+                            }`}>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onStartTour?.();
+                                    }}
+                                    className="pill relative overflow-hidden flex items-center gap-1 text-violet-300 font-bold shadow-lg shadow-violet-500/30 group/tour cursor-pointer transition-all duration-300 ease-out hover:shadow-violet-500/50"
+                                    title="Start guided tour"
+                                >
+                                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent motion-safe:animate-[shimmer_2s_infinite]"></span>
+                                    <span className="relative flex items-center drop-shadow-[0_0_4px_rgba(196,181,253,0.6)]">
+                                        <HelpCircle className="h-3.5 w-3.5" />
+                                        <span className="w-0 group-hover/tour:w-auto overflow-hidden transition-all duration-300 ease-out">
+                                            <span className="ml-1.5 whitespace-nowrap inline-block">Tour</span>
+                                        </span>
+                                    </span>
+                                </button>
                             </div>
 
                             {session.user?.image ? (

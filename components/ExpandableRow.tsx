@@ -191,6 +191,7 @@ export default function ExpandableRow({
               onFixAllPractices={onFixAllPractices}
               isExpanded={row2Expanded}
               onToggleExpanded={() => setRow2Expanded(!row2Expanded)}
+              data-tour="best-practices"
             />
 
             {/* Testing */}
@@ -213,6 +214,7 @@ export default function ExpandableRow({
               onFixAllStandards={onFixAllStandards}
               isExpanded={row3Expanded}
               onToggleExpanded={() => setRow3Expanded(!row3Expanded)}
+              data-tour="community"
             />
 
             {/* Metrics */}

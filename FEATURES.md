@@ -76,6 +76,10 @@
 
 ### 🎨 User Interface
 
+- **Guided Tour System**: 16-step interactive onboarding with spotlight overlay and auto-advance (3s per step)
+- **Smart Row Expansion**: Automatic expand/collapse during tour for proper section visibility
+- **Data-Tour Attributes**: Comprehensive element targeting with full card highlighting
+- **Tour Navigation Controls**: Skip tour, manual next/previous, pause on interaction
 - **Modern Dashboard**: Clean, dark-mode interface with glass-morphic effects and gradient backgrounds
 - **Three-Row Detail Layout**: Organized information architecture (Project/Quality/Standards)
 - **Left Sidebar**: AI Summary and Repository Stats consolidated for quick access

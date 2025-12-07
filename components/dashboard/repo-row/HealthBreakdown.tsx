@@ -112,11 +112,11 @@ export function HealthBreakdown({ repo, details, health, expanded, onToggle }: H
     else if (activityScore < 80) activityColor = 'yellow';
 
     return [
-      { label: 'Community', score: csScore, color: 'green', weight: '15%' },
-      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '20%' },
-      { label: 'Testing', score: testScore, color: 'blue', weight: '20%' },
-      { label: 'Activity', score: activityScore, color: activityColor, weight: '15%' },
-      { label: 'Documentation', score: docScore, color: 'slate', weight: '30%' },
+      { label: 'Community', score: csScore, color: 'green', weight: '10%' },
+      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '25%' },
+      { label: 'Testing', score: testScore, color: 'blue', weight: '25%' },
+      { label: 'Documentation', score: docScore, color: 'slate', weight: '20%' },
+      { label: 'Activity', score: activityScore, color: activityColor, weight: '10%' },
     ];
   }, [repo, details, now]);
 

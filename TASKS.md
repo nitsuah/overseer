@@ -2,13 +2,32 @@
 
 ## Done
 
+- [x] **Guided Tour System**: Interactive 16-step tour with spotlight overlay, auto-advance (3s), and data-tour attributes
+- [x] **Tour Navigation**: Welcome → Table columns → Expanded sections (Features/Roadmap/Tasks/Documentation/Best Practices/Testing/Community) → Controls → Status pills
+- [x] **Row Expansion Logic**: Smart expand/collapse for proper section visibility during tour steps
 - [x] Fix Modal content/markdown view and DiffView overflow issues
+- [x] Update Health Breakdown weights: Documentation 20%, Testing 25%, Best Practices 25%, Community Standards 10%, Activity 10%
 
 _For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._
 
 ## In Progress
 
 ## Todo
+
+### v0.1.7.2: Fix all Best practices
+
+Ensure all have modal and generate works, ensure prompts follow best practices from template and knowledge from repo on language and framework (primarily README and CONTRIBUTING.md):
+
+- [ ] Branch Protection (need more info on dormant/etc. setting breakdown into templates?)
+- [ ] Ci Cd
+- [ ] Gitignore
+- [ ] Pre Commit Hooks
+- [ ] Testing Framework
+- [ ] Linting
+- [ ] Docker
+- [ ] Env Template
+- [ ] Dependabot
+- [ ] Deploy Badge
 
 ### v0.1.8: Performance & Rate Limiting
 

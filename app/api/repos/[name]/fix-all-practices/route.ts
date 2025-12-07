@@ -82,12 +82,12 @@ export async function POST(
             addedTypes.push('docker');
             break;
           }
-          case 'netlify_badge': {
+          case 'deploy_badge': {
             try {
               const readme = await github.getFileContent(repoName, 'README.md');
               if (!readme) {
                 // If README missing, skip gracefully
-                logger.warn('README.md not found for netlify_badge');
+                logger.warn('README.md not found for deploy_badge');
                 break;
               }
               if (readme.includes('api.netlify.com/api/v1/badges')) {
@@ -110,10 +110,45 @@ export async function POST(
             lines.splice(insertIndex, 0, '', badgeMarkdown);
             const newReadme = lines.join('\n');
             filesToAdd.push({ path: 'README.md', content: newReadme });
-            addedTypes.push('netlify_badge');
+            addedTypes.push('deploy_badge');
           } catch (error) {
-            logger.warn('Error adding Netlify badge:', error);
+            logger.warn('Error adding deploy badge:', error);
           }
+          break;
+        }
+        case 'ci_cd': {
+          const templatePath = path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci.yml');
+          const content = await fs.readFile(templatePath, 'utf-8');
+          filesToAdd.push({ path: '.github/workflows/ci.yml', content });
+          addedTypes.push('ci_cd');
+          break;
+        }
+        case 'gitignore': {
+          const templatePath = path.join(process.cwd(), 'templates', '.gitignore');
+          const content = await fs.readFile(templatePath, 'utf-8');
+          filesToAdd.push({ path: '.gitignore', content });
+          addedTypes.push('gitignore');
+          break;
+        }
+        case 'pre_commit_hooks': {
+          const templatePath = path.join(process.cwd(), 'templates', '.pre-commit-config.yaml');
+          const content = await fs.readFile(templatePath, 'utf-8');
+          filesToAdd.push({ path: '.pre-commit-config.yaml', content });
+          addedTypes.push('pre_commit_hooks');
+          break;
+        }
+        case 'testing_framework': {
+          const templatePath = path.join(process.cwd(), 'templates', 'vitest.config.ts');
+          const content = await fs.readFile(templatePath, 'utf-8');
+          filesToAdd.push({ path: 'vitest.config.ts', content });
+          addedTypes.push('testing_framework');
+          break;
+        }
+        case 'linting': {
+          const templatePath = path.join(process.cwd(), 'templates', 'eslint.config.mjs');
+          const content = await fs.readFile(templatePath, 'utf-8');
+          filesToAdd.push({ path: 'eslint.config.mjs', content });
+          addedTypes.push('linting');
           break;
         }
         default:
@@ -128,7 +163,10 @@ export async function POST(
     }
 
     const branchName = `chore/add-best-practices-${Date.now()}`;
-    const commitMessage = `chore: add best practices (${filesToAdd.map(f => f.path).join(', ')})`;
+    const commitMessage = `chore: add ${filesToAdd.length} best practice file${filesToAdd.length > 1 ? 's' : ''}
+
+Added files:
+${filesToAdd.map(f => `- ${f.path}`).join('\n')}`;
 
     const prUrl = await github.createPrForFiles(
       repoName,

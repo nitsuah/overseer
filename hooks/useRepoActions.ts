@@ -299,6 +299,11 @@ export function useRepoActions(
       case 'env_template': return '.env.example';
       case 'docker': return 'Dockerfile';
       case 'dependabot': return '.github/dependabot.yml';
+      case 'ci_cd': return '.github/workflows/ci.yml';
+      case 'gitignore': return '.gitignore';
+      case 'pre_commit_hooks': return '.pre-commit-config.yaml';
+      case 'testing_framework': return 'vitest.config.ts';
+      case 'linting': return 'eslint.config.mjs';
       default: return practiceType;
     }
   };
@@ -310,6 +315,11 @@ export function useRepoActions(
       case 'env_template': return 'shell';
       case 'docker': return 'dockerfile';
       case 'dependabot': return 'yaml';
+      case 'ci_cd': return 'yaml';
+      case 'gitignore': return 'text';
+      case 'pre_commit_hooks': return 'yaml';
+      case 'testing_framework': return 'typescript';
+      case 'linting': return 'javascript';
       default: return 'text';
     }
   };
@@ -329,7 +339,7 @@ export function useRepoActions(
       const bestPractices: BestPractice[] = details.bestPractices || [];
 
       // Get fixable missing practices
-      const fixablePractices = ['dependabot', 'env_template', 'docker', 'deploy_badge'];
+      const fixablePractices = ['dependabot', 'env_template', 'docker', 'deploy_badge', 'ci_cd', 'gitignore', 'pre_commit_hooks', 'testing_framework', 'linting'];
       const missingPractices = bestPractices
         .filter((p: BestPractice) => p.status === 'missing' && fixablePractices.includes(p.practice_type))
         .map((p: BestPractice) => p.practice_type);

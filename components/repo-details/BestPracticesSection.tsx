@@ -68,7 +68,7 @@ export function BestPracticesSection({
   // Calculate fixable missing practices with AI-powered context-aware fixes
   // See docs/BEST_PRACTICES_AI_STRATEGY.md for implementation details
   // Each practice uses: template + README + language + (CONTRIBUTING/existing files)
-  const fixablePractices = ['dependabot', 'env_template', 'docker', 'deploy_badge'];
+  const fixablePractices = ['dependabot', 'env_template', 'docker', 'deploy_badge', 'ci_cd', 'gitignore', 'pre_commit_hooks', 'testing_framework', 'linting'];
   const missingFixable = bestPractices.filter(
     (p) => p.status === 'missing' && fixablePractices.includes(p.practice_type)
   );
@@ -123,7 +123,7 @@ export function BestPracticesSection({
           {bestPractices
             .sort((a, b) => {
               // Ensure fixable items are always listed at the bottom
-              const fixable = ['dependabot', 'env_template', 'docker', 'deploy_badge'];
+              const fixable = ['dependabot', 'env_template', 'docker', 'deploy_badge', 'ci_cd', 'gitignore', 'pre_commit_hooks', 'testing_framework', 'linting'];
               const isAFixable = fixable.includes(a.practice_type);
               const isBFixable = fixable.includes(b.practice_type);
               if (isAFixable && !isBFixable) return 1;
@@ -149,7 +149,7 @@ export function BestPracticesSection({
             })
             .map((practice, i) => {
             // Determine if this practice can be auto-fixed
-            const fixablePractices = ['dependabot', 'env_template', 'docker', 'deploy_badge'];
+            const fixablePractices = ['dependabot', 'env_template', 'docker', 'deploy_badge', 'ci_cd', 'gitignore', 'pre_commit_hooks', 'testing_framework', 'linting'];
             const canFix = fixablePractices.includes(practice.practice_type);
             const isMissing = practice.status === 'missing';
 

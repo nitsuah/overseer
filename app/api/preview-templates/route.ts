@@ -43,6 +43,11 @@ export async function POST(request: NextRequest) {
       docker: 'Dockerfile',
       env_template: '.env.example',
       dependabot: '.github/dependabot.yml',
+      ci_cd: '.github/workflows/ci.yml',
+      gitignore: '.gitignore',
+      pre_commit_hooks: '.pre-commit-config.yaml',
+      testing_framework: 'vitest.config.ts',
+      linting: 'eslint.config.mjs',
     };
     
     for (const docType of docTypes) {
@@ -72,8 +77,8 @@ export async function POST(request: NextRequest) {
           path: filename.replace(/\\/g, '/'),
           content,
           docType: normalized,
-          type: ['docker','env_template','dependabot','netlify_badge'].includes(normalized) ? 'practice' : 'doc',
-          practiceType: ['docker','env_template','dependabot','netlify_badge'].includes(normalized) ? normalized : undefined,
+          type: ['docker','env_template','dependabot','netlify_badge','ci_cd','gitignore','pre_commit_hooks','testing_framework','linting'].includes(normalized) ? 'practice' : 'doc',
+          practiceType: ['docker','env_template','dependabot','netlify_badge','ci_cd','gitignore','pre_commit_hooks','testing_framework','linting'].includes(normalized) ? normalized : undefined,
         });
       } catch (error) {
         console.warn(`Template not found for ${docType}:`, error);

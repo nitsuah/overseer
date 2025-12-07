@@ -106,6 +106,16 @@ function getTemplateFileName(practiceType: string): string {
       return 'Dockerfile';
     case 'dependabot':
       return '.github/dependabot.yml';
+    case 'ci_cd':
+      return '.github/workflows/ci.yml';
+    case 'gitignore':
+      return '.gitignore';
+    case 'pre_commit_hooks':
+      return '.pre-commit-config.yaml';
+    case 'testing_framework':
+      return 'vitest.config.ts';
+    case 'linting':
+      return 'eslint.config.mjs';
     default:
       return 'README.md';
   }
@@ -146,6 +156,63 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"`;
+
+    case 'ci_cd':
+      return `name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    - name: Install dependencies
+      run: npm ci
+    - name: Run tests
+      run: npm test`;
+
+    case 'gitignore':
+      return `node_modules/
+dist/
+build/
+.env
+.env.local
+coverage/
+.DS_Store`;
+
+    case 'pre_commit_hooks':
+      return `repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer`;
+
+    case 'testing_framework':
+      return `import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+  },
+});`;
+
+    case 'linting':
+      return `import eslint from '@eslint/js';
+
+export default [
+  eslint.configs.recommended,
+];`;
 
     default:
       return '';

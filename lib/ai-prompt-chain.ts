@@ -5,7 +5,7 @@
 
 import { GitHubClient } from './github';
 
-export type BestPracticeType = 'deploy_badge' | 'env_template' | 'docker' | 'dependabot';
+export type BestPracticeType = 'deploy_badge' | 'env_template' | 'docker' | 'dependabot' | 'ci_cd' | 'gitignore' | 'pre_commit_hooks' | 'testing_framework' | 'linting';
 
 export interface PromptChainContext {
   repoName: string;
@@ -40,7 +40,7 @@ export async function fetchRepoContext(
   try {
     // Always fetch README (primary context source)
     try {
-      const readmeContent = await client.getFileContent(owner, repo, 'README.md');
+      const readmeContent = await client.getFileContent(repo, 'README.md');
       if (readmeContent) {
         context.readme = readmeContent;
       
@@ -65,7 +65,7 @@ export async function fetchRepoContext(
 
     // Fetch CONTRIBUTING.md if available
     try {
-      const contributingContent = await client.getFileContent(owner, repo, 'CONTRIBUTING.md');
+      const contributingContent = await client.getFileContent(repo, 'CONTRIBUTING.md');
       if (contributingContent) {
         context.contributing = contributingContent;
       }
@@ -81,7 +81,7 @@ export async function fetchRepoContext(
         context.existingFiles = {};
         for (const file of envFiles) {
           try {
-            const content = await client.getFileContent(owner, repo, file);
+            const content = await client.getFileContent(repo, file);
             if (content) {
               context.existingFiles[file] = content;
             }
@@ -97,7 +97,7 @@ export async function fetchRepoContext(
         const dockerFiles = ['Dockerfile', 'docker-compose.yml', '.dockerignore'];
         for (const file of dockerFiles) {
           try {
-            const content = await client.getFileContent(owner, repo, file);
+            const content = await client.getFileContent(repo, file);
             if (content) {
               context.existingFiles[file] = content;
             }
@@ -110,6 +110,29 @@ export async function fetchRepoContext(
       case 'dependabot':
         // Detect package managers from repo files
         context.packageManagers = await detectPackageManagers(client, owner, repo);
+        break;
+
+      case 'ci_cd':
+        // Detect package managers for CI/CD setup
+        context.packageManagers = await detectPackageManagers(client, owner, repo);
+        break;
+
+      case 'gitignore':
+        // Detect package managers to include appropriate ignore patterns
+        context.packageManagers = await detectPackageManagers(client, owner, repo);
+        break;
+
+      case 'pre_commit_hooks':
+        // Detect package managers for appropriate hooks
+        context.packageManagers = await detectPackageManagers(client, owner, repo);
+        break;
+
+      case 'testing_framework':
+        // No additional context needed beyond README
+        break;
+
+      case 'linting':
+        // No additional context needed beyond README
         break;
     }
   } catch (error) {
@@ -204,7 +227,7 @@ async function detectPackageManagers(
   
   for (const { file, manager } of checks) {
     try {
-      await client.getFileContent(owner, repo, file);
+      await client.getFileContent(repo, file);
       managers.push(manager);
     } catch (_) {
       // File doesn't exist
@@ -247,6 +270,16 @@ export function buildPracticePrompt(context: EnrichedContext): string {
       return buildDockerPrompt(context);
     case 'dependabot':
       return buildDependabotPrompt(context);
+    case 'ci_cd':
+      return buildCICDPrompt(context);
+    case 'gitignore':
+      return buildGitignorePrompt(context);
+    case 'pre_commit_hooks':
+      return buildPreCommitHooksPrompt(context);
+    case 'testing_framework':
+      return buildTestingFrameworkPrompt(context);
+    case 'linting':
+      return buildLintingPrompt(context);
   }
 }
 
@@ -340,4 +373,120 @@ TASK: Generate .github/dependabot.yml that:
 - Includes security updates
 - Uses sensible defaults
 - Return ONLY the dependabot.yml file content`;
+}
+
+function buildCICDPrompt(context: EnrichedContext): string {
+  return `You are creating a CI/CD workflow for a ${context.language || 'Unknown'} project.
+
+REPO CONTEXT:
+- Name: ${context.repoName}
+- Language: ${context.language || 'Unknown'}
+
+${context.buildSteps ? `BUILD INSTRUCTIONS FROM README:\n${context.buildSteps}` : 'No build instructions found in README.'}
+
+${context.contributing ? `DEVELOPMENT GUIDELINES:\n${context.contributing.slice(0, 500)}...` : 'No CONTRIBUTING.md found.'}
+
+TEMPLATE:
+${context.template}
+
+TASK: Generate .github/workflows/ci.yml that:
+- Runs tests on push/PR
+- Uses appropriate actions for ${context.language || 'the project'}
+- Includes linting if applicable
+- Tests on multiple versions if relevant
+- Has clear job names and steps
+- Follows modern GitHub Actions best practices
+- Return ONLY the workflow YAML file content`;
+}
+
+function buildGitignorePrompt(context: EnrichedContext): string {
+  return `You are creating a .gitignore file for a ${context.language || 'Unknown'} project.
+
+REPO CONTEXT:
+- Name: ${context.repoName}
+- Language: ${context.language || 'Unknown'}
+- Package managers: ${context.packageManagers?.join(', ') || 'Unknown'}
+
+${context.readme ? `README CONTEXT:\n${context.readme.slice(0, 500)}...` : 'No README available.'}
+
+TEMPLATE:
+${context.template}
+
+TASK: Generate .gitignore that:
+- Includes patterns for ${context.language || 'common development'}
+- Covers IDE files (.vscode, .idea, etc.)
+- Ignores dependency directories (node_modules, venv, etc.)
+- Includes OS-specific files (.DS_Store, Thumbs.db)
+- Ignores build artifacts
+- Ignores environment files (.env, .env.local)
+- Well-organized with comments
+- Return ONLY the .gitignore file content`;
+}
+
+function buildPreCommitHooksPrompt(context: EnrichedContext): string {
+  return `You are creating pre-commit hooks configuration for a ${context.language || 'Unknown'} project.
+
+REPO CONTEXT:
+- Name: ${context.repoName}
+- Language: ${context.language || 'Unknown'}
+
+${context.contributing ? `DEVELOPMENT GUIDELINES:\n${context.contributing.slice(0, 500)}...` : 'No CONTRIBUTING.md found.'}
+
+TEMPLATE:
+${context.template}
+
+TASK: Generate .pre-commit-config.yaml that:
+- Uses appropriate hooks for ${context.language || 'the project'}
+- Includes code formatting checks
+- Includes trailing whitespace/line ending checks
+- Includes security checks if applicable
+- Uses stable/recommended hook versions
+- Follows pre-commit.com best practices
+- Return ONLY the .pre-commit-config.yaml file content`;
+}
+
+function buildTestingFrameworkPrompt(context: EnrichedContext): string {
+  return `You are setting up a testing framework for a ${context.language || 'Unknown'} project.
+
+REPO CONTEXT:
+- Name: ${context.repoName}
+- Language: ${context.language || 'Unknown'}
+
+${context.buildSteps ? `BUILD/DEVELOPMENT INFO:\n${context.buildSteps}` : 'No build information found.'}
+
+${context.contributing ? `DEVELOPMENT GUIDELINES:\n${context.contributing.slice(0, 500)}...` : 'No CONTRIBUTING.md found.'}
+
+TEMPLATE:
+${context.template}
+
+TASK: Generate testing configuration that:
+- Uses appropriate framework for ${context.language || 'the language'} (Jest/Vitest for JS/TS, pytest for Python, etc.)
+- Includes basic configuration
+- Sets up test directory structure
+- Includes example test file
+- Configures coverage reporting
+- Follows modern testing best practices
+- Return ONLY the test configuration file content (e.g., vitest.config.ts, jest.config.js, pytest.ini)`;
+}
+
+function buildLintingPrompt(context: EnrichedContext): string {
+  return `You are setting up linting for a ${context.language || 'Unknown'} project.
+
+REPO CONTEXT:
+- Name: ${context.repoName}
+- Language: ${context.language || 'Unknown'}
+
+${context.contributing ? `CODE STYLE GUIDELINES:\n${context.contributing.slice(0, 500)}...` : 'No CONTRIBUTING.md found.'}
+
+TEMPLATE:
+${context.template}
+
+TASK: Generate linting configuration that:
+- Uses appropriate linter for ${context.language || 'the language'} (ESLint for JS/TS, Pylint/Ruff for Python, etc.)
+- Includes sensible defaults
+- Enables recommended rules
+- Configures code style (Prettier for JS/TS if applicable)
+- Ignores common directories (node_modules, dist, build)
+- Follows modern linting best practices
+- Return ONLY the linting configuration file content (e.g., eslint.config.mjs, .pylintrc, .rubocop.yml)`;
 }

@@ -76,6 +76,9 @@ export async function POST(request: NextRequest) {
               const existingReadme = Buffer.from(data.content, 'base64').toString('utf-8');
               originalContent = existingReadme; // Store original for diff
               
+              console.log('[deploy_badge] Fetched README length:', existingReadme.length);
+              console.log('[deploy_badge] First 200 chars:', existingReadme.substring(0, 200));
+              
               // Insert deployment badge after title (first # line) or at the top
               const lines = existingReadme.split('\n');
               let insertIndex = 0;
@@ -88,6 +91,8 @@ export async function POST(request: NextRequest) {
                 }
               }
               
+              console.log('[deploy_badge] Inserting badge at line index:', insertIndex);
+              
               // Insert badge section
               const badgeSection = [
                 '',
@@ -98,6 +103,9 @@ export async function POST(request: NextRequest) {
               
               lines.splice(insertIndex, 0, ...badgeSection);
               content = lines.join('\n');
+              
+              console.log('[deploy_badge] Modified README length:', content.length);
+              console.log('[deploy_badge] First 300 chars after insert:', content.substring(0, 300));
             }
           } catch (error) {
             console.warn('Could not fetch README for deploy_badge:', error);

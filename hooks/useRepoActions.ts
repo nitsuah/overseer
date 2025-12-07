@@ -325,7 +325,7 @@ export function useRepoActions(
   };
 
   const handleFixAllPractices = async (repoName: string) => {
-    // Load previews for ALL missing fixable best practices and open modal
+    // Generate AI-powered, context-aware fixes for ALL missing best practices
     try {
       setFixingDoc(true);
       
@@ -349,24 +349,47 @@ export function useRepoActions(
         return;
       }
 
-      const previewRes = await fetch('/api/preview-templates', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ docTypes: missingPractices }),
-      });
+      // Generate AI content for each missing practice
+      const generatedFiles: FilePreview[] = [];
+      for (const practiceType of missingPractices) {
+        try {
+          const generateRes = await fetch('/api/repos/generate-best-practice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ repoName, practiceType }),
+          });
 
-      if (previewRes.ok) {
-        const { previews } = await previewRes.json();
-        setPreviewFiles(previews);
-        setPreviewRepoName(repoName);
-        setPreviewMode('batch');
-        setPreviewModalOpen(true);
-      } else {
-        setToastMessage('Failed to load previews');
+          if (generateRes.ok) {
+            const { content } = await generateRes.json();
+            const fileName = getFileNameForPractice(practiceType);
+            generatedFiles.push({
+              path: fileName,
+              content: content,
+              language: getLanguageForPractice(practiceType),
+              docType: practiceType,
+              type: 'practice',
+              practiceType: practiceType,
+            });
+          } else {
+            console.warn(`Failed to generate ${practiceType}`);
+          }
+        } catch (error) {
+          console.error(`Error generating ${practiceType}:`, error);
+        }
       }
+
+      if (generatedFiles.length === 0) {
+        setToastMessage('Failed to generate any practices');
+        return;
+      }
+
+      setPreviewFiles(generatedFiles);
+      setPreviewRepoName(repoName);
+      setPreviewMode('batch');
+      setPreviewModalOpen(true);
     } catch (error) {
-      console.error('Failed to fetch previews:', error);
-      setToastMessage('Failed to load previews');
+      console.error('Failed to generate practices:', error);
+      setToastMessage('Failed to generate practices');
     } finally {
       setFixingDoc(false);
     }

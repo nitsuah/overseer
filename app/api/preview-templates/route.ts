@@ -137,12 +137,35 @@ export async function POST(request: NextRequest) {
                 }
               }
               
-              // Insert badge section with actual repo owner/name
-              // Note: Workflow name 'deploy.yml' is hardcoded - consider making configurable
+              // Detect deployment workflow from repository
+              // Look for common workflow files: deploy.yml, cd.yml, production.yml, main.yml
+              let workflowFile = 'deploy.yml'; // default fallback
+              try {
+                const workflowsResponse = await octokit.repos.getContent({
+                  owner,
+                  repo,
+                  path: '.github/workflows',
+                });
+                
+                if (Array.isArray(workflowsResponse.data)) {
+                  // Priority order for deployment workflows
+                  const deployWorkflows = ['deploy.yml', 'deploy.yaml', 'cd.yml', 'cd.yaml', 'production.yml', 'production.yaml', 'main.yml', 'main.yaml'];
+                  const foundWorkflow = workflowsResponse.data.find((file) =>
+                    deployWorkflows.includes(file.name.toLowerCase())
+                  );
+                  if (foundWorkflow) {
+                    workflowFile = foundWorkflow.name;
+                  }
+                }
+              } catch {
+                // Workflows folder doesn't exist or cannot be accessed, use default
+              }
+              
+              // Insert badge section with actual repo owner/name and detected workflow
               const badgeSection = [
                 '',
                 '<!-- Deployment Status -->',
-                `[![Deploy Status](https://github.com/${owner}/${repo}/actions/workflows/deploy.yml/badge.svg)](https://github.com/${owner}/${repo}/actions)`,
+                `[![Deploy Status](https://github.com/${owner}/${repo}/actions/workflows/${workflowFile}/badge.svg)](https://github.com/${owner}/${repo}/actions)`,
                 ''
               ];
               

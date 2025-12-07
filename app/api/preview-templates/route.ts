@@ -4,6 +4,38 @@ import fs from 'fs/promises';
 import path from 'path';
 import { Octokit } from '@octokit/rest';
 
+// Practice types that represent best practices rather than documentation
+const PRACTICE_TYPES = [
+  'docker',
+  'env_template',
+  'dependabot',
+  'netlify_badge',
+  'deploy_badge',
+  'ci_cd',
+  'gitignore',
+  'pre_commit_hooks',
+  'testing_framework',
+  'linting',
+] as const;
+
+// Fallback content for deploy_badge when README cannot be fetched
+const DEPLOY_BADGE_FALLBACK = `# Deployment Badge Preview
+
+⚠️ Could not fetch existing README.md
+
+This change adds a deployment status badge to README.md.
+
+Example badges:
+
+**Netlify:**
+[![Netlify Status](https://api.netlify.com/api/v1/badges/<SITE_ID>/deploy-status)](https://app.netlify.com/sites/<SITE_NAME>/deploys)
+
+**Vercel:**
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=<REPO_URL>)
+
+**GitHub Actions:**
+[![Deploy Status](https://github.com/<OWNER>/<REPO>/actions/workflows/deploy.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions)`;
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -79,25 +111,38 @@ export async function POST(request: NextRequest) {
               console.log('[deploy_badge] Fetched README length:', existingReadme.length);
               console.log('[deploy_badge] First 200 chars:', existingReadme.substring(0, 200));
               
-              // Insert deployment badge after title (first # line) or at the top
+              // Insert deployment badge after title (first # line)
+              // If no heading is found, insert after first non-empty line or at top
               const lines = existingReadme.split('\n');
               let insertIndex = 0;
+              let foundHeading = false;
               
               // Find first # heading
               for (let i = 0; i < lines.length; i++) {
                 if (lines[i].trim().startsWith('#')) {
                   insertIndex = i + 1;
+                  foundHeading = true;
                   break;
                 }
               }
               
-              console.log('[deploy_badge] Inserting badge at line index:', insertIndex);
+              // If no heading found, insert after first non-empty line
+              if (!foundHeading) {
+                for (let i = 0; i < lines.length; i++) {
+                  if (lines[i].trim() !== '') {
+                    insertIndex = i + 1;
+                    break;
+                  }
+                }
+              }
               
-              // Insert badge section
+              console.log('[deploy_badge] Inserting badge at line index:', insertIndex, 'foundHeading:', foundHeading);
+              
+              // Insert badge section with actual repo owner/name
               const badgeSection = [
                 '',
                 '<!-- Deployment Status -->',
-                '[![Deploy Status](https://github.com/<OWNER>/<REPO>/actions/workflows/deploy.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions)',
+                `[![Deploy Status](https://github.com/${owner}/${repo}/actions/workflows/deploy.yml/badge.svg)](https://github.com/${owner}/${repo}/actions)`,
                 ''
               ];
               
@@ -114,7 +159,7 @@ export async function POST(request: NextRequest) {
         
         // Fallback if we couldn't fetch README
         if (!content) {
-          content = `# Deployment Badge Preview\n\n⚠️ Could not fetch existing README.md\n\nThis change adds a deployment status badge to README.md.\n\nExample badges:\n\n**Netlify:**\n[![Netlify Status](https://api.netlify.com/api/v1/badges/<SITE_ID>/deploy-status)](https://app.netlify.com/sites/<SITE_NAME>/deploys)\n\n**Vercel:**\n[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=<REPO_URL>)\n\n**GitHub Actions:**\n[![Deploy Status](https://github.com/<OWNER>/<REPO>/actions/workflows/deploy.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions)`;
+          content = DEPLOY_BADGE_FALLBACK;
         }
         
         previews.push({
@@ -135,12 +180,13 @@ export async function POST(request: NextRequest) {
       
       try {
         const content = await fs.readFile(templatePath, 'utf-8');
+        const isPractice = PRACTICE_TYPES.includes(normalized as typeof PRACTICE_TYPES[number]);
         previews.push({
           path: filename.replace(/\\/g, '/'),
           content,
           docType: normalized,
-          type: ['docker','env_template','dependabot','netlify_badge','deploy_badge','ci_cd','gitignore','pre_commit_hooks','testing_framework','linting'].includes(normalized) ? 'practice' : 'doc',
-          practiceType: ['docker','env_template','dependabot','netlify_badge','deploy_badge','ci_cd','gitignore','pre_commit_hooks','testing_framework','linting'].includes(normalized) ? normalized : undefined,
+          type: isPractice ? 'practice' : 'doc',
+          practiceType: isPractice ? normalized : undefined,
         });
       } catch (error) {
         console.warn(`Template not found for ${docType}:`, error);

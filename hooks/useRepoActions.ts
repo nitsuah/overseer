@@ -6,6 +6,7 @@ import { Repo, BestPractice } from '@/types/repo';
 interface FilePreview {
   path: string;
   content: string;
+  originalContent?: string; // For diffs when modifying existing files (e.g., deploy_badge)
   docType: string;
   type: 'doc' | 'practice';
   practiceType?: string;
@@ -325,7 +326,7 @@ export function useRepoActions(
   };
 
   const handleFixAllPractices = async (repoName: string) => {
-    // Load previews for ALL missing fixable best practices and open modal
+    // Load templates for all missing best practices - AI enrichment happens in modal
     try {
       setFixingDoc(true);
       
@@ -349,24 +350,26 @@ export function useRepoActions(
         return;
       }
 
+      // Load templates - AI enrichment happens in the modal
       const previewRes = await fetch('/api/preview-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ docTypes: missingPractices }),
+        body: JSON.stringify({ docTypes: missingPractices, repoName }),
       });
 
-      if (previewRes.ok) {
-        const { previews } = await previewRes.json();
-        setPreviewFiles(previews);
-        setPreviewRepoName(repoName);
-        setPreviewMode('batch');
-        setPreviewModalOpen(true);
-      } else {
-        setToastMessage('Failed to load previews');
+      if (!previewRes.ok) {
+        setToastMessage('Failed to load templates');
+        return;
       }
+
+      const { previews } = await previewRes.json();
+      setPreviewFiles(previews);
+      setPreviewRepoName(repoName);
+      setPreviewMode('batch');
+      setPreviewModalOpen(true);
     } catch (error) {
-      console.error('Failed to fetch previews:', error);
-      setToastMessage('Failed to load previews');
+      console.error('Failed to load templates:', error);
+      setToastMessage('Failed to load templates');
     } finally {
       setFixingDoc(false);
     }

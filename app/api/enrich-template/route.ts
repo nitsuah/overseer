@@ -111,11 +111,23 @@ function mapDocType(input: string): string {
     'dependabot.yml': 'dependabot',
     'env_example': 'env_example',
     '.env.example': 'env_example',
+    'env_template': 'env_example',
     'dockerfile': 'dockerfile',
+    'docker': 'dockerfile',
     'docker-compose.yml': 'docker_compose',
     'netlify_badge': 'netlify_badge',
     'license': 'license',
     'license.md': 'license',
+    'ci_cd': 'ci_cd',
+    '.github/workflows/ci.yml': 'ci_cd',
+    'gitignore': 'gitignore',
+    '.gitignore': 'gitignore',
+    'pre_commit_hooks': 'pre_commit_hooks',
+    '.pre-commit-config.yaml': 'pre_commit_hooks',
+    'testing_framework': 'testing_framework',
+    'vitest.config.ts': 'testing_framework',
+    'linting': 'linting',
+    'eslint.config.mjs': 'linting',
   };
   const result = mapping[t] || t;
   console.log('[mapDocType] Mapped to:', result);
@@ -591,6 +603,118 @@ Your task:
 4. Do NOT add any extra text, explanations, or markdown formatting
 
 Return ONLY the complete LICENSE file with placeholders filled in.`;
+      break;
+
+    case 'ci_cd':
+      console.log('[enrichTemplateWithAI] Building CI/CD workflow prompt');
+      prompt = `You are creating a GitHub Actions CI/CD workflow for ${repo.full_name}.
+
+${repoInfo}
+
+Current template:
+\`\`\`yaml
+${templateContent}
+\`\`\`
+
+Your task:
+1. Customize the workflow for a ${repo.language || 'generic'} project
+2. Include appropriate setup actions (e.g., setup-node, setup-python, setup-go)
+3. Add steps for installing dependencies based on the language
+4. Include linting, testing, and build steps
+5. Configure to run on push to main and pull requests
+6. Use appropriate version numbers (Node 18+, Python 3.9+, etc.)
+7. Add caching for faster builds if applicable
+
+Return ONLY the complete workflow YAML file content, no markdown fences.${NO_HALLUCINATION_CONSTRAINT}`;
+      break;
+
+    case 'gitignore':
+      console.log('[enrichTemplateWithAI] Building .gitignore prompt');
+      prompt = `You are creating a .gitignore file for ${repo.full_name}.
+
+${repoInfo}
+
+Current template:
+\`\`\`
+${templateContent}
+\`\`\`
+
+Your task:
+1. Customize for a ${repo.language || 'generic'} project
+2. Include language-specific patterns (node_modules, __pycache__, target/, etc.)
+3. Add IDE patterns (.vscode, .idea, *.swp)
+4. Add OS patterns (.DS_Store, Thumbs.db)
+5. Include environment files (.env, .env.local)
+6. Add build output patterns (dist/, build/, out/)
+7. Organize with comments for each section
+
+Return ONLY the complete .gitignore file content.${NO_HALLUCINATION_CONSTRAINT}`;
+      break;
+
+    case 'pre_commit_hooks':
+      console.log('[enrichTemplateWithAI] Building pre-commit hooks prompt');
+      prompt = `You are creating a .pre-commit-config.yaml for ${repo.full_name}.
+
+${repoInfo}
+
+Current template:
+\`\`\`yaml
+${templateContent}
+\`\`\`
+
+Your task:
+1. Customize hooks for a ${repo.language || 'generic'} project
+2. Include language-specific hooks (eslint/prettier for JS, black for Python, etc.)
+3. Add general hooks (trailing-whitespace, end-of-file-fixer, check-yaml)
+4. Include security checks (detect-private-key, check-added-large-files)
+5. Use recent stable versions of hooks
+6. Organize by hook type with comments
+
+Return ONLY the complete .pre-commit-config.yaml file content, no markdown fences.${NO_HALLUCINATION_CONSTRAINT}`;
+      break;
+
+    case 'testing_framework':
+      console.log('[enrichTemplateWithAI] Building testing framework config prompt');
+      prompt = `You are creating a testing framework configuration for ${repo.full_name}.
+
+${repoInfo}
+
+Current template:
+\`\`\`typescript
+${templateContent}
+\`\`\`
+
+Your task:
+1. Customize for a ${repo.language || 'TypeScript'} project
+2. Use appropriate framework (Vitest for TS/JS, pytest for Python, etc.)
+3. Configure test globals, environment, and coverage
+4. Set up coverage thresholds and reporters
+5. Exclude common directories from coverage
+6. Add helpful comments
+
+Return ONLY the complete config file content, no markdown fences.${NO_HALLUCINATION_CONSTRAINT}`;
+      break;
+
+    case 'linting':
+      console.log('[enrichTemplateWithAI] Building linting config prompt');
+      prompt = `You are creating a linting configuration for ${repo.full_name}.
+
+${repoInfo}
+
+Current template:
+\`\`\`javascript
+${templateContent}
+\`\`\`
+
+Your task:
+1. Customize for a ${repo.language || 'TypeScript'} project
+2. Use appropriate linter (ESLint for JS/TS, Pylint for Python, etc.)
+3. Include recommended rules and best practices
+4. Add Prettier integration if applicable for JS/TS
+5. Configure ignore patterns (node_modules, dist, build)
+6. Use modern flat config format if applicable
+
+Return ONLY the complete config file content, no markdown fences.${NO_HALLUCINATION_CONSTRAINT}`;
       break;
 
     default:

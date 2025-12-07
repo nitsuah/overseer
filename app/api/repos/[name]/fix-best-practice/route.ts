@@ -153,6 +153,66 @@ export async function POST(
                 break;
             }
 
+            case 'ci_cd': {
+                const templatePath = path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci.yml');
+                const content = await fs.readFile(templatePath, 'utf-8');
+                filesToAdd.push({
+                    path: '.github/workflows/ci.yml',
+                    content
+                });
+                branchName = `chore/add-ci-cd-${Date.now()}`;
+                commitMessage = 'chore: add CI/CD workflow configuration';
+                break;
+            }
+
+            case 'gitignore': {
+                const templatePath = path.join(process.cwd(), 'templates', '.gitignore');
+                const content = await fs.readFile(templatePath, 'utf-8');
+                filesToAdd.push({
+                    path: '.gitignore',
+                    content
+                });
+                branchName = `chore/add-gitignore-${Date.now()}`;
+                commitMessage = 'chore: add .gitignore file';
+                break;
+            }
+
+            case 'pre_commit_hooks': {
+                const templatePath = path.join(process.cwd(), 'templates', '.pre-commit-config.yaml');
+                const content = await fs.readFile(templatePath, 'utf-8');
+                filesToAdd.push({
+                    path: '.pre-commit-config.yaml',
+                    content
+                });
+                branchName = `chore/add-pre-commit-hooks-${Date.now()}`;
+                commitMessage = 'chore: add pre-commit hooks configuration';
+                break;
+            }
+
+            case 'testing_framework': {
+                const templatePath = path.join(process.cwd(), 'templates', 'vitest.config.ts');
+                const content = await fs.readFile(templatePath, 'utf-8');
+                filesToAdd.push({
+                    path: 'vitest.config.ts',
+                    content
+                });
+                branchName = `chore/add-testing-framework-${Date.now()}`;
+                commitMessage = 'chore: add testing framework configuration';
+                break;
+            }
+
+            case 'linting': {
+                const templatePath = path.join(process.cwd(), 'templates', 'eslint.config.mjs');
+                const content = await fs.readFile(templatePath, 'utf-8');
+                filesToAdd.push({
+                    path: 'eslint.config.mjs',
+                    content
+                });
+                branchName = `chore/add-linting-${Date.now()}`;
+                commitMessage = 'chore: add linting configuration';
+                break;
+            }
+
             default:
                 return NextResponse.json({ error: `Unsupported practice type: ${practiceType}` }, { status: 400 });
             }

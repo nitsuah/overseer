@@ -11,5 +11,17 @@ export default defineConfig({
         alias: {
             '@': path.resolve(__dirname, './'),
         },
+        coverage: {
+            provider: 'v8',
+            reporter: ['text', 'html', 'json'],
+            exclude: [
+                'node_modules/**',
+                'coverage/**',
+                '**/*.test.ts',
+                '**/*.spec.ts',
+                '**/tests/**',
+                'scripts/**',
+            ],
+        },
     },
 });

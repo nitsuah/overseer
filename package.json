@@ -56,7 +56,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.1",
-    "@vitest/coverage-v8": "^4.0.14",
+    "@vitest/coverage-v8": "^4.0.15",
     "baseline-browser-mapping": "^2.9.4",
     "dotenv": "^17.2.3",
     "eslint": "^9",

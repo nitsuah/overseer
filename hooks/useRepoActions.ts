@@ -6,6 +6,7 @@ import { Repo, BestPractice } from '@/types/repo';
 interface FilePreview {
   path: string;
   content: string;
+  originalContent?: string; // For diffs when modifying existing files (e.g., deploy_badge)
   docType: string;
   type: 'doc' | 'practice';
   practiceType?: string;
@@ -325,7 +326,7 @@ export function useRepoActions(
   };
 
   const handleFixAllPractices = async (repoName: string) => {
-    // Generate AI-powered, context-aware fixes for ALL missing best practices
+    // Load templates for all missing best practices - AI enrichment happens in modal
     try {
       setFixingDoc(true);
       
@@ -349,47 +350,26 @@ export function useRepoActions(
         return;
       }
 
-      // Generate AI content for each missing practice
-      const generatedFiles: FilePreview[] = [];
-      for (const practiceType of missingPractices) {
-        try {
-          const generateRes = await fetch('/api/repos/generate-best-practice', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ repoName, practiceType }),
-          });
+      // Load templates - AI enrichment happens in the modal
+      const previewRes = await fetch('/api/preview-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docTypes: missingPractices, repoName }),
+      });
 
-          if (generateRes.ok) {
-            const { content } = await generateRes.json();
-            const fileName = getFileNameForPractice(practiceType);
-            generatedFiles.push({
-              path: fileName,
-              content: content,
-              language: getLanguageForPractice(practiceType),
-              docType: practiceType,
-              type: 'practice',
-              practiceType: practiceType,
-            });
-          } else {
-            console.warn(`Failed to generate ${practiceType}`);
-          }
-        } catch (error) {
-          console.error(`Error generating ${practiceType}:`, error);
-        }
-      }
-
-      if (generatedFiles.length === 0) {
-        setToastMessage('Failed to generate any practices');
+      if (!previewRes.ok) {
+        setToastMessage('Failed to load templates');
         return;
       }
 
-      setPreviewFiles(generatedFiles);
+      const { previews } = await previewRes.json();
+      setPreviewFiles(previews);
       setPreviewRepoName(repoName);
       setPreviewMode('batch');
       setPreviewModalOpen(true);
     } catch (error) {
-      console.error('Failed to generate practices:', error);
-      setToastMessage('Failed to generate practices');
+      console.error('Failed to load templates:', error);
+      setToastMessage('Failed to load templates');
     } finally {
       setFixingDoc(false);
     }

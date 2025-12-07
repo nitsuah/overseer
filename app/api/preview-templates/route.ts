@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import fs from 'fs/promises';
 import path from 'path';
+import { Octokit } from '@octokit/rest';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,12 +11,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { docTypes } = await request.json();
+    const { docTypes, repoName } = await request.json();
     if (!docTypes || !Array.isArray(docTypes)) {
       return NextResponse.json({ error: 'docTypes array required' }, { status: 400 });
     }
 
-    const previews: Array<{ path: string; content: string; docType: string; type: 'doc' | 'practice'; practiceType?: string }> = [];
+    const previews: Array<{ path: string; content: string; originalContent?: string; docType: string; type: 'doc' | 'practice'; practiceType?: string }> = [];
 
     const TEMPLATE_FILES: Record<string, string> = {
       readme: 'README.md',
@@ -53,15 +54,68 @@ export async function POST(request: NextRequest) {
     for (const docType of docTypes) {
       const normalized = String(docType).toLowerCase();
       const filename = TEMPLATE_FILES[normalized];
-      // Special case: netlify_badge has no dedicated template file, show an informational preview
-      if (!filename && normalized === 'netlify_badge') {
-        const content = `# Netlify Badge Preview\n\nThis change adds a Netlify deployment status badge to README.md.\n\nExample snippet:\n\n[![Netlify Status](https://api.netlify.com/api/v1/badges/<SITE_ID>/deploy-status)](https://app.netlify.com/sites/<SITE_NAME>/deploys)`;
+      
+      // Special case: deploy_badge needs to fetch existing README and insert badge
+      if (!filename && (normalized === 'netlify_badge' || normalized === 'deploy_badge')) {
+        let content = '';
+        let originalContent = '';
+        
+        // Try to fetch existing README from GitHub
+        if (repoName && session?.accessToken) {
+          try {
+            const octokit = new Octokit({ auth: session.accessToken });
+            const [owner, repo] = repoName.split('/');
+            
+            const { data } = await octokit.repos.getContent({
+              owner,
+              repo,
+              path: 'README.md',
+            });
+            
+            if ('content' in data) {
+              const existingReadme = Buffer.from(data.content, 'base64').toString('utf-8');
+              originalContent = existingReadme; // Store original for diff
+              
+              // Insert deployment badge after title (first # line) or at the top
+              const lines = existingReadme.split('\n');
+              let insertIndex = 0;
+              
+              // Find first # heading
+              for (let i = 0; i < lines.length; i++) {
+                if (lines[i].trim().startsWith('#')) {
+                  insertIndex = i + 1;
+                  break;
+                }
+              }
+              
+              // Insert badge section
+              const badgeSection = [
+                '',
+                '<!-- Deployment Status -->',
+                '[![Deploy Status](https://github.com/<OWNER>/<REPO>/actions/workflows/deploy.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions)',
+                ''
+              ];
+              
+              lines.splice(insertIndex, 0, ...badgeSection);
+              content = lines.join('\n');
+            }
+          } catch (error) {
+            console.warn('Could not fetch README for deploy_badge:', error);
+          }
+        }
+        
+        // Fallback if we couldn't fetch README
+        if (!content) {
+          content = `# Deployment Badge Preview\n\n⚠️ Could not fetch existing README.md\n\nThis change adds a deployment status badge to README.md.\n\nExample badges:\n\n**Netlify:**\n[![Netlify Status](https://api.netlify.com/api/v1/badges/<SITE_ID>/deploy-status)](https://app.netlify.com/sites/<SITE_NAME>/deploys)\n\n**Vercel:**\n[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=<REPO_URL>)\n\n**GitHub Actions:**\n[![Deploy Status](https://github.com/<OWNER>/<REPO>/actions/workflows/deploy.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions)`;
+        }
+        
         previews.push({
-          path: 'README.md (badge snippet)',
+          path: 'README.md',
           content,
+          originalContent: originalContent || undefined,
           docType: 'README badge',
           type: 'practice',
-          practiceType: 'netlify_badge',
+          practiceType: normalized,
         });
         continue;
       }
@@ -77,8 +131,8 @@ export async function POST(request: NextRequest) {
           path: filename.replace(/\\/g, '/'),
           content,
           docType: normalized,
-          type: ['docker','env_template','dependabot','netlify_badge','ci_cd','gitignore','pre_commit_hooks','testing_framework','linting'].includes(normalized) ? 'practice' : 'doc',
-          practiceType: ['docker','env_template','dependabot','netlify_badge','ci_cd','gitignore','pre_commit_hooks','testing_framework','linting'].includes(normalized) ? normalized : undefined,
+          type: ['docker','env_template','dependabot','netlify_badge','deploy_badge','ci_cd','gitignore','pre_commit_hooks','testing_framework','linting'].includes(normalized) ? 'practice' : 'doc',
+          practiceType: ['docker','env_template','dependabot','netlify_badge','deploy_badge','ci_cd','gitignore','pre_commit_hooks','testing_framework','linting'].includes(normalized) ? normalized : undefined,
         });
       } catch (error) {
         console.warn(`Template not found for ${docType}:`, error);

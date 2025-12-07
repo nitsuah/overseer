@@ -10,6 +10,7 @@ import { DiffView } from './DiffView';
 interface FilePreview {
   path: string;
   content: string;
+  originalContent?: string; // For diffs when modifying existing files
   docType: string;
   type: 'doc' | 'practice';
   practiceType?: string;
@@ -270,17 +271,20 @@ export function PRPreviewModal({
                 diffView ? (
                   (() => {
                     const modifiedContent = editedContent.get(activeFile) ?? activeFileContent.content;
-                    const isSame = modifiedContent === activeFileContent.content;
+                    // Use originalContent if available (e.g., for deploy_badge showing README modification)
+                    const originalContent = activeFileContent.originalContent ?? activeFileContent.content;
+                    const isSame = modifiedContent === originalContent;
                     console.log('DiffView render:', {
                       file: activeFile,
-                      originalLen: activeFileContent.content.length,
+                      originalLen: originalContent.length,
                       modifiedLen: modifiedContent.length,
                       isSame,
+                      hasOriginal: !!activeFileContent.originalContent,
                     });
                     return (
                       <DiffView
                         key={`${activeFile}-${renderKey}-diff`}
-                        original={activeFileContent.content}
+                        original={originalContent}
                         modified={modifiedContent}
                         filename={activeFile}
                       />

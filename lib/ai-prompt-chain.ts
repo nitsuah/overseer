@@ -37,40 +37,51 @@ export async function fetchRepoContext(
   const client = new GitHubClient(githubToken || '', owner);
   const context: Partial<EnrichedContext> = {};
 
+  console.log(`[fetchRepoContext] Starting context fetch for ${owner}/${repo}, practice: ${practiceType}`);
+
   try {
     // Always fetch README (primary context source)
     try {
+      console.log(`[fetchRepoContext] Fetching README.md...`);
       const readmeContent = await client.getFileContent(repo, 'README.md');
       if (readmeContent) {
         context.readme = readmeContent;
+        console.log(`[fetchRepoContext] README.md fetched successfully (${readmeContent.length} chars)`);
       
       // Extract badges from README for deploy_badge
       if (practiceType === 'deploy_badge') {
         context.badges = extractBadges(readmeContent);
+        console.log(`[fetchRepoContext] Extracted ${context.badges.length} badges`);
       }
       
       // Extract build steps for docker
       if (practiceType === 'docker') {
         context.buildSteps = extractBuildSteps(readmeContent);
+        console.log(`[fetchRepoContext] Extracted build steps (${context.buildSteps?.length || 0} chars)`);
       }
       
       // Extract env var mentions for env_template
       if (practiceType === 'env_template') {
         context.envVars = extractEnvVarMentions(readmeContent);
+        console.log(`[fetchRepoContext] Extracted ${context.envVars.length} env vars`);
       }
+      } else {
+        console.warn(`[fetchRepoContext] README.md returned empty content`);
       }
-    } catch (_) {
-      console.log('No README found, continuing without it');
+    } catch (error) {
+      console.warn(`[fetchRepoContext] Failed to fetch README.md:`, error instanceof Error ? error.message : String(error));
     }
 
     // Fetch CONTRIBUTING.md if available
     try {
+      console.log(`[fetchRepoContext] Fetching CONTRIBUTING.md...`);
       const contributingContent = await client.getFileContent(repo, 'CONTRIBUTING.md');
       if (contributingContent) {
         context.contributing = contributingContent;
+        console.log(`[fetchRepoContext] CONTRIBUTING.md fetched successfully (${contributingContent.length} chars)`);
       }
-    } catch (_) {
-      console.log('No CONTRIBUTING.md found');
+    } catch (error) {
+      console.log(`[fetchRepoContext] No CONTRIBUTING.md found:`, error instanceof Error ? error.message : String(error));
     }
 
     // Practice-specific file fetching
@@ -215,8 +226,12 @@ async function detectPackageManagers(
   
   const checks = [
     { file: 'package.json', manager: 'npm' },
+    { file: 'yarn.lock', manager: 'yarn' },
+    { file: 'pnpm-lock.yaml', manager: 'pnpm' },
     { file: 'requirements.txt', manager: 'pip' },
-    { file: 'Pipfile', manager: 'pip' },
+    { file: 'Pipfile', manager: 'pipenv' },
+    { file: 'poetry.lock', manager: 'poetry' },
+    { file: 'pyproject.toml', manager: 'pip' },  // Can be used with pip or poetry
     { file: 'go.mod', manager: 'gomod' },
     { file: 'Cargo.toml', manager: 'cargo' },
     { file: 'composer.json', manager: 'composer' },
@@ -228,12 +243,15 @@ async function detectPackageManagers(
   for (const { file, manager } of checks) {
     try {
       await client.getFileContent(repo, file);
-      managers.push(manager);
+      if (!managers.includes(manager)) {
+        managers.push(manager);
+      }
     } catch (_) {
       // File doesn't exist
     }
   }
   
+  console.log(`[detectPackageManagers] Detected package managers: ${managers.join(', ') || 'none'}`);
   return managers;
 }
 
@@ -284,6 +302,28 @@ export function buildPracticePrompt(context: EnrichedContext): string {
 }
 
 function buildDeployBadgePrompt(context: EnrichedContext): string {
+  const hasReadme = context.readme && context.readme.trim().length > 0;
+  
+  if (!hasReadme) {
+    return `You are creating a README.md with a deployment status badge.
+
+REPO CONTEXT:
+- Name: ${context.repoName}
+- Language: ${context.language || 'Unknown'}
+
+TEMPLATE SNIPPET:
+${context.template}
+
+TASK: Create a basic README.md that includes:
+- Project title (# ${context.repoName})
+- Brief description placeholder
+- Deployment status badge: [![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](DEPLOYMENT_URL_HERE)
+- Installation section placeholder
+- Usage section placeholder
+- The user will replace DEPLOYMENT_URL_HERE with their actual deployment URL
+- Return ONLY the README.md content, no explanations`;
+  }
+  
   return `You are updating a README.md to add a deployment status badge.
 
 REPO CONTEXT:
@@ -293,7 +333,7 @@ REPO CONTEXT:
 ${context.badges && context.badges.length > 0 ? `EXISTING BADGES:\n${context.badges.join('\n')}` : 'No existing badges found.'}
 
 CURRENT README:
-${context.readme || 'No README found.'}
+${context.readme}
 
 TEMPLATE SNIPPET:
 ${context.template}
@@ -378,11 +418,15 @@ TASK: Generate .github/dependabot.yml that:
 }
 
 function buildCICDPrompt(context: EnrichedContext): string {
+  const isPython = context.language === 'Python';
+  const isJS = context.language === 'JavaScript' || context.language === 'TypeScript';
+  
   return `You are creating a CI/CD workflow for a ${context.language || 'Unknown'} project.
 
 REPO CONTEXT:
 - Name: ${context.repoName}
 - Language: ${context.language || 'Unknown'}
+- Package managers: ${context.packageManagers?.join(', ') || 'Unknown'}
 
 ${context.buildSteps ? `BUILD INSTRUCTIONS FROM README:\n${context.buildSteps}` : 'No build instructions found in README.'}
 
@@ -392,12 +436,23 @@ TEMPLATE:
 ${context.template}
 
 TASK: Generate .github/workflows/ci.yml that:
-- Runs tests on push/PR
-- Uses appropriate actions for ${context.language || 'the project'}
-- Includes linting if applicable
-- Tests on multiple versions if relevant
+${isPython ? `- Uses actions/setup-python@v4 with Python 3.10+
+- Optionally tests on multiple Python versions (matrix strategy)
+- Installs dependencies from requirements.txt or pyproject.toml
+- Runs linting (flake8, ruff, or pylint)
+- Runs tests with pytest and coverage
+- Optionally uploads coverage to Codecov
+- Triggers on push/PR to main branch` : ''}
+${isJS ? `- Uses actions/setup-node@v4 with Node 18+
+- Optionally tests on multiple Node versions
+- Uses npm ci / yarn / pnpm for dependency install
+- Runs type checking if TypeScript
+- Runs linting (ESLint)
+- Runs tests with coverage
+- Triggers on push/PR to main branch` : ''}
 - Has clear job names and steps
-- Follows modern GitHub Actions best practices
+- Follows modern GitHub Actions best practices (v4 actions)
+- Includes appropriate caching for dependencies
 - Return ONLY the workflow YAML file content`;
 }
 
@@ -426,11 +481,15 @@ TASK: Generate .gitignore that:
 }
 
 function buildPreCommitHooksPrompt(context: EnrichedContext): string {
+  const isPython = context.language === 'Python';
+  const isJS = context.language === 'JavaScript' || context.language === 'TypeScript';
+  
   return `You are creating pre-commit hooks configuration for a ${context.language || 'Unknown'} project.
 
 REPO CONTEXT:
 - Name: ${context.repoName}
 - Language: ${context.language || 'Unknown'}
+- Package managers: ${context.packageManagers?.join(', ') || 'Unknown'}
 
 ${context.contributing ? `DEVELOPMENT GUIDELINES:\n${context.contributing.slice(0, 500)}...` : 'No CONTRIBUTING.md found.'}
 
@@ -438,16 +497,31 @@ TEMPLATE:
 ${context.template}
 
 TASK: Generate .pre-commit-config.yaml that:
-- Uses appropriate hooks for ${context.language || 'the project'}
-- Includes code formatting checks
+${isPython ? `- Uses Python-specific hooks:
+  * black (code formatting)
+  * isort (import sorting)
+  * flake8 or ruff (linting)
+  * mypy (type checking, optional)
+- Includes pre-commit-hooks repo for general checks
+- Uses stable versions (black 24.x, isort 5.x, flake8 7.x)
+- Sets language_version: python3` : ''}
+${isJS ? `- Uses JavaScript/TypeScript hooks:
+  * prettier (formatting)
+  * eslint (linting)
+  * type checking if TypeScript
+- Can use husky + lint-staged as alternative
+- Uses stable versions` : ''}
 - Includes trailing whitespace/line ending checks
-- Includes security checks if applicable
-- Uses stable/recommended hook versions
+- Includes YAML validation and large file checks
+- Includes security checks (detect-private-key, check-merge-conflict)
 - Follows pre-commit.com best practices
 - Return ONLY the .pre-commit-config.yaml file content`;
 }
 
 function buildTestingFrameworkPrompt(context: EnrichedContext): string {
+  const isPython = context.language === 'Python';
+  const isJS = context.language === 'JavaScript' || context.language === 'TypeScript';
+  
   return `You are setting up a testing framework for a ${context.language || 'Unknown'} project.
 
 REPO CONTEXT:
@@ -462,16 +536,30 @@ TEMPLATE:
 ${context.template}
 
 TASK: Generate testing configuration that:
-- Uses appropriate framework for ${context.language || 'the language'} (Jest/Vitest for JS/TS, pytest for Python, etc.)
+${isPython ? `- Uses pytest (industry standard for Python)
+- Creates pytest.ini with:
+  * Test discovery patterns (test_*.py, *_test.py)
+  * Coverage configuration (pytest-cov)
+  * Test markers (slow, integration, unit)
+  * Minimum coverage threshold (80%)
+- Set testpaths = tests
+- Configure coverage report with term-missing` : ''}
+${isJS ? `- Uses modern framework (Vitest for Vite projects, Jest for others)
+- Includes TypeScript support if applicable
+- Configures test environment (node, jsdom, happy-dom)
+- Enables globals for cleaner test syntax
+- Sets up coverage reporting` : ''}
 - Includes basic configuration
-- Sets up test directory structure
-- Includes example test file
+- Sets up test directory structure expectations
 - Configures coverage reporting
 - Follows modern testing best practices
-- Return ONLY the test configuration file content (e.g., vitest.config.ts, jest.config.js, pytest.ini)`;
+- Return ONLY the test configuration file content (pytest.ini for Python, vitest.config.ts/jest.config.js for JS/TS)`;
 }
 
 function buildLintingPrompt(context: EnrichedContext): string {
+  const isPython = context.language === 'Python';
+  const isJS = context.language === 'JavaScript' || context.language === 'TypeScript';
+  
   return `You are setting up linting for a ${context.language || 'Unknown'} project.
 
 REPO CONTEXT:
@@ -484,11 +572,25 @@ TEMPLATE:
 ${context.template}
 
 TASK: Generate linting configuration that:
-- Uses appropriate linter for ${context.language || 'the language'} (ESLint for JS/TS, Pylint/Ruff for Python, etc.)
-- Includes sensible defaults
+${isPython ? `- Uses modern Python linting tools in pyproject.toml:
+  * [tool.ruff] - Fast linter and formatter (recommended)
+    - line-length = 120
+    - select = ["E", "F", "I", "B", "UP", "C4"]
+  * [tool.black] - Code formatter
+    - line-length = 120
+  * [tool.isort] - Import sorting
+    - profile = "black"
+- Alternative: .flake8 config if project uses flake8
+- Exclude: .venv, venv, __pycache__, dist, build` : ''}
+${isJS ? `- Uses ESLint with modern flat config (eslint.config.mjs)
+- Includes TypeScript support if applicable
+- Integrates Prettier for formatting
 - Enables recommended rules
-- Configures code style (Prettier for JS/TS if applicable)
-- Ignores common directories (node_modules, dist, build)
+- Ignores: node_modules, dist, build, .next` : ''}
+- Uses sensible defaults
+- Enables recommended rules for the language
+- Configures code style and formatting
+- Ignores common directories appropriately
 - Follows modern linting best practices
-- Return ONLY the linting configuration file content (e.g., eslint.config.mjs, .pylintrc, .rubocop.yml)`;
+- Return ONLY the linting configuration file content (pyproject.toml/.flake8 for Python, eslint.config.mjs for JS/TS)`;
 }

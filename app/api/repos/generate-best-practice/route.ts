@@ -32,16 +32,6 @@ export async function POST(request: NextRequest) {
       ? repoName.split('/')
       : [session.user.name || '', repoName];
 
-    // Load template file
-    const templatePath = path.join(process.cwd(), 'templates', getTemplateFileName(practiceType));
-    let template = '';
-    try {
-      template = await fs.readFile(templatePath, 'utf-8');
-    } catch (error) {
-      console.error(`Template not found for ${practiceType}:`, error);
-      template = getDefaultTemplate(practiceType);
-    }
-
     // Fetch repo metadata to get language
     const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
       headers: {
@@ -54,6 +44,17 @@ export async function POST(request: NextRequest) {
     if (repoResponse.ok) {
       const repoData = await repoResponse.json();
       language = repoData.language;
+    }
+
+    // Load template file (language-aware)
+    const templatePath = path.join(process.cwd(), 'templates', getTemplateFileName(practiceType, language));
+    let template = '';
+    try {
+      template = await fs.readFile(templatePath, 'utf-8');
+      console.log(`Loaded template from: ${templatePath}`);
+    } catch (error) {
+      console.warn(`Template not found at ${templatePath}, using default template`);
+      template = getDefaultTemplate(practiceType, language);
     }
 
     // Build enriched context
@@ -96,32 +97,36 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function getTemplateFileName(practiceType: string): string {
+function getTemplateFileName(practiceType: string, language: string | null): string {
+  const isPython = language === 'Python';
+  
   switch (practiceType) {
     case 'deploy_badge':
-      return 'README.md'; // Will extract badge snippet
+      return 'community-standards/README.md'; // Will extract badge snippet
     case 'env_template':
-      return '.env.example';
+      return 'env/.env.example';
     case 'docker':
-      return 'Dockerfile';
+      return 'docker/Dockerfile';
     case 'dependabot':
       return '.github/dependabot.yml';
     case 'ci_cd':
-      return '.github/workflows/ci.yml';
+      return isPython ? '.github/workflows/ci-python.yml' : '.github/workflows/ci.yml';
     case 'gitignore':
-      return '.gitignore';
+      return isPython ? 'gitignore/.gitignore-python' : 'gitignore/.gitignore';
     case 'pre_commit_hooks':
-      return '.pre-commit-config.yaml';
+      return isPython ? 'pre-commit/.pre-commit-config-python.yaml' : 'pre-commit/.pre-commit-config.yaml';
     case 'testing_framework':
-      return 'vitest.config.ts';
+      return isPython ? 'testing/pytest.ini' : 'testing/vitest.config.ts';
     case 'linting':
-      return 'eslint.config.mjs';
+      return isPython ? 'linting/pyproject.toml' : 'linting/eslint.config.mjs';
     default:
-      return 'README.md';
+      return 'community-standards/README.md';
   }
 }
 
-function getDefaultTemplate(practiceType: string): string {
+function getDefaultTemplate(practiceType: string, language: string | null): string {
+  const isPython = language === 'Python';
+  
   switch (practiceType) {
     case 'deploy_badge':
       return '[![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](DEPLOYMENT_URL_HERE)';
@@ -136,10 +141,19 @@ DATABASE_URL=postgresql://user:password@localhost:5432/dbname
 API_KEY=your_api_key_here
 
 # App Config
-NODE_ENV=development
+${isPython ? 'PYTHON_ENV=development' : 'NODE_ENV=development'}
 PORT=3000`;
 
     case 'docker':
+      if (isPython) {
+        return `FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["python", "app.py"]`;
+      }
       return `FROM node:18-alpine
 WORKDIR /app
 COPY package*.json ./
@@ -152,12 +166,37 @@ CMD ["npm", "start"]`;
     case 'dependabot':
       return `version: 2
 updates:
-  - package-ecosystem: "npm"
+  - package-ecosystem: "${isPython ? 'pip' : 'npm'}"
     directory: "/"
     schedule:
       interval: "weekly"`;
 
     case 'ci_cd':
+      if (isPython) {
+        return `name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    - name: Run tests
+      run: pytest --cov`;
+      }
       return `name: CI
 
 on:
@@ -181,15 +220,67 @@ jobs:
       run: npm test`;
 
     case 'gitignore':
+      if (isPython) {
+        return `__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+ENV/
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.DS_Store
+.idea/
+.vscode/`;
+      }
       return `node_modules/
 dist/
 build/
 .env
 .env.local
 coverage/
-.DS_Store`;
+.DS_Store
+.idea/
+.vscode/`;
 
     case 'pre_commit_hooks':
+      if (isPython) {
+        return `repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        language_version: python3
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        language_version: python3`;
+      }
       return `repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -198,6 +289,28 @@ coverage/
       - id: end-of-file-fixer`;
 
     case 'testing_framework':
+      if (isPython) {
+        return `[pytest]
+markers =
+    slow: long-running tests
+    integration: integration tests
+addopts = -ra --cov --cov-report term-missing
+
+testpaths = tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+
+[coverage:run]
+source = .
+omit =
+    */tests/*
+    .venv/*
+
+[coverage:report]
+fail_under = 80
+show_missing = True`;
+      }
       return `import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -208,6 +321,19 @@ export default defineConfig({
 });`;
 
     case 'linting':
+      if (isPython) {
+        return `[tool.ruff]
+line-length = 120
+fix = true
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E203"]
+
+[tool.black]
+line-length = 120
+skip-string-normalization = true`;
+      }
       return `import eslint from '@eslint/js';
 
 export default [

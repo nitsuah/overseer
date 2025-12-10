@@ -66,15 +66,15 @@ export async function POST(
             break;
           }
           case 'env_template': {
-            const templatePath = path.join(process.cwd(), 'templates', '.env.example');
+            const templatePath = path.join(process.cwd(), 'templates', 'env', '.env.example');
             const content = await fs.readFile(templatePath, 'utf-8');
             filesToAdd.push({ path: '.env.example', content });
             addedTypes.push('env_template');
             break;
           }
           case 'docker': {
-            const dockerfilePath = path.join(process.cwd(), 'templates', 'Dockerfile');
-            const dockerComposePath = path.join(process.cwd(), 'templates', 'docker-compose.yml');
+            const dockerfilePath = path.join(process.cwd(), 'templates', 'docker', 'Dockerfile');
+            const dockerComposePath = path.join(process.cwd(), 'templates', 'docker', 'docker-compose.yml');
             const dockerfileContent = await fs.readFile(dockerfilePath, 'utf-8');
             const dockerComposeContent = await fs.readFile(dockerComposePath, 'utf-8');
             filesToAdd.push({ path: 'Dockerfile', content: dockerfileContent });
@@ -124,28 +124,28 @@ export async function POST(
           break;
         }
         case 'gitignore': {
-          const templatePath = path.join(process.cwd(), 'templates', '.gitignore');
+          const templatePath = path.join(process.cwd(), 'templates', 'gitignore', '.gitignore');
           const content = await fs.readFile(templatePath, 'utf-8');
           filesToAdd.push({ path: '.gitignore', content });
           addedTypes.push('gitignore');
           break;
         }
         case 'pre_commit_hooks': {
-          const templatePath = path.join(process.cwd(), 'templates', '.pre-commit-config.yaml');
+          const templatePath = path.join(process.cwd(), 'templates', 'pre-commit', '.pre-commit-config.yaml');
           const content = await fs.readFile(templatePath, 'utf-8');
           filesToAdd.push({ path: '.pre-commit-config.yaml', content });
           addedTypes.push('pre_commit_hooks');
           break;
         }
         case 'testing_framework': {
-          const templatePath = path.join(process.cwd(), 'templates', 'vitest.config.ts');
+          const templatePath = path.join(process.cwd(), 'templates', 'testing', 'vitest.config.ts');
           const content = await fs.readFile(templatePath, 'utf-8');
           filesToAdd.push({ path: 'vitest.config.ts', content });
           addedTypes.push('testing_framework');
           break;
         }
         case 'linting': {
-          const templatePath = path.join(process.cwd(), 'templates', 'eslint.config.mjs');
+          const templatePath = path.join(process.cwd(), 'templates', 'linting', 'eslint.config.mjs');
           const content = await fs.readFile(templatePath, 'utf-8');
           filesToAdd.push({ path: 'eslint.config.mjs', content });
           addedTypes.push('linting');

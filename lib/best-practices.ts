@@ -127,9 +127,11 @@ export async function checkBestPractices(
         '.test.', 
         '.spec.', 
         '__tests__/',
-        '/tests/',
-        '/test/',
-        'e2e/'
+        'tests/',      // Match tests/ at any level (not just /tests/)
+        'test/',       // Match test/ at any level  
+        'e2e/',
+        'test_',       // Python test files: test_*.py
+        '_test.'       // Go test files: *_test.go
     ];
     const testFiles = fileList.filter(f => 
         testFilePatterns.some(pattern => f.toLowerCase().includes(pattern))

@@ -189,12 +189,12 @@ export default function Dashboard() {
                     onToggleHealth={() => setExpandedHealth(!expandedHealth)}
                     onToggleExpanded={() => handleToggleExpanded(repo.name)}
                     onRemove={() => handleRemoveRepo(repo.name)}
-                    onFixAllDocs={() => handleFixAllDocs(repo.name)}
-                    onFixDoc={(type) => handleFixDoc(repo.name, type)}
-                    onFixStandard={(type) => handleFixStandard(repo.name, type)}
-                    onFixAllStandards={() => handleFixAllStandards(repo.name)}
-                    onFixPractice={(type) => handleFixPractice(repo.name, type)}
-                    onFixAllPractices={() => handleFixAllPractices(repo.name)}
+                    onFixAllDocs={() => handleFixAllDocs(repo.full_name)}
+                    onFixDoc={(type) => handleFixDoc(repo.full_name, type)}
+                    onFixStandard={(type) => handleFixStandard(repo.full_name, type)}
+                    onFixAllStandards={() => handleFixAllStandards(repo.full_name)}
+                    onFixPractice={(type) => handleFixPractice(repo.full_name, type)}
+                    onFixAllPractices={() => handleFixAllPractices(repo.full_name)}
                     onGenerateSummary={() => handleGenerateSummary(repo.name)}
                     onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
                   />

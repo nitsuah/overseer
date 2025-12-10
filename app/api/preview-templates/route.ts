@@ -41,6 +41,7 @@ Example badges:
 [![Deploy Status](https://github.com/<OWNER>/<REPO>/actions/workflows/deploy.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions)`;
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
   try {
     const session = await auth();
     if (!session?.user) {
@@ -48,11 +49,89 @@ export async function POST(request: NextRequest) {
     }
 
     const { docTypes, repoName } = await request.json();
+    console.log(`[preview-templates] Request received: ${docTypes?.length} types for ${repoName}`);
     if (!docTypes || !Array.isArray(docTypes)) {
       return NextResponse.json({ error: 'docTypes array required' }, { status: 400 });
     }
 
     const previews: Array<{ path: string; content: string; originalContent?: string; docType: string; type: 'doc' | 'practice'; practiceType?: string }> = [];
+
+    // Fetch repo context once for all templates
+    interface RepoContext {
+      language: string;
+      owner: string;
+      repo: string;
+      hasWorkflows: boolean;
+      workflowFiles: string[];
+      packageManager?: 'npm' | 'yarn' | 'pnpm' | 'pip' | 'poetry' | 'cargo' | 'go';
+      hasDocker: boolean;
+      hasTests: boolean;
+    }
+    
+    const repoContext: RepoContext = {
+      language: 'javascript',
+      owner: '',
+      repo: '',
+      hasWorkflows: false,
+      workflowFiles: [],
+      hasDocker: false,
+      hasTests: false,
+    };
+
+    if (repoName && session?.accessToken) {
+      console.log('[preview-templates] Fetching repo context for:', repoName);
+      try {
+        const octokit = new Octokit({ auth: session.accessToken });
+        const [owner, repo] = repoName.split('/');
+        console.log('[preview-templates] Split into owner/repo:', { owner, repo });
+        repoContext.owner = owner;
+        repoContext.repo = repo;
+        
+        // Get repo metadata
+        const { data: repoData } = await octokit.repos.get({ owner, repo });
+        repoContext.language = repoData.language?.toLowerCase() || 'javascript';
+        
+        // Check for workflows
+        try {
+          const { data: workflowsData } = await octokit.repos.getContent({
+            owner,
+            repo,
+            path: '.github/workflows',
+          });
+          if (Array.isArray(workflowsData)) {
+            repoContext.hasWorkflows = true;
+            repoContext.workflowFiles = workflowsData.map(f => f.name);
+          }
+        } catch {
+          // No workflows folder
+        }
+        
+        // Detect package manager from root files
+        try {
+          const { data: rootFiles } = await octokit.repos.getContent({ owner, repo, path: '' });
+          if (Array.isArray(rootFiles)) {
+            const fileNames = rootFiles.map(f => f.name);
+            if (fileNames.includes('package-lock.json')) repoContext.packageManager = 'npm';
+            else if (fileNames.includes('yarn.lock')) repoContext.packageManager = 'yarn';
+            else if (fileNames.includes('pnpm-lock.yaml')) repoContext.packageManager = 'pnpm';
+            else if (fileNames.includes('requirements.txt') || fileNames.includes('setup.py')) repoContext.packageManager = 'pip';
+            else if (fileNames.includes('pyproject.toml')) repoContext.packageManager = 'poetry';
+            else if (fileNames.includes('Cargo.toml')) repoContext.packageManager = 'cargo';
+            else if (fileNames.includes('go.mod')) repoContext.packageManager = 'go';
+            
+            repoContext.hasDocker = fileNames.includes('Dockerfile') || fileNames.includes('docker-compose.yml');
+            repoContext.hasTests = fileNames.includes('pytest.ini') || fileNames.includes('vitest.config.ts') || 
+                                   fileNames.includes('jest.config.js') || fileNames.includes('test');
+          }
+        } catch {
+          // Could not fetch root files
+        }
+      } catch (error) {
+        console.warn(`Could not fetch repo context for ${repoName}:`, error);
+      }
+    }
+
+    const repoLanguage = repoContext.language;
 
     const TEMPLATE_FILES: Record<string, string> = {
       readme: 'README.md',
@@ -81,15 +160,74 @@ export async function POST(request: NextRequest) {
       env_template: '.env.example',
       dependabot: '.github/dependabot.yml',
       ci_cd: '.github/workflows/ci.yml',
-      gitignore: '.gitignore',
-      pre_commit_hooks: '.pre-commit-config.yaml',
-      testing_framework: 'vitest.config.ts',
-      linting: 'eslint.config.mjs',
+      // gitignore, pre_commit_hooks, testing_framework, and linting are handled specially below based on language
     };
     
     for (const docType of docTypes) {
       const normalized = String(docType).toLowerCase();
-      const filename = TEMPLATE_FILES[normalized];
+      let filename = TEMPLATE_FILES[normalized];
+      let templateSourcePath: string | undefined; // Path to template file in templates/ directory
+      
+      // Normalize language for template selection
+      // Map GitHub language to template category
+      const getTemplateLanguage = (lang: string): 'python' | 'javascript' | 'other' => {
+        const lower = lang.toLowerCase();
+        
+        // Python and Python-like
+        if (['python', 'jupyter notebook'].includes(lower)) return 'python';
+        
+        // JavaScript/TypeScript and web
+        if (['javascript', 'typescript', 'html', 'css'].includes(lower)) return 'javascript';
+        
+        // Everything else uses JavaScript templates as default
+        return 'javascript';
+      };
+      
+      const templateLang = getTemplateLanguage(repoLanguage);
+      const isPython = templateLang === 'python';
+      const isJS = templateLang === 'javascript';
+      
+      // Special case: gitignore - choose based on repo language
+      if (normalized === 'gitignore') {
+        if (isPython) {
+          templateSourcePath = path.join('gitignore', '.gitignore-python');
+        } else {
+          templateSourcePath = path.join('gitignore', '.gitignore');
+        }
+        filename = '.gitignore';
+      }
+      
+      // Special case: pre_commit_hooks - choose based on repo language
+      if (normalized === 'pre_commit_hooks') {
+        if (isPython) {
+          templateSourcePath = path.join('pre-commit', '.pre-commit-config-python.yaml');
+        } else {
+          templateSourcePath = path.join('pre-commit', '.pre-commit-config.yaml');
+        }
+        filename = '.pre-commit-config.yaml';
+      }
+      
+      // Special case: testing_framework - choose based on repo language
+      if (normalized === 'testing_framework') {
+        if (isPython) {
+          templateSourcePath = path.join('testing', 'pytest.ini');
+          filename = 'pytest.ini';
+        } else {
+          templateSourcePath = path.join('testing', 'vitest.config.ts');
+          filename = 'vitest.config.ts';
+        }
+      }
+      
+      // Special case: linting - choose based on repo language
+      if (normalized === 'linting') {
+        if (isPython) {
+          templateSourcePath = path.join('linting', 'pyproject.toml');
+          filename = 'pyproject.toml';
+        } else {
+          templateSourcePath = path.join('linting', 'eslint.config.mjs');
+          filename = 'eslint.config.mjs';
+        }
+      }
       
       // Special case: deploy_badge needs to fetch existing README and insert badge
       if (!filename && (normalized === 'netlify_badge' || normalized === 'deploy_badge')) {
@@ -97,14 +235,13 @@ export async function POST(request: NextRequest) {
         let originalContent = '';
         
         // Try to fetch existing README from GitHub
-        if (repoName && session?.accessToken) {
+        if (repoContext.owner && repoContext.repo && session?.accessToken) {
           try {
             const octokit = new Octokit({ auth: session.accessToken });
-            const [owner, repo] = repoName.split('/');
             
             const { data } = await octokit.repos.getContent({
-              owner,
-              repo,
+              owner: repoContext.owner,
+              repo: repoContext.repo,
               path: 'README.md',
             });
             
@@ -113,7 +250,7 @@ export async function POST(request: NextRequest) {
               originalContent = existingReadme; // Store original for diff
               
               // Insert deployment badge after title (first # line)
-              // If no heading is found, insert after first non-empty line or at top
+              // Skip any blank lines immediately after the heading
               const lines = existingReadme.split('\n');
               let insertIndex = 0;
               let foundHeading = false;
@@ -123,6 +260,14 @@ export async function POST(request: NextRequest) {
                 if (lines[i].trim().startsWith('#')) {
                   insertIndex = i + 1;
                   foundHeading = true;
+                  
+                  // Skip blank lines and TL;DR lines after heading
+                  while (insertIndex < lines.length && 
+                         (lines[insertIndex].trim() === '' || 
+                          lines[insertIndex].trim().startsWith('**TL;DR'))) {
+                    insertIndex++;
+                  }
+                  
                   break;
                 }
               }
@@ -137,35 +282,24 @@ export async function POST(request: NextRequest) {
                 }
               }
               
-              // Detect deployment workflow from repository
-              // Look for common workflow files: deploy.yml, cd.yml, production.yml, main.yml
+              // Use detected workflow from repo context
               let workflowFile = 'deploy.yml'; // default fallback
-              try {
-                const workflowsResponse = await octokit.repos.getContent({
-                  owner,
-                  repo,
-                  path: '.github/workflows',
-                });
-                
-                if (Array.isArray(workflowsResponse.data)) {
-                  // Priority order for deployment workflows
-                  const deployWorkflows = ['deploy.yml', 'deploy.yaml', 'cd.yml', 'cd.yaml', 'production.yml', 'production.yaml', 'main.yml', 'main.yaml'];
-                  const foundWorkflow = workflowsResponse.data.find((file) =>
-                    deployWorkflows.includes(file.name.toLowerCase())
-                  );
-                  if (foundWorkflow) {
-                    workflowFile = foundWorkflow.name;
-                  }
+              if (repoContext.hasWorkflows && repoContext.workflowFiles.length > 0) {
+                // Priority order for deployment workflows
+                const deployWorkflows = ['deploy.yml', 'deploy.yaml', 'cd.yml', 'cd.yaml', 'production.yml', 'production.yaml', 'main.yml', 'main.yaml'];
+                const foundWorkflow = repoContext.workflowFiles.find((filename) =>
+                  deployWorkflows.includes(filename.toLowerCase())
+                );
+                if (foundWorkflow) {
+                  workflowFile = foundWorkflow;
                 }
-              } catch {
-                // Workflows folder doesn't exist or cannot be accessed, use default
               }
               
               // Insert badge section with actual repo owner/name and detected workflow
               const badgeSection = [
                 '',
                 '<!-- Deployment Status -->',
-                `[![Deploy Status](https://github.com/${owner}/${repo}/actions/workflows/${workflowFile}/badge.svg)](https://github.com/${owner}/${repo}/actions)`,
+                `[![Deploy Status](https://github.com/${repoContext.owner}/${repoContext.repo}/actions/workflows/${workflowFile}/badge.svg)](https://github.com/${repoContext.owner}/${repoContext.repo}/actions)`,
                 ''
               ];
               
@@ -173,10 +307,13 @@ export async function POST(request: NextRequest) {
               content = lines.join('\n');
             }
           } catch (error) {
-            console.warn(
-              `Could not fetch README for deploy_badge (repo: ${repoName}, badge type: ${normalized}):`,
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error(
+              `[deploy_badge] Failed to fetch README for ${repoName}:`,
+              errorMessage,
               error
             );
+            // Content will remain empty and fall through to fallback
           }
         }
         
@@ -199,10 +336,12 @@ export async function POST(request: NextRequest) {
         // Skip unknown types silently
         continue;
       }
-      const templatePath = path.join(process.cwd(), 'templates', filename);
+      
+      // Use templateSourcePath if set (for language-specific templates), otherwise use filename
+      const templateFilePath = path.join(process.cwd(), 'templates', templateSourcePath || filename);
       
       try {
-        const content = await fs.readFile(templatePath, 'utf-8');
+        const content = await fs.readFile(templateFilePath, 'utf-8');
         const isPractice = PRACTICE_TYPES.includes(normalized as typeof PRACTICE_TYPES[number]);
         previews.push({
           path: filename.replace(/\\/g, '/'),
@@ -216,6 +355,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const elapsed = Date.now() - startTime;
+    console.log(`[preview-templates] Completed in ${elapsed}ms, returning ${previews.length} files`);
     return NextResponse.json({ previews });
   } catch (error) {
     console.error('Error fetching template previews:', error);

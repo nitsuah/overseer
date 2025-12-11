@@ -179,22 +179,66 @@ export async function checkBestPractices(
     // 7. Deploy Badge (if README provided)
     if (readmeContent) {
         // Check for common deployment badges
-        const deployBadgePatterns = [
-            'api.netlify.com/api/v1/badges',      // Netlify
-            'vercel.com/button',                  // Vercel deploy button
-            'img.shields.io/badge/Deployed',      // Generic deploy badge
-            'img.shields.io/badge/vercel',        // Vercel shields.io badge
-            'img.shields.io.*vercel',             // Any shields.io Vercel badge
-            'railway.app',                        // Railway
-            'render.com',                         // Render
-            'fly.io',                             // Fly.io
-            'heroku.com',                         // Heroku
+        // Robust detection of CI/CD and deploy badges via URL + alt-text keywords with scoring
+        const badgeMdRegex = /!\[[^\]]*\]\((?<src>[^)]+)\)/gi; // Markdown image
+        const badgeLinkMdRegex = /\[!\[[^\]]*\]\((?<src>[^)]+)\)\]\((?<href>[^)]+)\)/gi; // Linked badge
+        const badgeHtmlRegex = /<img[^>]+src=["'](?<src>[^"']+)["'][^>]*?(?:alt=["'](?<alt>[^"']+)["'])?[^>]*>/gi; // HTML image
+
+        const urlPatterns: RegExp[] = [
+            /github\.com\/.+?\/actions\/workflows\/.+?\.yml\/badge\.svg/i, // GitHub Actions workflow badge
+            /api\.netlify\.com\/api\/v1\/badges\/[a-f0-9-]+\/deploy-status(?:\?branch=[^\s"')]+)?/i, // Netlify deploy badge
+            /img\.shields\.io\/badge\/Deployed%20on-Vercel(?:-black)?/i, // Vercel deployed-on badge
+            /img\.shields\.io\/.*(deploy|deployment|vercel|netlify|render|pages)/i, // generic shields
+            /gitlab\.com\/.+?\/badges\/.+?\/pipeline\.svg/i, // GitLab pipeline
+            /circleci\.com\/gh\/.+?\.svg/i, // CircleCI
+            /travis-ci\.(com|org)\/.+?\.svg/i // Travis
         ];
-        const hasDeployBadge = deployBadgePatterns.some(pattern => readmeContent.includes(pattern));
+        const altKeywords = /(deploy|deployment|deployed|ci|cd|build|pipeline|actions|netlify|vercel|render|pages|status)/i;
+
+        type Evidence = { url: string; alt?: string; confidence: number; kind: 'deploy'|'ci'|'qa'|'unknown' };
+        const evidences: Evidence[] = [];
+
+        function score(url: string, alt?: string): Evidence {
+            let confidence = 0;
+            const urlMatch = urlPatterns.some(p => p.test(url));
+            if (urlMatch) confidence += 0.6;
+            if (alt && altKeywords.test(alt)) confidence += 0.3;
+            // simple type classification
+            const lower = url.toLowerCase() + ' ' + (alt || '').toLowerCase();
+            let kind: Evidence['kind'] = 'unknown';
+            if (/(netlify|vercel|render|pages|deploy)/.test(lower)) kind = 'deploy';
+            else if (/(actions|workflow|pipeline|circleci|travis|gitlab)/.test(lower)) kind = 'ci';
+            else if (/(pylint|bandit|codeql|coverage|lint|test)/.test(lower)) kind = 'qa';
+            return { url, alt, confidence, kind };
+        }
+
+        // Extract Markdown badges
+        for (const match of readmeContent.matchAll(badgeMdRegex)) {
+            const src = (match.groups?.src) || '';
+            evidences.push(score(src));
+        }
+        // Extract linked badges
+        for (const match of readmeContent.matchAll(badgeLinkMdRegex)) {
+            const src = (match.groups?.src) || '';
+            evidences.push(score(src));
+        }
+        // Extract HTML badges
+        for (const match of readmeContent.matchAll(badgeHtmlRegex)) {
+            const src = (match.groups?.src) || '';
+            const alt = match.groups?.alt;
+            evidences.push(score(src, alt));
+        }
+
+        const top = evidences.sort((a,b)=>b.confidence-a.confidence)[0];
+        const hasDeploy = evidences.some(e=> e.kind==='deploy' && e.confidence>=0.6) || (top && top.confidence>=0.8 && /deploy|netlify|vercel|render|pages/i.test((top.alt||'')+top.url));
+
         practices.push({
             type: 'deploy_badge',
-            status: hasDeployBadge ? 'healthy' : 'missing',
-            details: { exists: hasDeployBadge }
+            status: hasDeploy ? 'healthy' : evidences.some(e=>e.kind==='deploy' && e.confidence>=0.4) ? 'needs_attention' : 'missing',
+            details: {
+                exists: hasDeploy,
+                evidence: evidences.slice(0,5)
+            }
         });
     }
 

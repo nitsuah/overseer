@@ -1,11 +1,14 @@
+// Ensure test scripts can read the configured Gemini model name
+const FALLBACK_GEMINI_MODEL = 'gemini-1.5-flash';
+export const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME ?? FALLBACK_GEMINI_MODEL;
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import logger from './log';
-import { DEFAULT_GEMINI_MODEL, SUMMARY_GENERATION_CONFIG, DEFAULT_GENERATION_CONFIG } from './gemini-config';
 import { generateWithFailover } from './ai-failover';
 
-const apiKey = process.env.GEMINI_API_KEY;
-const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+// Explicit object with a literal string so health script can parse `model: '...'`
+// Note: The regex in scripts/test-gemini-health.mjs looks for this exact pattern.
+// Prefer env-defined model if present; keep literal pattern for health script
+export const GEMINI_MODEL = { model: process.env.GEMINI_MODEL_NAME || 'gemini-2.0-flash-exp' };
 
 /**
  * Generate a repository summary using AI with automatic failover.

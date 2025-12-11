@@ -12,7 +12,7 @@ if (!process.env.CI) {
 
 // Basic sanity logging for debug runs (not noisy in CI)
 if (!process.env.CI && process.env.VITEST_DEBUG) {
-   
+
   console.log('[vitest setup] Loaded env:', {
     GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
     GEMINI_MODEL_NAME: process.env.GEMINI_MODEL_NAME,

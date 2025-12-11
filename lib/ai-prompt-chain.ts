@@ -415,8 +415,9 @@ Placement:
 }
 
 function buildDependabotPrompt(context: EnrichedContext): string {
-  return `You are creating a Dependabot configuration for dependency updates.
+}
 
+return `You are creating a Dependabot configuration for dependency updates.
 REPO CONTEXT:
 - Name: ${context.repoName}
 - Language: ${context.language || 'Unknown'}

@@ -229,6 +229,7 @@ async function detectPackageManagers(
     { file: 'yarn.lock', manager: 'yarn' },
     { file: 'pnpm-lock.yaml', manager: 'pnpm' },
     { file: 'requirements.txt', manager: 'pip' },
+    // Pipfile indicates pipenv usage (intentional mapping)
     { file: 'Pipfile', manager: 'pipenv' },
     { file: 'poetry.lock', manager: 'poetry' },
     { file: 'pyproject.toml', manager: 'pip' },  // Can be used with pip or poetry

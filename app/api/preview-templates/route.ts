@@ -188,16 +188,23 @@ export async function POST(request: NextRequest) {
       const templateLang = getTemplateLanguage(repoLanguage);
       // Override with file-based detection when available
       const detectedLang = repoContext.owner && repoContext.repo ? await (async () => {
-        const octokit = new Octokit({ auth: (await auth())?.accessToken });
-        try { return await detectTemplateLanguage(octokit, repoContext.owner, repoContext.repo); } catch { return 'other'; }
+        const session = await auth();
+        // Safely extract token without using 'any'
+        const token = typeof (session as Record<string, unknown>)?.accessToken === 'string'
+          ? ((session as Record<string, unknown>).accessToken as string)
+          : undefined;
+        if (!token) return 'other';
+        try {
+          const octokit = new Octokit({ auth: token });
+          return await detectTemplateLanguage(octokit, repoContext.owner, repoContext.repo);
+        } catch {
+          return 'other';
+        }
       })() : 'other';
       const isMixed = detectedLang === 'mixed';
-      if (detectedLang === 'python') {
-        repoContext.templateLanguage = 'python';
-      } else if (detectedLang === 'javascript') {
-        repoContext.templateLanguage = 'javascript';
-      }
-      const isPython = templateLang === 'python';
+      // Prefer detected language when available, otherwise fall back to templateLang
+      repoContext.templateLanguage = (detectedLang !== 'other' && detectedLang !== 'mixed') ? detectedLang : templateLang;
+      const isPython = repoContext.templateLanguage === 'python';
       
       // Special case: docker
       if (normalized === 'docker') {
@@ -259,11 +266,15 @@ export async function POST(request: NextRequest) {
           try {
             const pyContent = await fs.readFile(path.join(process.cwd(), 'templates', 'linting', 'pyproject.toml'), 'utf-8');
             previews.push({ path: 'pyproject.toml', content: pyContent, docType: normalized, type: 'practice', practiceType: normalized });
-          } catch {}
+          } catch (error) {
+            console.warn('Template not found for linting (pyproject.toml):', error);
+          }
           try {
             const jsContent = await fs.readFile(path.join(process.cwd(), 'templates', 'linting', 'eslint.config.mjs'), 'utf-8');
             previews.push({ path: 'eslint.config.mjs', content: jsContent, docType: normalized, type: 'practice', practiceType: normalized });
-          } catch {}
+          } catch (error) {
+            console.warn('Template not found for linting (eslint.config.mjs):', error);
+          }
           // Skip single-file return; both options added
           continue;
         }

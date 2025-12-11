@@ -39,9 +39,8 @@ export async function POST(request: NextRequest) {
     let language: string | null = null;
     try {
       const detected = await detectTemplateLanguage(octokit, owner, repo);
-      if (detected === 'python') language = 'Python';
-      else if (detected === 'javascript') language = 'JavaScript';
-      else language = null;
+      const map: Record<string, string | null> = { python: 'Python', javascript: 'JavaScript', mixed: null, other: null };
+      language = map[detected] ?? null;
     } catch {
       // Fallback to GitHub's language field
       const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {

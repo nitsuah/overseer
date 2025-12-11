@@ -239,10 +239,12 @@ export class GitHubClient {
     }
     
     // 1. Get default branch SHA
+    // Use repository's default branch, not hardcoded 'main'
+    const defaultBranch = (await this.octokit.repos.get({ owner: repoOwner, repo })).data.default_branch;
     const { data: refData } = await this.octokit.git.getRef({
       owner: repoOwner,
       repo,
-      ref: `heads/main`,
+      ref: `heads/${defaultBranch}`,
     });
     const sha = refData.object.sha;
 
@@ -323,7 +325,7 @@ export class GitHubClient {
       repo,
       title: title,
       head: branchName,
-      base: 'main',
+      base: defaultBranch,
       body: body,
     });
 

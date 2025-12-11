@@ -86,7 +86,7 @@ export async function POST(
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
 
-        const branchName = `docs/add-missing-docs-${Date.now()}`;
+        const branchName = `docs-add-missing-docs-${Date.now()}`;
 
         const prUrl = await github.createPrForFiles(
             repoName,

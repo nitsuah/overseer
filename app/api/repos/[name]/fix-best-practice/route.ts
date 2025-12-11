@@ -52,7 +52,7 @@ export async function POST(
         // If content provided from modal, use it directly
         if (providedContent && providedPath) {
             filesToAdd.push({ path: providedPath, content: providedContent });
-            branchName = `chore/add-${practiceType}-${Date.now()}`;
+            branchName = `chore-add-${practiceType}-${Date.now()}`;
             commitMessage = `chore: add ${practiceType}`;
         } else {
             // Fallback: read from template files
@@ -65,7 +65,7 @@ export async function POST(
                         path: '.github/dependabot.yml',
                         content
                     });
-                    branchName = `chore/add-dependabot-${Date.now()}`;
+                    branchName = `chore-add-dependabot-${Date.now()}`;
                     commitMessage = 'chore: add Dependabot configuration for automatic dependency updates';
                     break;
                 }
@@ -77,7 +77,7 @@ export async function POST(
                         path: '.env.example',
                         content
                     });
-                    branchName = `chore/add-env-template-${Date.now()}`;
+                    branchName = `chore-add-env-template-${Date.now()}`;
                     commitMessage = 'chore: add environment variables template';
                     break;
                 }
@@ -97,7 +97,7 @@ export async function POST(
                         content: dockerComposeContent
                     }
                 );
-                branchName = `chore/add-docker-${Date.now()}`;
+                branchName = `chore-add-docker-${Date.now()}`;
                 commitMessage = 'chore: add Docker configuration';
                 break;
             }
@@ -144,7 +144,7 @@ export async function POST(
                         path: 'README.md',
                         content: newReadme
                     });
-                    branchName = `docs/add-deploy-badge-${Date.now()}`;
+                    branchName = `docs-add-deploy-badge-${Date.now()}`;
                     commitMessage = 'docs: add deployment status badge to README';
                 } catch (error) {
                     logger.warn('Error adding deploy badge:', error);
@@ -160,7 +160,7 @@ export async function POST(
                     path: '.github/workflows/ci.yml',
                     content
                 });
-                branchName = `chore/add-ci-cd-${Date.now()}`;
+                branchName = `chore-add-ci-cd-${Date.now()}`;
                 commitMessage = 'chore: add CI/CD workflow configuration';
                 break;
             }
@@ -172,7 +172,7 @@ export async function POST(
                     path: '.gitignore',
                     content
                 });
-                branchName = `chore/add-gitignore-${Date.now()}`;
+                branchName = `chore-add-gitignore-${Date.now()}`;
                 commitMessage = 'chore: add .gitignore file';
                 break;
             }
@@ -184,7 +184,7 @@ export async function POST(
                     path: '.pre-commit-config.yaml',
                     content
                 });
-                branchName = `chore/add-pre-commit-hooks-${Date.now()}`;
+                branchName = `chore-add-pre-commit-hooks-${Date.now()}`;
                 commitMessage = 'chore: add pre-commit hooks configuration';
                 break;
             }
@@ -196,7 +196,7 @@ export async function POST(
                     path: 'vitest.config.ts',
                     content
                 });
-                branchName = `chore/add-testing-framework-${Date.now()}`;
+                branchName = `chore-add-testing-framework-${Date.now()}`;
                 commitMessage = 'chore: add testing framework configuration';
                 break;
             }
@@ -208,7 +208,7 @@ export async function POST(
                     path: 'eslint.config.mjs',
                     content
                 });
-                branchName = `chore/add-linting-${Date.now()}`;
+                branchName = `chore-add-linting-${Date.now()}`;
                 commitMessage = 'chore: add linting configuration';
                 break;
             }

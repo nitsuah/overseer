@@ -107,9 +107,9 @@ export class GitHubClient {
         return Buffer.from(data.content, 'base64').toString('utf-8');
       }
       return null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
+      if (err.status === 404) {
         return null;
       }
       throw error;
@@ -211,34 +211,39 @@ export class GitHubClient {
     owner?: string
   ): Promise<string> {
     const repoOwner = owner || this.owner;
-    console.log('[createPrForFiles] Starting with:', { repo, repoOwner, branchName, fileCount: files.length });
     
     // 1. Get default branch SHA
-    const { data: repoData } = await this.octokit.repos.get({
-      owner: repoOwner,
-      repo,
-    });
-    const defaultBranch = repoData.default_branch;
-    console.log('[createPrForFiles] Got repo data, default branch:', defaultBranch);
-
     const { data: refData } = await this.octokit.git.getRef({
       owner: repoOwner,
       repo,
-      ref: `heads/${defaultBranch}`,
+      ref: `heads/main`,
     });
     const sha = refData.object.sha;
-    console.log('[createPrForFiles] Got ref SHA:', sha);
 
-    // 2. Create new branch
-    await this.octokit.git.createRef({
-      owner: repoOwner,
-      repo,
-      ref: `refs/heads/${branchName}`,
-      sha,
-    });
-    console.log('[createPrForFiles] Created branch:', branchName);
+    // 2. Create new branch from main
+    const refToCreate = `refs/heads/${branchName}`;
+    console.log('[createPrForFiles] Creating branch with ref:', refToCreate);
+    try {
+      const createResult = await this.octokit.git.createRef({
+        owner: repoOwner,
+        repo,
+        ref: refToCreate,
+        sha,
+      });
+      console.log('[createPrForFiles] Branch created successfully:', createResult.data.ref);
+    } catch (error: unknown) {
+      const err = error as { message?: string; status?: number };
+      console.error('[createPrForFiles] Failed to create initial branch:', {
+        error: err.message,
+        status: err.status,
+        branchName,
+        ref: refToCreate,
+        sha
+      });
+      throw error;
+    }
 
-    // 3. Create/Update files using Git Tree API for better nested directory support
+    // 3. Create/update files on the new branch
     const { data: baseCommit } = await this.octokit.git.getCommit({
       owner: repoOwner,
       repo,
@@ -264,43 +269,104 @@ export class GitHubClient {
 
     console.log('[createPrForFiles] All blobs created:', blobs.map(b => b.path));
 
-    // Create tree with all files
-    const treeItems = blobs.map(blob => ({
+    // Build the tree items - add all files with their full paths
+    const treeItems: Array<{ path: string; mode: '100644'; type: 'blob'; sha: string }> = blobs.map(blob => ({
       path: blob.path,
       mode: '100644' as const,
       type: 'blob' as const,
       sha: blob.sha,
     }));
-    console.log('[createPrForFiles] Creating tree with items:', treeItems);
-    
-    const { data: newTree } = await this.octokit.git.createTree({
+
+    console.log('[createPrForFiles] Creating root tree with items:', treeItems);
+    console.log('[createPrForFiles] Tree creation params:', {
       owner: repoOwner,
       repo,
       base_tree: baseCommit.tree.sha,
-      tree: treeItems,
+      tree_item_count: treeItems.length
     });
-    console.log('[createPrForFiles] Tree created:', newTree.sha);
+    
+    let newTree;
+    try {
+      // Verify base_tree exists before creating tree
+      try {
+        await this.octokit.git.getTree({
+          owner: repoOwner,
+          repo,
+          tree_sha: baseCommit.tree.sha,
+        });
+        console.log('[createPrForFiles] Base tree verified:', baseCommit.tree.sha);
+      } catch (verifyError: unknown) {
+        const err = verifyError as { status?: number };
+        console.error('[createPrForFiles] Base tree verification failed:', {
+          base_tree: baseCommit.tree.sha,
+          error: verifyError,
+          status: err.status
+        });
+      }
+
+      // Try creating tree without base_tree first if it has nested paths
+      const hasNestedPaths = treeItems.some(item => item.path.includes('/'));
+      
+      let createTreeParams: {
+        owner: string;
+        repo: string;
+        tree: Array<{ path: string; mode: '100644'; type: 'blob'; sha: string }>;
+        base_tree?: string;
+      } = {
+        owner: repoOwner,
+        repo,
+        tree: treeItems,
+      };
+      
+      // Only use base_tree if we don't have nested paths, or try without it first
+      if (!hasNestedPaths) {
+        createTreeParams.base_tree = baseCommit.tree.sha;
+      } else {
+        console.log('[createPrForFiles] Creating tree without base_tree due to nested paths');
+      }
+      
+      const result = await this.octokit.git.createTree(createTreeParams);
+      newTree = result.data;
+      console.log('[createPrForFiles] Tree created:', newTree.sha);
+    } catch (error: unknown) {
+      const err = error as { message?: string; status?: number; response?: { data?: unknown } };
+      console.error('[createPrForFiles] Tree creation failed:', {
+        error,
+        errorMessage: err.message,
+        errorStatus: err.status,
+        errorResponse: err.response?.data,
+        owner: repoOwner,
+        repo,
+        base_tree: baseCommit.tree.sha,
+        tree_item_count: treeItems.length,
+        tree_items: treeItems
+      });
+      throw error;
+    }
 
     // Create commit
     const { data: newCommit } = await this.octokit.git.createCommit({
       owner: repoOwner,
       repo,
-      message: message.split('\n')[0], // Use first line as commit message
+      message: message.split('\n')[0],
       tree: newTree.sha,
       parents: [sha],
     });
+    console.log('[createPrForFiles] Commit created:', newCommit.sha);
 
-    // Update branch reference
-    await this.octokit.git.updateRef({
+    // Update branch to point to new commit - use request to avoid URL encoding issues
+    console.log('[createPrForFiles] Updating branch:', branchName, 'to commit:', newCommit.sha);
+    await this.octokit.request('PATCH /repos/{owner}/{repo}/git/refs/{ref}', {
       owner: repoOwner,
       repo,
       ref: `heads/${branchName}`,
       sha: newCommit.sha,
+      force: true,
     });
 
     // 4. Create PR
     const messageParts = message.split('\n\n');
-    const title = messageParts[0]; // First line/paragraph as title
+    const title = messageParts[0];
     const body = messageParts.length > 1 ? messageParts.slice(1).join('\n\n') : `Automated PR to add files:\n\n${files.map(f => `- ${f.path}`).join('\n')}`;
     
     const { data: prData } = await this.octokit.pulls.create({
@@ -308,7 +374,7 @@ export class GitHubClient {
       repo,
       title: title,
       head: branchName,
-      base: defaultBranch,
+      base: 'main',
       body: body,
     });
 

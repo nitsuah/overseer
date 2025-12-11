@@ -142,7 +142,7 @@ export async function POST(
         }
 
         // Create branch and PR with all files
-        const branchName = `docs/add-community-standards-${Date.now()}`;
+        const branchName = `docs-add-community-standards-${Date.now()}`;
         const prUrl = await github.createPrForFiles(
             repoName,
             branchName,

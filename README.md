@@ -1,5 +1,7 @@
 # Overseer
 
+[![Deploy Status](https://github.com/nitsuah/overseer/actions/workflows/deploy.yml/badge.svg)](https://github.com/nitsuah/overseer/actions)
+
 > **Meta-Repository Intelligence Layer**
 > A dashboard that gives you and your AI agents a unified view across all your GitHub repositories.
 

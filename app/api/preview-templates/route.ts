@@ -189,10 +189,9 @@ export async function POST(request: NextRequest) {
       // Override with file-based detection when available
       const detectedLang = repoContext.owner && repoContext.repo ? await (async () => {
         const session = await auth();
-        // Safely extract token without using 'any'
-        const token = typeof (session as Record<string, unknown>)?.accessToken === 'string'
-          ? ((session as Record<string, unknown>).accessToken as string)
-          : undefined;
+        // Safely extract token by narrowing via optional chaining and typeof
+        const maybeToken = (session && (session as unknown as { accessToken?: unknown }).accessToken);
+        const token = typeof maybeToken === 'string' ? maybeToken : undefined;
         if (!token) return 'other';
         try {
           const octokit = new Octokit({ auth: token });

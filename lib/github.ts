@@ -265,140 +265,49 @@ export class GitHubClient {
       throw error;
     }
 
-    // 3. Create/update files on the new branch
-    const { data: baseCommit } = await this.octokit.git.getCommit({
-      owner: repoOwner,
-      repo,
-      commit_sha: sha,
-    });
-    console.log('[createPrForFiles] Got base commit, tree SHA:', baseCommit.tree.sha);
+    // Small delay to avoid ref propagation race conditions
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Create blobs for each file
-    const blobs = await Promise.all(
-      files.map(async (file) => {
-        const normalizedPath = file.path.replace(/^\/+/, '').replace(/\\/g, '/');
-        console.log('[createPrForFiles] Creating blob for:', normalizedPath);
-        const { data: blob } = await this.octokit.git.createBlob({
-          owner: repoOwner,
-          repo,
-          content: Buffer.from(file.content).toString('base64'),
-          encoding: 'base64',
-        });
-        console.log('[createPrForFiles] Blob created:', blob.sha);
-        return { path: normalizedPath, sha: blob.sha };
-      })
-    );
-
-    console.log('[createPrForFiles] All blobs created:', blobs.map(b => b.path));
-
-    // Verify all blobs exist
-    for (const blob of blobs) {
+    // 3. Write files to the new branch via Contents API
+    console.log('[createPrForFiles] Writing files to branch via Contents API');
+    for (const file of files) {
+      const normalizedPath = file.path.replace(/^\/+/, '').replace(/\\/g, '/');
+      // Check if file exists on the new branch to get its sha
+      let existingSha: string | undefined = undefined;
       try {
-        await this.octokit.git.getBlob({
+        const { data: existing } = await this.octokit.repos.getContent({
           owner: repoOwner,
           repo,
-          file_sha: blob.sha,
+          path: normalizedPath,
+          ref: branchName,
         });
-        console.log('[createPrForFiles] Blob verified:', blob.path, blob.sha);
-      } catch (blobError: unknown) {
-        console.error('[createPrForFiles] Blob verification failed:', blob.path, blob.sha, blobError);
-        throw new Error(`Blob ${blob.sha} for ${blob.path} does not exist`);
-      }
-    }
-
-    // Build tree items - GitHub API supports nested paths directly
-    const treeItems = blobs.map(blob => ({
-      path: blob.path,
-      mode: '100644' as const,
-      type: 'blob' as const,
-      sha: blob.sha,
-    }));
-
-    console.log('[createPrForFiles] Creating tree with items:', treeItems);
-    console.log('[createPrForFiles] Tree creation params:', {
-      owner: repoOwner,
-      repo,
-      base_tree: baseCommit.tree.sha,
-      tree_item_count: treeItems.length
-    });
-    
-    let newTree;
-    try {
-      // Verify base_tree exists before creating tree
-      try {
-        await this.octokit.git.getTree({
-          owner: repoOwner,
-          repo,
-          tree_sha: baseCommit.tree.sha,
-        });
-        console.log('[createPrForFiles] Base tree verified:', baseCommit.tree.sha);
-      } catch (verifyError: unknown) {
-        const err = verifyError as { status?: number };
-        console.error('[createPrForFiles] Base tree verification failed:', {
-          base_tree: baseCommit.tree.sha,
-          error: verifyError,
-          status: err.status
-        });
+        if (!Array.isArray(existing) && (existing as { sha?: string }).sha) {
+          existingSha = (existing as { sha: string }).sha;
+          console.log('[createPrForFiles] Existing file found on branch:', normalizedPath, existingSha);
+        }
+      } catch (getErr: unknown) {
+        const err = getErr as { status?: number };
+        if (err.status !== 404) {
+          console.warn('[createPrForFiles] getContent warning:', normalizedPath, getErr);
+        } else {
+          console.log('[createPrForFiles] File does not exist on branch, will create:', normalizedPath);
+        }
       }
 
-      // Create tree with base_tree - GitHub API supports nested paths with base_tree
-      const result = await this.octokit.git.createTree({
+      // Create or update the file on the branch
+      const commitMsgTitle = message.split('\n')[0] || 'chore: add file';
+      const commitMessage = `${commitMsgTitle}: ${normalizedPath}`;
+      const { data: writeResult } = await this.octokit.repos.createOrUpdateFileContents({
         owner: repoOwner,
         repo,
-        tree: treeItems,
-        base_tree: baseCommit.tree.sha,
+        path: normalizedPath,
+        message: commitMessage,
+        content: Buffer.from(file.content).toString('base64'),
+        branch: branchName,
+        sha: existingSha,
       });
-      newTree = result.data;
-      console.log('[createPrForFiles] Tree created:', newTree.sha);
-    } catch (error: unknown) {
-      const err = error as { message?: string; status?: number; response?: { data?: unknown } };
-      console.error('[createPrForFiles] Tree creation failed:', {
-        error,
-        errorMessage: err.message,
-        errorStatus: err.status,
-        errorResponse: err.response?.data,
-        owner: repoOwner,
-        repo,
-        base_tree: baseCommit.tree.sha,
-        tree_item_count: treeItems.length,
-        tree_items: treeItems
-      });
-      throw error;
+      console.log('[createPrForFiles] Wrote file via contents API:', normalizedPath, 'commit:', writeResult.commit?.sha);
     }
-
-    // Create commit
-    const { data: newCommit } = await this.octokit.git.createCommit({
-      owner: repoOwner,
-      repo,
-      message: message.split('\n')[0],
-      tree: newTree.sha,
-      parents: [sha],
-    });
-    console.log('[createPrForFiles] Commit created:', newCommit.sha);
-
-    // Verify branch exists before updating
-    try {
-      const { data: verifyBranch } = await this.octokit.git.getRef({
-        owner: repoOwner,
-        repo,
-        ref: `heads/${branchName}`,
-      });
-      console.log('[createPrForFiles] Branch verified before update:', verifyBranch.ref, 'SHA:', verifyBranch.object.sha);
-    } catch (error: unknown) {
-      console.error('[createPrForFiles] Branch verification failed before update:', error);
-      throw new Error(`Branch ${branchName} does not exist after creation`);
-    }
-
-    // Update branch to point to new commit
-    console.log('[createPrForFiles] Updating branch to commit:', newCommit.sha);
-    await this.octokit.git.updateRef({
-      owner: repoOwner,
-      repo,
-      ref: `heads/${branchName}`,
-      sha: newCommit.sha,
-      force: true,
-    });
-    console.log('[createPrForFiles] Branch updated successfully');
 
     // 4. Create PR
     const messageParts = message.split('\n\n');

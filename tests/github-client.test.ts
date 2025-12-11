@@ -170,3 +170,48 @@ test('GitHubClient.getPullRequests returns PR list', async () => {
   expect(prs[0].title).toBe('Test PR');
   expect(prs[0].labels).toEqual(['bug', 'priority']);
 });
+
+test('GitHubClient.createPrForFile creates branch and PR', async () => {
+  const client = new GitHubClient('fake-token', 'test-owner');
+  const mockOctokit = client.getOctokit() as unknown as {
+    repos: { get: ReturnType<typeof vi.fn>; createOrUpdateFileContents: ReturnType<typeof vi.fn> };
+    git: { getRef: ReturnType<typeof vi.fn>; createRef: ReturnType<typeof vi.fn> };
+    pulls: { create: ReturnType<typeof vi.fn> };
+  };
+
+  mockOctokit.repos.get.mockResolvedValue({
+    data: { default_branch: 'main' },
+  });
+
+  mockOctokit.git.getRef.mockResolvedValue({
+    data: { object: { sha: 'abc123' } },
+  });
+
+  mockOctokit.git.createRef.mockResolvedValue({
+    data: { ref: 'refs/heads/test-branch' },
+  });
+
+  mockOctokit.repos.createOrUpdateFileContents.mockResolvedValue({
+    data: { commit: { sha: 'def456' } },
+  });
+
+  mockOctokit.pulls.create.mockResolvedValue({
+    data: { html_url: 'https://github.com/test-owner/test-repo/pull/1' },
+  });
+
+  const prUrl = await client.createPrForFile(
+    'test-repo',
+    'test-branch',
+    'README.md',
+    '# Test',
+    'Add README'
+  );
+
+  expect(prUrl).toBe('https://github.com/test-owner/test-repo/pull/1');
+  expect(mockOctokit.git.createRef).toHaveBeenCalledWith({
+    owner: 'test-owner',
+    repo: 'test-repo',
+    ref: 'refs/heads/test-branch',
+    sha: 'abc123',
+  });
+});

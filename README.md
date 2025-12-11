@@ -1,6 +1,8 @@
 # Overseer
 
-[![Deploy Status](https://github.com/nitsuah/overseer/actions/workflows/deploy.yml/badge.svg)](https://github.com/nitsuah/overseer/actions)
+[![CI Status](https://github.com/nitsuah/overseer/actions/workflows/ci.yml/badge.svg)](https://github.com/nitsuah/overseer/actions)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/ebf5c761-34fb-495b-bd86-ea57932296b3/deploy-status)](https://app.netlify.com/projects/ghoverseer/deploys)
+
 
 > **Meta-Repository Intelligence Layer**
 > A dashboard that gives you and your AI agents a unified view across all your GitHub repositories.

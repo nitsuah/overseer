@@ -36,14 +36,20 @@ export interface PullRequestInfo {
 }
 
 export class GitHubClient {
-  public octokit: Octokit;
+  private octokit: Octokit;
   private owner: string;
+  private token: string;
 
   constructor(token: string, owner: string) {
     // Use shared Octokit instance factory
     this.octokit = createOctokitClient(token);
     this.owner = owner;
+    this.token = token;
   }
+  
+    public getOctokit(): Octokit {
+      return this.octokit;
+    }
 
   async listRepos(): Promise<RepoMetadata[]> {
     const { data } = await this.octokit.repos.listForAuthenticatedUser({
@@ -107,9 +113,9 @@ export class GitHubClient {
         return Buffer.from(data.content, 'base64').toString('utf-8');
       }
       return null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
+      if (err.status === 404) {
         return null;
       }
       throw error;
@@ -211,96 +217,107 @@ export class GitHubClient {
     owner?: string
   ): Promise<string> {
     const repoOwner = owner || this.owner;
-    console.log('[createPrForFiles] Starting with:', { repo, repoOwner, branchName, fileCount: files.length });
+    
+    // Check if repo is accessible and not archived
+    try {
+      const { data: repoData } = await this.octokit.repos.get({
+        owner: repoOwner,
+        repo,
+      });
+      console.log('[createPrForFiles] Repo status:', {
+        archived: repoData.archived,
+        disabled: repoData.disabled,
+        permissions: repoData.permissions,
+      });
+      
+      if (repoData.archived) {
+        throw new Error(`Repository ${repoOwner}/${repo} is archived and cannot accept changes`);
+      }
+    } catch (error: unknown) {
+      console.error('[createPrForFiles] Failed to get repo info:', error);
+      throw error;
+    }
     
     // 1. Get default branch SHA
-    const { data: repoData } = await this.octokit.repos.get({
-      owner: repoOwner,
-      repo,
-    });
-    const defaultBranch = repoData.default_branch;
-    console.log('[createPrForFiles] Got repo data, default branch:', defaultBranch);
-
+    // Use repository's default branch, not hardcoded 'main'
+    const defaultBranch = (await this.octokit.repos.get({ owner: repoOwner, repo })).data.default_branch;
     const { data: refData } = await this.octokit.git.getRef({
       owner: repoOwner,
       repo,
       ref: `heads/${defaultBranch}`,
     });
     const sha = refData.object.sha;
-    console.log('[createPrForFiles] Got ref SHA:', sha);
 
-    // 2. Create new branch
-    await this.octokit.git.createRef({
-      owner: repoOwner,
-      repo,
-      ref: `refs/heads/${branchName}`,
-      sha,
-    });
-    console.log('[createPrForFiles] Created branch:', branchName);
+    // 2. Create new branch from main
+    const refToCreate = `refs/heads/${branchName}`;
+    console.log('[createPrForFiles] Creating branch with ref:', refToCreate);
+    try {
+      const createResult = await this.octokit.git.createRef({
+        owner: repoOwner,
+        repo,
+        ref: refToCreate,
+        sha,
+      });
+      console.log('[createPrForFiles] Branch created successfully:', createResult.data.ref);
+    } catch (error: unknown) {
+      const err = error as { message?: string; status?: number };
+      console.error('[createPrForFiles] Failed to create initial branch:', {
+        error: err.message,
+        status: err.status,
+        branchName,
+        ref: refToCreate,
+        sha
+      });
+      throw error;
+    }
 
-    // 3. Create/Update files using Git Tree API for better nested directory support
-    const { data: baseCommit } = await this.octokit.git.getCommit({
-      owner: repoOwner,
-      repo,
-      commit_sha: sha,
-    });
-    console.log('[createPrForFiles] Got base commit, tree SHA:', baseCommit.tree.sha);
+    // Small delay to avoid ref propagation race conditions
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Create blobs for each file
-    const blobs = await Promise.all(
-      files.map(async (file) => {
-        const normalizedPath = file.path.replace(/^\/+/, '').replace(/\\/g, '/');
-        console.log('[createPrForFiles] Creating blob for:', normalizedPath);
-        const { data: blob } = await this.octokit.git.createBlob({
+    // 3. Write files to the new branch via Contents API
+    console.log('[createPrForFiles] Writing files to branch via Contents API');
+    for (const file of files) {
+      const normalizedPath = file.path.replace(/^\/+/, '').replace(/\\/g, '/');
+      // Check if file exists on the new branch to get its sha
+      let existingSha: string | undefined = undefined;
+      try {
+        const { data: existing } = await this.octokit.repos.getContent({
           owner: repoOwner,
           repo,
-          content: Buffer.from(file.content).toString('base64'),
-          encoding: 'base64',
+          path: normalizedPath,
+          ref: branchName,
         });
-        console.log('[createPrForFiles] Blob created:', blob.sha);
-        return { path: normalizedPath, sha: blob.sha };
-      })
-    );
+        if (!Array.isArray(existing) && (existing as { sha?: string }).sha) {
+          existingSha = (existing as { sha: string }).sha;
+          console.log('[createPrForFiles] Existing file found on branch:', normalizedPath, existingSha);
+        }
+      } catch (getErr: unknown) {
+        const err = getErr as { status?: number };
+        if (err.status !== 404) {
+          console.warn('[createPrForFiles] getContent warning:', normalizedPath, getErr);
+        } else {
+          console.log('[createPrForFiles] File does not exist on branch, will create:', normalizedPath);
+        }
+      }
 
-    console.log('[createPrForFiles] All blobs created:', blobs.map(b => b.path));
-
-    // Create tree with all files
-    const treeItems = blobs.map(blob => ({
-      path: blob.path,
-      mode: '100644' as const,
-      type: 'blob' as const,
-      sha: blob.sha,
-    }));
-    console.log('[createPrForFiles] Creating tree with items:', treeItems);
-    
-    const { data: newTree } = await this.octokit.git.createTree({
-      owner: repoOwner,
-      repo,
-      base_tree: baseCommit.tree.sha,
-      tree: treeItems,
-    });
-    console.log('[createPrForFiles] Tree created:', newTree.sha);
-
-    // Create commit
-    const { data: newCommit } = await this.octokit.git.createCommit({
-      owner: repoOwner,
-      repo,
-      message: message.split('\n')[0], // Use first line as commit message
-      tree: newTree.sha,
-      parents: [sha],
-    });
-
-    // Update branch reference
-    await this.octokit.git.updateRef({
-      owner: repoOwner,
-      repo,
-      ref: `heads/${branchName}`,
-      sha: newCommit.sha,
-    });
+      // Create or update the file on the branch
+      const commitMsgTitle = message.split('\n')[0] || 'chore: add file';
+      const commitMessage = `${commitMsgTitle}: ${normalizedPath}`;
+      const { data: writeResult } = await this.octokit.repos.createOrUpdateFileContents({
+        owner: repoOwner,
+        repo,
+        path: normalizedPath,
+        message: commitMessage,
+        content: Buffer.from(file.content).toString('base64'),
+        branch: branchName,
+        sha: existingSha,
+      });
+      console.log('[createPrForFiles] Wrote file via contents API:', normalizedPath, 'commit:', writeResult.commit?.sha);
+    }
 
     // 4. Create PR
     const messageParts = message.split('\n\n');
-    const title = messageParts[0]; // First line/paragraph as title
+    const title = messageParts[0];
     const body = messageParts.length > 1 ? messageParts.slice(1).join('\n\n') : `Automated PR to add files:\n\n${files.map(f => `- ${f.path}`).join('\n')}`;
     
     const { data: prData } = await this.octokit.pulls.create({

@@ -93,8 +93,11 @@ export function PRPreviewModal({
     console.log('AI Generate starting for:', activeFile, 'docType:', activeFileContent.docType);
     setGeneratingAI(true);
     try {
+      // Extract just the repo name for database lookup (enrich API uses name column)
+      const dbRepoName = repoName.includes('/') ? repoName.split('/')[1] : repoName;
+      
       const payload = {
-        repoName,
+        repoName: dbRepoName,
         docType: activeFileContent.docType,
         templateContent: editedContent.get(activeFile) || activeFileContent.content,
       };

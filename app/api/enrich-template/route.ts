@@ -729,13 +729,19 @@ Return ONLY the complete config file content, no markdown fences.${NO_HALLUCINAT
     const enriched = await generateAIContent(prompt);
     console.log('[enrichTemplateWithAI] AI response received, length:', enriched?.length);
     console.log('[enrichTemplateWithAI] AI response preview:', enriched?.substring(0, 300));
-    // Strip markdown code fences if present
+    // Strip markdown code fences if present (be aggressive about it)
     // Normalize line endings to avoid CRLF/LF diff issues
-    const cleaned = enriched
-      .replace(/^```[\w]*\n?/, '')
-      .replace(/\n?```$/, '')
+    let cleaned = enriched
       .replace(/\r\n/g, '\n')
       .trim();
+    
+    // Remove opening code fence (```markdown, ```yaml, etc.)
+    cleaned = cleaned.replace(/^```[\w]*\s*\n/, '');
+    // Remove closing code fence
+    cleaned = cleaned.replace(/\n```\s*$/, '');
+    // Trim again after fence removal
+    cleaned = cleaned.trim();
+    
     console.log('[enrichTemplateWithAI] After cleaning, length:', cleaned?.length);
     console.log('[enrichTemplateWithAI] Template length:', templateContent?.length);
     console.log('[enrichTemplateWithAI] Are they identical?', cleaned === templateContent);

@@ -70,10 +70,11 @@ export function useRepoActions(
     }
   };
 
-  const handleFixAllDocs = async (repoName: string, missingDocs?: string[]) => {
+  const handleFixAllDocs = async (fullRepoName: string, missingDocs?: string[]) => {
     // Fetch template previews
     try {
       setFixingDoc(true);
+      const repoName = fullRepoName.includes('/') ? fullRepoName.split('/')[1] : fullRepoName;
       
       // If no missing docs provided, fetch from repo details
       let docsToFix: string[] = missingDocs || [];
@@ -98,13 +99,13 @@ export function useRepoActions(
       const previewRes = await fetch('/api/preview-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ docTypes: docsToFix }),
+        body: JSON.stringify({ docTypes: docsToFix, repoName: fullRepoName }),
       });
 
       if (previewRes.ok) {
         const { previews } = await previewRes.json();
         setPreviewFiles(previews);
-        setPreviewRepoName(repoName);
+        setPreviewRepoName(fullRepoName);
         setPreviewMode('batch');
         setPreviewModalOpen(true);
       } else {
@@ -118,7 +119,8 @@ export function useRepoActions(
     }
   };
 
-  const handleFixDoc = async (repoName: string, docType: string) => {
+  const handleFixDoc = async (fullRepoName: string, docType: string) => {
+    const repoName = fullRepoName.includes('/') ? fullRepoName.split('/')[1] : fullRepoName;
     // Show preview modal first
     try {
       setFixingDoc(true);
@@ -145,21 +147,23 @@ export function useRepoActions(
     }
   };
 
-  const handleFixStandard = async (repoName: string, standardType: string) => {
+  const handleFixStandard = async (fullRepoName: string, standardType: string) => {
     // Use the preview modal flow for community standards where templates exist
     try {
       setFixingDoc(true);
+      const repoName = fullRepoName.includes('/') ? fullRepoName.split('/')[1] : fullRepoName;
+      
       const previewRes = await fetch('/api/preview-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ docTypes: [standardType] }),
+        body: JSON.stringify({ docTypes: [standardType], repoName: fullRepoName }),
       });
 
       if (previewRes.ok) {
         const { previews } = await previewRes.json();
         if (previews && previews.length > 0) {
           setPreviewFiles(previews);
-          setPreviewRepoName(repoName);
+          setPreviewRepoName(fullRepoName);
           setPreviewMode('single');
           setPreviewModalOpen(true);
           return; // Continue via confirmPRCreation
@@ -188,7 +192,8 @@ export function useRepoActions(
     }
   };
 
-  const handleFixAllStandards = async (repoName: string) => {
+  const handleFixAllStandards = async (fullRepoName: string) => {
+    const repoName = fullRepoName.includes('/') ? fullRepoName.split('/')[1] : fullRepoName;
     // Load previews for ALL missing supported community standards and open modal
     try {
       setFixingDoc(true);
@@ -227,13 +232,13 @@ export function useRepoActions(
       const previewRes = await fetch('/api/preview-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ docTypes: missingStandards }),
+        body: JSON.stringify({ docTypes: missingStandards, repoName: fullRepoName }),
       });
 
       if (previewRes.ok) {
         const { previews } = await previewRes.json();
         setPreviewFiles(previews);
-        setPreviewRepoName(repoName);
+        setPreviewRepoName(fullRepoName);
         setPreviewMode('batch');
         setPreviewModalOpen(true);
       } else {
@@ -247,7 +252,8 @@ export function useRepoActions(
     }
   };
 
-  const handleFixPractice = async (repoName: string, practiceType: string) => {
+  const handleFixPractice = async (fullRepoName: string, practiceType: string) => {
+    const repoName = fullRepoName.includes('/') ? fullRepoName.split('/')[1] : fullRepoName;
     // Generate AI-powered, context-aware best practice fix
     try {
       setFixingDoc(true);
@@ -325,10 +331,13 @@ export function useRepoActions(
     }
   };
 
-  const handleFixAllPractices = async (repoName: string) => {
+  const handleFixAllPractices = async (fullRepoName: string) => {
     // Load templates for all missing best practices - AI enrichment happens in modal
     try {
       setFixingDoc(true);
+      
+      // Extract just the repo name for database lookup
+      const repoName = fullRepoName.includes('/') ? fullRepoName.split('/')[1] : fullRepoName;
       
       // Get repo details to check which practices are actually missing
       const detailsRes = await fetch(`/api/repo-details/${repoName}`);
@@ -350,11 +359,11 @@ export function useRepoActions(
         return;
       }
 
-      // Load templates - AI enrichment happens in the modal
+      // Load templates - preview-templates needs full name for GitHub API calls
       const previewRes = await fetch('/api/preview-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ docTypes: missingPractices, repoName }),
+        body: JSON.stringify({ docTypes: missingPractices, repoName: fullRepoName }),
       });
 
       if (!previewRes.ok) {
@@ -364,7 +373,7 @@ export function useRepoActions(
 
       const { previews } = await previewRes.json();
       setPreviewFiles(previews);
-      setPreviewRepoName(repoName);
+      setPreviewRepoName(fullRepoName);
       setPreviewMode('batch');
       setPreviewModalOpen(true);
     } catch (error) {
@@ -426,11 +435,14 @@ export function useRepoActions(
     try {
       setFixingDoc(true);
       
+      // Extract repo name for API endpoints (they use database lookup)
+      const repoName = previewRepoName.includes('/') ? previewRepoName.split('/')[1] : previewRepoName;
+      
       if (selectedFiles.length === 1) {
         // Single file PR
         const f = selectedFiles[0];
         if (f.type === 'practice') {
-          const res = await fetch(`/api/repos/${previewRepoName}/fix-best-practice`, {
+          const res = await fetch(`/api/repos/${repoName}/fix-best-practice`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -450,7 +462,7 @@ export function useRepoActions(
           }
         } else {
           const docType = f.docType.toLowerCase();
-          const res = await fetch(`/api/repos/${previewRepoName}/fix-doc`, {
+          const res = await fetch(`/api/repos/${repoName}/fix-doc`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -484,10 +496,11 @@ export function useRepoActions(
 
         let docsMessage = '';
         let standardsMessage = '';
+        let hasError = false;
 
         // Core docs: single batch PR via fix-all-docs
         if (coreDocs.length > 0) {
-          const res = await fetch(`/api/repos/${previewRepoName}/fix-all-docs`, {
+          const res = await fetch(`/api/repos/${repoName}/fix-all-docs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ files: coreDocs }),
@@ -499,12 +512,13 @@ export function useRepoActions(
           } else {
             const err = await res.json();
             handlePRError(err);
+            hasError = true;
           }
         }
 
         // Community standards: single batch PR via fix-all-standards
         if (standardDocs.length > 0) {
-          const res = await fetch(`/api/repos/${previewRepoName}/fix-all-standards`, {
+          const res = await fetch(`/api/repos/${repoName}/fix-all-standards`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ files: standardDocs }),
@@ -516,13 +530,14 @@ export function useRepoActions(
           } else {
             const err = await res.json();
             handlePRError(err);
+            hasError = true;
           }
         }
 
         // Practices: create a single batch PR when multiple selected
         let practicesMessage = '';
         if (practices.length > 0) {
-          const res = await fetch(`/api/repos/${previewRepoName}/fix-all-practices`, {
+          const res = await fetch(`/api/repos/${repoName}/fix-all-practices`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ files: practices }),
@@ -534,11 +549,19 @@ export function useRepoActions(
           } else {
             const err = await res.json();
             handlePRError(err);
+            hasError = true;
           }
         }
 
-        setToastMessage([docsMessage, standardsMessage, practicesMessage].filter(Boolean).join(' '));
-        setPreviewModalOpen(false);
+        const messages = [docsMessage, standardsMessage, practicesMessage].filter(Boolean);
+        if (messages.length > 0) {
+          setToastMessage(messages.join(' '));
+        }
+        
+        // Only close modal if no errors occurred
+        if (!hasError) {
+          setPreviewModalOpen(false);
+        }
       }
     } catch (error) {
       console.error('Failed to create PR:', error);

@@ -112,7 +112,7 @@ export async function POST(
 
         // Create a new branch
         const normalized = String(docType).toLowerCase();
-        const branchName = `docs/add-${normalized}-${Date.now()}`;
+        const branchName = `docs-add-${normalized}-${Date.now()}`;
 
         // Use the target path (either from modal or from template mapping)
         const prUrl = await github.createPrForFile(

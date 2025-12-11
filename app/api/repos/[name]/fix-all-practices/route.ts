@@ -35,6 +35,13 @@ export async function POST(
     if (!githubToken) throw new Error('GitHub access token not found in session');
     const github = new GitHubClient(githubToken, owner);
 
+    // Fetch repo language once for template selection
+    const { data: repoData } = await github.getOctokit().repos.get({
+      owner,
+      repo: repoName,
+    });
+    const isPython = repoData.language?.toLowerCase() === 'python';
+
     let filesToAdd: { path: string; content: string }[];
     let addedTypes: string[];
 
@@ -66,15 +73,15 @@ export async function POST(
             break;
           }
           case 'env_template': {
-            const templatePath = path.join(process.cwd(), 'templates', '.env.example');
+            const templatePath = path.join(process.cwd(), 'templates', 'env', '.env.example');
             const content = await fs.readFile(templatePath, 'utf-8');
             filesToAdd.push({ path: '.env.example', content });
             addedTypes.push('env_template');
             break;
           }
           case 'docker': {
-            const dockerfilePath = path.join(process.cwd(), 'templates', 'Dockerfile');
-            const dockerComposePath = path.join(process.cwd(), 'templates', 'docker-compose.yml');
+            const dockerfilePath = path.join(process.cwd(), 'templates', 'docker', 'Dockerfile');
+            const dockerComposePath = path.join(process.cwd(), 'templates', 'docker', 'docker-compose.yml');
             const dockerfileContent = await fs.readFile(dockerfilePath, 'utf-8');
             const dockerComposeContent = await fs.readFile(dockerComposePath, 'utf-8');
             filesToAdd.push({ path: 'Dockerfile', content: dockerfileContent });
@@ -117,37 +124,47 @@ export async function POST(
           break;
         }
         case 'ci_cd': {
-          const templatePath = path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci.yml');
+          const templatePath = isPython
+            ? path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci-python.yml')
+            : path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci.yml');
           const content = await fs.readFile(templatePath, 'utf-8');
           filesToAdd.push({ path: '.github/workflows/ci.yml', content });
           addedTypes.push('ci_cd');
           break;
         }
         case 'gitignore': {
-          const templatePath = path.join(process.cwd(), 'templates', '.gitignore');
+          const templatePath = path.join(process.cwd(), 'templates', 'gitignore', '.gitignore');
           const content = await fs.readFile(templatePath, 'utf-8');
           filesToAdd.push({ path: '.gitignore', content });
           addedTypes.push('gitignore');
           break;
         }
         case 'pre_commit_hooks': {
-          const templatePath = path.join(process.cwd(), 'templates', '.pre-commit-config.yaml');
+          const templatePath = isPython
+            ? path.join(process.cwd(), 'templates', 'pre-commit', '.pre-commit-config-python.yaml')
+            : path.join(process.cwd(), 'templates', 'pre-commit', '.pre-commit-config.yaml');
           const content = await fs.readFile(templatePath, 'utf-8');
           filesToAdd.push({ path: '.pre-commit-config.yaml', content });
           addedTypes.push('pre_commit_hooks');
           break;
         }
         case 'testing_framework': {
-          const templatePath = path.join(process.cwd(), 'templates', 'vitest.config.ts');
+          const templatePath = isPython
+            ? path.join(process.cwd(), 'templates', 'testing', 'pytest.ini')
+            : path.join(process.cwd(), 'templates', 'testing', 'vitest.config.ts');
+          const fileName = isPython ? 'pytest.ini' : 'vitest.config.ts';
           const content = await fs.readFile(templatePath, 'utf-8');
-          filesToAdd.push({ path: 'vitest.config.ts', content });
+          filesToAdd.push({ path: fileName, content });
           addedTypes.push('testing_framework');
           break;
         }
         case 'linting': {
-          const templatePath = path.join(process.cwd(), 'templates', 'eslint.config.mjs');
+          const templatePath = isPython
+            ? path.join(process.cwd(), 'templates', 'linting', 'pyproject.toml')
+            : path.join(process.cwd(), 'templates', 'linting', 'eslint.config.mjs');
+          const fileName = isPython ? 'pyproject.toml' : 'eslint.config.mjs';
           const content = await fs.readFile(templatePath, 'utf-8');
-          filesToAdd.push({ path: 'eslint.config.mjs', content });
+          filesToAdd.push({ path: fileName, content });
           addedTypes.push('linting');
           break;
         }
@@ -162,7 +179,7 @@ export async function POST(
       return NextResponse.json({ error: 'No files to add' }, { status: 400 });
     }
 
-    const branchName = `chore/add-best-practices-${Date.now()}`;
+    const branchName = `chore-add-best-practices-${Date.now()}`;
     const commitMessage = `chore: add ${filesToAdd.length} best practice file${filesToAdd.length > 1 ? 's' : ''}
 
 Added files:

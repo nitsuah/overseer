@@ -51,6 +51,7 @@ export interface CommunityStandard {
 export interface Repo {
   id: string;
   name: string;
+  full_name: string;
   description: string | null;
   language: string | null;
   stars: number;

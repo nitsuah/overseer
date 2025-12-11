@@ -96,11 +96,16 @@ export async function checkBestPractices(
     });
 
     // 4. Pre-commit Hooks Detection
-    const hasHooks = fileList.some(f => f.includes('.husky/') || f.includes('.git/hooks/'));
+    const preCommitFiles = ['.husky/', '.git/hooks/', '.pre-commit-config.yaml'];
+    const detectedHooks = fileList.filter(f => preCommitFiles.some(hook => f.includes(hook)));
+    const hasHooks = detectedHooks.length > 0;
     practices.push({
         type: 'pre_commit_hooks',
         status: hasHooks ? 'healthy' : 'missing',
-        details: { exists: hasHooks }
+        details: { 
+            exists: hasHooks,
+            detected: detectedHooks
+        }
     });
 
     // 5. Testing Framework Detection
@@ -109,7 +114,10 @@ export async function checkBestPractices(
         'jest.config',
         'playwright.config',
         'cypress.config',
-        '.mocharc'
+        '.mocharc',
+        'pytest.ini',
+        'pyproject.toml',  // Can contain pytest config
+        'tox.ini'
     ];
     const detectedTestingConfigs = fileList.filter(f => testingFiles.some(test => f.includes(test)));
     const hasTesting = detectedTestingConfigs.length > 0;
@@ -119,9 +127,11 @@ export async function checkBestPractices(
         '.test.', 
         '.spec.', 
         '__tests__/',
-        '/tests/',
-        '/test/',
-        'e2e/'
+        'tests/',      // Match tests/ at any level (not just /tests/)
+        'test/',       // Match test/ at any level  
+        'e2e/',
+        'test_',       // Python test files: test_*.py
+        '_test.'       // Go test files: *_test.go
     ];
     const testFiles = fileList.filter(f => 
         testFilePatterns.some(pattern => f.toLowerCase().includes(pattern))
@@ -149,7 +159,12 @@ export async function checkBestPractices(
         '.eslintrc',
         'eslint.config',
         '.prettierrc',
-        'biome.json'
+        'biome.json',
+        '.flake8',
+        '.pylintrc',
+        'pylint.ini',
+        'ruff.toml',
+        'pyproject.toml'  // Can contain ruff/black/isort config
     ];
     const hasLinting = fileList.some(f => lintingFiles.some(lint => f.includes(lint)));
     practices.push({

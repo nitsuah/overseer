@@ -205,7 +205,12 @@ export async function POST(request: NextRequest) {
       if (detectedLang === 'python' || detectedLang === 'javascript') {
         repoContext.templateLanguage = detectedLang;
       } else {
-        repoContext.templateLanguage = templateLang;
+        // Fallback: only set when templateLang is allowed; otherwise leave undefined
+        if (templateLang === 'python' || templateLang === 'javascript') {
+          repoContext.templateLanguage = templateLang;
+        } else {
+          repoContext.templateLanguage = undefined;
+        }
       }
       const isPython = repoContext.templateLanguage === 'python';
       

@@ -366,7 +366,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     // Best Practices Detection
     try {
         const readmeContent = await github.getFileContent(repo.name, 'README.md', owner);
-        const bestPracticesResult = await checkBestPractices(owner, repo.name, github.octokit, fileList, readmeContent || undefined);
+        const bestPracticesResult = await checkBestPractices(owner, repo.name, github.getOctokit(), fileList, readmeContent || undefined);
 
         await db`DELETE FROM best_practices WHERE repo_id = ${repoId}`;
         for (const practice of bestPracticesResult.practices) {

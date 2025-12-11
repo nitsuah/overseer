@@ -47,7 +47,7 @@ export async function POST(
         const github = new GitHubClient(githubToken, owner);
 
         // Detect template language using file signals with fallback to repo language
-        const templateLanguage = await detectTemplateLanguage(github.octokit, owner, repoName);
+        const templateLanguage = await detectTemplateLanguage(github.getOctokit(), owner, repoName);
         const isPython = templateLanguage === 'python';
 
         const filesToAdd: { path: string; content: string }[] = [];

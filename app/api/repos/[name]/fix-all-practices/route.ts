@@ -36,7 +36,7 @@ export async function POST(
     const github = new GitHubClient(githubToken, owner);
 
     // Fetch repo language once for template selection
-    const { data: repoData } = await github.octokit.repos.get({
+    const { data: repoData } = await github.getOctokit().repos.get({
       owner,
       repo: repoName,
     });

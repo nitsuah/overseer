@@ -46,6 +46,10 @@ export class GitHubClient {
     this.owner = owner;
     this.token = token;
   }
+  
+    public getOctokit(): Octokit {
+      return this.octokit;
+    }
 
   async listRepos(): Promise<RepoMetadata[]> {
     const { data } = await this.octokit.repos.listForAuthenticatedUser({

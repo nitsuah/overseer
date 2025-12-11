@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/rest';
 
-export type HealthState = 'missing' | 'dormant' | 'malformed' | 'healthy';
+export type HealthState = 'missing' | 'dormant' | 'malformed' | 'healthy' | 'needs_attention';
 
 export interface BestPractice {
     type: string;
@@ -180,10 +180,10 @@ export async function checkBestPractices(
     if (readmeContent) {
         // Check for common deployment badges
         // Robust detection of CI/CD and deploy badges via URL + alt-text keywords with scoring
-        const badgeMdRegex = /!\[[^\]]*\]\((?<src>[^)]+)\)/gi; // Markdown image
-        const badgeLinkMdRegex = /\[!\[[^\]]*\]\((?<src>[^)]+)\)\]\((?<href>[^)]+)\)/gi; // Linked badge
-        const badgeHtmlRegex = /<img[^>]+src=["'](?<src>[^"']+)["'][^>]*?(?:alt=["'](?<alt>[^"']+)["'])?[^>]*>/gi; // HTML image
-
+        const badgeMdRegex = /!\[[^\]]*\]\(([^)]+)\)/gi; // Markdown image
+        const badgeLinkMdRegex = /\[!\[[^\]]*\]\(([^)]+)\)\]\(([^)]+)\)/gi; // Linked badge
+        const badgeHtmlRegex = /<img[^>]+src=["']([^"']+)["'][^>]*?(?:alt=["']([^"']+)["'])?[^>]*>/gi; // HTML image
+        
         const urlPatterns: RegExp[] = [
             /github\.com\/.+?\/actions\/workflows\/.+?\.yml\/badge\.svg/i, // GitHub Actions workflow badge
             /api\.netlify\.com\/api\/v1\/badges\/[a-f0-9-]+\/deploy-status(?:\?branch=[^\s"')]+)?/i, // Netlify deploy badge
@@ -212,24 +212,22 @@ export async function checkBestPractices(
             return { url, alt, confidence, kind };
         }
 
-        // Extract Markdown badges
-        for (const match of readmeContent.matchAll(badgeMdRegex)) {
-            const src = (match.groups?.src) || '';
-            evidences.push(score(src));
-        }
-        // Extract linked badges
-        for (const match of readmeContent.matchAll(badgeLinkMdRegex)) {
-            const src = (match.groups?.src) || '';
-            evidences.push(score(src));
-        }
-        // Extract HTML badges
-        for (const match of readmeContent.matchAll(badgeHtmlRegex)) {
-            const src = (match.groups?.src) || '';
-            const alt = match.groups?.alt;
-            evidences.push(score(src, alt));
-        }
-
-        const top = evidences.sort((a,b)=>b.confidence-a.confidence)[0];
+    // Extract Markdown badges
+    for (const match of readmeContent.matchAll(badgeMdRegex)) {
+        const src = match[1] || '';
+        evidences.push(score(src));
+    }
+    // Extract linked badges
+    for (const match of readmeContent.matchAll(badgeLinkMdRegex)) {
+        const src = match[1] || '';
+        evidences.push(score(src));
+    }
+    // Extract HTML badges
+    for (const match of readmeContent.matchAll(badgeHtmlRegex)) {
+        const src = match[1] || '';
+        const alt = match[2];
+        evidences.push(score(src, alt));
+    }        const top = evidences.sort((a,b)=>b.confidence-a.confidence)[0];
         const hasDeploy = evidences.some(e=> e.kind==='deploy' && e.confidence>=0.6) || (top && top.confidence>=0.8 && /deploy|netlify|vercel|render|pages/i.test((top.alt||'')+top.url));
 
         practices.push({

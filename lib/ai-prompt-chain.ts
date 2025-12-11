@@ -412,6 +412,9 @@ ${platformAdvice}
 Placement:
 - Place immediately under the project title, near CI badges for visibility
 `;
+}
+
+function buildDependabotPrompt(context: EnrichedContext): string {
   return `You are creating a Dependabot configuration for dependency updates.
 
 REPO CONTEXT:

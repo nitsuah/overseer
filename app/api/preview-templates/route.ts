@@ -201,8 +201,12 @@ export async function POST(request: NextRequest) {
         }
       })() : 'other';
       const isMixed = detectedLang === 'mixed';
-      // Prefer detected language when available, otherwise fall back to templateLang
-      repoContext.templateLanguage = (detectedLang !== 'other' && detectedLang !== 'mixed') ? detectedLang : templateLang;
+      // Prefer detected language when allowed; otherwise fall back to templateLang
+      if (detectedLang === 'python' || detectedLang === 'javascript') {
+        repoContext.templateLanguage = detectedLang;
+      } else {
+        repoContext.templateLanguage = templateLang;
+      }
       const isPython = repoContext.templateLanguage === 'python';
       
       // Special case: docker

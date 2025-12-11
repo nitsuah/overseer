@@ -6,6 +6,7 @@ import { parseGitHubError, getOrgAuthInstructions } from '@/lib/github-errors';
 import fs from 'fs/promises';
 import path from 'path';
 import logger from '@/lib/log';
+import { detectTemplateLanguage } from '@/lib/detectLanguage';
 
 export async function POST(
     request: NextRequest,
@@ -45,12 +46,9 @@ export async function POST(
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
 
-        // Fetch repo language for template selection
-        const { data: repoData } = await github.octokit.repos.get({
-            owner,
-            repo: repoName,
-        });
-        const isPython = repoData.language?.toLowerCase() === 'python';
+        // Detect template language using file signals with fallback to repo language
+        const templateLanguage = await detectTemplateLanguage(github.octokit, owner, repoName);
+        const isPython = templateLanguage === 'python';
 
         const filesToAdd: { path: string; content: string }[] = [];
         let branchName: string;
@@ -199,26 +197,54 @@ export async function POST(
             }
 
             case 'testing_framework': {
-                const templatePath = path.join(process.cwd(), 'templates', 'vitest.config.ts');
-                const content = await fs.readFile(templatePath, 'utf-8');
-                filesToAdd.push({
-                    path: 'vitest.config.ts',
-                    content
-                });
-                branchName = `chore-add-testing-framework-${Date.now()}`;
-                commitMessage = 'chore: add testing framework configuration';
+                if (isPython) {
+                    const pytestIniPath = path.join(process.cwd(), 'templates', 'testing', 'pytest.ini');
+                    const pytestIniContent = await fs.readFile(pytestIniPath, 'utf-8');
+                    filesToAdd.push({ path: 'pytest.ini', content: pytestIniContent });
+
+                    // Optional: include a minimal pyproject for pytest if present
+                    const pyprojectPath = path.join(process.cwd(), 'templates', 'linting', 'pyproject.toml');
+                    try {
+                        const pyprojectContent = await fs.readFile(pyprojectPath, 'utf-8');
+                        filesToAdd.push({ path: 'pyproject.toml', content: pyprojectContent });
+                    } catch {
+                        // skip if template not present
+                    }
+
+                    branchName = `chore-add-testing-framework-${Date.now()}`;
+                    commitMessage = 'chore: add pytest testing configuration';
+                } else {
+                    const templatePath = path.join(process.cwd(), 'templates', 'testing', 'vitest.config.ts');
+                    const content = await fs.readFile(templatePath, 'utf-8');
+                    filesToAdd.push({ path: 'vitest.config.ts', content });
+                    branchName = `chore-add-testing-framework-${Date.now()}`;
+                    commitMessage = 'chore: add vitest testing configuration';
+                }
                 break;
             }
 
             case 'linting': {
-                const templatePath = path.join(process.cwd(), 'templates', 'eslint.config.mjs');
-                const content = await fs.readFile(templatePath, 'utf-8');
-                filesToAdd.push({
-                    path: 'eslint.config.mjs',
-                    content
-                });
-                branchName = `chore-add-linting-${Date.now()}`;
-                commitMessage = 'chore: add linting configuration';
+                if (isPython) {
+                    const pyprojectPath = path.join(process.cwd(), 'templates', 'linting', 'pyproject.toml');
+                    const content = await fs.readFile(pyprojectPath, 'utf-8');
+                    filesToAdd.push({ path: 'pyproject.toml', content });
+
+                    // Optional flake8/ruff configs if present
+                    const flake8Path = path.join(process.cwd(), 'templates', 'linting', '.flake8');
+                    try {
+                        const flake8Content = await fs.readFile(flake8Path, 'utf-8');
+                        filesToAdd.push({ path: '.flake8', content: flake8Content });
+                    } catch { /* optional */ }
+
+                    branchName = `chore-add-linting-${Date.now()}`;
+                    commitMessage = 'chore: add Python linting (ruff/black) configuration';
+                } else {
+                    const templatePath = path.join(process.cwd(), 'templates', 'linting', 'eslint.config.mjs');
+                    const content = await fs.readFile(templatePath, 'utf-8');
+                    filesToAdd.push({ path: 'eslint.config.mjs', content });
+                    branchName = `chore-add-linting-${Date.now()}`;
+                    commitMessage = 'chore: add JavaScript linting configuration';
+                }
                 break;
             }
 

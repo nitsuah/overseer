@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import fs from 'fs/promises';
 import path from 'path';
 import { Octokit } from '@octokit/rest';
+import { detectTemplateLanguage } from '@/lib/detectLanguage';
 
 // Practice types that represent best practices rather than documentation
 const PRACTICE_TYPES = [
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
       packageManager?: 'npm' | 'yarn' | 'pnpm' | 'pip' | 'poetry' | 'cargo' | 'go';
       hasDocker: boolean;
       hasTests: boolean;
+      templateLanguage?: 'python' | 'javascript';
     }
     
     const repoContext: RepoContext = {
@@ -184,9 +186,41 @@ export async function POST(request: NextRequest) {
       };
       
       const templateLang = getTemplateLanguage(repoLanguage);
+      // Override with file-based detection when available
+      const detectedLang = repoContext.owner && repoContext.repo ? await (async () => {
+        const octokit = new Octokit({ auth: (await auth())?.accessToken });
+        try { return await detectTemplateLanguage(octokit, repoContext.owner, repoContext.repo); } catch { return 'other'; }
+      })() : 'other';
+      const isMixed = detectedLang === 'mixed';
+      if (detectedLang === 'python') {
+        repoContext.templateLanguage = 'python';
+      } else if (detectedLang === 'javascript') {
+        repoContext.templateLanguage = 'javascript';
+      }
       const isPython = templateLang === 'python';
-      const isJS = templateLang === 'javascript';
       
+      // Special case: docker
+      if (normalized === 'docker') {
+        // Always show Dockerfile
+        templateSourcePath = path.join('docker', 'Dockerfile');
+        filename = 'Dockerfile';
+        
+        // Also include docker-compose.yml preview if template exists
+        try {
+          const composeTemplatePath = path.join(process.cwd(), 'templates', 'docker', 'docker-compose.yml');
+          const composeContent = await fs.readFile(composeTemplatePath, 'utf-8');
+          previews.push({
+            path: 'docker-compose.yml',
+            content: composeContent,
+            docType: normalized,
+            type: 'practice',
+            practiceType: normalized,
+          });
+        } catch {
+          // If compose template missing, silently skip
+        }
+      }
+
       // Special case: gitignore - choose based on repo language
       if (normalized === 'gitignore') {
         if (isPython) {
@@ -220,6 +254,19 @@ export async function POST(request: NextRequest) {
       
       // Special case: linting - choose based on repo language
       if (normalized === 'linting') {
+        if (isMixed) {
+          // Push both options for mixed repos
+          try {
+            const pyContent = await fs.readFile(path.join(process.cwd(), 'templates', 'linting', 'pyproject.toml'), 'utf-8');
+            previews.push({ path: 'pyproject.toml', content: pyContent, docType: normalized, type: 'practice', practiceType: normalized });
+          } catch {}
+          try {
+            const jsContent = await fs.readFile(path.join(process.cwd(), 'templates', 'linting', 'eslint.config.mjs'), 'utf-8');
+            previews.push({ path: 'eslint.config.mjs', content: jsContent, docType: normalized, type: 'practice', practiceType: normalized });
+          } catch {}
+          // Skip single-file return; both options added
+          continue;
+        }
         if (isPython) {
           templateSourcePath = path.join('linting', 'pyproject.toml');
           filename = 'pyproject.toml';

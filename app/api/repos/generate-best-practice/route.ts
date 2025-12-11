@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { generateAIContent } from '@/lib/ai';
 import { enrichContext, buildPracticePrompt, BestPracticeType } from '@/lib/ai-prompt-chain';
+import { Octokit } from '@octokit/rest';
+import { detectTemplateLanguage } from '@/lib/detectLanguage';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -32,18 +34,23 @@ export async function POST(request: NextRequest) {
       ? repoName.split('/')
       : [session.user.name || '', repoName];
 
-    // Fetch repo metadata to get language
-    const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-      headers: {
-        Authorization: `Bearer ${githubToken}`,
-        Accept: 'application/vnd.github.v3+json',
-      },
-    });
-    
-    let language = null;
-    if (repoResponse.ok) {
-      const repoData = await repoResponse.json();
-      language = repoData.language;
+    // Detect language from repo files with Octokit
+    const octokit = new Octokit({ auth: githubToken });
+    let language: string | null = null;
+    try {
+      const detected = await detectTemplateLanguage(octokit, owner, repo);
+      if (detected === 'python') language = 'Python';
+      else if (detected === 'javascript') language = 'JavaScript';
+      else language = null;
+    } catch {
+      // Fallback to GitHub's language field
+      const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+        headers: { Authorization: `Bearer ${githubToken}`, Accept: 'application/vnd.github.v3+json' },
+      });
+      if (repoResponse.ok) {
+        const repoData = await repoResponse.json();
+        language = repoData.language;
+      }
     }
 
     // Load template file (language-aware)
@@ -52,7 +59,7 @@ export async function POST(request: NextRequest) {
     try {
       template = await fs.readFile(templatePath, 'utf-8');
       console.log(`Loaded template from: ${templatePath}`);
-    } catch (error) {
+    } catch {
       console.warn(`Template not found at ${templatePath}, using default template`);
       template = getDefaultTemplate(practiceType, language);
     }
@@ -98,7 +105,7 @@ export async function POST(request: NextRequest) {
 }
 
 function getTemplateFileName(practiceType: string, language: string | null): string {
-  const isPython = language === 'Python';
+  const isPython = language === 'Python' || language === 'Jupyter Notebook';
   
   switch (practiceType) {
     case 'deploy_badge':
@@ -125,7 +132,7 @@ function getTemplateFileName(practiceType: string, language: string | null): str
 }
 
 function getDefaultTemplate(practiceType: string, language: string | null): string {
-  const isPython = language === 'Python';
+  const isPython = language === 'Python' || language === 'Jupyter Notebook';
   
   switch (practiceType) {
     case 'deploy_badge':

@@ -50,6 +50,6 @@ test('low-confidence deploy indicator yields needs_attention', async () => {
 `;
   const res = await checkBestPractices('owner','repo', mockOctokit(), [], readme);
   const deploy = res.practices.find(p=>p.type==='deploy_badge');
-  expect(['needs_attention','healthy','missing']).toContain(deploy?.status as string);
+  expect(deploy?.status).toBe('needs_attention');
 });
 

@@ -382,18 +382,18 @@ function buildDockerPrompt(context: EnrichedContext): string {
     const ghaDeploySnippet = `[![Deploy Status](https://github.com/OWNER/REPO/actions/workflows/deploy.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/deploy.yml)`;
 
     const platformAdvice = hasNetlify
-  ? `Detected Netlify usage. Prefer the official Netlify deploy status badge:
+        ? `Detected Netlify usage. Prefer the official Netlify deploy status badge:
 ${netlifySnippet}
 Replace YOUR-SITE-ID and YOUR-SITE-NAME accordingly.`
-  : hasVercel
-  ? `Detected Vercel usage. Prefer a clear deployed-on badge:
+        : hasVercel
+        ? `Detected Vercel usage. Prefer a clear deployed-on badge:
 ${vercelSnippet}
 Link to your Vercel project/dashboard.`
-  : hasGHActions
-  ? `Detected GitHub Actions. If you have a deploy workflow, expose its badge:
+        : hasGHActions
+        ? `Detected GitHub Actions. If you have a deploy workflow, expose its badge:
 ${ghaDeploySnippet}
 Replace OWNER/REPO and ensure workflow file is deploy.yml.`
-  : `No platform detected. Use a platform-agnostic badge and link it to your deploy dashboard:
+        : `No platform detected. Use a platform-agnostic badge and link it to your deploy dashboard:
 [![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](DEPLOYMENT_URL_HERE)`;
 
     return `You are updating a README.md to add or improve a deployment status badge.

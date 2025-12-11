@@ -1,9 +1,9 @@
+import logger from './log';
+import { generateWithFailover } from './ai-failover';
+
 // Ensure test scripts can read the configured Gemini model name
 const FALLBACK_GEMINI_MODEL = 'gemini-1.5-flash';
 export const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME ?? FALLBACK_GEMINI_MODEL;
-
-import logger from './log';
-import { generateWithFailover } from './ai-failover';
 
 // Explicit object with a literal string so health script can parse `model: '...'`
 // Note: The regex in scripts/test-gemini-health.mjs looks for this exact pattern.

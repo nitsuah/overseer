@@ -1,5 +1,16 @@
 import { Octokit } from '@octokit/rest';
 
+/**
+ * Represents the health state of a best practice check.
+ *
+ * - 'missing': The best practice is not present or not implemented.
+ * - 'dormant': The best practice exists but is not actively enforced or used.
+ * - 'malformed': The best practice exists but is incorrectly configured or broken.
+ * - 'healthy': The best practice is present and correctly configured.
+ * - 'needs_attention': The best practice exists but requires human review or intervention due to ambiguous, incomplete, or potentially problematic configuration.
+ *
+ * Use 'needs_attention' when the state does not clearly fit 'dormant' (inactive but valid) or 'malformed' (invalid/broken), but still warrants a maintainer's review.
+ */
 export type HealthState = 'missing' | 'dormant' | 'malformed' | 'healthy' | 'needs_attention';
 
 export interface BestPractice {
@@ -188,10 +199,12 @@ export async function checkBestPractices(
             /github\.com\/.+?\/actions\/workflows\/.+?\.yml\/badge\.svg/i, // GitHub Actions workflow badge
             /api\.netlify\.com\/api\/v1\/badges\/[a-f0-9-]+\/deploy-status(?:\?branch=[^\s"')]+)?/i, // Netlify deploy badge
             /img\.shields\.io\/badge\/Deployed%20on-Vercel(?:-black)?/i, // Vercel deployed-on badge
-            /img\.shields\.io\/.*(deploy|deployment|vercel|netlify|render|pages)/i, // generic shields
             /gitlab\.com\/.+?\/badges\/.+?\/pipeline\.svg/i, // GitLab pipeline
             /circleci\.com\/gh\/.+?\.svg/i, // CircleCI
             /travis-ci\.(com|org)\/.+?\.svg/i // Travis
+        ];
+        const lowConfidencePatterns: RegExp[] = [
+            /img\.shields\.io\/.*(deploy|deployment|vercel|netlify|render|pages)/i, // generic shields - low confidence
         ];
         const altKeywords = /(deploy|deployment|deployed|ci|cd|build|pipeline|actions|netlify|vercel|render|pages|status)/i;
 
@@ -200,8 +213,10 @@ export async function checkBestPractices(
 
         function score(url: string, alt?: string): Evidence {
             let confidence = 0;
-            const urlMatch = urlPatterns.some(p => p.test(url));
-            if (urlMatch) confidence += 0.6;
+            const highConfidenceMatch = urlPatterns.some(p => p.test(url));
+            const lowConfidenceMatch = lowConfidencePatterns.some(p => p.test(url));
+            if (highConfidenceMatch) confidence += 0.6;
+            else if (lowConfidenceMatch) confidence += 0.4; // Lower confidence for generic patterns
             if (alt && altKeywords.test(alt)) confidence += 0.3;
             // simple type classification
             const lower = url.toLowerCase() + ' ' + (alt || '').toLowerCase();
@@ -227,8 +242,10 @@ export async function checkBestPractices(
         const src = match[1] || '';
         const alt = match[2];
         evidences.push(score(src, alt));
-    }        const top = evidences.sort((a,b)=>b.confidence-a.confidence)[0];
-        const hasDeploy = evidences.some(e=> e.kind==='deploy' && e.confidence>=0.6) || (top && top.confidence>=0.8 && /deploy|netlify|vercel|render|pages/i.test((top.alt||'')+top.url));
+    }
+    const top = evidences.sort((a, b) => b.confidence - a.confidence)[0];
+    const hasDeploy = evidences.some(e => e.kind === 'deploy' && e.confidence >= 0.6) ||
+        (top && top.confidence >= 0.8 && /deploy|netlify|vercel|render|pages/i.test((top.alt || '') + top.url));
 
         practices.push({
             type: 'deploy_badge',

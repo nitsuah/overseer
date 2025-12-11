@@ -1,6 +1,7 @@
 # Overseer
 
-[![CI Status](https://github.com/nitsuah/overseer/actions/workflows/ci.yml/badge.svg)](https://github.com/nitsuah/overseer/actions)
+[![CI](https://github.com/nitsuah/overseer/actions/workflows/ci.yml/badge.svg)](https://github.com/nitsuah/darkmoon/actions)
+
 [![Netlify Status](https://api.netlify.com/api/v1/badges/ebf5c761-34fb-495b-bd86-ea57932296b3/deploy-status)](https://app.netlify.com/projects/ghoverseer/deploys)
 
 

@@ -45,6 +45,13 @@ export async function POST(
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
 
+        // Fetch repo language for template selection
+        const { data: repoData } = await github.octokit.repos.get({
+            owner,
+            repo: repoName,
+        });
+        const isPython = repoData.language?.toLowerCase() === 'python';
+
         const filesToAdd: { path: string; content: string }[] = [];
         let branchName: string;
         let commitMessage: string;
@@ -154,7 +161,9 @@ export async function POST(
             }
 
             case 'ci_cd': {
-                const templatePath = path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci.yml');
+                const templatePath = isPython
+                    ? path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci-python.yml')
+                    : path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci.yml');
                 const content = await fs.readFile(templatePath, 'utf-8');
                 filesToAdd.push({
                     path: '.github/workflows/ci.yml',

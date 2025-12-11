@@ -36,13 +36,15 @@ export interface PullRequestInfo {
 }
 
 export class GitHubClient {
-  public octokit: Octokit;
+  private octokit: Octokit;
   private owner: string;
+  private token: string;
 
   constructor(token: string, owner: string) {
     // Use shared Octokit instance factory
     this.octokit = createOctokitClient(token);
     this.owner = owner;
+    this.token = token;
   }
 
   async listRepos(): Promise<RepoMetadata[]> {
@@ -212,6 +214,26 @@ export class GitHubClient {
   ): Promise<string> {
     const repoOwner = owner || this.owner;
     
+    // Check if repo is accessible and not archived
+    try {
+      const { data: repoData } = await this.octokit.repos.get({
+        owner: repoOwner,
+        repo,
+      });
+      console.log('[createPrForFiles] Repo status:', {
+        archived: repoData.archived,
+        disabled: repoData.disabled,
+        permissions: repoData.permissions,
+      });
+      
+      if (repoData.archived) {
+        throw new Error(`Repository ${repoOwner}/${repo} is archived and cannot accept changes`);
+      }
+    } catch (error: unknown) {
+      console.error('[createPrForFiles] Failed to get repo info:', error);
+      throw error;
+    }
+    
     // 1. Get default branch SHA
     const { data: refData } = await this.octokit.git.getRef({
       owner: repoOwner,
@@ -269,15 +291,30 @@ export class GitHubClient {
 
     console.log('[createPrForFiles] All blobs created:', blobs.map(b => b.path));
 
-    // Build the tree items - add all files with their full paths
-    const treeItems: Array<{ path: string; mode: '100644'; type: 'blob'; sha: string }> = blobs.map(blob => ({
+    // Verify all blobs exist
+    for (const blob of blobs) {
+      try {
+        await this.octokit.git.getBlob({
+          owner: repoOwner,
+          repo,
+          file_sha: blob.sha,
+        });
+        console.log('[createPrForFiles] Blob verified:', blob.path, blob.sha);
+      } catch (blobError: unknown) {
+        console.error('[createPrForFiles] Blob verification failed:', blob.path, blob.sha, blobError);
+        throw new Error(`Blob ${blob.sha} for ${blob.path} does not exist`);
+      }
+    }
+
+    // Build tree items - GitHub API supports nested paths directly
+    const treeItems = blobs.map(blob => ({
       path: blob.path,
       mode: '100644' as const,
       type: 'blob' as const,
       sha: blob.sha,
     }));
 
-    console.log('[createPrForFiles] Creating root tree with items:', treeItems);
+    console.log('[createPrForFiles] Creating tree with items:', treeItems);
     console.log('[createPrForFiles] Tree creation params:', {
       owner: repoOwner,
       repo,
@@ -304,28 +341,13 @@ export class GitHubClient {
         });
       }
 
-      // Try creating tree without base_tree first if it has nested paths
-      const hasNestedPaths = treeItems.some(item => item.path.includes('/'));
-      
-      let createTreeParams: {
-        owner: string;
-        repo: string;
-        tree: Array<{ path: string; mode: '100644'; type: 'blob'; sha: string }>;
-        base_tree?: string;
-      } = {
+      // Create tree with base_tree - GitHub API supports nested paths with base_tree
+      const result = await this.octokit.git.createTree({
         owner: repoOwner,
         repo,
         tree: treeItems,
-      };
-      
-      // Only use base_tree if we don't have nested paths, or try without it first
-      if (!hasNestedPaths) {
-        createTreeParams.base_tree = baseCommit.tree.sha;
-      } else {
-        console.log('[createPrForFiles] Creating tree without base_tree due to nested paths');
-      }
-      
-      const result = await this.octokit.git.createTree(createTreeParams);
+        base_tree: baseCommit.tree.sha,
+      });
       newTree = result.data;
       console.log('[createPrForFiles] Tree created:', newTree.sha);
     } catch (error: unknown) {
@@ -354,15 +376,29 @@ export class GitHubClient {
     });
     console.log('[createPrForFiles] Commit created:', newCommit.sha);
 
-    // Update branch to point to new commit - use request to avoid URL encoding issues
-    console.log('[createPrForFiles] Updating branch:', branchName, 'to commit:', newCommit.sha);
-    await this.octokit.request('PATCH /repos/{owner}/{repo}/git/refs/{ref}', {
+    // Verify branch exists before updating
+    try {
+      const { data: verifyBranch } = await this.octokit.git.getRef({
+        owner: repoOwner,
+        repo,
+        ref: `heads/${branchName}`,
+      });
+      console.log('[createPrForFiles] Branch verified before update:', verifyBranch.ref, 'SHA:', verifyBranch.object.sha);
+    } catch (error: unknown) {
+      console.error('[createPrForFiles] Branch verification failed before update:', error);
+      throw new Error(`Branch ${branchName} does not exist after creation`);
+    }
+
+    // Update branch to point to new commit
+    console.log('[createPrForFiles] Updating branch to commit:', newCommit.sha);
+    await this.octokit.git.updateRef({
       owner: repoOwner,
       repo,
       ref: `heads/${branchName}`,
       sha: newCommit.sha,
       force: true,
     });
+    console.log('[createPrForFiles] Branch updated successfully');
 
     // 4. Create PR
     const messageParts = message.split('\n\n');

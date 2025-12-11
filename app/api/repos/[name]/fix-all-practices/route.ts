@@ -124,7 +124,9 @@ export async function POST(
           break;
         }
         case 'ci_cd': {
-          const templatePath = path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci.yml');
+          const templatePath = isPython
+            ? path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci-python.yml')
+            : path.join(process.cwd(), 'templates', '.github', 'workflows', 'ci.yml');
           const content = await fs.readFile(templatePath, 'utf-8');
           filesToAdd.push({ path: '.github/workflows/ci.yml', content });
           addedTypes.push('ci_cd');

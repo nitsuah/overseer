@@ -148,36 +148,53 @@ export function BestPracticesSection({
               return aPos - bPos;
             })
             .map((practice, i) => {
-            // Determine if this practice can be auto-fixed
-            const fixablePractices = ['dependabot', 'env_template', 'docker', 'deploy_badge', 'ci_cd', 'gitignore', 'pre_commit_hooks', 'testing_framework', 'linting'];
-            const canFix = fixablePractices.includes(practice.practice_type);
-            const isMissing = practice.status === 'missing';
+              // Determine if this practice can be auto-fixed
+              const fixablePractices = ['dependabot', 'env_template', 'docker', 'deploy_badge', 'ci_cd', 'gitignore', 'pre_commit_hooks', 'testing_framework', 'linting'];
+              const canFix = fixablePractices.includes(practice.practice_type);
+              const isMissing = practice.status === 'missing';
 
-            return (
-              <div key={i} className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                {getStatusIcon(practice.status)}
-                <span className={getStatusColor(practice.status)}>
-                  {getLabel(practice.practice_type)}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                {isAuthenticated && canFix && isMissing && onFixPractice && repoName && (
-                  <button
-                    onClick={() => onFixPractice(repoName, practice.practice_type)}
-                    className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
-                    title={`AI-powered context-aware fix for ${getLabel(practice.practice_type)}`}
-                  >
-                    Fix
-                  </button>
-                )}
-                {getStatusBadge(practice.status)}
-              </div>
-            </div>
-            );
+              return (
+                <div key={i}>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(practice.status)}
+                      <span className={getStatusColor(practice.status)}>
+                        {getLabel(practice.practice_type)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isAuthenticated && canFix && isMissing && onFixPractice && repoName && (
+                        <button
+                          onClick={() => onFixPractice(repoName, practice.practice_type)}
+                          className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-medium transition-colors"
+                          title={`AI-powered context-aware fix for ${getLabel(practice.practice_type)}`}
+                        >
+                          Fix
+                        </button>
+                      )}
+                      {getStatusBadge(practice.status)}
+                    </div>
+                  </div>
+
+                  {practice.practice_type === 'deploy_badge' && practice.status === 'needs_attention' && (
+                    <div className="mt-2 ml-6 text-xs text-slate-400">
+                      <div>Hint: Detected a possible deploy-related badge but confidence is low.</div>
+                      {Array.isArray(practice.details?.evidence) && practice.details.evidence.length > 0 && (
+                        <div className="truncate">Top evidence: {(practice.details.evidence[0]?.url || '').toString()}</div>
+                      )}
+                      <div>
+                        Consider adding a platform badge:
+                        <span className="ml-1 text-slate-300">Netlify</span>,
+                        <span className="ml-1 text-slate-300">Vercel</span>,
+                        <span className="ml-1 text-slate-300">GitHub Actions (deploy.yml)</span>.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
             })}
-        </div>
-      )}
+            </div>
+          )}
         </div>
       )}
     </div>

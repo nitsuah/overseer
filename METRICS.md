@@ -4,11 +4,11 @@
 
 | Metric              | Value  | Notes                                                                                                                                  |
 | ------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Code Coverage       | 60.21% | Overall statement coverage (vitest). Branch: 60.45%. Utility files: date-utils 100%, log 100%, repo-type 100%, health-score 74.28%     |
+| Code Coverage       | 71.51% | Overall statement coverage (vitest). Branch: 67.36%, Function: 73.23%, Line: 70.96%. All core utilities at 100%                        |
 | Build Time          | ~6s    | Local dev build                                                                                                                        |
 | Bundle Size         | TBD    | Not measured yet                                                                                                                       |
-| Test Files          | 13     | Vitest unit tests (9 passing: parsers, utils, github; 1 failing: gemini-health due to model deprecation)                               |
-| Test Cases          | 92     | Vitest unit tests passing (date-utils: 24, repo-type: 40, health-score: 11, log: 6, parsers: 8, github: 3)                             |
+| Test Files          | 16     | All vitest unit tests passing (parsers, utils, github, best-practices, features, tasks, osrs, gemini-health)                           |
+| Test Cases          | 162    | All tests passing (date-utils: 24, repo-type: 40, health-score: 11, log: 6, best-practices: 25, github-client: 7, parsers: 26+)        |
 | E2E Test Files      | 1      | Playwright E2E tests (tests/dashboard.spec.ts)                                                                                         |
 | E2E Test Cases      | 5      | Playwright tests passing (unauthenticated state, performance)                                                                          |
 | Database Tables     | 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                        |
@@ -22,13 +22,13 @@
 
 ## Health
 
-| Metric        | Value      | Notes                                   |
-| ------------- | ---------- | --------------------------------------- |
-| Open Issues   | 0          | GitHub issues                           |
-| PR Turnaround | < 1 day    | Typical merge time                      |
-| Skipped Tests | 1          | gemini-health (model deprecation issue) |
-| Health Score  | 95/100     | Overseer's own score                    |
-| Last Updated  | 2025-12-07 | Last audit date                         |
+| Metric        | Value      | Notes                |
+| ------------- | ---------- | -------------------- |
+| Open Issues   | 0          | GitHub issues        |
+| PR Turnaround | < 1 day    | Typical merge time   |
+| Skipped Tests | 0          | All tests passing    |
+| Health Score  | 95/100     | Overseer's own score |
+| Last Updated  | 2025-12-11 | Last audit date      |
 
 <!--
 AGENT INSTRUCTIONS:

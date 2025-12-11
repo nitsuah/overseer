@@ -1,6 +1,28 @@
 import { Octokit } from '@octokit/rest';
 
-export type HealthState = 'missing' | 'dormant' | 'malformed' | 'healthy';
+/**
+ * Represents the health state of a best practice check.
+ *
+ * - 'missing': The best practice is not present or not implemented.
+ * - 'dormant': The best practice exists but is not actively enforced or used.
+ * - 'malformed': The best practice exists but is incorrectly configured or broken.
+ * - 'healthy': The best practice is present and correctly configured.
+ * - 'needs_attention': The best practice exists but requires human review or intervention due to ambiguous, incomplete, or potentially problematic configuration.
+ *
+ * Use 'needs_attention' when the state does not clearly fit 'dormant' (inactive but valid) or 'malformed' (invalid/broken), but still warrants a maintainer's review.
+ */
+/**
+ * Represents the health state of a best practice check.
+ *
+ * - 'missing': The best practice is not present or not implemented.
+ * - 'dormant': The best practice exists but is not actively enforced or used.
+ * - 'malformed': The best practice exists but is incorrectly configured or broken.
+ * - 'healthy': The best practice is present and correctly configured.
+ * - 'needs_attention': The best practice exists but requires human review or intervention due to ambiguous, incomplete, or potentially problematic configuration.
+ *
+ * Use 'needs_attention' when the state does not clearly fit 'dormant' (inactive but valid) or 'malformed' (invalid/broken), but still warrants a maintainer's review.
+ */
+export type HealthState = 'missing' | 'dormant' | 'malformed' | 'healthy' | 'needs_attention';
 
 export interface BestPractice {
     type: string;
@@ -179,22 +201,70 @@ export async function checkBestPractices(
     // 7. Deploy Badge (if README provided)
     if (readmeContent) {
         // Check for common deployment badges
-        const deployBadgePatterns = [
-            'api.netlify.com/api/v1/badges',      // Netlify
-            'vercel.com/button',                  // Vercel deploy button
-            'img.shields.io/badge/Deployed',      // Generic deploy badge
-            'img.shields.io/badge/vercel',        // Vercel shields.io badge
-            'img.shields.io.*vercel',             // Any shields.io Vercel badge
-            'railway.app',                        // Railway
-            'render.com',                         // Render
-            'fly.io',                             // Fly.io
-            'heroku.com',                         // Heroku
+        // Robust detection of CI/CD and deploy badges via URL + alt-text keywords with scoring
+        const badgeMdRegex = /!\[[^\]]*\]\(([^)]+)\)/gi; // Markdown image
+        const badgeLinkMdRegex = /\[!\[[^\]]*\]\(([^)]+)\)\]\(([^)]+)\)/gi; // Linked badge
+        const badgeHtmlRegex = /<img[^>]+src=["']([^"']+)["'][^>]*?(?:alt=["']([^"']+)["'])?[^>]*>/gi; // HTML image
+        
+        const urlPatterns: RegExp[] = [
+            /github\.com\/.+?\/actions\/workflows\/.+?\.yml\/badge\.svg/i, // GitHub Actions workflow badge
+            /api\.netlify\.com\/api\/v1\/badges\/[a-f0-9-]+\/deploy-status(?:\?branch=[^\s"')]+)?/i, // Netlify deploy badge
+            /img\.shields\.io\/badge\/Deployed%20on-Vercel(?:-black)?/i, // Vercel deployed-on badge
+            /gitlab\.com\/.+?\/badges\/.+?\/pipeline\.svg/i, // GitLab pipeline
+            /circleci\.com\/gh\/.+?\.svg/i, // CircleCI
+            /travis-ci\.(com|org)\/.+?\.svg/i // Travis
         ];
-        const hasDeployBadge = deployBadgePatterns.some(pattern => readmeContent.includes(pattern));
+        const lowConfidencePatterns: RegExp[] = [
+            /img\.shields\.io\/.*(deploy|deployment|vercel|netlify|render|pages)/i, // generic shields - low confidence
+        ];
+        const altKeywords = /(deploy|deployment|deployed|ci|cd|build|pipeline|actions|netlify|vercel|render|pages|status)/i;
+
+        type Evidence = { url: string; alt?: string; confidence: number; kind: 'deploy'|'ci'|'qa'|'unknown' };
+        const evidences: Evidence[] = [];
+
+        function score(url: string, alt?: string): Evidence {
+            let confidence = 0;
+            const highConfidenceMatch = urlPatterns.some(p => p.test(url));
+            const lowConfidenceMatch = lowConfidencePatterns.some(p => p.test(url));
+            if (highConfidenceMatch) confidence += 0.6;
+            else if (lowConfidenceMatch) confidence += 0.4; // Lower confidence for generic patterns
+            if (alt && altKeywords.test(alt)) confidence += 0.3;
+            // simple type classification
+            const lower = url.toLowerCase() + ' ' + (alt || '').toLowerCase();
+            let kind: Evidence['kind'] = 'unknown';
+            if (/(netlify|vercel|render|pages|deploy)/.test(lower)) kind = 'deploy';
+            else if (/(actions|workflow|pipeline|circleci|travis|gitlab)/.test(lower)) kind = 'ci';
+            else if (/(pylint|bandit|codeql|coverage|lint|test)/.test(lower)) kind = 'qa';
+            return { url, alt, confidence, kind };
+        }
+
+    // Extract Markdown badges
+    for (const match of readmeContent.matchAll(badgeMdRegex)) {
+        const src = match[1] || '';
+        evidences.push(score(src));
+    }
+    // Extract linked badges
+    for (const match of readmeContent.matchAll(badgeLinkMdRegex)) {
+        const src = match[1] || '';
+        evidences.push(score(src));
+    }
+    // Extract HTML badges
+    for (const match of readmeContent.matchAll(badgeHtmlRegex)) {
+        const src = match[1] || '';
+        const alt = match[2];
+        evidences.push(score(src, alt));
+    }
+    const top = evidences.sort((a, b) => b.confidence - a.confidence)[0];
+    const hasDeploy = evidences.some(e => e.kind === 'deploy' && e.confidence >= 0.6) ||
+        (top && top.confidence >= 0.8 && /deploy|netlify|vercel|render|pages/i.test((top.alt || '') + top.url));
+
         practices.push({
             type: 'deploy_badge',
-            status: hasDeployBadge ? 'healthy' : 'missing',
-            details: { exists: hasDeployBadge }
+            status: hasDeploy ? 'healthy' : evidences.some(e=>e.kind==='deploy' && e.confidence>=0.4) ? 'needs_attention' : 'missing',
+            details: {
+                exists: hasDeploy,
+                evidence: evidences.slice(0,5)
+            }
         });
     }
 

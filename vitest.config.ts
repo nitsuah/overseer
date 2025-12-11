@@ -11,6 +11,7 @@ export default defineConfig({
         alias: {
             '@': path.resolve(__dirname, './'),
         },
+        setupFiles: [path.resolve(__dirname, 'tests/setup-env.ts')],
         coverage: {
             provider: 'v8',
             reporter: ['text', 'html', 'json'],

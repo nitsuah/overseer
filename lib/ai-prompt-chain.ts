@@ -96,7 +96,7 @@ export async function fetchRepoContext(
             if (content) {
               context.existingFiles[file] = content;
             }
-          } catch (_) {
+          } catch (_err) {
             // File doesn't exist, continue
           }
         }
@@ -112,7 +112,7 @@ export async function fetchRepoContext(
             if (content) {
               context.existingFiles[file] = content;
             }
-          } catch (_) {
+          } catch (_err) {
             // File doesn't exist
           }
         }
@@ -247,7 +247,7 @@ async function detectPackageManagers(
       if (!managers.includes(manager)) {
         managers.push(manager);
       }
-    } catch (_) {
+    } catch (_err) {
       // File doesn't exist
     }
   }
@@ -371,33 +371,51 @@ TASK: Create a comprehensive .env.example that:
 }
 
 function buildDockerPrompt(context: EnrichedContext): string {
-  return `You are creating Docker configuration for a ${context.language || 'Unknown'} project.
+    // Tailor suggestions based on detected platform badges
+    const badges = context.badges || [];
+    const hasNetlify = badges.some(b => /api\.netlify\.com\/api\/v1\/badges\//i.test(b));
+    const hasVercel = badges.some(b => /img\.shields\.io\/badge\/Deployed%20on-Vercel/i.test(b) || /vercel\.com\/(?:button|deploy)/i.test(b));
+    const hasGHActions = badges.some(b => /github\.com\/.+?\/actions\/workflows\/.+?\.yml\/badge\.svg/i.test(b));
 
-REPO CONTEXT:
-- Name: ${context.repoName}
-- Language: ${context.language || 'Unknown'}
+    const netlifySnippet = `[![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-SITE-ID/deploy-status)](https://app.netlify.com/sites/YOUR-SITE-NAME/deploys)`;
+    const vercelSnippet = `[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/YOUR-PROJECT)`;
+    const ghaDeploySnippet = `[![Deploy Status](https://github.com/OWNER/REPO/actions/workflows/deploy.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/deploy.yml)`;
 
-${context.buildSteps ? `BUILD INSTRUCTIONS FROM README:\n${context.buildSteps}` : 'No build instructions found in README.'}
+    const platformAdvice = hasNetlify
+        ? `Detected Netlify usage. Prefer the official Netlify deploy status badge:
+${netlifySnippet}
+Replace YOUR-SITE-ID and YOUR-SITE-NAME accordingly.`
+        : hasVercel
+        ? `Detected Vercel usage. Prefer a clear deployed-on badge:
+${vercelSnippet}
+Link to your Vercel project/dashboard.`
+        : hasGHActions
+        ? `Detected GitHub Actions. If you have a deploy workflow, expose its badge:
+${ghaDeploySnippet}
+Replace OWNER/REPO and ensure workflow file is deploy.yml.`
+        : `No platform detected. Use a platform-agnostic badge and link it to your deploy dashboard:
+[![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](DEPLOYMENT_URL_HERE)`;
 
-${context.contributing ? `CONTRIBUTING GUIDELINES:\n${context.contributing.slice(0, 500)}...` : 'No CONTRIBUTING.md found.'}
+    return `You are updating a README.md to add or improve a deployment status badge.
 
-${context.existingFiles?.['Dockerfile'] ? 'Note: A Dockerfile already exists. Improve it.' : ''}
+Constraints:
+- Keep existing badges intact and grouped at the top
+- Use concise alt text ("Deploy Status" or platform name)
+- Ensure the badge links to a real deployment dashboard
 
-TEMPLATES:
-${context.template}
+Context badges:
+${badges.length ? badges.join('\n') : 'No existing badges found.'}
 
-TASK: Generate Docker files that:
-- Use appropriate base image for ${context.language || 'the project'}
-- Match project's build/run process from README
-- Include necessary dependencies
-- Follow best practices
-- Add helpful comments
-- Return ONLY the Dockerfile content (or docker-compose.yml if needed)`;
+Recommended snippet:
+${platformAdvice}
+
+Placement:
+- Place immediately under the project title, near CI badges for visibility
+`;
 }
 
 function buildDependabotPrompt(context: EnrichedContext): string {
   return `You are creating a Dependabot configuration for dependency updates.
-
 REPO CONTEXT:
 - Name: ${context.repoName}
 - Language: ${context.language || 'Unknown'}

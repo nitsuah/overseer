@@ -27,17 +27,22 @@ if (!apiKey) {
   process.exit(1);
 }
 
-// Read the model name from lib/ai.ts
-const aiTsPath = join(__dirname, '..', 'lib', 'ai.ts');
-const aiTsContent = readFileSync(aiTsPath, 'utf-8');
-const modelMatch = aiTsContent.match(/model:\s*['"]([^'"]+)['"]/);
+// Prefer GEMINI_MODEL_NAME from env, fallback to parsing lib/ai.ts
+let configuredModel = process.env.GEMINI_MODEL_NAME;
 
-if (!modelMatch) {
-  console.error('❌ Could not find model name in lib/ai.ts');
-  process.exit(1);
+if (!configuredModel) {
+  const aiTsPath = join(__dirname, '..', 'lib', 'ai.ts');
+  const aiTsContent = readFileSync(aiTsPath, 'utf-8');
+  const modelMatch = aiTsContent.match(/model:\s*['"]([^'"]+)['"]/);
+  
+  if (!modelMatch) {
+    console.error('❌ Could not find model name in lib/ai.ts or GEMINI_MODEL_NAME env var');
+    process.exit(1);
+  }
+  
+  configuredModel = modelMatch[1];
 }
 
-const configuredModel = modelMatch[1];
 console.log(`🔍 Testing configured model: ${configuredModel}`);
 
 const genAI = new GoogleGenerativeAI(apiKey);

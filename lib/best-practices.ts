@@ -257,13 +257,36 @@ export async function checkBestPractices(
     const top = evidences.sort((a, b) => b.confidence - a.confidence)[0];
     const hasDeploy = evidences.some(e => e.kind === 'deploy' && e.confidence >= 0.6) ||
         (top && top.confidence >= 0.8 && /deploy|netlify|vercel|render|pages/i.test((top.alt || '') + top.url));
+    
+    // Check if repo has ANY quality badge (CI, QA, deploy) - having something is better than nothing
+    const hasAnyCIorQABadge = evidences.some(e => 
+        (e.kind === 'ci' || e.kind === 'qa') && e.confidence >= 0.6
+    );
+    
+    // For non-deployable repos (tools, libraries, bots), CI badges are sufficient
+    const isLikelyDeployable = fileList.some(f => 
+        f.includes('netlify.toml') || 
+        f.includes('vercel.json') || 
+        f.includes('render.yaml') ||
+        f.includes('fly.toml') ||
+        f.includes('railway.json') ||
+        f.includes('Procfile') ||
+        f.includes('app.yaml') || // Google App Engine
+        f.includes('azure-pipelines.yml')
+    );
 
         practices.push({
             type: 'deploy_badge',
-            status: hasDeploy ? 'healthy' : evidences.some(e=>e.kind==='deploy' && e.confidence>=0.4) ? 'needs_attention' : 'missing',
+            status: hasDeploy ? 'healthy' : 
+                    hasAnyCIorQABadge && !isLikelyDeployable ? 'healthy' : // CI badge is good enough for non-deployable repos
+                    hasAnyCIorQABadge && isLikelyDeployable ? 'needs_attention' : // Has CI but should have deploy badge
+                    evidences.some(e=>e.kind==='deploy' && e.confidence>=0.4) ? 'needs_attention' : 
+                    'missing',
             details: {
-                exists: hasDeploy,
-                evidence: evidences.slice(0,5)
+                exists: hasDeploy || (hasAnyCIorQABadge && !isLikelyDeployable),
+                evidence: evidences.slice(0,5),
+                hasCI: hasAnyCIorQABadge,
+                isDeployable: isLikelyDeployable
             }
         });
     }

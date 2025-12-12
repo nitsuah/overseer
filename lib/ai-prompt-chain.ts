@@ -23,6 +23,8 @@ export interface EnrichedContext extends PromptChainContext {
   envVars?: string[];
   buildSteps?: string;
   badges?: string[];
+  fileList?: string[];
+  owner?: string;
 }
 
 /**
@@ -35,9 +37,25 @@ export async function fetchRepoContext(
   githubToken?: string
 ): Promise<Partial<EnrichedContext>> {
   const client = new GitHubClient(githubToken || '', owner);
-  const context: Partial<EnrichedContext> = {};
+  const context: Partial<EnrichedContext> = {
+    owner: owner
+  };
 
   console.log(`[fetchRepoContext] Starting context fetch for ${owner}/${repo}, practice: ${practiceType}`);
+
+  // Fetch file list for workflow and config detection
+  try {
+    const tree = await client.getRepoTree(repo);
+    if (tree && tree.tree) {
+      context.fileList = tree.tree
+        .filter(item => item.type === 'blob')
+        .map(item => item.path || '');
+      console.log(`[fetchRepoContext] Fetched ${context.fileList.length} files from repo tree`);
+    }
+  } catch (error) {
+    console.warn(`[fetchRepoContext] Failed to fetch repo tree:`, error instanceof Error ? error.message : String(error));
+    context.fileList = [];
+  }
 
   try {
     // Always fetch README (primary context source)
@@ -305,12 +323,43 @@ export function buildPracticePrompt(context: EnrichedContext): string {
 function buildDeployBadgePrompt(context: EnrichedContext): string {
   const hasReadme = context.readme && context.readme.trim().length > 0;
   
+  // Check for deployment platforms based on config files in the repo
+  const hasNetlify = context.fileList?.some(f => f.includes('netlify.toml'));
+  const hasVercel = context.fileList?.some(f => f.includes('vercel.json'));
+  const hasRender = context.fileList?.some(f => f.includes('render.yaml'));
+  const hasFly = context.fileList?.some(f => f.includes('fly.toml'));
+  const hasRailway = context.fileList?.some(f => f.includes('railway.json'));
+  const hasDockerfile = context.fileList?.some(f => f === 'Dockerfile' || f === 'docker-compose.yml');
+  
+  // Check for GitHub Actions workflows that might be deploy-related
+  const workflows = context.fileList?.filter(f => 
+    f.includes('.github/workflows/') && (f.endsWith('.yml') || f.endsWith('.yaml'))
+  ) || [];
+  const hasDeployWorkflow = workflows.some(w => 
+    /deploy|cd|release|publish/i.test(w)
+  );
+  const hasCIWorkflow = workflows.some(w => 
+    /ci|test|lint|build/i.test(w)
+  );
+  
+  // Determine if this repo is actually deployable or just a tool/library
+  const isDeployable = hasNetlify || hasVercel || hasRender || hasFly || hasRailway || hasDeployWorkflow;
+  
   if (!hasReadme) {
-    return `You are creating a README.md with a deployment status badge.
+    const suggestedBadge = hasCIWorkflow 
+      ? `[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions)`
+      : hasNetlify
+      ? `[![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-SITE-ID/deploy-status)](https://app.netlify.com/sites/YOUR-SITE-NAME/deploys)`
+      : `[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions)`;
+    
+    return `You are creating a README.md with status badges.
 
 REPO CONTEXT:
 - Name: ${context.repoName}
 - Language: ${context.language || 'Unknown'}
+- Deployable: ${isDeployable ? 'Yes' : 'No (tool/library)'}
+- Has CI Workflow: ${hasCIWorkflow ? 'Yes' : 'No'}
+- Deploy Platform: ${hasNetlify ? 'Netlify' : hasVercel ? 'Vercel' : hasRender ? 'Render' : 'None detected'}
 
 TEMPLATE SNIPPET:
 ${context.template}
@@ -318,32 +367,42 @@ ${context.template}
 TASK: Create a basic README.md that includes:
 - Project title (# ${context.repoName})
 - Brief description placeholder
-- Deployment status badge: [![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](DEPLOYMENT_URL_HERE)
+- Appropriate status badge: ${suggestedBadge}
 - Installation section placeholder
 - Usage section placeholder
-- The user will replace DEPLOYMENT_URL_HERE with their actual deployment URL
+${hasCIWorkflow ? '- Replace ci.yml with the actual workflow filename from .github/workflows/' : ''}
+${hasNetlify ? '- Replace YOUR-SITE-ID and YOUR-SITE-NAME with actual Netlify site details' : ''}
 - Return ONLY the README.md content, no explanations`;
   }
   
-  return `You are updating a README.md to add a deployment status badge.
+  return `You are updating a README.md to add or improve status badges.
 
 REPO CONTEXT:
 - Name: ${context.repoName}
 - Language: ${context.language || 'Unknown'}
+- Deployable: ${isDeployable ? 'Yes' : 'No (tool/library)'}
+- Workflows detected: ${workflows.length > 0 ? workflows.map(w => w.split('/').pop()).join(', ') : 'None'}
+- Deploy Platform: ${hasNetlify ? 'Netlify' : hasVercel ? 'Vercel' : hasRender ? 'Render' : hasFly ? 'Fly.io' : hasRailway ? 'Railway' : 'None detected'}
 
 ${context.badges && context.badges.length > 0 ? `EXISTING BADGES:\n${context.badges.join('\n')}` : 'No existing badges found.'}
 
 CURRENT README:
 ${context.readme}
 
-TEMPLATE SNIPPET:
-${context.template}
+GUIDANCE:
+${isDeployable ? `This repo appears deployable. Add a deployment status badge for ${hasNetlify ? 'Netlify' : hasVercel ? 'Vercel' : hasRender ? 'Render' : 'the detected platform'}.` : 
+  hasCIWorkflow ? `This appears to be a tool/library. The existing CI badge is appropriate - no deploy badge needed.` :
+  `Add a CI/test badge using one of the detected workflows: ${workflows.map(w => w.split('/').pop()).join(', ') || 'ci.yml'}`}
 
-TASK: Insert a deployment status badge near other badges or at the top of the README.
+EXAMPLES:
+${hasCIWorkflow ? `- GitHub Actions: [![CI](https://github.com/${context.owner || 'OWNER'}/${context.repoName}/actions/workflows/${workflows[0]?.split('/').pop() || 'ci.yml'}/badge.svg)](https://github.com/${context.owner || 'OWNER'}/${context.repoName}/actions)` : ''}
+${hasNetlify ? `- Netlify: [![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-SITE-ID/deploy-status)](https://app.netlify.com/sites/YOUR-SITE-NAME/deploys)` : ''}
+${hasVercel ? `- Vercel: [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/YOUR-PROJECT)` : ''}
+
+TASK: ${isDeployable ? 'Add deployment badge' : 'Ensure CI/test badge is present'}
 - Preserve existing formatting and style
-- Place it logically with other status badges (if any exist)
-- Use platform-agnostic placeholder: [![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](DEPLOYMENT_URL_HERE)
-- The user will replace DEPLOYMENT_URL_HERE with their actual deployment URL (works with Netlify, Vercel, Railway, Render, Fly.io, Heroku, etc.)
+- Place badge(s) near project title at the top
+- Use actual workflow filenames from the repo
 - Return ONLY the modified README content, no explanations`;
 }
 

@@ -442,8 +442,9 @@ export class GitHubClient {
         critical,
         high,
       };
-    } catch {
-      // If API call fails (lack of permissions, etc.), return zeros
+    } catch (error) {
+      // If API call fails (403 = lack of permissions, 404 = not found, etc.), return zeros
+      // This is expected for repos without dependabot enabled or insufficient permissions
       return { total: 0, critical: 0, high: 0 };
     }
   }

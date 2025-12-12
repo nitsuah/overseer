@@ -7,6 +7,8 @@ import { parseRoadmap } from '@/lib/parsers/roadmap';
 import { parseTasks } from '@/lib/parsers/tasks';
 import { parseMetrics } from '@/lib/parsers/metrics';
 import { detectRepoType } from '@/lib/repo-type';
+import { DEFAULT_REPOS } from '@/lib/default-repos';
+import { syncRepo } from '@/lib/sync';
 
 export async function POST() {
     try {
@@ -226,9 +228,29 @@ export async function POST() {
             }
         }
 
+        // Always sync default repos (using system token from environment)
+        const systemToken = process.env.GITHUB_TOKEN;
+        if (systemToken) {
+            const systemGithub = new GitHubClient(systemToken, 'nitsuah');
+            for (const defaultRepo of DEFAULT_REPOS) {
+                try {
+                    logger.info(`Syncing default repo: ${defaultRepo.fullName}`);
+                    const repoMeta = await systemGithub.getRepo(defaultRepo.owner, defaultRepo.name);
+                    await syncRepo(repoMeta, systemGithub, db);
+                    successCount++;
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    logger.warn(`Failed to sync default repo ${defaultRepo.fullName}:`, errorMessage);
+                    errorCount++;
+                }
+            }
+        } else {
+            logger.warn('No GITHUB_TOKEN found in environment - skipping default repos sync');
+        }
+
         return NextResponse.json({
             success: true,
-            total: repos.length,
+            total: repos.length + DEFAULT_REPOS.length,
             synced: successCount,
             errors: errorCount
         });

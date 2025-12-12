@@ -230,8 +230,9 @@ export async function POST() {
 
         // Always sync default repos (using system token from environment)
         const systemToken = process.env.GITHUB_TOKEN;
+        const systemUsername = process.env.GITHUB_SYSTEM_USERNAME || 'nitsuah';
         if (systemToken) {
-            const systemGithub = new GitHubClient(systemToken, 'nitsuah');
+            const systemGithub = new GitHubClient(systemToken, systemUsername);
             for (const defaultRepo of DEFAULT_REPOS) {
                 try {
                     logger.info(`Syncing default repo: ${defaultRepo.fullName}`);
@@ -250,7 +251,7 @@ export async function POST() {
 
         return NextResponse.json({
             success: true,
-            total: repos.length + DEFAULT_REPOS.length,
+            total: successCount + errorCount,
             synced: successCount,
             errors: errorCount
         });

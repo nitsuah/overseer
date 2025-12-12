@@ -53,3 +53,40 @@ test('low-confidence deploy indicator yields needs_attention', async () => {
   expect(deploy?.status).toBe('needs_attention');
 });
 
+test('CI badge on non-deployable repo (tool/library) yields healthy', async () => {
+  const readme = `[![CI](https://github.com/nitsuah/osrs/actions/workflows/ci.yml/badge.svg)](https://github.com/nitsuah/osrs/actions)`;
+  const fileList: string[] = ['.github/workflows/ci.yml', 'setup.py', 'README.md']; // No deploy config
+  const res = await checkBestPractices('owner','repo', mockOctokit(), fileList, readme);
+  const deploy = res.practices.find(p=>p.type==='deploy_badge');
+  expect(deploy?.status).toBe('healthy');
+  expect(deploy?.details.hasCI).toBe(true);
+  expect(deploy?.details.isDeployable).toBe(false);
+});
+
+test('CI badge on deployable repo (has netlify.toml) yields needs_attention', async () => {
+  const readme = `[![CI](https://github.com/nitsuah/games/actions/workflows/ci.yml/badge.svg)](https://github.com/nitsuah/games/actions)`;
+  const fileList: string[] = ['.github/workflows/ci.yml', 'netlify.toml', 'package.json']; // Has deploy config
+  const res = await checkBestPractices('owner','repo', mockOctokit(), fileList, readme);
+  const deploy = res.practices.find(p=>p.type==='deploy_badge');
+  expect(deploy?.status).toBe('needs_attention'); // Should have deploy badge since it's deployable
+  expect(deploy?.details.hasCI).toBe(true);
+  expect(deploy?.details.isDeployable).toBe(true);
+});
+
+test('multiple CI badges (linting, fast, slow) on research repo yields healthy', async () => {
+  const readme = `
+[![CI fast](https://github.com/nitsuah/kryptos/actions/workflows/ci-fast.yml/badge.svg)](https://github.com/nitsuah/kryptos/actions)
+[![CI (smoke)](https://github.com/nitsuah/kryptos/actions/workflows/demo-smoke.yml/badge.svg)](https://github.com/nitsuah/kryptos/actions)
+[![CI (slow)](https://github.com/nitsuah/kryptos/actions/workflows/ci-slow.yml/badge.svg)](https://github.com/nitsuah/kryptos/actions)
+`;
+  const fileList: string[] = [
+    '.github/workflows/ci-fast.yml',
+    '.github/workflows/demo-smoke.yml', 
+    '.github/workflows/ci-slow.yml',
+    'pyproject.toml'
+  ];
+  const res = await checkBestPractices('owner','repo', mockOctokit(), fileList, readme);
+  const deploy = res.practices.find(p=>p.type==='deploy_badge');
+  expect(deploy?.status).toBe('healthy');
+});
+

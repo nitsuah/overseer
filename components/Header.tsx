@@ -142,9 +142,14 @@ export default function Header(props: HeaderProps = {}) {
                                     <button
                                         type="submit"
                                         disabled={addingRepo || !addRepoUrl?.trim()}
-                                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded text-xs font-medium transition-all"
+                                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded text-xs font-medium transition-all flex items-center gap-1.5 min-w-[60px] justify-center"
                                     >
-                                        {addingRepo ? '...' : 'Add'}
+                                        {addingRepo ? (
+                                            <>
+                                                <RefreshCw className="h-3 w-3 animate-spin" />
+                                                <span>Adding</span>
+                                            </>
+                                        ) : 'Add'}
                                     </button>
                                     <button
                                         type="button"

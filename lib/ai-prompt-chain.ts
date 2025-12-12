@@ -45,15 +45,11 @@ export async function fetchRepoContext(
 
   // Fetch file list for workflow and config detection
   try {
-    const tree = await client.getRepoTree(repo);
-    if (tree && tree.tree) {
-      context.fileList = tree.tree
-        .filter(item => item.type === 'blob')
-        .map(item => item.path || '');
-      console.log(`[fetchRepoContext] Fetched ${context.fileList.length} files from repo tree`);
-    }
+    const fileList = await client.getRepoFileList(repo);
+    context.fileList = fileList;
+    console.log(`[fetchRepoContext] Fetched ${context.fileList.length} files from repo`);
   } catch (error) {
-    console.warn(`[fetchRepoContext] Failed to fetch repo tree:`, error instanceof Error ? error.message : String(error));
+    console.warn(`[fetchRepoContext] Failed to fetch file list:`, error instanceof Error ? error.message : String(error));
     context.fileList = [];
   }
 

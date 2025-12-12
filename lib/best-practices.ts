@@ -139,7 +139,13 @@ export async function checkBestPractices(
         '.mocharc',
         'pytest.ini',
         'pyproject.toml',  // Can contain pytest config
-        'tox.ini'
+        'tox.ini',
+        // Web3/Solidity testing frameworks
+        'hardhat.config',  // Hardhat testing framework
+        'truffle-config',  // Truffle testing framework
+        'foundry.toml',    // Foundry testing framework
+        'dappfile',        // DappTools testing
+        'brownie-config'   // Brownie testing framework
     ];
     const detectedTestingConfigs = fileList.filter(f => testingFiles.some(test => f.includes(test)));
     const hasTesting = detectedTestingConfigs.length > 0;
@@ -153,7 +159,8 @@ export async function checkBestPractices(
         'test/',       // Match test/ at any level  
         'e2e/',
         'test_',       // Python test files: test_*.py
-        '_test.'       // Go test files: *_test.go
+        '_test.',      // Go test files: *_test.go
+        '.t.sol'       // Solidity test files (Foundry convention)
     ];
     const testFiles = fileList.filter(f => 
         testFilePatterns.some(pattern => f.toLowerCase().includes(pattern))
@@ -186,7 +193,12 @@ export async function checkBestPractices(
         '.pylintrc',
         'pylint.ini',
         'ruff.toml',
-        'pyproject.toml'  // Can contain ruff/black/isort config
+        'pyproject.toml',  // Can contain ruff/black/isort config
+        // Web3/Solidity linting
+        '.solhint.json',   // Solhint config
+        '.solhintrc',      // Alternative Solhint config
+        'slither.config',  // Slither static analyzer
+        'mythril.yml'      // Mythril security analyzer
     ];
     const hasLinting = fileList.some(f => lintingFiles.some(lint => f.includes(lint)));
     practices.push({

@@ -86,6 +86,7 @@ export interface Repo {
   commit_frequency?: number;
   bus_factor?: number;
   avg_pr_merge_time_hours?: number;
+  is_hidden?: boolean;
 }
 
 export interface RepoDetails {

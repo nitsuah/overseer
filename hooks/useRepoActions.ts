@@ -70,12 +70,28 @@ export function useRepoActions(
     }
   };
 
+  const handleRestoreRepo = async (repoName: string) => {
+    try {
+      const res = await fetch(`/api/repos/${repoName}/unhide`, { method: 'POST' });
+      if (res.ok) {
+        await refetchRepos();
+        setToastMessage(`Successfully restored ${repoName}`);
+      } else {
+        const err = await res.json();
+        setToastMessage(`Failed to restore repo: ${err.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to restore repo:', error);
+      setToastMessage('Failed to restore repo');
+    }
+  };
+
   const handleFixAllDocs = async (fullRepoName: string, missingDocs?: string[]) => {
     // Fetch template previews
     try {
       setFixingDoc(true);
       const repoName = fullRepoName.includes('/') ? fullRepoName.split('/')[1] : fullRepoName;
-      
+
       // If no missing docs provided, fetch from repo details
       let docsToFix: string[] = missingDocs || [];
       if (!missingDocs) {
@@ -152,7 +168,7 @@ export function useRepoActions(
     try {
       setFixingDoc(true);
       const repoName = fullRepoName.includes('/') ? fullRepoName.split('/')[1] : fullRepoName;
-      
+
       const previewRes = await fetch('/api/preview-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -257,7 +273,7 @@ export function useRepoActions(
     // Generate AI-powered, context-aware best practice fix
     try {
       setFixingDoc(true);
-      
+
       // First, generate the AI content using prompt chain
       const generateRes = await fetch('/api/repos/generate-best-practice', {
         method: 'POST',
@@ -273,7 +289,7 @@ export function useRepoActions(
       }
 
       const { content } = await generateRes.json();
-      
+
       // Show generated content in modal for review
       const fileName = getFileNameForPractice(practiceType);
       setPreviewFiles([{
@@ -287,10 +303,10 @@ export function useRepoActions(
       setPreviewRepoName(repoName);
       setPreviewMode('single');
       setPreviewModalOpen(true);
-      
+
       // Store practice type for PR creation after modal confirm
       (window as Window & { __pendingPracticeType?: string }).__pendingPracticeType = practiceType;
-      
+
     } catch (error) {
       console.error('Failed to fix practice:', error);
       setToastMessage('Failed to generate fix');
@@ -335,10 +351,10 @@ export function useRepoActions(
     // Load templates for all missing best practices - AI enrichment happens in modal
     try {
       setFixingDoc(true);
-      
+
       // Extract just the repo name for database lookup
       const repoName = fullRepoName.includes('/') ? fullRepoName.split('/')[1] : fullRepoName;
-      
+
       // Get repo details to check which practices are actually missing
       const detailsRes = await fetch(`/api/repo-details/${repoName}`);
       if (!detailsRes.ok) {
@@ -434,10 +450,10 @@ export function useRepoActions(
 
     try {
       setFixingDoc(true);
-      
+
       // Extract repo name for API endpoints (they use database lookup)
       const repoName = previewRepoName.includes('/') ? previewRepoName.split('/')[1] : previewRepoName;
-      
+
       if (selectedFiles.length === 1) {
         // Single file PR
         const f = selectedFiles[0];
@@ -445,7 +461,7 @@ export function useRepoActions(
           const res = await fetch(`/api/repos/${repoName}/fix-best-practice`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               practiceType: f.practiceType,
               content: f.content,
               path: f.path
@@ -465,13 +481,13 @@ export function useRepoActions(
           const res = await fetch(`/api/repos/${repoName}/fix-doc`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               docType,
               content: f.content,
               path: f.path
             }),
           });
-        
+
           if (res.ok) {
             const data = await res.json();
             if (data.prUrl) {
@@ -490,7 +506,7 @@ export function useRepoActions(
         const practices = selectedFiles.filter(f => f.type === 'practice');
 
         // Split docs into core docs vs community standards
-        const CORE_DOCS = new Set(['roadmap','tasks','metrics','features','readme']);
+        const CORE_DOCS = new Set(['roadmap', 'tasks', 'metrics', 'features', 'readme']);
         const coreDocs = allDocs.filter(f => CORE_DOCS.has(f.docType.toLowerCase()));
         const standardDocs = allDocs.filter(f => !CORE_DOCS.has(f.docType.toLowerCase()));
 
@@ -557,7 +573,7 @@ export function useRepoActions(
         if (messages.length > 0) {
           setToastMessage(messages.join(' '));
         }
-        
+
         // Only close modal if no errors occurred
         if (!hasError) {
           setPreviewModalOpen(false);
@@ -607,6 +623,7 @@ export function useRepoActions(
     setPreviewModalOpen,
     handleAddRepo,
     handleRemoveRepo,
+    handleRestoreRepo,
     handleFixAllDocs,
     handleFixDoc,
     handleFixStandard,

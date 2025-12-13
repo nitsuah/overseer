@@ -3,25 +3,25 @@
 import { useState, useEffect } from 'react';
 import { Repo, RepoDetails } from '@/types/repo';
 
-export function useRepos() {
+export function useRepos(showHidden = false) {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchRepos = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/repos');
+      const res = await fetch(`/api/repos?showHidden=${showHidden}`);
       if (!res.ok) {
         console.error(`Failed to fetch repos: ${res.status} ${res.statusText}`);
         return;
       }
-      
+
       const contentType = res.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         console.error(`Invalid response type: ${contentType}`);
         return;
       }
-      
+
       const data = await res.json();
       setRepos(data);
     } catch (error) {
@@ -33,7 +33,7 @@ export function useRepos() {
 
   useEffect(() => {
     fetchRepos();
-  }, []);
+  }, [showHidden, fetchRepos]);
 
   return { repos, setRepos, loading, refetch: fetchRepos };
 }
@@ -44,22 +44,22 @@ export function useRepoDetails() {
 
   const fetchRepoDetails = async (repoName: string, force = false) => {
     if (!force && (repoDetails[repoName] || loadingDetails.has(repoName))) return;
-    
+
     setLoadingDetails(prev => new Set(prev).add(repoName));
-    
+
     try {
       const res = await fetch(`/api/repo-details/${repoName}`);
       if (!res.ok) {
         console.error(`Failed to fetch details for ${repoName}: ${res.status} ${res.statusText}`);
         return;
       }
-      
+
       const contentType = res.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         console.error(`Invalid response type for ${repoName}: ${contentType}`);
         return;
       }
-      
+
       const data = await res.json();
       setRepoDetails((prev) => ({
         ...prev,

@@ -1,0 +1,33 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { getNeonClient } from '@/lib/db';
+import logger from '@/lib/log';
+
+export async function POST(
+    request: NextRequest,
+    props: { params: Promise<{ name: string }> }
+) {
+    const params = await props.params;
+    try {
+        const session = await auth();
+
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const repoName = params.name;
+        const db = getNeonClient();
+
+        await db`
+            UPDATE repos 
+            SET is_hidden = FALSE 
+            WHERE name = ${repoName}
+        `;
+
+        return NextResponse.json({ success: true });
+    } catch (error: unknown) {
+        logger.warn('Error unhiding repo:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
+    }
+}

@@ -52,7 +52,6 @@ interface RepoTableRowProps {
   onFixAllPractices: () => void;
   onGenerateSummary: () => void;
   onSyncSingleRepo: () => void;
-  showHidden?: boolean;
   onUnhide?: () => void;
 }
 

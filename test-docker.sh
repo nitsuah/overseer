@@ -9,30 +9,37 @@ case "${1:-test}" in
   "test")
     echo "📋 Running test suite..."
     docker-compose -f docker-compose.test.yml run --rm test
+    echo "✅ Done!"
     ;;
   "watch")
     echo "👀 Running tests in watch mode..."
     docker-compose -f docker-compose.test.yml run --rm test-watch
+    echo "✅ Done!"
     ;;
   "lint")
     echo "🔍 Running linter..."
     docker-compose -f docker-compose.test.yml run --rm lint
+    echo "✅ Done!"
     ;;
   "type-check")
     echo "🔤 Running TypeScript type check..."
     docker-compose -f docker-compose.test.yml run --rm type-check
+    echo "✅ Done!"
     ;;
   "pre-commit")
     echo "🔨 Running pre-commit checks (lint + test + type-check)..."
     docker-compose -f docker-compose.test.yml run --rm pre-commit
+    echo "✅ Done!"
     ;;
   "build")
     echo "🏗️  Building test container..."
     docker-compose -f docker-compose.test.yml build
+    echo "✅ Done!"
     ;;
   "clean")
     echo "🧹 Cleaning up test containers..."
     docker-compose -f docker-compose.test.yml down -v
+    echo "✅ Done!"
     ;;
   *)
     echo "Usage: $0 {test|watch|lint|type-check|pre-commit|build|clean}"
@@ -48,5 +55,3 @@ case "${1:-test}" in
     exit 1
     ;;
 esac
-
-echo "✅ Done!"

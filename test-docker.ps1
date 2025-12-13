@@ -42,4 +42,9 @@ switch ($Command) {
     }
 }
 
-Write-Host "✅ Done!" -ForegroundColor Green
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "✅ Done!" -ForegroundColor Green
+} else {
+    Write-Host "❌ Docker command failed with exit code $LASTEXITCODE" -ForegroundColor Red
+    exit $LASTEXITCODE
+}

@@ -15,12 +15,13 @@
 ## This broke Next.js App Router API routes like /api/repos by sending
 ## them to non-existent functions (404). It also caused /api/sync-repos
 ## to hit the function but fail with 500 when GITHUB_TOKEN was missing.
-## We now restrict the redirect only to the explicit sync function.
+## We now use the Next.js API route for /api/sync-repos instead of a
+## Netlify function, as it properly handles user authentication.
 
-[[redirects]]
-  from = "/api/sync-repos"
-  to = "/.netlify/functions/sync-repos"
-  status = 200
+## [[redirects]]
+##   from = "/api/sync-repos"
+##   to = "/.netlify/functions/sync-repos"
+##   status = 200
 
 [functions]
   directory = "netlify/functions"

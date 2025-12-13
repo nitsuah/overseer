@@ -34,7 +34,6 @@ export async function POST() {
         const totalRepos = repos.length + DEFAULT_REPOS.length;
 
         // Start background sync without awaiting to avoid timeout
-         
         (async () => {
             let successCount = 0;
             let errorCount = 0;
@@ -86,8 +85,9 @@ export async function POST() {
                 }
             }
 
-            logger.info(`Background sync completed: ${successCount}/${successCount + errorCount} repos synced successfully`);
-        })();
+            const totalProcessed = successCount + errorCount;
+            logger.info(`Background sync completed: ${successCount}/${totalProcessed} repos synced successfully`);
+        })().catch(error => logger.error('Background sync failed:', error));
 
         // Return immediately to avoid timeout
         return NextResponse.json({

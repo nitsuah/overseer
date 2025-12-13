@@ -92,7 +92,7 @@ export async function POST(
             repoName,
             branchName,
             filesToCreate,
-            `docs: add missing documentation (${filesToCreate.map(f => f.path).join(', ')})`
+            `docs: add missing documentation`
         );
 
         return NextResponse.json({ success: true, prUrl, count: filesToCreate.length });

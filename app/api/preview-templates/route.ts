@@ -135,17 +135,18 @@ export async function POST(request: NextRequest) {
 
     const repoLanguage = repoContext.language;
 
-    const TEMPLATE_FILES: Record<string, string> = {
-      readme: 'README.md',
-      roadmap: 'ROADMAP.md',
-      tasks: 'TASKS.md',
-      metrics: 'METRICS.md',
-      features: 'FEATURES.md',
-      code_of_conduct: 'CODE_OF_CONDUCT.md',
-      contributing: 'CONTRIBUTING.md',
-      security: 'SECURITY.md',
-      changelog: 'CHANGELOG.md',
-      license: 'LICENSE',
+    // Template source paths (where templates are stored in our templates/ directory)
+    const TEMPLATE_SOURCE_PATHS: Record<string, string> = {
+      readme: path.join('community-standards', 'README.md'),
+      roadmap: path.join('community-standards', 'ROADMAP.md'),
+      tasks: path.join('community-standards', 'TASKS.md'),
+      metrics: path.join('community-standards', 'METRICS.md'),
+      features: path.join('community-standards', 'FEATURES.md'),
+      code_of_conduct: path.join('community-standards', 'CODE_OF_CONDUCT.md'),
+      contributing: path.join('community-standards', 'CONTRIBUTING.md'),
+      security: path.join('community-standards', 'SECURITY.md'),
+      changelog: path.join('community-standards', 'CHANGELOG.md'),
+      license: path.join('community-standards', 'LICENSE'),
       // Community standards under .github
       codeowners: path.join('.github', 'CODEOWNERS'),
       copilot: path.join('.github', 'copilot-instructions.md'),
@@ -165,10 +166,40 @@ export async function POST(request: NextRequest) {
       // gitignore, pre_commit_hooks, testing_framework, and linting are handled specially below based on language
     };
     
+    // Target paths (where files should go in the user's repo)
+    const TARGET_PATHS: Record<string, string> = {
+      // Core docs go in root
+      readme: 'README.md',
+      roadmap: 'ROADMAP.md',
+      tasks: 'TASKS.md',
+      metrics: 'METRICS.md',
+      features: 'FEATURES.md',
+      // Community standards go in root
+      code_of_conduct: 'CODE_OF_CONDUCT.md',
+      contributing: 'CONTRIBUTING.md',
+      security: 'SECURITY.md',
+      changelog: 'CHANGELOG.md',
+      license: 'LICENSE',
+      // GitHub files stay in .github
+      codeowners: path.join('.github', 'CODEOWNERS'),
+      copilot: path.join('.github', 'copilot-instructions.md'),
+      copilot_instructions: path.join('.github', 'copilot-instructions.md'),
+      funding: path.join('.github', 'FUNDING.yml'),
+      issue_template: path.join('.github', 'ISSUE_TEMPLATE', 'bug_report.md'),
+      issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
+      pr_template: path.join('.github', 'pull_request_template.md'),
+      pull_request_template: path.join('.github', 'pull_request_template.md'),
+      // Best practices
+      docker: 'Dockerfile',
+      env_template: '.env.example',
+      dependabot: '.github/dependabot.yml',
+      ci_cd: '.github/workflows/ci.yml',
+    };
+    
     for (const docType of docTypes) {
       const normalized = String(docType).toLowerCase();
-      let filename = TEMPLATE_FILES[normalized];
-      let templateSourcePath: string | undefined; // Path to template file in templates/ directory
+      let templateSourcePath = TEMPLATE_SOURCE_PATHS[normalized]; // Path to template file in templates/ directory
+      let filename = TARGET_PATHS[normalized]; // Path where file goes in user's repo
       
       // Normalize language for template selection
       // Map GitHub language to template category

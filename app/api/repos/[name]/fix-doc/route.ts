@@ -43,15 +43,39 @@ export async function POST(
 
         if (!content) {
             // Fallback: read from template file
-            // Map logical doc types to template filenames
-            const TEMPLATE_FILES: Record<string, string> = {
-                // Core docs
+            // Map logical doc types to template source paths (where templates are stored)
+            const TEMPLATE_SOURCE_PATHS: Record<string, string> = {
+                // Core docs (stored in community-standards subdirectory)
+                readme: path.join('community-standards', 'README.md'),
+                roadmap: path.join('community-standards', 'ROADMAP.md'),
+                tasks: path.join('community-standards', 'TASKS.md'),
+                metrics: path.join('community-standards', 'METRICS.md'),
+                features: path.join('community-standards', 'FEATURES.md'),
+                // Community standards (stored in community-standards subdirectory)
+                code_of_conduct: path.join('community-standards', 'CODE_OF_CONDUCT.md'),
+                contributing: path.join('community-standards', 'CONTRIBUTING.md'),
+                security: path.join('community-standards', 'SECURITY.md'),
+                changelog: path.join('community-standards', 'CHANGELOG.md'),
+                license: path.join('community-standards', 'LICENSE'),
+                codeowners: path.join('.github', 'CODEOWNERS'),
+                copilot: path.join('.github', 'copilot-instructions.md'),
+                copilot_instructions: path.join('.github', 'copilot-instructions.md'),
+                funding: path.join('.github', 'FUNDING.yml'),
+                issue_template: path.join('.github', 'ISSUE_TEMPLATE', 'bug_report.md'),
+                issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
+                pr_template: path.join('.github', 'pull_request_template.md'),
+                pull_request_template: path.join('.github', 'pull_request_template.md'),
+            };
+            
+            // Map logical doc types to target paths (where they should go in the repo)
+            const TARGET_PATHS: Record<string, string> = {
+                // Core docs go in root
                 readme: 'README.md',
                 roadmap: 'ROADMAP.md',
                 tasks: 'TASKS.md',
                 metrics: 'METRICS.md',
                 features: 'FEATURES.md',
-                // Community standards
+                // Community standards go in root
                 code_of_conduct: 'CODE_OF_CONDUCT.md',
                 contributing: 'CONTRIBUTING.md',
                 security: 'SECURITY.md',
@@ -68,20 +92,20 @@ export async function POST(
             };
 
             const normalized = String(docType).toLowerCase();
-            templateFilename = TEMPLATE_FILES[normalized];
-            if (!templateFilename) {
+            const templateSourcePath = TEMPLATE_SOURCE_PATHS[normalized];
+            if (!templateSourcePath) {
                 return NextResponse.json({ 
                     error: `Unknown doc type: ${docType}. No template mapping found.`,
-                    supported: Object.keys(TEMPLATE_FILES)
+                    supported: Object.keys(TEMPLATE_SOURCE_PATHS)
                 }, { status: 400 });
             }
 
             // Always use process.cwd() which should be the project root when Next.js runs
-            const templatePath = path.join(process.cwd(), 'templates', templateFilename);
+            const templatePath = path.join(process.cwd(), 'templates', templateSourcePath);
 
             try {
                 content = await fs.readFile(templatePath, 'utf-8');
-                targetPath = templateFilename;
+                targetPath = TARGET_PATHS[normalized];
             } catch (error) {
                 logger.warn(`[fix-doc] Template not found:`, {
                     docType,

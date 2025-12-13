@@ -16,5 +16,9 @@ export function warn(...args: unknown[]) {
   console.warn(...args);
 }
 
-const logger = { debug, info, warn };
+export function error(...args: unknown[]) {
+  console.error(...args);
+}
+
+const logger = { debug, info, warn, error };
 export default logger;

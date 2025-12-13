@@ -31,61 +31,69 @@ export async function POST() {
         const db = getNeonClient();
 
         const repos = await github.listRepos();
-        let successCount = 0;
-        let errorCount = 0;
+        const totalRepos = repos.length + DEFAULT_REPOS.length;
 
-        // Sync user repos using the centralized syncRepo function
-        for (const repo of repos) {
-            try {
-                await syncRepo(repo, github, db);
-                successCount++;
-            } catch (repoError: unknown) {
-                const message = repoError instanceof Error ? repoError.message : 'Unknown error';
-                logger.warn(`Error syncing repo ${repo.name}:`, message);
-                errorCount++;
-                // Continue with next repo instead of failing entire sync
-                continue;
-            }
-        }
+        // Start background sync without awaiting to avoid timeout
+        (async () => {
+            let successCount = 0;
+            let errorCount = 0;
 
-        // Always sync default repos (using system token from environment)
-        const systemToken = process.env.GITHUB_TOKEN;
-        const systemUsername = process.env.GITHUB_SYSTEM_USERNAME || 'nitsuah';
-        if (systemToken) {
-            const systemGithub = new GitHubClient(systemToken, systemUsername);
-            for (const defaultRepo of DEFAULT_REPOS) {
+            // Sync user repos using the centralized syncRepo function
+            for (const repo of repos) {
                 try {
-                    logger.info(`Syncing default repo: ${defaultRepo.fullName}`);
-                    const repoMeta = await systemGithub.getRepo(defaultRepo.owner, defaultRepo.name);
-                    await syncRepo(repoMeta, systemGithub, db);
+                    await syncRepo(repo, github, db);
                     successCount++;
-                } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                    logger.warn(`Failed to sync default repo ${defaultRepo.fullName}:`, errorMessage);
+                } catch (repoError: unknown) {
+                    const message = repoError instanceof Error ? repoError.message : 'Unknown error';
+                    logger.warn(`Error syncing repo ${repo.name}:`, message);
                     errorCount++;
+                    // Continue with next repo instead of failing entire sync
+                    continue;
                 }
             }
-        } else {
-            // If no system token, try to sync using user's token (may fail for repos they don't own)
-            logger.info('No GITHUB_TOKEN found - attempting to sync default repos with user token');
-            for (const defaultRepo of DEFAULT_REPOS) {
-                try {
-                    const repoMeta = await github.getRepo(defaultRepo.owner, defaultRepo.name);
-                    await syncRepo(repoMeta, github, db);
-                    successCount++;
-                } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                    logger.info(`Could not sync default repo ${defaultRepo.fullName} with user token:`, errorMessage);
-                    // Don't count as error since this is expected for public repos
-                }
-            }
-        }
 
+            // Always sync default repos (using system token from environment)
+            const systemToken = process.env.GITHUB_TOKEN;
+            const systemUsername = process.env.GITHUB_SYSTEM_USERNAME || 'nitsuah';
+            if (systemToken) {
+                const systemGithub = new GitHubClient(systemToken, systemUsername);
+                for (const defaultRepo of DEFAULT_REPOS) {
+                    try {
+                        logger.info(`Syncing default repo: ${defaultRepo.fullName}`);
+                        const repoMeta = await systemGithub.getRepo(defaultRepo.owner, defaultRepo.name);
+                        await syncRepo(repoMeta, systemGithub, db);
+                        successCount++;
+                    } catch (error) {
+                        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                        logger.warn(`Failed to sync default repo ${defaultRepo.fullName}:`, errorMessage);
+                        errorCount++;
+                    }
+                }
+            } else {
+                // If no system token, try to sync using user's token (may fail for repos they don't own)
+                logger.info('No GITHUB_TOKEN found - attempting to sync default repos with user token');
+                for (const defaultRepo of DEFAULT_REPOS) {
+                    try {
+                        const repoMeta = await github.getRepo(defaultRepo.owner, defaultRepo.name);
+                        await syncRepo(repoMeta, github, db);
+                        successCount++;
+                    } catch (error) {
+                        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                        logger.info(`Could not sync default repo ${defaultRepo.fullName} with user token:`, errorMessage);
+                        // Don't count as error since this is expected for public repos
+                    }
+                }
+            }
+
+            const totalProcessed = successCount + errorCount;
+            logger.info(`Background sync completed: ${successCount}/${totalProcessed} repos synced successfully`);
+        })().catch(error => logger.error('Background sync failed:', error));
+
+        // Return immediately to avoid timeout
         return NextResponse.json({
             success: true,
-            total: successCount + errorCount,
-            synced: successCount,
-            errors: errorCount
+            message: 'Sync started in background',
+            totalRepos
         });
     } catch (error: unknown) {
     logger.warn('Sync error:', error);

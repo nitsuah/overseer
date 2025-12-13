@@ -180,10 +180,7 @@ export async function POST(
     }
 
     const branchName = `chore-add-best-practices-${Date.now()}`;
-    const commitMessage = `chore: add ${filesToAdd.length} best practice file${filesToAdd.length > 1 ? 's' : ''}
-
-Added files:
-${filesToAdd.map(f => `- ${f.path}`).join('\n')}`;
+    const commitMessage = `chore: add best practices`;
 
     const prUrl = await github.createPrForFiles(
       repoName,

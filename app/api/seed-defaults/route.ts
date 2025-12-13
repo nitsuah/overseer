@@ -7,12 +7,13 @@ import logger from '@/lib/log';
 
 export async function POST() {
     try {
+        // Try to use GITHUB_TOKEN if available, otherwise use unauthenticated API
         const githubToken = process.env.GITHUB_TOKEN;
         if (!githubToken) {
-            throw new Error('GITHUB_TOKEN not configured');
+            logger.info('GITHUB_TOKEN not configured - using unauthenticated GitHub API (rate limited)');
         }
 
-        const github = new GitHubClient(githubToken, 'nitsuah');
+        const github = new GitHubClient(githubToken ?? '', 'nitsuah');
         const db = getNeonClient();
 
         let syncedCount = 0;
@@ -35,7 +36,8 @@ export async function POST() {
             success: true,
             synced: syncedCount,
             total: DEFAULT_REPOS.length,
-            errors: errors.length > 0 ? errors : undefined
+            errors: errors.length > 0 ? errors : undefined,
+            warning: !githubToken ? 'Running without GITHUB_TOKEN - rate limits apply' : undefined
         });
     } catch (error: unknown) {
         logger.warn('Error seeding default repos:', error);

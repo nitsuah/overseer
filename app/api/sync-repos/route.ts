@@ -246,7 +246,19 @@ export async function POST() {
                 }
             }
         } else {
-            logger.warn('No GITHUB_TOKEN found in environment - skipping default repos sync');
+            // If no system token, try to sync using user's token (may fail for repos they don't own)
+            logger.info('No GITHUB_TOKEN found - attempting to sync default repos with user token');
+            for (const defaultRepo of DEFAULT_REPOS) {
+                try {
+                    const repoMeta = await github.getRepo(defaultRepo.owner, defaultRepo.name);
+                    await syncRepo(repoMeta, github, db);
+                    successCount++;
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    logger.info(`Could not sync default repo ${defaultRepo.fullName} with user token:`, errorMessage);
+                    // Don't count as error since this is expected for public repos
+                }
+            }
         }
 
         return NextResponse.json({

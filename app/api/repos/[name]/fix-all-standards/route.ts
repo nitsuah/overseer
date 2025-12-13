@@ -147,7 +147,7 @@ export async function POST(
             repoName,
             branchName,
             filesToAdd,
-            `docs: add community standards (${filesToAdd.map(f => f.path).join(', ')})`
+            `docs: add community standards`
         );
 
         return NextResponse.json({ 

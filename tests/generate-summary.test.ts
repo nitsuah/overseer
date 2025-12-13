@@ -110,7 +110,7 @@ describe('Generate Summary API', () => {
     mockGetNeonClient.mockReturnValue(mockDb as never);
     
     // Mock GitHubClient to return no files
-    mockGitHubClient.mockImplementation(function(this: { getFileContent: ReturnType<typeof vi.fn> }) {
+    mockGitHubClient.mockImplementation(function(this: Record<string, unknown>) {
       this.getFileContent = vi.fn().mockResolvedValue(null);
     } as never);
     
@@ -139,7 +139,7 @@ describe('Generate Summary API', () => {
     mockGetNeonClient.mockReturnValue(mockDb as never);
     
     // Mock GitHubClient to return README
-    mockGitHubClient.mockImplementation(function(this: { getFileContent: ReturnType<typeof vi.fn> }) {
+    mockGitHubClient.mockImplementation(function(this: Record<string, unknown>) {
       this.getFileContent = vi.fn().mockImplementation((repo: string, file: string) => {
         if (file === 'README.md') return Promise.resolve('# Test Repo\n\nA test repository');
         return Promise.resolve(null);
@@ -176,7 +176,7 @@ describe('Generate Summary API', () => {
     mockGetNeonClient.mockReturnValue(mockDb as never);
     
     // Mock GitHubClient to return README
-    mockGitHubClient.mockImplementation(function(this: { getFileContent: ReturnType<typeof vi.fn> }) {
+    mockGitHubClient.mockImplementation(function(this: Record<string, unknown>) {
       this.getFileContent = vi.fn().mockResolvedValue('# Test Repo');
     } as never);
     

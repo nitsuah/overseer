@@ -13,7 +13,7 @@ export async function POST() {
             logger.info('GITHUB_TOKEN not configured - using unauthenticated GitHub API (rate limited)');
         }
 
-        const github = new GitHubClient(githubToken || '', 'nitsuah');
+        const github = new GitHubClient(githubToken ?? '', 'nitsuah');
         const db = getNeonClient();
 
         let syncedCount = 0;

@@ -11,8 +11,8 @@ You are working on one of the following repositories: `farm-3j`, `gcp`, `avatar`
 
 ### Prerequisite Check
 
-1.  **Identify the Stack**: Confirm if it's TypeScript/Vitest (`farm-3j`), Python/Pytest (`gcp`, `osrs`, `avatar`), or other.
-2.  **Verify Harness**: Run the existing test command (`npm test`, `pytest`). Ensure it executes cleanly, even if no tests exist. If it fails, **fix the harness first**.
+1. **Identify the Stack**: Confirm if it's TypeScript/Vitest (`farm-3j`), Python/Pytest (`gcp`, `osrs`, `avatar`), or other.
+2. **Verify Harness**: Run the existing test command (`npm test`, `pytest`). Ensure it executes cleanly, even if no tests exist. If it fails, **fix the harness first**.
 
 ### Phase 1: The Walking Skeleton (Target: >1-5%)
 
@@ -57,4 +57,4 @@ _Goal: Ensure components work together and handle errors gracefully._
 
 ## Example Prompt for the Bot
 
-_"I am working on [REPO_NAME]. Please implement Phase [X] of the Testing Strategy. Current coverage is [CURRENT_%]. Focus on [SPECIFIC_FILES_OR_MODULES]."_
+_"I am working on [REPO_NAME]. Please implement Phase [X] of the Testing Strategy. Current coverage is [CURRENT_%]. Focus on [SPECIFIC_FILES_OR_MODULES]."\_

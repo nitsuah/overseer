@@ -15,47 +15,47 @@ describe('Template File Paths', () => {
     
     it('should have README.md template in community-standards', async () => {
       const templatePath = path.join(communityStandardsDir, 'README.md');
-      await expect(fs.access(templatePath)).resolves.not.toThrow();
+      await expect(fs.access(templatePath)).resolves.toBeUndefined();
     });
     
     it('should have ROADMAP.md template in community-standards', async () => {
       const templatePath = path.join(communityStandardsDir, 'ROADMAP.md');
-      await expect(fs.access(templatePath)).resolves.not.toThrow();
+      await expect(fs.access(templatePath)).resolves.toBeUndefined();
     });
     
     it('should have TASKS.md template in community-standards', async () => {
       const templatePath = path.join(communityStandardsDir, 'TASKS.md');
-      await expect(fs.access(templatePath)).resolves.not.toThrow();
+      await expect(fs.access(templatePath)).resolves.toBeUndefined();
     });
     
     it('should have METRICS.md template in community-standards', async () => {
       const templatePath = path.join(communityStandardsDir, 'METRICS.md');
-      await expect(fs.access(templatePath)).resolves.not.toThrow();
+      await expect(fs.access(templatePath)).resolves.toBeUndefined();
     });
     
     it('should have FEATURES.md template in community-standards', async () => {
       const templatePath = path.join(communityStandardsDir, 'FEATURES.md');
-      await expect(fs.access(templatePath)).resolves.not.toThrow();
+      await expect(fs.access(templatePath)).resolves.toBeUndefined();
     });
     
     it('should have CODE_OF_CONDUCT.md template in community-standards', async () => {
       const templatePath = path.join(communityStandardsDir, 'CODE_OF_CONDUCT.md');
-      await expect(fs.access(templatePath)).resolves.not.toThrow();
+      await expect(fs.access(templatePath)).resolves.toBeUndefined();
     });
     
     it('should have CONTRIBUTING.md template in community-standards', async () => {
       const templatePath = path.join(communityStandardsDir, 'CONTRIBUTING.md');
-      await expect(fs.access(templatePath)).resolves.not.toThrow();
+      await expect(fs.access(templatePath)).resolves.toBeUndefined();
     });
     
     it('should have SECURITY.md template in community-standards', async () => {
       const templatePath = path.join(communityStandardsDir, 'SECURITY.md');
-      await expect(fs.access(templatePath)).resolves.not.toThrow();
+      await expect(fs.access(templatePath)).resolves.toBeUndefined();
     });
     
     it('should have CHANGELOG.md template in community-standards', async () => {
       const templatePath = path.join(communityStandardsDir, 'CHANGELOG.md');
-      await expect(fs.access(templatePath)).resolves.not.toThrow();
+      await expect(fs.access(templatePath)).resolves.toBeUndefined();
     });
   });
   

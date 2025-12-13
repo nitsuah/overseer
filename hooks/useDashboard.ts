@@ -1,13 +1,13 @@
 // Custom hooks for dashboard functionality
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Repo, RepoDetails } from '@/types/repo';
 
 export function useRepos(showHidden = false) {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchRepos = async () => {
+  const fetchRepos = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(`/api/repos?showHidden=${showHidden}`);
@@ -29,11 +29,11 @@ export function useRepos(showHidden = false) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showHidden]);
 
   useEffect(() => {
     fetchRepos();
-  }, [showHidden, fetchRepos]);
+  }, [fetchRepos]);
 
   return { repos, setRepos, loading, refetch: fetchRepos };
 }

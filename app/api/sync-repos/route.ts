@@ -6,6 +6,8 @@ import { getNeonClient } from '@/lib/db';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { syncRepo, syncRepoMetadata } from '@/lib/sync';
 
+const GITHUB_API_TIMEOUT_MS = 10000;
+
 export async function POST() {
     try {
         const session = await auth();
@@ -33,7 +35,7 @@ export async function POST() {
         try {
             const userPromise = octokit.rest.users.getAuthenticated();
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('GitHub API timeout')), 10000)
+                setTimeout(() => reject(new Error('GitHub API timeout')), GITHUB_API_TIMEOUT_MS)
             );
             const { data: user } = await Promise.race([userPromise, timeoutPromise]) as Awaited<ReturnType<typeof octokit.rest.users.getAuthenticated>>;
             githubUsername = user.login;

@@ -65,24 +65,18 @@ export default function Dashboard() {
   } = useRepoFilters(repos);
 
   const handleSync = async () => {
-    console.log('handleSync called');
     try {
       setSyncing(true);
-      console.log('Calling /api/sync-repos...');
       const res = await fetch('/api/sync-repos', { method: 'POST' });
-      console.log('Response status:', res.status, 'ok:', res.ok);
       if (res.ok) {
         const data = await res.json();
-        console.log('Sync response:', data);
         await refetch();
         setToastMessage(data.message || 'Sync started successfully!');
       } else {
         const error = await res.json();
-        console.error('Sync failed with status', res.status, ':', error);
         setToastMessage(`Sync failed: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Failed to sync repos:', error);
       setToastMessage('Failed to sync repos - network error');
     } finally {
       setSyncing(false);

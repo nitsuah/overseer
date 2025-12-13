@@ -37,10 +37,7 @@ export async function GET(request: NextRequest) {
         }
 
         // If authenticated, return repos based on showHidden param
-        // If showHidden is true, we simply omit the is_hidden check (or check ONLY hidden? standard pattern is "include hidden")
-        // User asked to "show hidden" implying mixed list or toggle. Let's make it include ALL if showHidden=true.
-        // Actually, typical UI is "Show Hidden" toggle which adds them to the list.
-
+        // When showHidden is true, return all repos; otherwise, only return non-hidden and non-archived repos
         const repos = await db`
             SELECT * FROM repos
             WHERE (${showHidden}::boolean IS TRUE OR ((is_hidden = FALSE OR is_hidden IS NULL) AND (is_archived = FALSE OR is_archived IS NULL)))

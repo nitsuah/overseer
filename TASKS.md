@@ -11,6 +11,7 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 ### v0.1.8: Performance & Rate Limiting
 
 - [ ] **Test Coverage Target**: Increase coverage from 60% to 70%+ with additional utility and component tests
+- [ ] Add sorting to Repo list ui
 - [ ] Implement smart caching for GitHub API calls using content_hash from doc_status
 - [ ] Improve Error Handling in GitHub API Client - Standardize error messages and logging in lib/github.ts
 - [ ] Add ETag support to skip unchanged file fetches

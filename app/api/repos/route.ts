@@ -1,13 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import logger from '@/lib/log';
 import { getNeonClient } from '@/lib/db';
 import { auth } from '@/auth';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
         const session = await auth();
         const db = getNeonClient();
+        const { searchParams } = new URL(request.url);
+        const showHidden = searchParams.get('showHidden') === 'true';
 
         // If not authenticated, only return default repos
         if (!session) {
@@ -34,11 +36,13 @@ export async function GET() {
             return NextResponse.json(repos);
         }
 
-        // If authenticated, return all non-hidden repos
+        // If authenticated, return repos based on showHidden param
+        // When showHidden is true, return all repos; otherwise, only return non-hidden and non-archived repos
         const repos = await db`
             SELECT * FROM repos
-            WHERE is_hidden = FALSE OR is_hidden IS NULL
+            WHERE (${showHidden}::boolean IS TRUE OR ((is_hidden = FALSE OR is_hidden IS NULL) AND (is_archived = FALSE OR is_archived IS NULL)))
             ORDER BY 
+                is_hidden ASC, -- Show visible first, then hidden
                 is_fork ASC,
                 CASE 
                     WHEN repo_type = 'unknown' THEN 999

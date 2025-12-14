@@ -9,29 +9,31 @@ import { useState } from "react";
 import { RepoType } from "@/lib/repo-type";
 
 interface HeaderProps {
-  repoCount?: { filtered: number; total: number };
-  showAddRepo?: boolean;
-  addRepoUrl?: string;
-  addRepoType?: string;
-  addingRepo?: boolean;
-  showFilters?: boolean;
-  syncing?: boolean;
-  isAuthenticated?: boolean;
-  filterType?: RepoType | 'all';
-  filterLanguage?: string;
-  filterFork?: 'all' | 'no-forks' | 'forks-only';
-  languages?: string[];
-  onAddRepoUrlChange?: (url: string) => void;
-  onAddRepoTypeChange?: (type: RepoType) => void;
-  onAddRepoSubmit?: (e: React.FormEvent) => void;
-  onToggleAddRepo?: () => void;
-  onToggleFilters?: () => void;
-  onSync?: () => void;
-  onFilterTypeChange?: (type: RepoType | 'all') => void;
-  onFilterLanguageChange?: (language: string) => void;
-  onFilterForkChange?: (fork: 'all' | 'no-forks' | 'forks-only') => void;
-  onClearFilters?: () => void;
-  onStartTour?: () => void;
+    repoCount?: { filtered: number; total: number };
+    showAddRepo?: boolean;
+    addRepoUrl?: string;
+    addRepoType?: string;
+    addingRepo?: boolean;
+    showFilters?: boolean;
+    syncing?: boolean;
+    isAuthenticated?: boolean;
+    filterType?: RepoType | 'all';
+    filterLanguage?: string;
+    filterFork?: 'all' | 'no-forks' | 'forks-only';
+    languages?: string[];
+    onAddRepoUrlChange?: (url: string) => void;
+    onAddRepoTypeChange?: (type: RepoType) => void;
+    onAddRepoSubmit?: (e: React.FormEvent) => void;
+    onToggleAddRepo?: () => void;
+    onToggleFilters?: () => void;
+    onSync?: () => void;
+    onFilterTypeChange?: (type: RepoType | 'all') => void;
+    onFilterLanguageChange?: (language: string) => void;
+    onFilterForkChange?: (fork: 'all' | 'no-forks' | 'forks-only') => void;
+    onClearFilters?: () => void;
+    onStartTour?: () => void;
+    showHidden?: boolean;
+    onToggleHidden?: () => void;
 }
 
 const repoTypes: RepoType[] = ['web-app', 'game', 'tool', 'library', 'bot', 'research', 'unknown'];
@@ -64,6 +66,8 @@ export default function Header(props: HeaderProps = {}) {
         onFilterForkChange,
         onClearFilters,
         onStartTour,
+        showHidden,
+        onToggleHidden,
     } = props;
 
     const [showStatusPills, setShowStatusPills] = useState(false);
@@ -107,201 +111,236 @@ export default function Header(props: HeaderProps = {}) {
             <div className="flex items-center gap-3">
                 {/* Repo Controls */}
                 {session && onToggleAddRepo && (
-                <div className="flex items-center gap-2">
-                    {/* Compact Add Repo */}
-                    <div className="relative group/add" data-tour="add-repo">
-                        <div className={`absolute -inset-0.5 bg-gradient-to-r from-emerald-600 to-green-600 rounded-lg opacity-0 group-hover/add:opacity-20 blur transition-all duration-300 ${showAddRepo ? 'opacity-30' : ''}`}></div>
-                        <div className={`relative flex items-center gap-2 bg-slate-800/90 border rounded-lg transition-all duration-300 ${
-                            showAddRepo 
-                                ? 'border-emerald-600/50 shadow-lg shadow-emerald-600/20 pr-2 py-2' 
+                    <div className="flex items-center gap-2">
+                        {/* Compact Add Repo */}
+                        <div className="relative group/add" data-tour="add-repo">
+                            <div className={`absolute -inset-0.5 bg-gradient-to-r from-emerald-600 to-green-600 rounded-lg opacity-0 group-hover/add:opacity-20 blur transition-all duration-300 ${showAddRepo ? 'opacity-30' : ''}`}></div>
+                            <div className={`relative flex items-center gap-2 bg-slate-800/90 border rounded-lg transition-all duration-300 ${showAddRepo
+                                ? 'border-emerald-600/50 shadow-lg shadow-emerald-600/20 pr-2 py-2'
                                 : 'border-slate-700 hover:border-emerald-600/30 px-3 py-2'
-                        }`}>
-                            {showAddRepo ? (
-                                <form onSubmit={onAddRepoSubmit} className="flex items-center gap-2">
-                                    <input
-                                        type="text"
-                                        value={addRepoUrl}
-                                        onChange={(e) => onAddRepoUrlChange?.(e.target.value)}
-                                        placeholder="owner/repo"
-                                        className="w-40 px-3 py-0 bg-transparent text-slate-200 placeholder:text-slate-500 focus:outline-none text-sm"
-                                        autoFocus
-                                    />
-                                    <select
-                                        value={addRepoType}
-                                        onChange={(e) => onAddRepoTypeChange?.(e.target.value as RepoType)}
-                                        className="px-2 py-1 bg-slate-900/50 border border-slate-700 rounded text-slate-300 focus:outline-none text-xs"
-                                    >
-                                        <option value="unknown">Type</option>
-                                        <option value="web-app">Web App</option>
-                                        <option value="game">Game</option>
-                                        <option value="tool">Tool</option>
-                                        <option value="library">Library</option>
-                                        <option value="bot">Bot</option>
-                                        <option value="research">Research</option>
-                                    </select>
+                                }`}>
+                                {showAddRepo ? (
+                                    <form onSubmit={onAddRepoSubmit} className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={addRepoUrl}
+                                            onChange={(e) => onAddRepoUrlChange?.(e.target.value)}
+                                            placeholder="owner/repo"
+                                            className="w-40 px-3 py-0 bg-transparent text-slate-200 placeholder:text-slate-500 focus:outline-none text-sm"
+                                            autoFocus
+                                        />
+                                        <select
+                                            value={addRepoType}
+                                            onChange={(e) => onAddRepoTypeChange?.(e.target.value as RepoType)}
+                                            className="px-2 py-1 bg-slate-900/50 border border-slate-700 rounded text-slate-300 focus:outline-none text-xs"
+                                        >
+                                            <option value="unknown">Type</option>
+                                            <option value="web-app">Web App</option>
+                                            <option value="game">Game</option>
+                                            <option value="tool">Tool</option>
+                                            <option value="library">Library</option>
+                                            <option value="bot">Bot</option>
+                                            <option value="research">Research</option>
+                                        </select>
+                                        <button
+                                            type="submit"
+                                            disabled={addingRepo || !addRepoUrl?.trim()}
+                                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded text-xs font-medium transition-all flex items-center gap-1.5 min-w-[60px] justify-center"
+                                        >
+                                            {addingRepo ? (
+                                                <>
+                                                    <RefreshCw className="h-3 w-3 animate-spin" />
+                                                    <span>Adding</span>
+                                                </>
+                                            ) : 'Add'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={onToggleAddRepo}
+                                            className="p-1 text-slate-400 hover:text-slate-200"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </form>
+                                ) : (
                                     <button
-                                        type="submit"
-                                        disabled={addingRepo || !addRepoUrl?.trim()}
-                                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded text-xs font-medium transition-all flex items-center gap-1.5 min-w-[60px] justify-center"
+                                        onClick={() => {
+                                            if (showFilters) onToggleFilters?.();
+                                            onToggleAddRepo();
+                                        }}
+                                        className="flex items-center gap-1.5 text-sm font-medium text-slate-300 group-hover/add:text-emerald-400 transition-colors"
                                     >
-                                        {addingRepo ? (
-                                            <>
-                                                <RefreshCw className="h-3 w-3 animate-spin" />
-                                                <span>Adding</span>
-                                            </>
-                                        ) : 'Add'}
+                                        <Plus className="h-4 w-4" />
+                                        <span>Add</span>
                                     </button>
-                                    <button
-                                        type="button"
-                                        onClick={onToggleAddRepo}
-                                        className="p-1 text-slate-400 hover:text-slate-200"
-                                    >
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                </form>
-                            ) : (
-                                <button
-                                    onClick={() => {
-                                        if (showFilters) onToggleFilters?.();
-                                        onToggleAddRepo();
-                                    }}
-                                    className="flex items-center gap-1.5 text-sm font-medium text-slate-300 group-hover/add:text-emerald-400 transition-colors"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    <span>Add</span>
-                                </button>
-                            )}
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Compact Filters */}
-                    <div className="relative group/filter">
-                        <div className={`absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg opacity-0 group-hover/filter:opacity-20 blur transition-all duration-300 ${showFilters ? 'opacity-30' : ''}`}></div>
-                        <div className={`relative flex items-center gap-2 bg-slate-800/90 border rounded-lg transition-all duration-300 ${
-                            showFilters 
-                                ? 'border-blue-600/50 shadow-lg shadow-blue-600/20 pr-2 py-2' 
+                        {/* Compact Filters */}
+                        <div className="relative group/filter">
+                            <div className={`absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg opacity-0 group-hover/filter:opacity-20 blur transition-all duration-300 ${showFilters ? 'opacity-30' : ''}`}></div>
+                            <div className={`relative flex items-center gap-2 bg-slate-800/90 border rounded-lg transition-all duration-300 ${showFilters
+                                ? 'border-blue-600/50 shadow-lg shadow-blue-600/20 pr-2 py-2'
                                 : hasActiveFilters
                                     ? 'border-purple-600/50 px-3 py-2'
                                     : 'border-slate-700 hover:border-blue-600/30 px-3 py-2'
-                        }`}>
-                            {showFilters ? (
-                                <div className="flex items-center gap-1.5">
-                                    <select
-                                        value={filterType}
-                                        onChange={(e) => onFilterTypeChange?.(e.target.value as RepoType | 'all')}
-                                        className="px-3 py-1.5 bg-slate-700/60 border-2 border-purple-500/60 rounded-lg text-slate-100 hover:border-purple-400/80 hover:shadow-sm hover:shadow-purple-500/30 focus:outline-none focus:border-purple-400 transition-all duration-200 text-sm font-medium cursor-pointer"
-                                    >
-                                        <option value="all" className="bg-slate-900 text-slate-300">Type</option>
-                                        {repoTypes.map((t) => (
-                                            <option key={t} value={t} className="bg-slate-900 text-slate-300">
-                                                {t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' ')}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        value={filterLanguage}
-                                        onChange={(e) => onFilterLanguageChange?.(e.target.value)}
-                                        className="px-3 py-1.5 bg-slate-700/60 border-2 border-blue-500/60 rounded-lg text-slate-100 hover:border-blue-400/80 hover:shadow-sm hover:shadow-blue-500/30 focus:outline-none focus:border-blue-400 transition-all duration-200 text-sm font-medium cursor-pointer"
-                                    >
-                                        <option value="all" className="bg-slate-900 text-slate-300">Language</option>
-                                        {languages.sort().map((lang) => {
-                                            const colorClass = getLanguageColor(lang);
-                                            return (
-                                                <option key={lang} value={lang} className={`bg-slate-900 ${colorClass} font-semibold`}>
-                                                    {lang}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                    <select
-                                        value={filterFork}
-                                        onChange={(e) => onFilterForkChange?.(e.target.value as 'all' | 'no-forks' | 'forks-only')}
-                                        className="px-3 py-1.5 bg-slate-700/60 border-2 border-fuchsia-500/60 rounded-lg text-slate-100 hover:border-fuchsia-400/80 hover:shadow-sm hover:shadow-fuchsia-500/30 focus:outline-none focus:border-fuchsia-400 transition-all duration-200 text-sm font-medium cursor-pointer"
-                                    >
-                                        <option value="all" className="bg-slate-900 text-slate-300">Fork</option>
-                                        <option value="no-forks" className="bg-slate-900 text-slate-300">No Forks</option>
-                                        <option value="forks-only" className="bg-slate-900 text-slate-300">Forks Only</option>
-                                    </select>
-                                    {hasActiveFilters && (
-                                        <button
-                                            onClick={onClearFilters}
-                                            className="px-2 py-1 text-sm text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded transition-colors font-medium"
+                                }`}>
+                                {showFilters ? (
+                                    <div className="flex items-center gap-1.5">
+                                        <select
+                                            value={filterType}
+                                            onChange={(e) => onFilterTypeChange?.(e.target.value as RepoType | 'all')}
+                                            className="px-3 py-1.5 bg-slate-700/60 border-2 border-purple-500/60 rounded-lg text-slate-100 hover:border-purple-400/80 hover:shadow-sm hover:shadow-purple-500/30 focus:outline-none focus:border-purple-400 transition-all duration-200 text-sm font-medium cursor-pointer"
                                         >
-                                            Clear
+                                            <option value="all" className="bg-slate-900 text-slate-300">Type</option>
+                                            {repoTypes.map((t) => (
+                                                <option key={t} value={t} className="bg-slate-900 text-slate-300">
+                                                    {t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' ')}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <select
+                                            value={filterLanguage}
+                                            onChange={(e) => onFilterLanguageChange?.(e.target.value)}
+                                            className="px-3 py-1.5 bg-slate-700/60 border-2 border-blue-500/60 rounded-lg text-slate-100 hover:border-blue-400/80 hover:shadow-sm hover:shadow-blue-500/30 focus:outline-none focus:border-blue-400 transition-all duration-200 text-sm font-medium cursor-pointer"
+                                        >
+                                            <option value="all" className="bg-slate-900 text-slate-300">Language</option>
+                                            {languages.sort().map((lang) => {
+                                                const colorClass = getLanguageColor(lang);
+                                                return (
+                                                    <option key={lang} value={lang} className={`bg-slate-900 ${colorClass} font-semibold`}>
+                                                        {lang}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+                                        <select
+                                            value={filterFork}
+                                            onChange={(e) => onFilterForkChange?.(e.target.value as 'all' | 'no-forks' | 'forks-only')}
+                                            className="px-3 py-1.5 bg-slate-700/60 border-2 border-fuchsia-500/60 rounded-lg text-slate-100 hover:border-fuchsia-400/80 hover:shadow-sm hover:shadow-fuchsia-500/30 focus:outline-none focus:border-fuchsia-400 transition-all duration-200 text-sm font-medium cursor-pointer"
+                                        >
+                                            <option value="all" className="bg-slate-900 text-slate-300">Fork</option>
+                                            <option value="no-forks" className="bg-slate-900 text-slate-300">No Forks</option>
+                                            <option value="forks-only" className="bg-slate-900 text-slate-300">Forks Only</option>
+                                        </select>
+                                        {hasActiveFilters && (
+                                            <button
+                                                onClick={onClearFilters}
+                                                className="px-2 py-1 text-sm text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded transition-colors font-medium"
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={onToggleFilters}
+                                            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 rounded transition-colors"
+                                        >
+                                            <X className="h-3 w-3" />
                                         </button>
-                                    )}
+                                    </div>
+                                ) : (
                                     <button
-                                        onClick={onToggleFilters}
-                                        className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 rounded transition-colors"
+                                        onClick={() => {
+                                            if (showAddRepo) onToggleAddRepo?.();
+                                            onToggleFilters?.();
+                                        }}
+                                        className="flex items-center gap-1.5 text-sm font-medium transition-colors relative"
+                                        data-tour="filters"
                                     >
-                                        <X className="h-3 w-3" />
+                                        <Filter className={`h-4 w-4 ${hasActiveFilters ? 'text-purple-400' : 'text-slate-300 group-hover/filter:text-blue-400'}`} />
+                                        <span className={hasActiveFilters ? 'text-purple-400' : 'text-slate-300 group-hover/filter:text-blue-400'}>
+                                            Filters
+                                        </span>
+                                        {repoCount && (
+                                            <span className="pill relative overflow-hidden text-sky-300 font-bold shadow-lg shadow-sky-500/20 ml-1 text-[10px]">
+                                                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent motion-safe:animate-[shimmer_3s_infinite]"></span>
+                                                <span className="relative">{repoCount.filtered}/{repoCount.total}</span>
+                                            </span>
+                                        )}
+                                        {hasActiveFilters && (
+                                            <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                                                <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                                            </span>
+                                        )}
                                     </button>
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => {
-                                        if (showAddRepo) onToggleAddRepo?.();
-                                        onToggleFilters?.();
-                                    }}
-                                    className="flex items-center gap-1.5 text-sm font-medium transition-colors relative"
-                                    data-tour="filters"
-                                >
-                                    <Filter className={`h-4 w-4 ${hasActiveFilters ? 'text-purple-400' : 'text-slate-300 group-hover/filter:text-blue-400'}`} />
-                                    <span className={hasActiveFilters ? 'text-purple-400' : 'text-slate-300 group-hover/filter:text-blue-400'}>
-                                        Filters
-                                    </span>
-                                    {repoCount && (
-                                        <span className="pill relative overflow-hidden text-sky-300 font-bold shadow-lg shadow-sky-500/20 ml-1 text-[10px]">
-                                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent motion-safe:animate-[shimmer_3s_infinite]"></span>
-                                            <span className="relative">{repoCount.filtered}/{repoCount.total}</span>
-                                        </span>
-                                    )}
-                                    {hasActiveFilters && (
-                                        <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                                            <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-                                        </span>
-                                    )}
-                                </button>
-                            )}
+                                )}
+                            </div>
                         </div>
+                        {/* Show Hidden Button */}
+                        <button
+                            onClick={onToggleHidden}
+                            className={`p-2 rounded-lg border transition-all duration-300 ${showHidden
+                                ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400 shadow-lg shadow-indigo-500/20'
+                                : 'bg-slate-800/90 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-slate-300'
+                                }`}
+                            title={showHidden ? "Hide hidden repositories" : "Show hidden repositories"}
+                        >
+                            {/* Using Eye/EyeOff logic, assuming Eye is 'show' state meaning active */}
+                            <div className="relative">
+                                <div className={`absolute inset-0 bg-indigo-500 rounded-full blur-sm opacity-0 transition-opacity ${showHidden ? 'opacity-20' : ''}`}></div>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className={`relative transition-transform ${showHidden ? 'scale-110' : ''}`}
+                                >
+                                    {showHidden ? (
+                                        <>
+                                            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                                            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                                            <line x1="2" x2="22" y1="2" y2="22" />
+                                        </>
+                                    )}
+                                </svg>
+                            </div>
+                        </button>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Sync Button */}
-            {onSync && isAuthenticated && (
-                <button
-                    onClick={onSync}
-                    disabled={syncing}
-                    className="flex items-center gap-1.5 px-3 py-2 btn-primary-gradient disabled:bg-slate-800 disabled:cursor-not-allowed rounded-lg transition-colors font-medium shadow-lg text-sm"
-                    data-tour="sync-all"
-                >
-                    <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-                    {syncing ? 'Syncing...' : 'Sync'}
-                </button>
-            )}
+                {/* Sync Button */}
+                {onSync && isAuthenticated && (
+                    <button
+                        onClick={onSync}
+                        disabled={syncing}
+                        className="flex items-center gap-1.5 px-3 py-2 btn-primary-gradient disabled:bg-slate-800 disabled:cursor-not-allowed rounded-lg transition-colors font-medium shadow-lg text-sm"
+                        data-tour="sync-all"
+                    >
+                        <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                        {syncing ? 'Syncing...' : 'Sync'}
+                    </button>
+                )}
 
                 {session ? (
                     /* Enhanced Profile Section with Integrated Sign Out and Status Pills */
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 rounded-lg opacity-25 group-hover:opacity-40 blur transition duration-300"></div>
-                        <div className={`relative flex items-center bg-slate-900/90 rounded-lg border border-slate-700/50 backdrop-blur-sm transition-all duration-300 ease-out overflow-visible gap-3 ${
-                            showStatusPills ? 'py-8 pl-28 pr-16' : 'py-3 pl-4 pr-0 group-hover:pr-10'
-                        }`}>
-                            
+                        <div className={`relative flex items-center bg-slate-900/90 rounded-lg border border-slate-700/50 backdrop-blur-sm transition-all duration-300 ease-out overflow-visible gap-3 ${showStatusPills ? 'py-8 pl-28 pr-16' : 'py-3 pl-4 pr-0 group-hover:pr-10'
+                            }`}>
+
                             {/* Auth Pill - Top */}
-                            <div className={`absolute left-4 top-2 transition-all duration-500 ease-out origin-right ${
-                                showStatusPills 
-                                    ? 'opacity-100 scale-100' 
-                                    : 'opacity-0 scale-50 pointer-events-none'
-                            }`} data-tour="auth-status">
-                                <span 
-                                    className={`pill relative overflow-hidden flex items-center gap-1 font-bold shadow-lg group/auth cursor-pointer transition-all duration-300 ease-out ${!session ? 'pl-2' : ''} ${
-                                        session 
-                                            ? 'pill-success shadow-emerald-500/30' 
-                                            : 'pill-warn shadow-amber-500/30'
-                                    }`}
+                            <div className={`absolute left-4 top-2 transition-all duration-500 ease-out origin-right ${showStatusPills
+                                ? 'opacity-100 scale-100'
+                                : 'opacity-0 scale-50 pointer-events-none'
+                                }`} data-tour="auth-status">
+                                <span
+                                    className={`pill relative overflow-hidden flex items-center gap-1 font-bold shadow-lg group/auth cursor-pointer transition-all duration-300 ease-out ${!session ? 'pl-2' : ''} ${session
+                                        ? 'pill-success shadow-emerald-500/30'
+                                        : 'pill-warn shadow-amber-500/30'
+                                        }`}
                                 >
                                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent motion-safe:animate-[shimmer_2s_infinite]"></span>
                                     <span className="relative flex items-center">
@@ -323,19 +362,17 @@ export default function Header(props: HeaderProps = {}) {
                             </div>
 
                             {/* Gemini Pill - Middle */}
-                            <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-500 ease-out origin-right ${
-                                showStatusPills 
-                                    ? 'opacity-100 scale-100' 
-                                    : 'opacity-0 scale-50 pointer-events-none'
-                            }`} data-tour="gemini-status">
-                                <span 
-                                    className={`pill relative overflow-hidden flex items-center gap-1 font-bold shadow-lg group/gemini cursor-pointer transition-all duration-300 ease-out ${!geminiStatus.healthy && !geminiStatus.loading ? 'pl-2' : ''} ${
-                                        geminiStatus.loading 
-                                            ? 'text-slate-400 shadow-slate-500/20' 
-                                            : geminiStatus.healthy 
-                                                ? 'pill-success shadow-emerald-500/30' 
-                                                : 'pill-error shadow-red-500/30'
-                                    }`}
+                            <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-500 ease-out origin-right ${showStatusPills
+                                ? 'opacity-100 scale-100'
+                                : 'opacity-0 scale-50 pointer-events-none'
+                                }`} data-tour="gemini-status">
+                                <span
+                                    className={`pill relative overflow-hidden flex items-center gap-1 font-bold shadow-lg group/gemini cursor-pointer transition-all duration-300 ease-out ${!geminiStatus.healthy && !geminiStatus.loading ? 'pl-2' : ''} ${geminiStatus.loading
+                                        ? 'text-slate-400 shadow-slate-500/20'
+                                        : geminiStatus.healthy
+                                            ? 'pill-success shadow-emerald-500/30'
+                                            : 'pill-error shadow-red-500/30'
+                                        }`}
                                 >
                                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent motion-safe:animate-[shimmer_2s_infinite]"></span>
                                     <span className="relative flex items-center">
@@ -359,12 +396,11 @@ export default function Header(props: HeaderProps = {}) {
                             </div>
 
                             {/* Version Pill - Bottom Left */}
-                            <div className={`absolute left-4 bottom-2 transition-all duration-500 ease-out origin-right ${
-                                showStatusPills 
-                                    ? 'opacity-100 scale-100' 
-                                    : 'opacity-0 scale-50 pointer-events-none'
-                            }`} data-tour="version-info">
-                                <span 
+                            <div className={`absolute left-4 bottom-2 transition-all duration-500 ease-out origin-right ${showStatusPills
+                                ? 'opacity-100 scale-100'
+                                : 'opacity-0 scale-50 pointer-events-none'
+                                }`} data-tour="version-info">
+                                <span
                                     className="pill relative overflow-hidden flex items-center gap-1 text-sky-300 font-bold shadow-lg shadow-sky-500/30 group/version cursor-pointer transition-all duration-300 ease-out"
                                 >
                                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent motion-safe:animate-[shimmer_2s_infinite]"></span>
@@ -378,11 +414,10 @@ export default function Header(props: HeaderProps = {}) {
                             </div>
 
                             {/* Tour Pill - Bottom Right */}
-                            <div className={`absolute right-16 bottom-2 transition-all duration-500 ease-out origin-left ${
-                                showStatusPills 
-                                    ? 'opacity-100 scale-100' 
-                                    : 'opacity-0 scale-50 pointer-events-none'
-                            }`}>
+                            <div className={`absolute right-16 bottom-2 transition-all duration-500 ease-out origin-left ${showStatusPills
+                                ? 'opacity-100 scale-100'
+                                : 'opacity-0 scale-50 pointer-events-none'
+                                }`}>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -402,7 +437,7 @@ export default function Header(props: HeaderProps = {}) {
                             </div>
 
                             {session.user?.image ? (
-                                <button 
+                                <button
                                     onClick={() => setShowStatusPills(!showStatusPills)}
                                     className="relative cursor-pointer focus:outline-none"
                                     title="Toggle status indicators"
@@ -433,7 +468,7 @@ export default function Header(props: HeaderProps = {}) {
                                     </span>
                                 )}
                             </div>
-                            
+
                             {/* Sign Out Button - Overlays right side on hover */}
                             <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto">
                                 <button

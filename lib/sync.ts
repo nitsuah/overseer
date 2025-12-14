@@ -13,6 +13,36 @@ import logger from './log';
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
+    const lastCommitDate = repo.pushedAt; // Approximation
+
+    await db`
+        INSERT INTO repos (
+            name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, 
+            last_synced, updated_at, last_commit_date, is_archived
+        )
+        VALUES (
+            ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
+            ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
+            NOW(), NOW(), ${lastCommitDate}, ${repo.archived}
+        )
+        ON CONFLICT (name) DO UPDATE SET
+          description = EXCLUDED.description,
+          language = EXCLUDED.language,
+          stars = EXCLUDED.stars,
+          forks = EXCLUDED.forks,
+          open_issues = EXCLUDED.open_issues,
+          url = EXCLUDED.url,
+          homepage = EXCLUDED.homepage,
+          topics = EXCLUDED.topics,
+          last_synced = NOW(),
+          updated_at = NOW(),
+          last_commit_date = EXCLUDED.last_commit_date,
+          is_archived = EXCLUDED.is_archived
+    `;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any) {
     const owner = repo.fullName.split('/')[0];
 
@@ -244,21 +274,21 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             logger.debug(`[SYNC] ${repo.name} - Tasks content preview:`, tasksContent.substring(0, 200));
         }
         await db`DELETE FROM tasks WHERE repo_id = ${repoId}`;
-        
+
         // Track seen task IDs to handle duplicates
         const seenTaskIds = new Set<string>();
-        
+
         for (const task of tasksData.tasks) {
             let taskId = task.id;
             let counter = 1;
-            
+
             // If duplicate task_id, append counter to make it unique
             while (seenTaskIds.has(taskId)) {
                 taskId = `${task.id}-${counter}`;
                 counter++;
             }
             seenTaskIds.add(taskId);
-            
+
             await db`
                 INSERT INTO tasks (repo_id, task_id, title, status, section, subsection)
                 VALUES (${repoId}, ${taskId}, ${task.title}, ${task.status}, ${task.section}, ${task.subsection})
@@ -302,7 +332,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             }
         }
     }
-    
+
     // Always update coverage_score (set to NULL if no coverage found)
     await db`
         UPDATE repos 

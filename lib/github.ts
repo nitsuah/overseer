@@ -17,6 +17,7 @@ export interface RepoMetadata {
   updatedAt: string;
   pushedAt: string;
   isFork: boolean;
+  archived: boolean;
 }
 
 export interface BranchInfo {
@@ -46,10 +47,10 @@ export class GitHubClient {
     this.owner = owner;
     this.token = token;
   }
-  
-    public getOctokit(): Octokit {
-      return this.octokit;
-    }
+
+  public getOctokit(): Octokit {
+    return this.octokit;
+  }
 
   async listRepos(): Promise<RepoMetadata[]> {
     const { data } = await this.octokit.repos.listForAuthenticatedUser({
@@ -73,6 +74,7 @@ export class GitHubClient {
       updatedAt: repo.updated_at || new Date().toISOString(),
       pushedAt: repo.pushed_at || new Date().toISOString(),
       isFork: repo.fork || false,
+      archived: repo.archived || false,
     }));
   }
 
@@ -98,6 +100,7 @@ export class GitHubClient {
       updatedAt: data.updated_at || new Date().toISOString(),
       pushedAt: data.pushed_at || new Date().toISOString(),
       isFork: data.fork || false,
+      archived: data.archived || false,
     };
   }
 
@@ -217,7 +220,7 @@ export class GitHubClient {
     owner?: string
   ): Promise<string> {
     const repoOwner = owner || this.owner;
-    
+
     // Check if repo is accessible and not archived
     try {
       const { data: repoData } = await this.octokit.repos.get({
@@ -229,7 +232,7 @@ export class GitHubClient {
         disabled: repoData.disabled,
         permissions: repoData.permissions,
       });
-      
+
       if (repoData.archived) {
         throw new Error(`Repository ${repoOwner}/${repo} is archived and cannot accept changes`);
       }
@@ -237,7 +240,7 @@ export class GitHubClient {
       console.error('[createPrForFiles] Failed to get repo info:', error);
       throw error;
     }
-    
+
     // 1. Get default branch SHA
     // Use repository's default branch, not hardcoded 'main'
     const defaultBranch = (await this.octokit.repos.get({ owner: repoOwner, repo })).data.default_branch;
@@ -319,7 +322,7 @@ export class GitHubClient {
     const messageParts = message.split('\n\n');
     const title = messageParts[0];
     const body = messageParts.length > 1 ? messageParts.slice(1).join('\n\n') : `Automated PR to add files:\n\n${files.map(f => `- ${f.path}`).join('\n')}`;
-    
+
     const { data: prData } = await this.octokit.pulls.create({
       owner: repoOwner,
       repo,
@@ -442,7 +445,7 @@ export class GitHubClient {
         critical,
         high,
       };
-    } catch (error) {
+    } catch {
       // If API call fails (403 = lack of permissions, 404 = not found, etc.), return zeros
       // This is expected for repos without dependabot enabled or insufficient permissions
       return { total: 0, critical: 0, high: 0 };

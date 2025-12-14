@@ -14,7 +14,8 @@ import { RepoType } from '@/lib/repo-type';
 
 export default function Dashboard() {
   const { data: session } = useSession();
-  const { repos, setRepos, loading, refetch } = useRepos();
+  const [showHidden, setShowHidden] = useState(false);
+  const { repos, setRepos, loading, refetch } = useRepos(showHidden);
   const { repoDetails, fetchRepoDetails, fetchAllRepoDetails } = useRepoDetails();
   const { expandedRepos, toggleRepo } = useRepoExpansion();
 
@@ -39,6 +40,7 @@ export default function Dashboard() {
     setPreviewModalOpen,
     handleAddRepo,
     handleRemoveRepo,
+    handleRestoreRepo,
     handleFixAllDocs,
     handleFixDoc,
     handleFixStandard,
@@ -67,10 +69,15 @@ export default function Dashboard() {
       setSyncing(true);
       const res = await fetch('/api/sync-repos', { method: 'POST' });
       if (res.ok) {
+        const data = await res.json();
         await refetch();
+        setToastMessage(data.message || 'Sync started successfully!');
+      } else {
+        const error = await res.json();
+        setToastMessage(`Sync failed: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Failed to sync repos:', error);
+      setToastMessage('Failed to sync repos - network error');
     } finally {
       setSyncing(false);
     }
@@ -143,6 +150,8 @@ export default function Dashboard() {
         onFilterForkChange={setFilterFork}
         onClearFilters={clearFilters}
         onStartTour={() => setShowTour(true)}
+        showHidden={showHidden}
+        onToggleHidden={() => setShowHidden(!showHidden)}
       />
       <div className="px-6 py-8 space-y-6">
         {filteredRepos.length === 0 ? (
@@ -197,6 +206,7 @@ export default function Dashboard() {
                     onFixAllPractices={() => handleFixAllPractices(repo.full_name)}
                     onGenerateSummary={() => handleGenerateSummary(repo.name)}
                     onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
+                    onUnhide={() => handleRestoreRepo(repo.name)}
                   />
                 ))}
               </tbody>

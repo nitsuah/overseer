@@ -10,14 +10,16 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ### v0.1.8: Performance & Rate Limiting
 
+- [x] Add sorting to Repo list ui (name, health, stars, updated, language columns)
+- [x] Improve Error Handling in GitHub API Client - Standardized error messages and logging in lib/github.ts
+- [x] Display rate limit status in UI with warning when approaching limits (RateLimitIndicator component)
+- [x] Add delay batching between repos during sync to reduce rate limit pressure (configurable SYNC_DELAY_MS=2000)
+- [x] Implement exponential backoff for rate limit retries (3 attempts with backoff)
+- [x] Implement smart caching for GitHub API calls using content_hash from doc_status (in-memory cache with 5-min TTL)
+- [x] Add ETag support to skip unchanged file fetches (integrated in getFileContent and listRepos)
+- [x] Fix TypeScript errors in scripts/debug-skyview.ts
+- [x] Fix failing Playwright tests in dashboard.spec.ts
 - [ ] **Test Coverage Target**: Increase coverage from 60% to 70%+ with additional utility and component tests
-- [ ] Add sorting to Repo list ui
-- [ ] Implement smart caching for GitHub API calls using content_hash from doc_status
-- [ ] Improve Error Handling in GitHub API Client - Standardize error messages and logging in lib/github.ts
-- [ ] Add ETag support to skip unchanged file fetches
-- [ ] Add delay batching between repos during sync to reduce rate limit pressure
-- [ ] Display rate limit status in UI with warning when approaching limits
-- [ ] Consider implementing exponential backoff for rate limit retries
 
 ### v0.1.9: Security & Tracking
 

@@ -7,6 +7,9 @@ import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { syncRepo, syncRepoMetadata } from '@/lib/sync';
 
 const GITHUB_API_TIMEOUT_MS = 10000;
+const SYNC_DELAY_MS = 2000; // Delay between repo syncs to reduce rate limit pressure
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 1000; // Base delay for exponential backoff
 
 export async function POST() {
     try {
@@ -76,16 +79,30 @@ export async function POST() {
             // This fills in the health scores, issues, PRs, etc. slowly to avoid rate limits
             logger.info('Starting Phase 2: Detailed Health Sync (Background)');
 
-            // Helper to sync details with delay
+            // Helper to sync details with delay and exponential backoff retry
             const syncDetailsWithDelay = async (repoMeta: RepoMetadata, client: GitHubClient) => {
-                try {
-                    // 2 second delay between repos to be gentle on rate limits
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    await syncRepo(repoMeta, client, db);
-                    logger.info(`✓ Detailed sync completed for ${repoMeta.name}`);
-                } catch (error) {
-                    const message = error instanceof Error ? error.message : 'Unknown error';
-                    logger.warn(`Failed detailed sync for ${repoMeta.name}:`, message);
+                // Delay between repos to be gentle on rate limits
+                await new Promise(resolve => setTimeout(resolve, SYNC_DELAY_MS));
+                
+                let lastError: Error | null = null;
+                for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
+                    try {
+                        await syncRepo(repoMeta, client, db);
+                        logger.info(`✓ Detailed sync completed for ${repoMeta.name}${attempt > 0 ? ` (attempt ${attempt + 1})` : ''}`);
+                        return; // Success, exit the retry loop
+                    } catch (error) {
+                        lastError = error instanceof Error ? error : new Error('Unknown error');
+                        const isRateLimit = lastError.message.includes('rate limit') || lastError.message.includes('secondary rate limit');
+                        
+                        if (isRateLimit && attempt < MAX_RETRY_ATTEMPTS - 1) {
+                            // Exponential backoff: 1s, 2s, 4s
+                            const backoffDelay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
+                            logger.warn(`Rate limit hit for ${repoMeta.name}, retrying in ${backoffDelay}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`);
+                            await new Promise(resolve => setTimeout(resolve, backoffDelay));
+                        } else if (attempt === MAX_RETRY_ATTEMPTS - 1) {
+                            logger.warn(`Failed detailed sync for ${repoMeta.name} after ${MAX_RETRY_ATTEMPTS} attempts: ${lastError.message}`);
+                        }
+                    }
                 }
             };
 

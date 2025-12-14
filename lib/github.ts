@@ -1,6 +1,8 @@
 import { Octokit } from '@octokit/rest';
 import { createOctokitClient } from '@/lib/githubClient';
+import { githubCache } from '@/lib/github-cache';
 
+export { githubCache };
 export interface RepoMetadata {
   name: string;
   fullName: string;
@@ -53,29 +55,60 @@ export class GitHubClient {
   }
 
   async listRepos(): Promise<RepoMetadata[]> {
-    const { data } = await this.octokit.repos.listForAuthenticatedUser({
-      sort: 'updated',
-      per_page: 100,
-    });
+    const cacheKey = 'repos:list';
+    
+    // Check cache first
+    const cached = githubCache.get(cacheKey);
+    const headers: Record<string, string> = {};
+    
+    if (cached?.etag) {
+      headers['If-None-Match'] = cached.etag;
+    }
 
-    return data.map((repo) => ({
-      name: repo.name,
-      fullName: repo.full_name,
-      description: repo.description,
-      language: repo.language,
-      stars: repo.stargazers_count,
-      forks: repo.forks_count,
-      openIssues: repo.open_issues_count,
-      defaultBranch: repo.default_branch,
-      url: repo.html_url,
-      homepage: repo.homepage,
-      topics: repo.topics || [],
-      createdAt: repo.created_at || new Date().toISOString(),
-      updatedAt: repo.updated_at || new Date().toISOString(),
-      pushedAt: repo.pushed_at || new Date().toISOString(),
-      isFork: repo.fork || false,
-      archived: repo.archived || false,
-    }));
+    try {
+      const { data, headers: responseHeaders } = await this.octokit.repos.listForAuthenticatedUser({
+        sort: 'updated',
+        per_page: 100,
+        headers,
+      });
+
+      const repos = data.map((repo) => ({
+        name: repo.name,
+        fullName: repo.full_name,
+        description: repo.description,
+        language: repo.language,
+        stars: repo.stargazers_count,
+        forks: repo.forks_count,
+        openIssues: repo.open_issues_count,
+        defaultBranch: repo.default_branch,
+        url: repo.html_url,
+        homepage: repo.homepage,
+        topics: repo.topics || [],
+        createdAt: repo.created_at || new Date().toISOString(),
+        updatedAt: repo.updated_at || new Date().toISOString(),
+        pushedAt: repo.pushed_at || new Date().toISOString(),
+        isFork: repo.fork || false,
+        archived: repo.archived || false,
+      }));
+
+      // Cache the result with ETag
+      const etag = responseHeaders.etag;
+      if (etag) {
+        githubCache.set(cacheKey, repos, etag);
+      }
+
+      return repos;
+    } catch (error: unknown) {
+      const err = error as { status?: number };
+      
+      // If 304 Not Modified, return cached content
+      if (err.status === 304 && cached) {
+        logger.debug('[GitHub] Using cached repo list');
+        return cached.data as RepoMetadata[];
+      }
+      
+      throw error;
+    }
   }
 
   async getRepo(owner: string, repo: string): Promise<RepoMetadata> {
@@ -105,19 +138,49 @@ export class GitHubClient {
   }
 
   async getFileContent(repo: string, path: string, owner?: string): Promise<string | null> {
+    const repoOwner = owner || this.owner;
+    const cacheKey = `file:${repoOwner}/${repo}/${path}`;
+    
     try {
-      const { data } = await this.octokit.repos.getContent({
-        owner: owner || this.owner,
+      // Check cache first
+      const cached = githubCache.get(cacheKey);
+      const headers: Record<string, string> = {};
+      
+      if (cached?.etag) {
+        headers['If-None-Match'] = cached.etag;
+      }
+
+      const { data, headers: responseHeaders } = await this.octokit.repos.getContent({
+        owner: repoOwner,
         repo,
         path,
+        headers,
       });
 
       if ('content' in data && data.type === 'file') {
-        return Buffer.from(data.content, 'base64').toString('utf-8');
+        const content = Buffer.from(data.content, 'base64').toString('utf-8');
+        
+        // Cache the result with ETag
+        const etag = responseHeaders.etag;
+        if (etag) {
+          githubCache.set(cacheKey, content, etag);
+        }
+        
+        return content;
       }
       return null;
     } catch (error: unknown) {
       const err = error as { status?: number };
+      
+      // If 304 Not Modified, return cached content
+      if (err.status === 304) {
+        const cached = githubCache.get(cacheKey);
+        if (cached) {
+          logger.debug(`[GitHub] Using cached file: ${repoOwner}/${repo}/${path}`);
+          return cached.data as string;
+        }
+      }
+      
       if (err.status === 404) {
         return null;
       }

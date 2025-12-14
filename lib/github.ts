@@ -1,6 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import { createOctokitClient } from '@/lib/githubClient';
 import { githubCache } from '@/lib/github-cache';
+import logger from '@/lib/log';
 
 export { githubCache };
 export interface RepoMetadata {

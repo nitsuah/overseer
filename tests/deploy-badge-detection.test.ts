@@ -44,13 +44,13 @@ test('mixed badges: CI + Deploy yields healthy', async () => {
   expect(deploy?.status).toBe('healthy');
 });
 
-test('low-confidence deploy indicator yields needs_attention', async () => {
+test('low-confidence deploy indicator yields dormant', async () => {
   const readme = `
 ![Status](https://img.shields.io/badge/deploy-ready-blue)
 `;
   const res = await checkBestPractices('owner','repo', mockOctokit(), [], readme);
   const deploy = res.practices.find(p=>p.type==='deploy_badge');
-  expect(deploy?.status).toBe('needs_attention');
+  expect(deploy?.status).toBe('dormant');
 });
 
 test('CI badge on non-deployable repo (tool/library) yields healthy', async () => {
@@ -63,12 +63,12 @@ test('CI badge on non-deployable repo (tool/library) yields healthy', async () =
   expect(deploy?.details.isDeployable).toBe(false);
 });
 
-test('CI badge on deployable repo (has netlify.toml) yields needs_attention', async () => {
+test('CI badge on deployable repo (has netlify.toml) yields dormant', async () => {
   const readme = `[![CI](https://github.com/nitsuah/games/actions/workflows/ci.yml/badge.svg)](https://github.com/nitsuah/games/actions)`;
   const fileList: string[] = ['.github/workflows/ci.yml', 'netlify.toml', 'package.json']; // Has deploy config
   const res = await checkBestPractices('owner','repo', mockOctokit(), fileList, readme);
   const deploy = res.practices.find(p=>p.type==='deploy_badge');
-  expect(deploy?.status).toBe('needs_attention'); // Should have deploy badge since it's deployable
+  expect(deploy?.status).toBe('dormant'); // Should have deploy badge since it's deployable
   expect(deploy?.details.hasCI).toBe(true);
   expect(deploy?.details.isDeployable).toBe(true);
 });

@@ -176,7 +176,7 @@ export function BestPracticesSection({
                     </div>
                   </div>
 
-                  {practice.practice_type === 'deploy_badge' && practice.status === 'needs_attention' && (
+                  {practice.practice_type === 'deploy_badge' && practice.status === 'dormant' && (
                     <div className="mt-2 ml-6 text-xs text-slate-400">
                       <div>Hint: Detected a possible deploy-related badge but confidence is low.</div>
                       {Array.isArray(practice.details?.evidence) && practice.details.evidence.length > 0 && (

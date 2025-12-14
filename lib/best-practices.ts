@@ -7,22 +7,8 @@ import { Octokit } from '@octokit/rest';
  * - 'dormant': The best practice exists but is not actively enforced or used.
  * - 'malformed': The best practice exists but is incorrectly configured or broken.
  * - 'healthy': The best practice is present and correctly configured.
- * - 'needs_attention': The best practice exists but requires human review or intervention due to ambiguous, incomplete, or potentially problematic configuration.
- *
- * Use 'needs_attention' when the state does not clearly fit 'dormant' (inactive but valid) or 'malformed' (invalid/broken), but still warrants a maintainer's review.
  */
-/**
- * Represents the health state of a best practice check.
- *
- * - 'missing': The best practice is not present or not implemented.
- * - 'dormant': The best practice exists but is not actively enforced or used.
- * - 'malformed': The best practice exists but is incorrectly configured or broken.
- * - 'healthy': The best practice is present and correctly configured.
- * - 'needs_attention': The best practice exists but requires human review or intervention due to ambiguous, incomplete, or potentially problematic configuration.
- *
- * Use 'needs_attention' when the state does not clearly fit 'dormant' (inactive but valid) or 'malformed' (invalid/broken), but still warrants a maintainer's review.
- */
-export type HealthState = 'missing' | 'dormant' | 'malformed' | 'healthy' | 'needs_attention';
+export type HealthState = 'missing' | 'dormant' | 'malformed' | 'healthy';
 
 export interface BestPractice {
     type: string;
@@ -292,8 +278,8 @@ export async function checkBestPractices(
 
         deployBadgeStatus = hasDeploy ? 'healthy' : 
                 hasAnyCIorQABadge && !isLikelyDeployable ? 'healthy' : // CI badge is good enough for non-deployable repos
-                hasAnyCIorQABadge && isLikelyDeployable ? 'needs_attention' : // Has CI but should have deploy badge
-                evidences.some(e=>e.kind==='deploy' && e.confidence>=0.4) ? 'needs_attention' : 
+                hasAnyCIorQABadge && isLikelyDeployable ? 'dormant' : // Has CI but should have deploy badge
+                evidences.some(e=>e.kind==='deploy' && e.confidence>=0.4) ? 'dormant' : 
                 'missing';
         
         deployBadgeDetails = {

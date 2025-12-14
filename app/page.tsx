@@ -206,7 +206,6 @@ export default function Dashboard() {
                     onFixAllPractices={() => handleFixAllPractices(repo.full_name)}
                     onGenerateSummary={() => handleGenerateSummary(repo.name)}
                     onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
-                    showHidden={showHidden}
                     onUnhide={() => handleRestoreRepo(repo.name)}
                   />
                 ))}

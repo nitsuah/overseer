@@ -7,6 +7,7 @@ import { useGeminiStatus } from "@/hooks/useGeminiStatus";
 import { getLanguageColor } from "@/lib/language-colors";
 import { useState } from "react";
 import { RepoType } from "@/lib/repo-type";
+import { RateLimitIndicator } from "./RateLimitIndicator";
 
 interface HeaderProps {
     repoCount?: { filtered: number; total: number };
@@ -109,6 +110,9 @@ export default function Header(props: HeaderProps = {}) {
 
             {/* Right Cluster */}
             <div className="flex items-center gap-3">
+                {/* Rate Limit Indicator */}
+                {session && <RateLimitIndicator />}
+                
                 {/* Repo Controls */}
                 {session && onToggleAddRepo && (
                     <div className="flex items-center gap-2">

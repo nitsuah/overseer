@@ -23,7 +23,7 @@ async function main() {
     console.log(JSON.stringify(repos, null, 2));
     
     // Get detailed best practices for skyview
-    const skyview = repos.find((r: {name: string}) => r.name === 'skyview');
+    const skyview = repos.find((r) => r.name === 'skyview');
     if (skyview) {
         const practices = await db`
             SELECT practice_type, status, details 

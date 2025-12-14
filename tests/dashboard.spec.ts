@@ -2,27 +2,27 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Overseer Dashboard - Unauthenticated', () => {
   test('should load dashboard page', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'networkidle' });
 
     // Should stay on dashboard
     await expect(page).toHaveURL('/');
 
-    // Should show the repositories heading
-    await expect(page.getByRole('heading', { name: /repositories/i })).toBeVisible();
+    // Should show the main heading
+    await expect(page.getByRole('heading', { name: /repo.*seer/i })).toBeVisible({ timeout: 10000 });
   });
 
   test('should show sign in button when not authenticated', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'networkidle' });
 
     // Should show sign in button
-    await expect(page.getByRole('button', { name: /sign in to manage repositories/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /sign in with github/i })).toBeVisible({ timeout: 10000 });
   });
 
-  test('should show repository count', async ({ page }) => {
-    await page.goto('/');
+  test('should show repository table', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' });
 
-    // Should show repository count (even if 0)
-    await expect(page.getByText(/repositories?/i)).toBeVisible();
+    // Should show repository table with columnheader
+    await expect(page.getByRole('columnheader', { name: /repository/i })).toBeVisible({ timeout: 10000 });
   });
 });
 

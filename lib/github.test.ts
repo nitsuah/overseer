@@ -71,6 +71,7 @@ describe('GitHubClient', () => {
                     fork: false,
                 },
             ],
+            headers: {},
         });
 
         const repos = await client.listRepos();
@@ -85,6 +86,7 @@ describe('GitHubClient', () => {
                 type: 'file',
                 content: Buffer.from('hello world').toString('base64'),
             },
+            headers: {},
         });
 
         const content = await client.getFileContent('repo-1', 'README.md');
@@ -93,6 +95,7 @@ describe('GitHubClient', () => {
             owner: 'fake-owner',
             repo: 'repo-1',
             path: 'README.md',
+            headers: {},
         });
     });
 

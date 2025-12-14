@@ -210,7 +210,11 @@ export async function checkBestPractices(
         }
     });
 
-    // 7. Deploy Badge (if README provided)
+    // 7. Deploy Badge
+    type Evidence = { url: string; alt?: string; confidence: number; kind: 'deploy'|'ci'|'qa'|'unknown' };
+    let deployBadgeStatus: HealthState = 'missing';
+    let deployBadgeDetails: { exists: boolean; evidence?: Evidence[]; hasCI?: boolean; isDeployable?: boolean } = { exists: false };
+    
     if (readmeContent) {
         // Check for common deployment badges
         // Robust detection of CI/CD and deploy badges via URL + alt-text keywords with scoring
@@ -231,7 +235,6 @@ export async function checkBestPractices(
         ];
         const altKeywords = /(deploy|deployment|deployed|ci|cd|build|pipeline|actions|netlify|vercel|render|pages|status)/i;
 
-        type Evidence = { url: string; alt?: string; confidence: number; kind: 'deploy'|'ci'|'qa'|'unknown' };
         const evidences: Evidence[] = [];
 
         function score(url: string, alt?: string): Evidence {
@@ -275,33 +278,38 @@ export async function checkBestPractices(
         (e.kind === 'ci' || e.kind === 'qa') && e.confidence >= 0.6
     );
     
-    // For non-deployable repos (tools, libraries, bots), CI badges are sufficient
-    const isLikelyDeployable = fileList.some(f => 
-        f.includes('netlify.toml') || 
-        f.includes('vercel.json') || 
-        f.includes('render.yaml') ||
-        f.includes('fly.toml') ||
-        f.includes('railway.json') ||
-        f.includes('Procfile') ||
-        f.includes('app.yaml') || // Google App Engine
-        f.includes('azure-pipelines.yml')
-    );
+        // For non-deployable repos (tools, libraries, bots), CI badges are sufficient
+        const isLikelyDeployable = fileList.some(f => 
+            f.includes('netlify.toml') || 
+            f.includes('vercel.json') || 
+            f.includes('render.yaml') ||
+            f.includes('fly.toml') ||
+            f.includes('railway.json') ||
+            f.includes('Procfile') ||
+            f.includes('app.yaml') || // Google App Engine
+            f.includes('azure-pipelines.yml')
+        );
 
-        practices.push({
-            type: 'deploy_badge',
-            status: hasDeploy ? 'healthy' : 
-                    hasAnyCIorQABadge && !isLikelyDeployable ? 'healthy' : // CI badge is good enough for non-deployable repos
-                    hasAnyCIorQABadge && isLikelyDeployable ? 'needs_attention' : // Has CI but should have deploy badge
-                    evidences.some(e=>e.kind==='deploy' && e.confidence>=0.4) ? 'needs_attention' : 
-                    'missing',
-            details: {
-                exists: hasDeploy || (hasAnyCIorQABadge && !isLikelyDeployable),
-                evidence: evidences.slice(0,5),
-                hasCI: hasAnyCIorQABadge,
-                isDeployable: isLikelyDeployable
-            }
-        });
+        deployBadgeStatus = hasDeploy ? 'healthy' : 
+                hasAnyCIorQABadge && !isLikelyDeployable ? 'healthy' : // CI badge is good enough for non-deployable repos
+                hasAnyCIorQABadge && isLikelyDeployable ? 'needs_attention' : // Has CI but should have deploy badge
+                evidences.some(e=>e.kind==='deploy' && e.confidence>=0.4) ? 'needs_attention' : 
+                'missing';
+        
+        deployBadgeDetails = {
+            exists: hasDeploy || (hasAnyCIorQABadge && !isLikelyDeployable),
+            evidence: evidences.slice(0,5),
+            hasCI: hasAnyCIorQABadge,
+            isDeployable: isLikelyDeployable
+        };
     }
+    
+    // Always add deploy_badge practice, even if README is not available
+    practices.push({
+        type: 'deploy_badge',
+        status: deployBadgeStatus,
+        details: deployBadgeDetails
+    });
 
     // 8. Environment Template
     const hasEnvExample = fileList.some(f => f.includes('.env.example') || f.includes('.env.template'));

@@ -32,11 +32,6 @@ class GitHubCache {
     return { data: entry.data, etag: entry.etag };
   }
 
-  getETag(key: string): string | null {
-    const entry = this.cache.get(key);
-    return entry ? entry.etag : null;
-  }
-
   clear(): void {
     this.cache.clear();
   }

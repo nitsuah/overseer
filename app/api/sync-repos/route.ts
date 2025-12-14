@@ -97,7 +97,7 @@ export async function POST() {
                         if (isRateLimit && attempt < MAX_RETRY_ATTEMPTS - 1) {
                             // Exponential backoff: 1s, 2s, 4s
                             const backoffDelay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
-                            logger.warn(`Rate limit hit for ${repoMeta.name}, retrying in ${backoffDelay}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`);
+                            logger.warn(`Rate limit hit for ${repoMeta.name}, retrying in ${backoffDelay}ms (attempt ${attempt + 1} of ${MAX_RETRY_ATTEMPTS})`);
                             await new Promise(resolve => setTimeout(resolve, backoffDelay));
                         } else if (attempt === MAX_RETRY_ATTEMPTS - 1) {
                             logger.warn(`Failed detailed sync for ${repoMeta.name} after ${MAX_RETRY_ATTEMPTS} attempts: ${lastError.message}`);

@@ -71,6 +71,8 @@ export function useRepoFilters(repos: Repo[]) {
     setFilterType('all');
     setFilterLanguage('all');
     setFilterFork('all');
+    setSortField('name');
+    setSortDirection('asc');
   };
 
   const handleSort = (field: SortField) => {

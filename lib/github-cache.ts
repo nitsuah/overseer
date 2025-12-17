@@ -45,11 +45,27 @@ class GitHubCache {
       }
     }
   }
+
+  private pruneInterval: NodeJS.Timeout | null = null;
+
+  // Start automatic pruning
+  startPruning(): void {
+    if (this.pruneInterval) return; // Already running
+    this.pruneInterval = setInterval(() => this.prune(), 10 * 60 * 1000);
+  }
+
+  // Stop automatic pruning (useful for cleanup in tests or hot-reload)
+  stopPruning(): void {
+    if (this.pruneInterval) {
+      clearInterval(this.pruneInterval);
+      this.pruneInterval = null;
+    }
+  }
 }
 
 export const githubCache = new GitHubCache();
 
-// Prune expired entries every 10 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => githubCache.prune(), 10 * 60 * 1000);
+// Start pruning in non-test environments
+if (typeof setInterval !== 'undefined' && process.env.NODE_ENV !== 'test') {
+  githubCache.startPruning();
 }

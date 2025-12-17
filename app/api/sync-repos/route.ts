@@ -80,15 +80,17 @@ export async function POST() {
             logger.info('Starting Phase 2: Detailed Health Sync (Background)');
 
             // Helper to sync details with delay and exponential backoff retry
-            const syncDetailsWithDelay = async (repoMeta: RepoMetadata, client: GitHubClient) => {
-                // Delay between repos to be gentle on rate limits
-                await new Promise(resolve => setTimeout(resolve, SYNC_DELAY_MS));
-                
+            const syncDetailsWithDelay = async (repoMeta: RepoMetadata, client: GitHubClient, isFirstRepo: boolean) => {
                 let lastError: Error | null = null;
                 for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
                     try {
                         await syncRepo(repoMeta, client, db);
                         logger.info(`✓ Detailed sync completed for ${repoMeta.name}${attempt > 0 ? ` (attempt ${attempt + 1})` : ''}`);
+                        
+                        // Delay after successful sync (except for first repo)
+                        if (!isFirstRepo) {
+                            await new Promise(resolve => setTimeout(resolve, SYNC_DELAY_MS));
+                        }
                         return; // Success, exit the retry loop
                     } catch (error) {
                         lastError = error instanceof Error ? error : new Error('Unknown error');
@@ -107,8 +109,8 @@ export async function POST() {
             };
 
             // Sync user repos details
-            for (const repo of repos) {
-                await syncDetailsWithDelay(repo, github);
+            for (let i = 0; i < repos.length; i++) {
+                await syncDetailsWithDelay(repos[i], github, i === 0);
             }
 
             // Always sync default repos (using system token from environment)
@@ -116,14 +118,15 @@ export async function POST() {
             const systemUsername = process.env.GITHUB_SYSTEM_USERNAME || 'nitsuah';
             if (systemToken) {
                 const systemGithub = new GitHubClient(systemToken, systemUsername);
-                for (const defaultRepo of DEFAULT_REPOS) {
+                for (let i = 0; i < DEFAULT_REPOS.length; i++) {
+                    const defaultRepo = DEFAULT_REPOS[i];
                     try {
                         logger.info(`Syncing default repo metadata: ${defaultRepo.fullName}`);
                         const repoMeta = await systemGithub.getRepo(defaultRepo.owner, defaultRepo.name);
                         // Metadata first
                         await syncRepoMetadata(repoMeta, db);
                         // Then details
-                        await syncDetailsWithDelay(repoMeta, systemGithub);
+                        await syncDetailsWithDelay(repoMeta, systemGithub, i === 0 && repos.length === 0);
                         successCount++;
                     } catch (error) {
                         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -134,13 +137,14 @@ export async function POST() {
             } else {
                 // If no system token, try to sync using user's token (may fail for repos they don't own)
                 logger.info('No GITHUB_TOKEN found - attempting to sync default repos with user token');
-                for (const defaultRepo of DEFAULT_REPOS) {
+                for (let i = 0; i < DEFAULT_REPOS.length; i++) {
+                    const defaultRepo = DEFAULT_REPOS[i];
                     try {
                         const repoMeta = await github.getRepo(defaultRepo.owner, defaultRepo.name);
                         // Metadata first
                         await syncRepoMetadata(repoMeta, db);
                         // Then details
-                        await syncDetailsWithDelay(repoMeta, github);
+                        await syncDetailsWithDelay(repoMeta, github, i === 0 && repos.length === 0);
                         successCount++;
                     } catch (error) {
                         const errorMessage = error instanceof Error ? error.message : 'Unknown error';

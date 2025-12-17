@@ -9,7 +9,7 @@ interface CacheEntry {
 
 class GitHubCache {
   private cache: Map<string, CacheEntry> = new Map();
-  private readonly maxAge: number = 5 * 60 * 1000; // 5 minutes default
+  private readonly maxAge: number = 5 * 60 * 1000; // 5 minutes
 
   set(key: string, data: unknown, etag: string): void {
     this.cache.set(key, {

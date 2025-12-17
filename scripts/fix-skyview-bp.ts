@@ -56,7 +56,7 @@ async function fixSkyviewBestPractices() {
     `;
     
     console.log('\n✅ Updated best practices (total:', updatedPractices.length, '):');
-    updatedPractices.forEach((p: {practice_type: string, status: string}) => {
+    updatedPractices.forEach((p) => {
         console.log(`  - ${p.practice_type}: ${p.status}`);
     });
     

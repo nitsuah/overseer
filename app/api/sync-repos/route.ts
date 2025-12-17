@@ -94,7 +94,13 @@ export async function POST() {
                         return; // Success, exit the retry loop
                     } catch (error) {
                         lastError = error instanceof Error ? error : new Error('Unknown error');
-                        const isRateLimit = lastError.message.includes('rate limit') || lastError.message.includes('secondary rate limit');
+                        
+                        // Check status codes (403/429) or message content for rate limits
+                        const errorWithStatus = error as { status?: number; response?: { status?: number } };
+                        const status = errorWithStatus?.status ?? errorWithStatus?.response?.status;
+                        const isRateLimit = status === 403 || status === 429 || 
+                            lastError.message.includes('rate limit') || 
+                            lastError.message.includes('secondary rate limit');
                         
                         if (isRateLimit && attempt < MAX_RETRY_ATTEMPTS - 1) {
                             // Exponential backoff: 1s, 2s, 4s

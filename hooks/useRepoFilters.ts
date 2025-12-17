@@ -73,8 +73,6 @@ export function useRepoFilters(repos: Repo[]) {
     setFilterFork('all');
     setSortField('name');
     setSortDirection('asc');
-    setSortField('name');
-    setSortDirection('asc');
   };
 
   const handleSort = (field: SortField) => {

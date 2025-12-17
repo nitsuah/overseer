@@ -24,7 +24,7 @@ async function fixSkyviewBestPractices() {
         FROM best_practices 
         WHERE repo_id = ${repoId}
     `;
-    const existingTypes = new Set(existingPractices.map((p: {practice_type: string}) => p.practice_type));
+    const existingTypes = new Set(existingPractices.map((p) => p.practice_type as string));
     console.log('\nExisting practices:', Array.from(existingTypes));
     
     // Add missing practices
@@ -56,7 +56,7 @@ async function fixSkyviewBestPractices() {
     `;
     
     console.log('\n✅ Updated best practices (total:', updatedPractices.length, '):');
-    updatedPractices.forEach((p: {practice_type: string, status: string}) => {
+    updatedPractices.forEach((p) => {
         console.log(`  - ${p.practice_type}: ${p.status}`);
     });
     

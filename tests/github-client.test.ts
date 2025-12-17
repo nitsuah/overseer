@@ -49,6 +49,7 @@ test('GitHubClient.listRepos returns mapped repo metadata', async () => {
         fork: false,
       },
     ],
+    headers: {},
   });
 
   const repos = await client.listRepos();
@@ -106,6 +107,7 @@ test('GitHubClient.getFileContent returns decoded content', async () => {
       content: encoded,
       encoding: 'base64',
     },
+    headers: {},
   });
 
   const result = await client.getFileContent('test-repo', 'README.md');

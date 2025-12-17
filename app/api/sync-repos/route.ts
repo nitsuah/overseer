@@ -7,6 +7,9 @@ import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { syncRepo, syncRepoMetadata } from '@/lib/sync';
 
 const GITHUB_API_TIMEOUT_MS = 10000;
+const SYNC_DELAY_MS = 2000; // Delay between repo syncs to reduce rate limit pressure
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 1000; // Base delay for exponential backoff
 
 export async function POST() {
     try {
@@ -76,22 +79,38 @@ export async function POST() {
             // This fills in the health scores, issues, PRs, etc. slowly to avoid rate limits
             logger.info('Starting Phase 2: Detailed Health Sync (Background)');
 
-            // Helper to sync details with delay
-            const syncDetailsWithDelay = async (repoMeta: RepoMetadata, client: GitHubClient) => {
-                try {
-                    // 2 second delay between repos to be gentle on rate limits
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    await syncRepo(repoMeta, client, db);
-                    logger.info(`✓ Detailed sync completed for ${repoMeta.name}`);
-                } catch (error) {
-                    const message = error instanceof Error ? error.message : 'Unknown error';
-                    logger.warn(`Failed detailed sync for ${repoMeta.name}:`, message);
+            // Helper to sync details with delay and exponential backoff retry
+            const syncDetailsWithDelay = async (repoMeta: RepoMetadata, client: GitHubClient, isFirstRepo: boolean) => {
+                let lastError: Error | null = null;
+                for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
+                    try {
+                        await syncRepo(repoMeta, client, db);
+                        logger.info(`✓ Detailed sync completed for ${repoMeta.name}${attempt > 0 ? ` (attempt ${attempt + 1})` : ''}`);
+                        
+                        // Delay after successful sync (except for first repo)
+                        if (!isFirstRepo) {
+                            await new Promise(resolve => setTimeout(resolve, SYNC_DELAY_MS));
+                        }
+                        return; // Success, exit the retry loop
+                    } catch (error) {
+                        lastError = error instanceof Error ? error : new Error('Unknown error');
+                        const isRateLimit = lastError.message.includes('rate limit') || lastError.message.includes('secondary rate limit');
+                        
+                        if (isRateLimit && attempt < MAX_RETRY_ATTEMPTS - 1) {
+                            // Exponential backoff: 1s, 2s, 4s
+                            const backoffDelay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
+                            logger.warn(`Rate limit hit for ${repoMeta.name}, retrying in ${backoffDelay}ms (attempt ${attempt + 1} of ${MAX_RETRY_ATTEMPTS})`);
+                            await new Promise(resolve => setTimeout(resolve, backoffDelay));
+                        } else if (attempt === MAX_RETRY_ATTEMPTS - 1) {
+                            logger.warn(`Failed detailed sync for ${repoMeta.name} after ${MAX_RETRY_ATTEMPTS} attempts: ${lastError.message}`);
+                        }
+                    }
                 }
             };
 
             // Sync user repos details
-            for (const repo of repos) {
-                await syncDetailsWithDelay(repo, github);
+            for (let i = 0; i < repos.length; i++) {
+                await syncDetailsWithDelay(repos[i], github, i === 0);
             }
 
             // Always sync default repos (using system token from environment)
@@ -99,14 +118,15 @@ export async function POST() {
             const systemUsername = process.env.GITHUB_SYSTEM_USERNAME || 'nitsuah';
             if (systemToken) {
                 const systemGithub = new GitHubClient(systemToken, systemUsername);
-                for (const defaultRepo of DEFAULT_REPOS) {
+                for (let i = 0; i < DEFAULT_REPOS.length; i++) {
+                    const defaultRepo = DEFAULT_REPOS[i];
                     try {
                         logger.info(`Syncing default repo metadata: ${defaultRepo.fullName}`);
                         const repoMeta = await systemGithub.getRepo(defaultRepo.owner, defaultRepo.name);
                         // Metadata first
                         await syncRepoMetadata(repoMeta, db);
                         // Then details
-                        await syncDetailsWithDelay(repoMeta, systemGithub);
+                        await syncDetailsWithDelay(repoMeta, systemGithub, i === 0 && repos.length === 0);
                         successCount++;
                     } catch (error) {
                         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -117,13 +137,14 @@ export async function POST() {
             } else {
                 // If no system token, try to sync using user's token (may fail for repos they don't own)
                 logger.info('No GITHUB_TOKEN found - attempting to sync default repos with user token');
-                for (const defaultRepo of DEFAULT_REPOS) {
+                for (let i = 0; i < DEFAULT_REPOS.length; i++) {
+                    const defaultRepo = DEFAULT_REPOS[i];
                     try {
                         const repoMeta = await github.getRepo(defaultRepo.owner, defaultRepo.name);
                         // Metadata first
                         await syncRepoMetadata(repoMeta, db);
                         // Then details
-                        await syncDetailsWithDelay(repoMeta, github);
+                        await syncDetailsWithDelay(repoMeta, github, i === 0 && repos.length === 0);
                         successCount++;
                     } catch (error) {
                         const errorMessage = error instanceof Error ? error.message : 'Unknown error';

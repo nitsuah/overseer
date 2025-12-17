@@ -59,6 +59,9 @@ export default function Dashboard() {
     setFilterLanguage,
     filterFork,
     setFilterFork,
+    sortField,
+    sortDirection,
+    handleSort,
     languages,
     filteredRepos,
     clearFilters,
@@ -73,8 +76,8 @@ export default function Dashboard() {
         await refetch();
         setToastMessage(data.message || 'Sync started successfully!');
       } else {
-        const error = await res.json();
-        setToastMessage(`Sync failed: ${error.error || 'Unknown error'}`);
+        const errorData = await res.json();
+        setToastMessage(`Sync failed: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       setToastMessage('Failed to sync repos - network error');
@@ -166,14 +169,34 @@ export default function Dashboard() {
             <table className="w-full">
               <thead className="bg-slate-800/50 border-b border-slate-700">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                    Repository
+                  <th 
+                    className="px-6 py-4 text-left text-sm font-semibold text-slate-300 cursor-pointer hover:text-purple-400 transition-colors"
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Repository
+                      {sortField === 'name' && (
+                        <span className="text-purple-400">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300 hidden xl:table-cell">
                     Description
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                    Health
+                  <th 
+                    className="px-6 py-4 text-left text-sm font-semibold text-slate-300 cursor-pointer hover:text-purple-400 transition-colors"
+                    onClick={() => handleSort('health')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Health
+                      {sortField === 'health' && (
+                        <span className="text-purple-400">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
                     Docs

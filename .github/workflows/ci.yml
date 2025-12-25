@@ -27,6 +27,20 @@ jobs:
 
       - name: Run unit tests
         run: npm test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_ID: ${{ secrets.GITHUB_ID || 'dummy_id' }}
+          GITHUB_SECRET: ${{ secrets.GITHUB_SECRET || 'dummy_secret' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'dummy_nextauth_secret' }}
+          CI: true
 
       - name: Build
         run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_ID: ${{ secrets.GITHUB_ID || 'dummy_id' }}
+          GITHUB_SECRET: ${{ secrets.GITHUB_SECRET || 'dummy_secret' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'dummy_nextauth_secret' }}
+          NEXT_PUBLIC_APP_URL: http://localhost:3000

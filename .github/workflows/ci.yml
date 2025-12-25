@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, gh-actions ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_ID: ${{ secrets.GITHUB_ID || 'dummy_id' }}
+          GITHUB_SECRET: ${{ secrets.GITHUB_SECRET || 'dummy_secret' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'dummy_nextauth_secret' }}
+          CI: true
+
+      - name: Build
+        run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_ID: ${{ secrets.GITHUB_ID || 'dummy_id' }}
+          GITHUB_SECRET: ${{ secrets.GITHUB_SECRET || 'dummy_secret' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'dummy_nextauth_secret' }}
+          NEXT_PUBLIC_APP_URL: http://localhost:3000

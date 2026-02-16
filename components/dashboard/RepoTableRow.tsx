@@ -367,6 +367,7 @@ export function RepoTableRow({
               repoNameForSync={repo.name}
               onGenerateSummary={onGenerateSummary}
               generatingSummary={generatingSummary === repo.name}
+              securityConfig={details.securityConfig}
             />
           </td>
         </tr>

@@ -48,6 +48,18 @@ export interface CommunityStandard {
   details: Record<string, unknown>;
 }
 
+export interface SecurityConfig {
+  hasSecurityPolicy: boolean;
+  hasSecurityAdvisories: boolean;
+  privateVulnerabilityReportingEnabled: boolean;
+  dependabotAlertsEnabled: boolean;
+  dependabotAlertCount: number;
+  codeScanningEnabled: boolean;
+  codeScanningAlertCount: number;
+  secretScanningEnabled: boolean;
+  secretScanningAlertCount: number;
+}
+
 export interface Repo {
   id: string;
   name: string;
@@ -87,6 +99,16 @@ export interface Repo {
   bus_factor?: number;
   avg_pr_merge_time_hours?: number;
   is_hidden?: boolean;
+  has_security_policy?: boolean;
+  has_security_advisories?: boolean;
+  private_vuln_reporting_enabled?: boolean;
+  dependabot_alerts_enabled?: boolean;
+  dependabot_alert_count?: number;
+  code_scanning_enabled?: boolean;
+  code_scanning_alert_count?: number;
+  secret_scanning_enabled?: boolean;
+  secret_scanning_alert_count?: number;
+  security_last_checked?: string | null;
 }
 
 export interface RepoDetails {
@@ -97,4 +119,5 @@ export interface RepoDetails {
   features: Feature[];
   bestPractices: BestPractice[];
   communityStandards: CommunityStandard[];
+  securityConfig?: SecurityConfig;
 }

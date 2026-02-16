@@ -668,7 +668,6 @@ export class GitHubClient {
           owner: ownerName,
           repo,
         });
-        // @ts-expect-error - this property might not be in types yet
         privateVulnerabilityReportingEnabled = repoData.security_and_analysis?.secret_scanning?.status === 'enabled' || false;
       } catch {
         // Unable to check

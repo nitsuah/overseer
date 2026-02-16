@@ -86,6 +86,14 @@ export async function POST(request: NextRequest) {
         const octokit = new Octokit({ auth: session.accessToken });
         const [owner, repo] = repoName.split('/');
         console.log('[preview-templates] Split into owner/repo:', { owner, repo });
+        
+        // Validate owner and repo to prevent injection attacks
+        const validGitHubName = /^[a-zA-Z0-9._-]+$/;
+        if (!owner || !repo || !validGitHubName.test(owner) || !validGitHubName.test(repo)) {
+          console.warn('[preview-templates] Invalid owner or repo name:', { owner, repo });
+          throw new Error('Invalid repository name');
+        }
+        
         repoContext.owner = owner;
         repoContext.repo = repo;
         
@@ -198,6 +206,13 @@ export async function POST(request: NextRequest) {
     
     for (const docType of docTypes) {
       const normalized = String(docType).toLowerCase();
+      
+      // Validate docType to prevent path traversal
+      if (normalized.includes('..') || normalized.includes('/') || normalized.includes('\\')) {
+        console.warn('[preview-templates] Invalid docType with path traversal attempt:', normalized);
+        continue;
+      }
+      
       let templateSourcePath = TEMPLATE_SOURCE_PATHS[normalized]; // Path to template file in templates/ directory
       let filename = TARGET_PATHS[normalized]; // Path where file goes in user's repo
       
@@ -435,7 +450,15 @@ export async function POST(request: NextRequest) {
       }
       
       // Use templateSourcePath if set (for language-specific templates), otherwise use filename
-      const templateFilePath = path.join(process.cwd(), 'templates', templateSourcePath || filename);
+      const finalPath = templateSourcePath || filename;
+      
+      // Validate path to prevent directory traversal
+      if (!finalPath || finalPath.includes('..')) {
+        console.warn('[preview-templates] Invalid template path:', finalPath);
+        continue;
+      }
+      
+      const templateFilePath = path.join(process.cwd(), 'templates', finalPath);
       
       try {
         const content = await fs.readFile(templateFilePath, 'utf-8');

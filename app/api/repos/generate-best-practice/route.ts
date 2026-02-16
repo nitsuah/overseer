@@ -34,6 +34,15 @@ export async function POST(request: NextRequest) {
       ? repoName.split('/')
       : [session.user.name || '', repoName];
 
+    // Validate owner and repo to prevent SSRF attacks
+    const validGitHubName = /^[a-zA-Z0-9._-]+$/;
+    if (!owner || !repo || !validGitHubName.test(owner) || !validGitHubName.test(repo)) {
+      return NextResponse.json(
+        { error: 'Invalid repository owner or name' },
+        { status: 400 }
+      );
+    }
+
     // Detect language from repo files with Octokit
     const octokit = new Octokit({ auth: githubToken });
     let language: string | null = null;
@@ -42,13 +51,13 @@ export async function POST(request: NextRequest) {
       const map: Record<string, string | null> = { python: 'Python', javascript: 'JavaScript', mixed: null, other: null };
       language = map[detected] ?? null;
     } catch {
-      // Fallback to GitHub's language field
-      const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-        headers: { Authorization: `Bearer ${githubToken}`, Accept: 'application/vnd.github.v3+json' },
-      });
-      if (repoResponse.ok) {
-        const repoData = await repoResponse.json();
+      // Fallback to GitHub's language field using Octokit instead of direct fetch
+      try {
+        const { data: repoData } = await octokit.repos.get({ owner, repo });
         language = repoData.language;
+      } catch {
+        // If both methods fail, leave language as null
+        language = null;
       }
     }
 

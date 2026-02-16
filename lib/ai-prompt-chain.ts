@@ -219,7 +219,7 @@ function extractEnvVarMentions(readme: string): string[] {
   // Clean up and deduplicate
   const vars = new Set<string>();
   matches.forEach(match => {
-    const cleaned = match.replace('process.env.', '').replace('$', '');
+    const cleaned = match.replaceAll('process.env.', '').replaceAll('$', '');
     if (cleaned.length > 1 && /^[A-Z]/.test(cleaned)) {
       vars.add(cleaned);
     }

@@ -7,14 +7,14 @@
 
 /**
  * Default Gemini model for all AI operations.
- * Using gemini-2.0-flash-exp for fast responses with experimental features.
+ * Using models/gemini-2.5-flash for fast responses with latest features.
  * 
  * Alternative models:
- * - gemini-1.5-pro: More capable but slower
- * - gemini-1.5-flash: Faster, good for most tasks
- * - gemini-2.0-flash-exp: Experimental, latest features
+ * - models/gemini-2.5-pro: More capable but slower
+ * - models/gemini-2.0-flash: Stable 2.0 version
+ * - models/gemini-flash-latest: Always uses latest flash model
  */
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash-exp';
+export const DEFAULT_GEMINI_MODEL = 'models/gemini-2.5-flash';
 
 /**
  * Default generation configuration for all Gemini requests.

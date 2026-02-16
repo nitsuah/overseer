@@ -24,7 +24,7 @@ export function getAvailableProviders(): AIProviderConfig[] {
       name: 'gemini',
       enabled: !!process.env.GEMINI_API_KEY,
       apiKey: process.env.GEMINI_API_KEY,
-      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp',
+      model: process.env.GEMINI_MODEL || 'models/gemini-2.5-flash',
       priority: 1,
     },
     {

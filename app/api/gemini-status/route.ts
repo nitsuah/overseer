@@ -35,7 +35,7 @@ export async function GET() {
     }
 
     // Use the same model as configured in lib/ai.ts
-    const modelName = 'gemini-2.0-flash-exp';
+    const modelName = 'models/gemini-2.5-flash';
     const genAI = new GoogleGenerativeAI(apiKey);
     
     try {

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { getConfiguredModel } from '../lib/gemini-model-discovery';
 
 const execAsync = promisify(exec);
 
@@ -12,7 +13,7 @@ describe('Gemini API Health', () => {
       skip();
       return;
     }
-    const model = process.env.GEMINI_MODEL_NAME || 'gemini-2.0-flash-exp';
+    const model = getConfiguredModel();
 
     const { stdout } = await execAsync('node scripts/test-gemini-health.mjs', {
       env: {

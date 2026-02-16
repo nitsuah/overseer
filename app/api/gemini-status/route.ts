@@ -3,6 +3,7 @@
 
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getConfiguredModel } from '@/lib/gemini-model-discovery';
 
 // Cache status for 5 minutes to avoid excessive API calls
 let cachedStatus: { healthy: boolean; timestamp: number; model: string } | null = null;
@@ -34,8 +35,8 @@ export async function GET() {
       });
     }
 
-    // Use the same model as configured in lib/ai.ts
-    const modelName = 'gemini-2.0-flash-exp';
+    // Use the same model as configured via centralized discovery
+    const modelName = getConfiguredModel();
     const genAI = new GoogleGenerativeAI(apiKey);
     
     try {

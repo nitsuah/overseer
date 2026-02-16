@@ -9,15 +9,23 @@ if (!apiKey) {
 }
 
 const modelsToTry = [
-  'gemini-1.5-pro',
-  'gemini-1.5-flash',
-  'gemini-1.5-pro-latest',
-  'gemini-1.5-flash-latest',
-  'gemini-pro',
-  'gemini-pro-vision',
-  'gemini-2.0-flash-exp',
-  'models/gemini-1.5-pro',
-  'models/gemini-1.5-flash',
+  // Version 2.5 (current working as of Feb 2026)
+  'models/gemini-2.5-flash',
+  'models/gemini-flash-latest',
+  
+  // Version 3 (future-proofing)
+  'models/gemini-3-flash',
+  'models/gemini-3-flash-latest',
+  'gemini-3-flash',
+  
+  // Version 2.0 fallbacks
+  'models/gemini-2.0-flash',
+  'models/gemini-2.0-flash-001',
+  
+  // Pro models (if flash fails)
+  'models/gemini-3-pro',
+  'models/gemini-2.5-pro',
+  'models/gemini-pro-latest',
 ];
 
 const genAI = new GoogleGenerativeAI(apiKey);

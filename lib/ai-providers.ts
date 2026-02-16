@@ -4,6 +4,8 @@
  * Supports multiple AI providers with automatic failover for redundancy.
  */
 
+import { getConfiguredModel } from './gemini-model-discovery';
+
 export type AIProvider = 'gemini' | 'openai' | 'anthropic';
 
 export interface AIProviderConfig {
@@ -24,7 +26,7 @@ export function getAvailableProviders(): AIProviderConfig[] {
       name: 'gemini',
       enabled: !!process.env.GEMINI_API_KEY,
       apiKey: process.env.GEMINI_API_KEY,
-      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp',
+      model: getConfiguredModel(),
       priority: 1,
     },
     {

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Centralized Gemini Model Discovery:** New `gemini-model-discovery.ts` module provides single source of truth for model configuration
+- **Auto-Discovery Fallback:** Automatically searches for working models when configured model fails (tries version 3, 2.5, 2.0, then pro models)
+- **Model Caching:** Discovered working models are cached for 1 hour to reduce API calls
+- **Unified Environment Variables:** Aligned all code to use `GEMINI_MODEL_NAME` (or `GEMINI_MODEL` as fallback) consistently
+
+### Changed
+
+- **Default Model Updated:** Changed from deprecated `models/gemini-2.0-flash-exp` to `models/gemini-2.5-flash` (current working model as of Feb 2026)
+- **Model Configuration:** All files now import from centralized `gemini-model-discovery` instead of hardcoding strings
+- **AI Failover Integration:** Integrated new discovery system with existing failover logic
+- **Test Model Candidates:** Updated `test-model-names.mjs` with future-proof version 3 models for when Google releases them
+
+### Fixed
+
+- **Model String Duplication:** Eliminated hardcoded model strings across multiple files
+- **Environment Variable Inconsistency:** Fixed discrepancy between `GEMINI_MODEL` and `GEMINI_MODEL_NAME` usage
+- **Health Check Accuracy:** Health endpoint now uses same model as actual generation code
+
 ## [1.7.0] - 2025-12-05
 
 ### Added

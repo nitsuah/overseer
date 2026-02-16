@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { docTypes, repoName } = await request.json();
-    console.log(`[preview-templates] Request received: ${docTypes?.length} types for ${repoName}`);
+    console.log('[preview-templates] Request received:', docTypes?.length, 'types for', repoName);
     if (!docTypes || !Array.isArray(docTypes)) {
       return NextResponse.json({ error: 'docTypes array required' }, { status: 400 });
     }
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
           // Could not fetch root files
         }
       } catch (error) {
-        console.warn(`Could not fetch repo context for ${repoName}:`, error);
+        console.warn('Could not fetch repo context for', repoName, ':', error);
       }
     }
 
@@ -421,7 +421,9 @@ export async function POST(request: NextRequest) {
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             console.error(
-              `[deploy_badge] Failed to fetch README for ${repoName}:`,
+              '[deploy_badge] Failed to fetch README for',
+              repoName,
+              ':',
               errorMessage,
               error
             );
@@ -471,12 +473,12 @@ export async function POST(request: NextRequest) {
           practiceType: isPractice ? normalized : undefined,
         });
       } catch (error) {
-        console.warn(`Template not found for ${docType}:`, error);
+        console.warn('Template not found for', docType, ':', error);
       }
     }
 
     const elapsed = Date.now() - startTime;
-    console.log(`[preview-templates] Completed in ${elapsed}ms, returning ${previews.length} files`);
+    console.log('[preview-templates] Completed in', elapsed, 'ms, returning', previews.length, 'files');
     return NextResponse.json({ previews });
   } catch (error) {
     console.error('Error fetching template previews:', error);

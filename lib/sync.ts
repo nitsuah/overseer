@@ -147,6 +147,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     let hasSecurityAdvisories = false;
     let privateVulnReportingEnabled = false;
     let dependabotAlertsEnabled = false;
+    let dependabotAlertCount = 0;
     let codeScanningEnabled = false;
     let codeScanningAlertCount = 0;
     let secretScanningEnabled = false;
@@ -157,6 +158,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         hasSecurityAdvisories = securityConfig.hasSecurityAdvisories;
         privateVulnReportingEnabled = securityConfig.privateVulnerabilityReportingEnabled;
         dependabotAlertsEnabled = securityConfig.dependabotAlertsEnabled;
+        dependabotAlertCount = securityConfig.dependabotAlertCount;
         codeScanningEnabled = securityConfig.codeScanningEnabled;
         codeScanningAlertCount = securityConfig.codeScanningAlertCount;
         secretScanningEnabled = securityConfig.secretScanningEnabled;
@@ -174,7 +176,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             vuln_alert_count, vuln_critical_count, vuln_high_count, vuln_last_checked,
             contributor_count, commit_frequency, bus_factor, avg_pr_merge_time_hours, contributors_last_checked,
             has_security_policy, has_security_advisories, private_vuln_reporting_enabled,
-            dependabot_alerts_enabled, code_scanning_enabled, code_scanning_alert_count,
+            dependabot_alerts_enabled, dependabot_alert_count, code_scanning_enabled, code_scanning_alert_count,
             secret_scanning_enabled, secret_scanning_alert_count, security_last_checked
         )
         VALUES (
@@ -185,7 +187,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             ${vulnAlertCount}, ${vulnCriticalCount}, ${vulnHighCount}, NOW(),
             ${contributorCount}, ${commitFrequency}, ${busFactor}, ${avgPrMergeTimeHours}, NOW(),
             ${hasSecurityPolicy}, ${hasSecurityAdvisories}, ${privateVulnReportingEnabled},
-            ${dependabotAlertsEnabled}, ${codeScanningEnabled}, ${codeScanningAlertCount},
+            ${dependabotAlertsEnabled}, ${dependabotAlertCount}, ${codeScanningEnabled}, ${codeScanningAlertCount},
             ${secretScanningEnabled}, ${secretScanningAlertCount}, NOW()
         )
         ON CONFLICT (name) DO UPDATE SET
@@ -221,6 +223,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           has_security_advisories = EXCLUDED.has_security_advisories,
           private_vuln_reporting_enabled = EXCLUDED.private_vuln_reporting_enabled,
           dependabot_alerts_enabled = EXCLUDED.dependabot_alerts_enabled,
+          dependabot_alert_count = EXCLUDED.dependabot_alert_count,
           code_scanning_enabled = EXCLUDED.code_scanning_enabled,
           code_scanning_alert_count = EXCLUDED.code_scanning_alert_count,
           secret_scanning_enabled = EXCLUDED.secret_scanning_enabled,

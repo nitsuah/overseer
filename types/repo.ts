@@ -103,6 +103,7 @@ export interface Repo {
   has_security_advisories?: boolean;
   private_vuln_reporting_enabled?: boolean;
   dependabot_alerts_enabled?: boolean;
+  dependabot_alert_count?: number;
   code_scanning_enabled?: boolean;
   code_scanning_alert_count?: number;
   secret_scanning_enabled?: boolean;

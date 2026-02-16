@@ -92,7 +92,7 @@ export async function GET(
                 hasSecurityAdvisories: repo.has_security_advisories || false,
                 privateVulnerabilityReportingEnabled: repo.private_vuln_reporting_enabled || false,
                 dependabotAlertsEnabled: repo.dependabot_alerts_enabled || false,
-                dependabotAlertCount: repo.vuln_alert_count || 0,
+                dependabotAlertCount: repo.dependabot_alert_count || 0,
                 codeScanningEnabled: repo.code_scanning_enabled || false,
                 codeScanningAlertCount: repo.code_scanning_alert_count || 0,
                 secretScanningEnabled: repo.secret_scanning_enabled || false,

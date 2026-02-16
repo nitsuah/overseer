@@ -32,9 +32,17 @@ async function checkSecurityColumns() {
             logger.info(`  - ${col.column_name} (${col.data_type})`);
         });
         
-        // Try a simple query to verify column is accessible
-        await db`SELECT has_security_policy FROM repos LIMIT 1`;
-        logger.info('✓ Successfully queried has_security_policy column');
+        // Verify column is accessible by checking if it exists in the table structure
+        const columnCheck = await db`
+            SELECT COUNT(*) as count 
+            FROM information_schema.columns 
+            WHERE table_name = 'repos' AND column_name = 'has_security_policy'
+        `;
+        if (columnCheck[0].count > 0) {
+            logger.info('✓ has_security_policy column is accessible');
+        } else {
+            logger.warn('✗ has_security_policy column not found');
+        }
         
     } catch (error) {
         logger.warn('Error:', error);

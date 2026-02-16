@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Task, RoadmapItem, DocStatus, Metric, Feature, BestPractice, CommunityStandard } from '@/types/repo';
+import { Task, RoadmapItem, DocStatus, Metric, Feature, BestPractice, CommunityStandard, SecurityConfig } from '@/types/repo';
 import { RepositoryStatsSectionStatic } from './repo-details/RepositoryStatsSectionStatic';
 import { TestingSection } from './repo-details/TestingSection';
 import { MetricsSection } from './repo-details/MetricsSection';
@@ -13,6 +13,7 @@ import { CommunityStandardsSection } from './repo-details/CommunityStandardsSect
 import { RoadmapSection } from './repo-details/RoadmapSection';
 import { TasksSection } from './repo-details/TasksSection';
 import { FeaturesSection } from './repo-details/FeaturesSection';
+import { SecuritySection } from './repo-details/SecuritySection';
 
 interface ExpandableRowProps {
   tasks: Task[];
@@ -53,6 +54,7 @@ interface ExpandableRowProps {
   repoNameForSync?: string;
   onGenerateSummary?: () => void;
   generatingSummary?: boolean;
+  securityConfig?: SecurityConfig;
 }
 
 export default function ExpandableRow({
@@ -94,6 +96,7 @@ export default function ExpandableRow({
   repoNameForSync,
   onGenerateSummary,
   generatingSummary = false,
+  securityConfig,
 }: ExpandableRowProps) {
   const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
   const [aiSummaryKey, setAiSummaryKey] = useState(aiSummary);
@@ -215,6 +218,13 @@ export default function ExpandableRow({
               isExpanded={row3Expanded}
               onToggleExpanded={() => setRow3Expanded(!row3Expanded)}
               data-tour="community"
+            />
+
+            {/* Security */}
+            <SecuritySection
+              securityConfig={securityConfig}
+              isExpanded={row3Expanded}
+              onToggleExpanded={() => setRow3Expanded(!row3Expanded)}
             />
 
             {/* Metrics */}

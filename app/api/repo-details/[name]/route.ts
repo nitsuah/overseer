@@ -84,6 +84,22 @@ export async function GET(
             logger.warn('Community standards table not queried:', e);
         }
 
+        // Build security config from repo fields
+        let securityConfig = null;
+        if (repo.has_security_policy !== undefined) {
+            securityConfig = {
+                hasSecurityPolicy: repo.has_security_policy || false,
+                hasSecurityAdvisories: repo.has_security_advisories || false,
+                privateVulnerabilityReportingEnabled: repo.private_vuln_reporting_enabled || false,
+                dependabotAlertsEnabled: repo.dependabot_alerts_enabled || false,
+                dependabotAlertCount: repo.vuln_alert_count || 0,
+                codeScanningEnabled: repo.code_scanning_enabled || false,
+                codeScanningAlertCount: repo.code_scanning_alert_count || 0,
+                secretScanningEnabled: repo.secret_scanning_enabled || false,
+                secretScanningAlertCount: repo.secret_scanning_alert_count || 0,
+            };
+        }
+
         return NextResponse.json({
             repo,
             tasks,
@@ -92,7 +108,8 @@ export async function GET(
             features,
             docStatuses,
             bestPractices,
-            communityStandards
+            communityStandards,
+            securityConfig
         });
     } catch (error: unknown) {
         logger.warn('Error fetching repo details:', error);

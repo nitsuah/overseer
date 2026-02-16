@@ -23,13 +23,13 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ### v0.1.9: Security & Tracking
 
-- [ ] Add new "Security Details" section to application detail window.
-- [ ] Track GitHub security policy presence (SECURITY.md existence)
-- [ ] Detect security advisory configuration (vulnerability disclosure enabled)
-- [ ] Check private vulnerability reporting status
-- [ ] Monitor Dependabot alerts status (enabled/disabled)
-- [ ] Track code scanning alerts configuration
-- [ ] Track secret scanning alerts configuration
+- [x] Add new "Security Details" section to application detail window.
+- [x] Track GitHub security policy presence (SECURITY.md existence)
+- [x] Detect security advisory configuration (vulnerability disclosure enabled)
+- [x] Check private vulnerability reporting status
+- [x] Monitor Dependabot alerts status (enabled/disabled)
+- [x] Track code scanning alerts configuration
+- [x] Track secret scanning alerts configuration
 
 ### v0.1.10: Future Enhancements
 

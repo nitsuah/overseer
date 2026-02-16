@@ -142,6 +142,29 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         console.warn(`Could not get PR stats for ${repo.name}:`, (e as Error).message);
     }
 
+    // Fetch security configuration
+    let hasSecurityPolicy = false;
+    let hasSecurityAdvisories = false;
+    let privateVulnReportingEnabled = false;
+    let dependabotAlertsEnabled = false;
+    let codeScanningEnabled = false;
+    let codeScanningAlertCount = 0;
+    let secretScanningEnabled = false;
+    let secretScanningAlertCount = 0;
+    try {
+        const securityConfig = await github.getSecurityConfig(repo.name, owner);
+        hasSecurityPolicy = securityConfig.hasSecurityPolicy;
+        hasSecurityAdvisories = securityConfig.hasSecurityAdvisories;
+        privateVulnReportingEnabled = securityConfig.privateVulnerabilityReportingEnabled;
+        dependabotAlertsEnabled = securityConfig.dependabotAlertsEnabled;
+        codeScanningEnabled = securityConfig.codeScanningEnabled;
+        codeScanningAlertCount = securityConfig.codeScanningAlertCount;
+        secretScanningEnabled = securityConfig.secretScanningEnabled;
+        secretScanningAlertCount = securityConfig.secretScanningAlertCount;
+    } catch (e) {
+        console.warn(`Could not get security config for ${repo.name}:`, (e as Error).message);
+    }
+
     // Upsert repo with new metrics
     const repoRows = await db`
         INSERT INTO repos (
@@ -149,7 +172,10 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             last_synced, updated_at, last_commit_date, open_prs, branches_count, readme_last_updated,
             total_loc, loc_language_breakdown, ci_status, ci_last_run, ci_workflow_name,
             vuln_alert_count, vuln_critical_count, vuln_high_count, vuln_last_checked,
-            contributor_count, commit_frequency, bus_factor, avg_pr_merge_time_hours, contributors_last_checked
+            contributor_count, commit_frequency, bus_factor, avg_pr_merge_time_hours, contributors_last_checked,
+            has_security_policy, has_security_advisories, private_vuln_reporting_enabled,
+            dependabot_alerts_enabled, code_scanning_enabled, code_scanning_alert_count,
+            secret_scanning_enabled, secret_scanning_alert_count, security_last_checked
         )
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
@@ -157,7 +183,10 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}, ${readmeLastUpdated},
             ${totalLoc}, ${JSON.stringify(locLanguageBreakdown)}, ${ciStatus}, ${ciLastRun}, ${ciWorkflowName},
             ${vulnAlertCount}, ${vulnCriticalCount}, ${vulnHighCount}, NOW(),
-            ${contributorCount}, ${commitFrequency}, ${busFactor}, ${avgPrMergeTimeHours}, NOW()
+            ${contributorCount}, ${commitFrequency}, ${busFactor}, ${avgPrMergeTimeHours}, NOW(),
+            ${hasSecurityPolicy}, ${hasSecurityAdvisories}, ${privateVulnReportingEnabled},
+            ${dependabotAlertsEnabled}, ${codeScanningEnabled}, ${codeScanningAlertCount},
+            ${secretScanningEnabled}, ${secretScanningAlertCount}, NOW()
         )
         ON CONFLICT (name) DO UPDATE SET
           description = EXCLUDED.description,
@@ -187,7 +216,16 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           commit_frequency = EXCLUDED.commit_frequency,
           bus_factor = EXCLUDED.bus_factor,
           avg_pr_merge_time_hours = EXCLUDED.avg_pr_merge_time_hours,
-          contributors_last_checked = EXCLUDED.contributors_last_checked
+          contributors_last_checked = EXCLUDED.contributors_last_checked,
+          has_security_policy = EXCLUDED.has_security_policy,
+          has_security_advisories = EXCLUDED.has_security_advisories,
+          private_vuln_reporting_enabled = EXCLUDED.private_vuln_reporting_enabled,
+          dependabot_alerts_enabled = EXCLUDED.dependabot_alerts_enabled,
+          code_scanning_enabled = EXCLUDED.code_scanning_enabled,
+          code_scanning_alert_count = EXCLUDED.code_scanning_alert_count,
+          secret_scanning_enabled = EXCLUDED.secret_scanning_enabled,
+          secret_scanning_alert_count = EXCLUDED.secret_scanning_alert_count,
+          security_last_checked = EXCLUDED.security_last_checked
         RETURNING id;
     `;
     const repoId = repoRows[0].id;

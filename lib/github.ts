@@ -599,4 +599,143 @@ export class GitHubClient {
       return { avgMergeTimeHours: 0 };
     }
   }
+
+  async getSecurityConfig(repo: string, owner?: string): Promise<{
+    hasSecurityPolicy: boolean;
+    hasSecurityAdvisories: boolean;
+    privateVulnerabilityReportingEnabled: boolean;
+    dependabotAlertsEnabled: boolean;
+    dependabotAlertCount: number;
+    codeScanningEnabled: boolean;
+    codeScanningAlertCount: number;
+    secretScanningEnabled: boolean;
+    secretScanningAlertCount: number;
+  }> {
+    const ownerName = owner || this.owner;
+    const defaultResponse = {
+      hasSecurityPolicy: false,
+      hasSecurityAdvisories: false,
+      privateVulnerabilityReportingEnabled: false,
+      dependabotAlertsEnabled: false,
+      dependabotAlertCount: 0,
+      codeScanningEnabled: false,
+      codeScanningAlertCount: 0,
+      secretScanningEnabled: false,
+      secretScanningAlertCount: 0,
+    };
+
+    try {
+      // Check for SECURITY.md file
+      let hasSecurityPolicy = false;
+      try {
+        await this.octokit.repos.getContent({
+          owner: ownerName,
+          repo,
+          path: 'SECURITY.md',
+        });
+        hasSecurityPolicy = true;
+      } catch {
+        // Check alternative locations
+        try {
+          await this.octokit.repos.getContent({
+            owner: ownerName,
+            repo,
+            path: '.github/SECURITY.md',
+          });
+          hasSecurityPolicy = true;
+        } catch {
+          // File doesn't exist
+        }
+      }
+
+      // Check if security advisories are enabled
+      let hasSecurityAdvisories = false;
+      try {
+        await this.octokit.request('GET /repos/{owner}/{repo}/security-advisories', {
+          owner: ownerName,
+          repo,
+          per_page: 1,
+        });
+        hasSecurityAdvisories = true;
+      } catch {
+        // Advisories not enabled or no permission
+      }
+
+      // Check private vulnerability reporting
+      let privateVulnerabilityReportingEnabled = false;
+      try {
+        const { data: repoData } = await this.octokit.repos.get({
+          owner: ownerName,
+          repo,
+        });
+        // @ts-expect-error - this property might not be in types yet
+        privateVulnerabilityReportingEnabled = repoData.security_and_analysis?.secret_scanning?.status === 'enabled' || false;
+      } catch {
+        // Unable to check
+      }
+
+      // Check Dependabot alerts
+      let dependabotAlertsEnabled = false;
+      let dependabotAlertCount = 0;
+      try {
+        const { data } = await this.octokit.request('GET /repos/{owner}/{repo}/dependabot/alerts', {
+          owner: ownerName,
+          repo,
+          state: 'open',
+          per_page: 100,
+        });
+        dependabotAlertsEnabled = true;
+        dependabotAlertCount = Array.isArray(data) ? data.length : 0;
+      } catch {
+        // Dependabot not enabled or no permission
+      }
+
+      // Check code scanning alerts
+      let codeScanningEnabled = false;
+      let codeScanningAlertCount = 0;
+      try {
+        const { data } = await this.octokit.request('GET /repos/{owner}/{repo}/code-scanning/alerts', {
+          owner: ownerName,
+          repo,
+          state: 'open',
+          per_page: 100,
+        });
+        codeScanningEnabled = true;
+        codeScanningAlertCount = Array.isArray(data) ? data.length : 0;
+      } catch {
+        // Code scanning not enabled or no permission
+      }
+
+      // Check secret scanning alerts
+      let secretScanningEnabled = false;
+      let secretScanningAlertCount = 0;
+      try {
+        const { data } = await this.octokit.request('GET /repos/{owner}/{repo}/secret-scanning/alerts', {
+          owner: ownerName,
+          repo,
+          state: 'open',
+          per_page: 100,
+        });
+        secretScanningEnabled = true;
+        secretScanningAlertCount = Array.isArray(data) ? data.length : 0;
+      } catch {
+        // Secret scanning not enabled or no permission
+      }
+
+      return {
+        hasSecurityPolicy,
+        hasSecurityAdvisories,
+        privateVulnerabilityReportingEnabled,
+        dependabotAlertsEnabled,
+        dependabotAlertCount,
+        codeScanningEnabled,
+        codeScanningAlertCount,
+        secretScanningEnabled,
+        secretScanningAlertCount,
+      };
+    } catch (error) {
+      console.error(`Error fetching security config for ${repo}:`, error);
+      return defaultResponse;
+    }
+  }
 }

@@ -57,11 +57,11 @@ export class GitHubClient {
 
   async listRepos(): Promise<RepoMetadata[]> {
     const cacheKey = 'repos:list';
-    
+
     // Check cache first
     const cached = githubCache.get(cacheKey);
     const headers: Record<string, string> = {};
-    
+
     if (cached?.etag) {
       headers['If-None-Match'] = cached.etag;
     }
@@ -101,13 +101,13 @@ export class GitHubClient {
       return repos;
     } catch (error: unknown) {
       const err = error as { status?: number };
-      
+
       // If 304 Not Modified, return cached content
       if (err.status === 304 && cached) {
         logger.debug('[GitHub] Using cached repo list');
         return cached.data as RepoMetadata[];
       }
-      
+
       throw error;
     }
   }
@@ -141,12 +141,12 @@ export class GitHubClient {
   async getFileContent(repo: string, path: string, owner?: string): Promise<string | null> {
     const repoOwner = owner || this.owner;
     const cacheKey = `file:${repoOwner}/${repo}/${path}`;
-    
+
     try {
       // Check cache first
       const cached = githubCache.get(cacheKey);
       const headers: Record<string, string> = {};
-      
+
       if (cached?.etag) {
         headers['If-None-Match'] = cached.etag;
       }
@@ -160,19 +160,19 @@ export class GitHubClient {
 
       if ('content' in data && data.type === 'file') {
         const content = Buffer.from(data.content, 'base64').toString('utf-8');
-        
+
         // Cache the result with ETag
         const etag = responseHeaders.etag;
         if (etag) {
           githubCache.set(cacheKey, content, etag);
         }
-        
+
         return content;
       }
       return null;
     } catch (error: unknown) {
       const err = error as { status?: number };
-      
+
       // If 304 Not Modified, return cached content
       if (err.status === 304) {
         const cached = githubCache.get(cacheKey);
@@ -181,7 +181,7 @@ export class GitHubClient {
           return cached.data as string;
         }
       }
-      
+
       if (err.status === 404) {
         return null;
       }
@@ -668,7 +668,8 @@ export class GitHubClient {
           owner: ownerName,
           repo,
         });
-        privateVulnerabilityReportingEnabled = repoData.security_and_analysis?.secret_scanning?.status === 'enabled' || false;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        privateVulnerabilityReportingEnabled = (repoData as any).security_and_analysis?.private_vulnerability_reporting?.status === 'enabled' || false;
       } catch {
         // Unable to check
       }

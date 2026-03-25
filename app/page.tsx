@@ -111,8 +111,8 @@ export default function Dashboard() {
     });
   }, [handleSyncSingleRepo, expandedRepos, fetchRepoDetails]);
 
-  // Auto-refresh expanded panels every 5 minutes to pick up new commits/changes.
-  // The timer is cancelled if the panel is collapsed before it fires.
+  // Poll expanded panels every 5 minutes: re-syncs the repo then re-fetches
+  // detail data. The timer resets if the panel is collapsed before it fires.
   useRepoPolling(expandedRepos, handleSyncAndRefresh);
 
   // Fetch details for all repos when repos change

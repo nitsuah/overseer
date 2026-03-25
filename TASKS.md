@@ -33,7 +33,7 @@ _For full feature details, see FEATURES.md. For historical changelog, see CHANGE
 
 ### v0.1.10: Future Enhancements
 
-- [x] Add webhook integration for real-time updates (get repo after 5 minutes, if panel is expanded, scheduler for refreshes but watch out for token usage and rate limits)
+- [x] Add background refresh polling for near real-time updates (polls every 5 minutes while panel is expanded, cancels on collapse, respects existing rate-limit backoff)
 - [ ] Token Density Metric (LOC per logical unit with AI-assisted parsing)
 - [ ] Zombie Branch Detection (stale branches past merge)
 - [ ] Maintenance Mode Detection (activity patterns suggesting abandonment)

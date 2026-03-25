@@ -1,6 +1,6 @@
 // Custom hooks for dashboard functionality
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Repo, RepoDetails } from '@/types/repo';
 
 export function useRepos(showHidden = false) {
@@ -106,4 +106,55 @@ export function useRepoExpansion() {
   };
 
   return { expandedRepos, toggleRepo };
+}
+
+/**
+ * When a repo panel is expanded, schedule a background refresh after `intervalMs`
+ * (default 5 minutes). The timer is cancelled if the panel is collapsed before it
+ * fires, preventing unnecessary API calls. The callback should call sync + refetch.
+ */
+export function useRepoPolling(
+  expandedRepos: Set<string>,
+  onRefresh: (repoName: string) => Promise<void>,
+  intervalMs = 5 * 60 * 1000
+) {
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  // Keep a stable ref to onRefresh so the effect doesn't re-subscribe when the
+  // callback identity changes on every render.
+  const onRefreshRef = useRef(onRefresh);
+  useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
+
+  useEffect(() => {
+    const timers = timersRef.current;
+
+    // Start a timer for each newly-expanded repo
+    expandedRepos.forEach(repoName => {
+      if (!timers.has(repoName)) {
+        const timer = setTimeout(() => {
+          timers.delete(repoName);
+          onRefreshRef.current(repoName).catch(() => {
+            // Swallow errors — polling is best-effort
+          });
+        }, intervalMs);
+        timers.set(repoName, timer);
+      }
+    });
+
+    // Cancel timers for repos that have been collapsed
+    timers.forEach((timer, repoName) => {
+      if (!expandedRepos.has(repoName)) {
+        clearTimeout(timer);
+        timers.delete(repoName);
+      }
+    });
+  }, [expandedRepos, intervalMs]);
+
+  // Cancel all timers when the component unmounts
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+      timers.clear();
+    };
+  }, []);
 }

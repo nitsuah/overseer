@@ -3,11 +3,11 @@
 import { Toast } from '@/components/Toast';
 import { PRPreviewModal } from '@/components/PRPreviewModal';
 import GuidedTour from '@/components/GuidedTour';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import Header from '@/components/Header';
 import { RepoTableRow } from '@/components/dashboard/RepoTableRow';
-import { useRepos, useRepoDetails, useRepoExpansion } from '@/hooks/useDashboard';
+import { useRepos, useRepoDetails, useRepoExpansion, useRepoPolling } from '@/hooks/useDashboard';
 import { useRepoActions } from '@/hooks/useRepoActions';
 import { useRepoFilters } from '@/hooks/useRepoFilters';
 import { RepoType } from '@/lib/repo-type';
@@ -103,13 +103,17 @@ export default function Dashboard() {
     toggleRepo(repoName);
   };
 
-  const handleSyncAndRefresh = async (repoName: string) => {
+  const handleSyncAndRefresh = useCallback(async (repoName: string) => {
     await handleSyncSingleRepo(repoName, () => {
       if (expandedRepos.has(repoName)) {
         fetchRepoDetails(repoName, true); // Force refetch after sync
       }
     });
-  };
+  }, [handleSyncSingleRepo, expandedRepos, fetchRepoDetails]);
+
+  // Auto-refresh expanded panels every 5 minutes to pick up new commits/changes.
+  // The timer is cancelled if the panel is collapsed before it fires.
+  useRepoPolling(expandedRepos, handleSyncAndRefresh);
 
   // Fetch details for all repos when repos change
   React.useEffect(() => {

@@ -15,14 +15,27 @@ describe('Gemini API Health', () => {
     }
     const model = getConfiguredModel();
 
-    const { stdout } = await execAsync('node scripts/test-gemini-health.mjs', {
-      env: {
-        ...process.env,
-        GEMINI_MODEL_NAME: model,
-      },
-      timeout: 10000,
-    });
-    expect(stdout).toContain('Gemini API healthy');
-    expect(stdout).toContain(model);
+    try {
+      const { stdout, stderr } = await execAsync('node scripts/test-gemini-health.mjs', {
+        env: { ...process.env, GEMINI_MODEL_NAME: model },
+        timeout: 10000,
+      });
+      if ((stdout + stderr).includes('429 Too Many Requests')) {
+        console.warn('Skipping Gemini API Health test: quota exceeded (429)');
+        skip();
+        return;
+      }
+      expect(stdout).toContain('Gemini API healthy');
+      expect(stdout).toContain(model);
+    } catch (error: unknown) {
+      const combined = ((error as { stdout?: string; stderr?: string }).stdout ?? '') +
+        ((error as { stdout?: string; stderr?: string }).stderr ?? '');
+      if (combined.includes('429 Too Many Requests')) {
+        console.warn('Skipping Gemini API Health test: quota exceeded (429)');
+        skip();
+        return;
+      }
+      throw error;
+    }
   }, 15000);
 });

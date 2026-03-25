@@ -1,6 +1,6 @@
 // Custom hooks for dashboard functionality
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Repo, RepoDetails } from '@/types/repo';
 
 export function useRepos(showHidden = false) {
@@ -106,4 +106,88 @@ export function useRepoExpansion() {
   };
 
   return { expandedRepos, toggleRepo };
+}
+
+/**
+ * Auto-refresh expanded repo panels every `intervalMs` (default 5 min).
+ * Uses a recursive setTimeout so the next tick only fires after the async
+ * refresh fully completes. Timers are cancelled when a panel is collapsed
+ * or when the component unmounts, preventing wasted API calls.
+ * When `intervalMs` changes at runtime, all active timers are restarted
+ * with the new interval.
+ */
+export function useRepoPolling(
+  expandedRepos: Set<string>,
+  onRefresh: (repoName: string) => Promise<void>,
+  intervalMs = 5 * 60 * 1000
+) {
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  // Refs keep the latest values accessible inside timer callbacks without
+  // requiring the effect to re-subscribe on every render.
+  const onRefreshRef = useRef(onRefresh);
+  const expandedReposRef = useRef(expandedRepos);
+  const intervalMsRef = useRef(intervalMs);
+  useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
+  useEffect(() => { expandedReposRef.current = expandedRepos; }, [expandedRepos]);
+  useEffect(() => { intervalMsRef.current = intervalMs; }, [intervalMs]);
+
+  // scheduleOne is stable (no deps) because all mutable values are read via refs.
+  const scheduleOne = useCallback((repoName: string) => {
+    const timers = timersRef.current;
+    if (timers.has(repoName)) return; // already counting down
+    const timer = setTimeout(async () => {
+      timers.delete(repoName);
+      try {
+        await onRefreshRef.current(repoName);
+      } catch (err) {
+        console.error(`[useRepoPolling] refresh failed for "${repoName}":`, err);
+      }
+      // Re-schedule while the panel is still expanded — this is what makes
+      // it truly poll rather than fire once.
+      if (expandedReposRef.current.has(repoName)) {
+        scheduleOne(repoName);
+      }
+    }, intervalMsRef.current);
+    timers.set(repoName, timer);
+  }, []);
+
+  // Start/cancel timers as the set of expanded repos changes.
+  useEffect(() => {
+    const timers = timersRef.current;
+
+    // Start a timer for each newly-expanded repo
+    expandedRepos.forEach(repoName => scheduleOne(repoName));
+
+    // Cancel timers for repos that have been collapsed
+    timers.forEach((timer, repoName) => {
+      if (!expandedRepos.has(repoName)) {
+        clearTimeout(timer);
+        timers.delete(repoName);
+      }
+    });
+  }, [expandedRepos, scheduleOne]);
+
+  // When intervalMs changes, restart all active timers so the new interval
+  // takes effect immediately rather than waiting for the next expansion.
+  const prevIntervalMsRef = useRef(intervalMs);
+  useEffect(() => {
+    if (prevIntervalMsRef.current === intervalMs) return;
+    prevIntervalMsRef.current = intervalMs;
+    const timers = timersRef.current;
+    const active = [...timers.keys()];
+    active.forEach(repoName => {
+      clearTimeout(timers.get(repoName)!);
+      timers.delete(repoName);
+    });
+    active.forEach(repoName => scheduleOne(repoName));
+  }, [intervalMs, scheduleOne]);
+
+  // Cancel all timers when the component unmounts
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+      timers.clear();
+    };
+  }, []);
 }

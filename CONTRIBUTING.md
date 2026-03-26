@@ -106,12 +106,15 @@ DATABASE_URL=postgresql://user:pass@host/db
 # Get from https://aistudio.google.com/app/apikey
 GEMINI_API_KEY=AIzaSy...your_key_here
 
+# Optional model override
+GEMINI_MODEL_NAME=models/gemini-2.5-flash
+
 # Netlify (optional)
 NETLIFY_SITE_ID=
 NETLIFY_AUTH_TOKEN=
 ```
 
-**Note on Gemini API**: As of November 2025, Google deprecated Gemini 1.x models. The codebase uses `gemini-2.0-flash-exp`. Test with `npm run test-gemini-health` to verify your API key works. If the model breaks in the future, run `npm run find-gemini-models` to discover working alternatives.
+**Note on Gemini API**: Google model availability can change over time. The codebase defaults to `models/gemini-2.5-flash` and supports discovery/fallback. Test with `npm run test-gemini-health` to verify your API key works. If the model breaks in the future, run `npm run find-gemini-models` to discover working alternatives.
 
 ## Project Structure
 
@@ -185,8 +188,8 @@ All root-level documentation files should follow these formats:
 ## Testing
 
 - Run tests: `npm test`
-- Check coverage: `npm run coverage`
-- Parser tests achieve 87.5% branch coverage (vitest)
+- Check coverage: `npm test -- --coverage`
+- Use health/model checks when working on AI integration: `npm run test-gemini-health`
 
 See [ROADMAP.md](./ROADMAP.md) for planned testing improvements.
 
@@ -213,6 +216,6 @@ When updating:
 2. Update development setup steps as dependencies change
 3. Maintain coding standards section as patterns evolve
 4. Add examples for common contribution scenarios
-5. Ensure all referenced files (README.md, LICENSE.md) exist and are current
+5. Ensure all referenced files (README.md, LICENSE) exist and are current
 6. Test setup instructions to verify accuracy
 -->

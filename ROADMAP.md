@@ -1,111 +1,36 @@
-# 🗺️ Overseer Product Roadmap
+# Roadmap
 
-**Last Updated:** 2026-03-27 | PMO audit — live site https://ghoverseer.netlify.app (frontend loaded), 71.51% coverage (above target)
+Last Updated: 2026-03-27
 
-## Status Legend
+## 2025 Q4 (Completed)
 
-- `[x]` Done
-- `[/]` In Progress
-- `[ ]` Planned
-- `[ ]` 🔭 Exploratory (not yet scoped)
+- [x] Ship the foundation and UX baseline.
+- [x] Add PR preview, AI enrichment, repo intelligence, and auto-fix flows.
+- [x] Reach and hold the test coverage target.
 
----
+## 2026 Q1 (In Progress)
 
-## 2025 Q4: Foundation & UX ✅ — Complete
+- [ ] Complete the Agent Task Queue API for autonomous agent work.
+- [ ] Add workflow visualization for multi-step execution paths.
+- [ ] Add the conversational interface foundation.
+- [ ] Add AI doc-improvement controls.
+- [/] Keep Gemini failover and model evolution resilient.
 
-All shipped and validated.
+## 2026 Q2 (Planned)
 
-- [x] **Guided Tour System** — Interactive 16-step onboarding with spotlight, auto-advance (3s), row expansion for wizard UX
-- [x] **PR Preview Modal** — File selection, diff view (Myers LCS algorithm), inline edit/generate toggle
-- [x] **AI Template Enrichment** — Context-aware doc generation using repo metadata, Gemini 2.0 backbone
-- [x] **OAuth Error Handling** — Comprehensive error detection (5 types) with auto-redirect and user-friendly messaging
-- [x] **Repository Intelligence** — Health scoring (0-100 with component breakdown), 4-state doc tracking (Missing/Dormant/Malformed/Healthy), activity monitoring
-- [x] **Auto-Fix System** — One-click PR creation for 8 doc types + 4 best practices + 10 community standards; batch operations
-- [x] **AI Prompt Chain** — Multi-stage RAG for repo-specific best practice generation (repo type detection, context inference, failover)
-- [x] **Test Coverage** — 71.51% achieved (exceeded 70% target); 162 test cases across 16 suites; 5 E2E Playwright tests; all paths converging
+- [ ] Refresh `docs/AUDIT.md` and keep the metrics evidence current.
+- [ ] Add security inputs to the health score.
+- [ ] Expand the rate-limit, caching, and provider-reliability path where needed.
 
----
+## 2026 Q3 (Exploratory)
 
-## 2026 Q1: 🤖 Autonomous Agents & Conversational UI — In Planning
+- [ ] Add advanced analytics such as velocity and technical debt scoring.
+- [ ] Expand agent APIs, plugin boundaries, and webhook-driven updates.
+- [ ] Evaluate team collaboration, enterprise auth, and mobile follow-on work.
+- [ ] Revisit exploratory metrics such as token density, zombie branches, maintenance mode, and comment-to-code ratio.
 
-Foundation for multi-agent orchestration.
+## Notes
 
-- [ ] **Agent Task Queue API** — `/api/agent/tasks` endpoint for autonomous AI agents to submit doc generation and fix tasks; webhook signature validation
-- [ ] **Workflow Visualization** — UI screen showing branching/execution paths for multi-step actions (e.g., template → edit → PR)
-- [ ] **Unified PR & Task Manager** — Central dashboard for GitHub PRs + TASKS.md entries (pull both sources into single view)
-- [ ] **Roadmap Simulation** — AI-powered schedule impact analysis (e.g., "if Mobile App delays 1 month, Q3 shifts how?")
-- [ ] **Conversational Interface Foundation** — Natural language, chat-driven input routing to handlers (docs fix, vuln assignment, repo hygiene checks)
-- [ ] **AI Doc Improvement Modal** — "Improve" buttons on existing docs (ROADMAP, TASKS, FEATURES, METRICS) with baseline → enhanced → accept/reject flow
-
----
-
-## 2026 Q2: 🔐 Security Enhancements & Analytics — Planned
-
-Security hardening + advanced metrics.
-
-**Rate Limiting Optimization:**
-
-- [x] Content-hash based caching — skip unchanged files using `doc_status.content_hash`
-- [x] ETag support — GitHub ETag headers to avoid redundant fetches
-- [x] Batch delays — configurable delays between repo syncs (already implemented, `SYNC_DELAY_MS=2000`)
-- [x] Rate limit UI — status indicator with warnings (already implemented)
-- [x] Exponential backoff — retry with backoff when hitting limits (already implemented)
-
-**Security in Health Score:**
-
-- [ ] Add vulnerability metrics to 0-100 calculation (Dependabot count, severity levels)
-- [ ] Track 6 GitHub security settings (SECURITY.md, advisories, private reporting, Dependabot, code scanning, secret scanning)
-
-**Gemini Model Evolution:**
-
-- [/] Auto-detection of deprecated models (test on each request, discover alternatives if broken)
-- [/] Runtime model caching (15min TTL) for switching mid-session
-- [/] Self-healing failover across Gemini + GPT-4 + Claude
-
----
-
-## 2026 Q3: 🏗️ Advanced Analytics Features — Exploratory
-
-Intelligence layer expansion.
-
-- [ ] **Velocity Tracking** — PR/commit trends over time; burn-down charts
-- [ ] **Technical Debt Scoring** — Dependency age, library maturity, dependency tree depth
-- [ ] **Agent APIs** — AI-driven multi-step actions ("Suggest Roadmap for Q2", "Propose Code Review Assignment", "Flag Security Gaps")
-- [ ] **Extensibility: Plugin System** — Custom parsers, custom metrics, custom AI providers
-- [ ] **Real-time: Webhook Integration** — Real-time updates on repo events (commits, PRs, issues)
-- [ ] **Team Collaboration** — Comments, assignments, approval workflows
-- [ ] **Enterprise SSO** — Single sign-on (SAML, OIDC) for enterprise deployment
-- [ ] **Mobile App** — React Native app for mobile repository oversight
-- [ ] **Custom AI Model Fine-tuning** — Overseer-specific fine-tuned Gemini/GPT models
-- [ ] **Dark/Light Mode Toggle** — UI theme preferences (localStorage persistence)
-
-**Exploratory Metrics:**
-
-- [ ] **Token Density Metric** — LOC per logical unit (function/method/class) with AI-assisted parsing
-- [ ] **Zombie Branch Detection** — Stale branches past merge date (90+day threshold)
-- [ ] **Maintenance Mode Detection** — Auto-flag repos with zero activity past threshold
-- [ ] **Comment-to-Code Ratio** — Documentation density (comment lines / total lines) per file and aggregate
-
----
-
-## Architecture North Star
-
-**Philosophy:** GitHub repos (code + markdown) as source of truth. Zero manual overhead. Lightweight. Serverless.
-
-**Stack:** Next.js 16 + React 19 + TypeScript + Tailwind 4 (frontend) | Netlify Functions + Neon Postgres (backend) | NextAuth v5 + GitHub OAuth (auth) | Octokit + Gemini + OpenAI/Anthropic (integrations)
-
-**End State (2027+):** Conversational interface orchestrating multi-step governance workflows:
-
-- _"Run hygiene check on payment service, fix stale docs, assign highest priority vuln to Alice"_
-- _"Impact on Q3 if Mobile App delays one month?"_
-- _"Generate Q2 roadmap based on velocity and debt scores"_
-
-Overseer = **Workflow Orchestrator + Intelligence Layer for Engineering Health** (humans + AI agents)
-
-<!--
-AGENT INSTRUCTIONS:
-1. Keep this roadmap up-to-date with high-level milestones.
-2. Mark items as completed [x] when features are shipped.
-3. Add new quarters as time progresses.
-4. Evidence source: live site, METRICS.md, FEATURES.md
--->
+- GitHub repositories and markdown remain the source of truth.
+- Multi-step governance workflows are the long-term product direction.
+- Detailed execution work stays in TASKS.md.

@@ -1,5 +1,7 @@
 # Overseer Features
 
+Status guide: features listed here are shipped unless explicitly marked as planned in ROADMAP.md or TASKS.md.
+
 ## 🎯 Core Capabilities
 
 ### 📊 Repository Intelligence

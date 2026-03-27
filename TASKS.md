@@ -9,7 +9,9 @@ Last Updated: 2026-03-27
   - Context: `ai.ts` already has multi-provider failover and auto-discovery, but the repo still needs clearer resilience around Gemini deprecations and provider switching.
   - Acceptance Criteria: provider health checks, fallback behavior, and model-switch logging stay reliable.
 
-## P1 - High
+## Todo
+
+### P1 - High
 
 - [ ] Refresh `docs/AUDIT.md`.
   - Priority: P1
@@ -21,7 +23,7 @@ Last Updated: 2026-03-27
   - Context: autonomous agent submission still lacks a documented and implemented task-queue contract.
   - Acceptance Criteria: `POST /api/agent/tasks` is defined with validation, auth, and response structure.
 
-## P2 - Medium
+### P2 - Medium
 
 - [ ] Add workflow visualization.
   - Priority: P2
@@ -38,7 +40,7 @@ Last Updated: 2026-03-27
   - Context: the app lacks inline improve-and-accept flows for existing documentation.
   - Acceptance Criteria: users can compare baseline and AI-enhanced content before accepting changes.
 
-## P3 - Exploratory
+### P3 - Exploratory
 
 - [ ] Add token-density metrics.
   - Priority: P3

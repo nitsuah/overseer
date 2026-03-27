@@ -1,50 +1,95 @@
-# Tasks
+---
+updated: 2026-03-27
+---
 
-## Done
-
-_For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._
+# TASKS
 
 ## In Progress
 
+- [/] Gemini model evolution and reliability.
+  - Priority: P1
+  - Context: `ai.ts` already has multi-provider failover and auto-discovery, but the repo still needs clearer resilience around Gemini deprecations and provider switching.
+  - Acceptance Criteria: provider health checks, fallback behavior, and model-switch logging stay reliable.
+
 ## Todo
 
-### v0.1.8: Performance & Rate Limiting
+### P1 - High
 
-- [x] Add sorting to Repo list ui (name, health, stars, updated, language columns)
-- [x] Improve Error Handling in GitHub API Client - Standardized error messages and logging in lib/github.ts
-- [x] Display rate limit status in UI with warning when approaching limits (RateLimitIndicator component)
-- [x] Add delay batching between repos during sync to reduce rate limit pressure (configurable SYNC_DELAY_MS=2000)
-- [x] Implement exponential backoff for rate limit retries (3 attempts with backoff)
-- [x] Implement smart caching for GitHub API calls using content_hash from doc_status (in-memory cache with 5-min TTL)
-- [x] Add ETag support to skip unchanged file fetches (integrated in getFileContent and listRepos)
-- [x] Fix TypeScript errors in scripts/debug-skyview.ts
-- [x] Fix failing Playwright tests in dashboard.spec.ts
-- [ ] **Test Coverage Target**: Increase coverage from 60% to 70%+ with additional utility and component tests
+- [ ] Refresh `docs/AUDIT.md`.
+  - Priority: P1
+  - Context: the audit doc is stale relative to the current branch state and measured coverage.
+  - Acceptance Criteria: `docs/AUDIT.md` and the matching metrics timestamps reflect the current validated state.
 
-### v0.1.9: Security & Tracking
+- [ ] Complete the Agent Task Queue API.
+  - Priority: P1
+  - Context: autonomous agent submission still lacks a documented and implemented task-queue contract.
+  - Acceptance Criteria: `POST /api/agent/tasks` is defined with validation, auth, and response structure.
 
-- [x] Add new "Security Details" section to application detail window.
-- [x] Track GitHub security policy presence (SECURITY.md existence)
-- [x] Detect security advisory configuration (vulnerability disclosure enabled)
-- [x] Check private vulnerability reporting status
-- [x] Monitor Dependabot alerts status (enabled/disabled)
-- [x] Track code scanning alerts configuration
-- [x] Track secret scanning alerts configuration
+### P2 - Medium
 
-### v0.1.10: Future Enhancements
+- [ ] Add workflow visualization.
+  - Priority: P2
+  - Context: multi-step actions still lack a clear branching and execution view.
+  - Acceptance Criteria: the UI exposes execution-path visibility for template, edit, and PR flows.
 
-- [x] Add background refresh polling for near real-time updates (polls every 5 minutes while panel is expanded, cancels on collapse, respects existing rate-limit backoff)
-- [ ] Token Density Metric (LOC per logical unit with AI-assisted parsing)
-- [ ] Zombie Branch Detection (stale branches past merge)
-- [ ] Maintenance Mode Detection (activity patterns suggesting abandonment)
-- [ ] Comment-to-Code Ratio Analysis (documentation density)
-- [ ] Implement Dark/Light Mode Toggle and other UI enhancements
+- [ ] Add a conversational interface foundation.
+  - Priority: P2
+  - Context: natural-language routing for repo hygiene and doc work is still only a concept.
+  - Acceptance Criteria: one or two chat-driven workflows work end to end.
+
+- [ ] Add AI doc-improvement controls.
+  - Priority: P2
+  - Context: the app lacks inline improve-and-accept flows for existing documentation.
+  - Acceptance Criteria: users can compare baseline and AI-enhanced content before accepting changes.
+
+### P3 - Exploratory
+
+- [ ] Add token-density metrics.
+  - Priority: P3
+  - Context: token density is still only an exploratory repo-health metric.
+  - Acceptance Criteria: logical-unit density is stored and surfaced usefully.
+
+- [ ] Add zombie-branch detection.
+  - Priority: P3
+  - Context: the UI does not yet surface stale long-lived branches.
+  - Acceptance Criteria: stale branches are detected and flagged in the interface.
+
+- [ ] Add maintenance-mode detection.
+  - Priority: P3
+  - Context: dormant repositories are not yet automatically classified.
+  - Acceptance Criteria: inactive repos are flagged past a defined threshold.
+
+- [ ] Add comment-to-code ratio metrics.
+  - Priority: P3
+  - Context: documentation density remains an idea rather than a measured signal.
+  - Acceptance Criteria: file-level and aggregate ratios are calculated and displayed.
+
+- [ ] Add a dark and light mode toggle.
+  - Priority: P3
+  - Context: theme preferences are still not user-configurable.
+  - Acceptance Criteria: the UI supports a persistent theme toggle.
+
+## Done
+
+For full feature details, see FEATURES.md. For historical context, see CHANGELOG.md.
+
+- [x] Performance and rate-limiting improvements.
+- [x] Security and tracking improvements.
+- [x] Background refresh behavior.
+- [x] Repository intelligence and health scoring.
+- [x] AI integration and provider failover.
+- [x] PR preview modal.
+- [x] Auto-fix system.
+- [x] Testing baseline and coverage target.
+- [x] OAuth error handling.
+- [x] GitHub integration.
+- [x] Netlify deployment.
+- [x] Guided tour system.
+- [x] Core docs set.
 
 <!--
 AGENT INSTRUCTIONS:
-1. Add new tasks to "Todo" as they arise.
-2. Move tasks to "In Progress" when you start working on them.
-3. Move tasks to "Done" when completed.
-4. Keep task descriptions concise.
-5. Wait for PM to add new Tasks if completed all current tasks.
+1. Keep active items in In Progress and P1-P3 sections.
+2. Keep task bullets short and scannable.
+3. Move finished work into Done.
 -->

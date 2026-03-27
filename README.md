@@ -4,7 +4,6 @@
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/ebf5c761-34fb-495b-bd86-ea57932296b3/deploy-status)](https://app.netlify.com/projects/ghoverseer/deploys)
 
-
 > **Meta-Repository Intelligence Layer**
 > A dashboard that gives you and your AI agents a unified view across all your GitHub repositories.
 
@@ -21,7 +20,7 @@ Overseer bridges human intent and AI execution through enforced documentation st
 ## Features
 
 - 📊 **Repository Intelligence** - Health scoring, doc tracking, activity monitoring
-- 🤖 **AI Automation** - Gemini 2.0 summaries, context-aware doc generation with multi-stage RAG
+- 🤖 **AI Automation** - Gemini-powered summaries, failover, and context-aware doc generation with multi-stage RAG
 - 🔧 **One-Click Fixes** - PR creation for docs, 9 best practices, 10 community standards
 - 🎯 **Interactive Onboarding** - 16-step guided tour with spotlight highlighting
 - 🔗 **GitHub Integration** - OAuth auth, full metadata sync, rate limit monitoring, custom repo paths
@@ -33,14 +32,14 @@ Overseer bridges human intent and AI execution through enforced documentation st
 - **Backend:** Netlify Functions (serverless)
 - **Database:** Neon Postgres (serverless)
 - **Auth:** NextAuth v5 with GitHub OAuth
-- **APIs:** GitHub REST API via Octokit, Google Gemini AI
-- **Testing:** Vitest (92 tests, 60% coverage) + Playwright E2E
+- **APIs:** GitHub REST API via Octokit, Google Gemini, OpenAI, Anthropic
+- **Testing:** Vitest + Playwright E2E
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20.x
 - GitHub OAuth App (for authentication)
 - Neon Postgres database (free tier)
 - Google Gemini API key (optional, for AI summaries)
@@ -84,6 +83,9 @@ DATABASE_URL=postgresql://user:pass@host/db
 
 # Google Gemini (optional - for AI summaries)
 GEMINI_API_KEY=your_gemini_api_key
+
+# Optional model override
+GEMINI_MODEL_NAME=models/gemini-2.5-flash
 
 # Optional Netlify
 NETLIFY_SITE_ID=
@@ -174,7 +176,7 @@ netlify deploy --prod
 
 ## License
 
-See `LICENSE.md` file
+See `LICENSE` file
 
 ## Author
 
@@ -195,7 +197,7 @@ CRITICAL FORMAT REQUIREMENTS:
 When updating:
 1. Test all installation commands before committing
 2. Update version numbers when dependencies change
-3. Verify all linked files (CONTRIBUTING.md, LICENSE.md) exist
+3. Verify all linked files (CONTRIBUTING.md, LICENSE) exist
 4. Keep feature list in sync with FEATURES.md
 5. Update tech stack when adding/removing major dependencies
 6. Ensure API endpoint documentation matches actual routes

@@ -11,85 +11,40 @@
 
 ---
 
-## P1 — High
-
-### Complete 2026Q1 Agent Task Queue API
-
-**Status:** Planned  
-**Context:** 2026Q1 roadmap item "Agent Task Queue: API endpoint for autonomous AI agents to submit tasks". This is foundational for the autonomous agent orchestration vision.  
-**Acceptance:** POST `/api/agent/tasks` accepts agent-submitted doc generation queues; webhooks validate GitHub webhook signatures; response structure defined and documented
+## In Progress
 
 ### Gemini Model Evolution & Reliability
 
-**Status:** Ongoing  
-**Context:** `ai.ts` has multi-provider failover (Gemini, GPT-4, Claude) and auto-discovery. But Gemini API has frequent model deprecations (v1 → v1.5 → v1.5 Pro → 2.0 Pro evolution). Current cached model may become unavailable.  
-**Acceptance:** `npm run test-gemini` passes across all model family options; health check endpoint monitors all providers; logs when model switch happens
-
-### docs/AUDIT.md Currency
-
-**Status:** Open  
-**Context:** Last audit was Dec 11, 2025 (3.5 months ago). METRICS.md shows actual coverage at 71.51% (above the 70% target) but timestamp is stale.  
-**Acceptance:** docs/AUDIT.md reviewed and updated; METRICS.md timestamp refreshed; coverage value validated against latest vitest run
+- [/] **(P1) Gemini Model Evolution** — `ai.ts` has multi-provider failover (Gemini, GPT-4, Claude) and auto-discovery. Ensure resilience against Gemini API model deprecations; health check monitors all providers; logs when model switch happens
 
 ---
 
-## P2 — Medium
+## Todo
 
-### Workflow Visualization & Execution Paths
+### Documentation & Audit
 
-**Status:** Planned  
-**Context:** 2026Q1 "Workflow Visualization: Screen showing branching/execution paths for complex actions". Currently PR Preview shows diff only; no branching/multi-step flow visualization.  
-**Acceptance:** PR Preview Modal extended with visualization of AI template → edit → PR creation steps with branch visualization
+- [ ] **(P1) Refresh docs/AUDIT.md** — Last audit Dec 11, 2025 (3.5mo ago); update METRICS.md timestamp; validate coverage value against latest vitest run
 
-### Conversational Interface Foundation (Chat-Driven)
+### 2026Q1 Autonomous Agents
 
-**Status:** Planned  
-**Context:** 2026Q1 roadmap item. Currently UI is GUI-driven (point-and-click). Target is natural language interface like "Run hygiene check on payment service, fix stale docs, assign highest priority vuln to Alice".  
-**Acceptance:** Conversational input component accepts natural language; routes to appropriate handlers (docs fix, assignee logic, etc.); proof-of-concept for 1–2 workflows
+- [ ] **(P1) Complete Agent Task Queue API** — POST `/api/agent/tasks` for autonomous AI agents to submit doc generation queues; webhook signature validation; response structure defined and documented
+- [ ] **(P2) Workflow Visualization** — UI screen showing branching/execution paths for multi-step actions (template → edit → PR creation)
+- [ ] **(P2) Conversational Interface Foundation** — Natural language chat-driven input routing to handlers (docs fix, vuln assignment, repo hygiene); proof-of-concept for 1–2 workflows
+- [ ] **(P2) AI Doc Improvement Buttons** — "Improve" buttons on existing docs; modal shows baseline + AI-enhanced version with accept/reject/edit flow
 
-### AI Doc Improvement Buttons
+### Exploratory
 
-**Status:** Planned  
-**Context:** 2026Q1 item "Add 'Improve' buttons to existing documentation with AI-powered enhancement modal". Currently auto-fix is available, but improving existing docs is not exposed.  
-**Acceptance:** "Improve" button visible in doc rows; modal shows baseline + AI-enhanced version with user choice to accept/reject/edit
-
----
-
-## P3 — Low / Exploratory
-
-### Token Density Metric (LOC per logical unit)
-
-**Status:** Open  
-**Context:** v0.1.10 roadmap. Requires parsing code structure (functions, methods, classes) and correlating with LOC.  
-**Acceptance:** Token density calculated for 3+ languages (JS/TS, Python, Go); stored in `repo_columns` with percentile display
-
-### Zombie Branch Detection
-
-**Status:** Open  
-**Context:** v0.1.10 roadmap. Identify stale branches past merge date.  
-**Acceptance:** GitHub API query for branches older than N days; UI marks branches with "stale" indicator
-
-### Maintenance Mode Detection
-
-**Status:** Open  
-**Context:** v0.1.10 roadmap. Activity pattern analysis (no commits, no PRs, no issues in 90+ days).  
-**Acceptance:** Repo marked "maintenance mode" if zero activity for 90 days; appear in separate UI section
-
-### Comment-to-Code Ratio (Documentation Density)
-
-**Status:** Open  
-**Context:** v0.1.10 roadmap. Percentage of lines that are comments.  
-**Acceptance:** Calculated per file and aggregated; correlated with test coverage and PR review time
-
-### Dark/Light Mode Toggle
-
-**Status:** Open  
-**Context:** v0.1.10 item. Currently no dark mode.  
-**Acceptance:** Toggle visible in header; persists to localStorage; all colors adapt correctly
+- [ ] **(P3) Token Density Metric** — LOC per logical unit (function/method/class) for JS/TS, Python, Go; stored in `repo_columns` with percentile display
+- [ ] **(P3) Zombie Branch Detection** — GitHub API query for branches older than N days; UI marks branches with "stale" indicator
+- [ ] **(P3) Maintenance Mode Detection** — Auto-flag repos with zero activity for 90+ days; separate UI section
+- [ ] **(P3) Comment-to-Code Ratio** — Documentation density per file and aggregate; correlated with test coverage
+- [ ] **(P3) Dark/Light Mode Toggle** — Toggle in header; persists to localStorage; all colors adapt correctly
 
 ---
 
 ## Done
+
+_For full feature details, see FEATURES.md. For historical changelog, see CHANGELOG.md._
 
 - [x] **v0.1.8 Performance & Rate Limiting** — Rate limit UI, exponential backoff, smart caching, ETag support, sorting
 - [x] **v0.1.9 Security & Tracking** — Security details section, SECURITY.md tracking, Dependabot, code/secret scanning configuration
@@ -110,9 +65,9 @@
 
 <!--
 AGENT INSTRUCTIONS:
-This file tracks actionable tasks.
-1. Keep active items in their priority sections (P0–P3)
-2. Move completed items to Done with [x]
-3. Evidence source in Context field
-4. Keep descriptions concise but actionable
+1. Add new tasks to "Todo" as they arise.
+2. Move tasks to "In Progress" when you start working on them.
+3. Move tasks to "Done" when completed.
+4. Keep task descriptions concise.
+5. Priority is encoded in task title: (P0) blocking, (P1) high, (P2) medium, (P3) low/exploratory.
 -->

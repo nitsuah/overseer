@@ -12,7 +12,9 @@ updated: 2026-03-27
 
 ## 2026 Q1 (In Progress)
 
-- [ ] Complete the Agent Task Queue API for autonomous agent work.
+- [x] Complete the Agent Task Queue API for autonomous agent work.
+	- Completed: 2026-03-27
+	- Evidence: [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md), [app/api/agent/tasks.ts](app/api/agent/tasks.ts)
 - [ ] Add workflow visualization for multi-step execution paths.
 - [ ] Add the conversational interface foundation.
 - [ ] Add AI doc-improvement controls.

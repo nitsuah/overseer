@@ -11,14 +11,14 @@ updated: 2026-03-27
   - Context: `ai.ts` already has multi-provider failover and auto-discovery, but the repo still needs clearer resilience around Gemini deprecations and provider switching.
   - Acceptance Criteria: provider health checks, fallback behavior, and model-switch logging stay reliable.
 
+- [/] Keep Docker validation and app-build smoke tests reliable.
+  - Priority: P1
+  - Context: the production image now builds with placeholder auth values during the build stage, but the runtime path still depends on correctly supplied secrets.
+  - Acceptance Criteria: container smoke builds stay green and runtime secret requirements remain documented.
+
 ## Todo
 
 ### P1 - High
-
-- [ ] Refresh `docs/AUDIT.md`.
-  - Priority: P1
-  - Context: the audit doc is stale relative to the current branch state and measured coverage.
-  - Acceptance Criteria: `docs/AUDIT.md` and the matching metrics timestamps reflect the current validated state.
 
 - [ ] Complete the Agent Task Queue API.
   - Priority: P1
@@ -86,6 +86,10 @@ For full feature details, see FEATURES.md. For historical context, see CHANGELOG
 - [x] Netlify deployment.
 - [x] Guided tour system.
 - [x] Core docs set.
+- [x] Refresh `docs/AUDIT.md` and metrics evidence.
+- [x] Add Docker smoke workflow coverage for app and test-stack checks.
+  - Completed: 2026-03-27
+  - Evidence: `.github/workflows/docker-smoke.yml` now builds the production image and validates the containerized test runtime command.
 
 <!--
 AGENT INSTRUCTIONS:

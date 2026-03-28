@@ -12,12 +12,18 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN GITHUB_ID=docker-build-placeholder \
+    GITHUB_SECRET=docker-build-placeholder \
+    NEXTAUTH_SECRET=docker-build-placeholder \
+    NEXTAUTH_URL=http://localhost:3000 \
+    NEXT_TELEMETRY_DISABLED=1 \
+    npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json

@@ -11,9 +11,9 @@ test-results
 tests
 *.log
 *.md
+!templates/**/*.md
 Dockerfile.test
 docker-compose.test.yml
 netlify.toml
 database
 scripts
-templates

@@ -1,6 +1,6 @@
 # Overseer Feature Audit
 
-Last Updated: December 1, 2025
+Last Updated: March 27, 2026
 
 ## Summary
 
@@ -10,11 +10,12 @@ Documentation and implementation are aligned across the project. Key validations
 - **Documentation**: All 5 core docs (ROADMAP, TASKS, METRICS, FEATURES, README) have templates and modal-based PR creation ✅
 - **Best Practices**: All 4 template-based practices (Dependabot, Env Template, Docker, Netlify Badge) have modal-based PR creation ✅
 - Centralized server-side logging via `lib/log.ts`; server routes and scripts use `logger` consistently.
-- `.env.template` exists and is referenced in README and CONTRIBUTING; Dependabot and Docker are configured;
+- `.env.example` exists and is referenced in README and CONTRIBUTING; Dependabot and Docker are configured;
 - ⚠️ Deploy Badge in README includes Netlify badge section but needs ability to update existing if present.
-- METRICS reflect current test suite: 7 test files, 12 tests; coverage is self-reported via METRICS.md.
+- METRICS now reflect the Docker-validated unit suite: 19 test files, 200 passing tests, 1 skipped Gemini health check, and 62.50% statement coverage.
 - **Security Enhancement**: Markdown rendering now uses react-markdown with rehype-sanitize plugin for XSS protection ✅
 - **Authentication UI**: Sync All button restricted to authenticated users only ✅
+- **Docker Validation**: `docker build -t overseer-devops-check .` now completes without real secrets injected at build time; runtime secrets are still required ✅
 
 _For historical improvements and version history, see CHANGELOG.md._
 

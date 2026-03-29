@@ -20,7 +20,7 @@ updated: 2026-03-27
 
 ## 2026 Q2 (Planned)
 
-- [ ] Refresh `docs/AUDIT.md` and keep the metrics evidence current.
+- [x] Refresh `docs/AUDIT.md` and keep the metrics evidence current.
 - [ ] Add security inputs to the health score.
 - [ ] Expand the rate-limit, caching, and provider-reliability path where needed.
 

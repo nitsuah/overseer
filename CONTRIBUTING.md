@@ -59,7 +59,7 @@ Be respectful, constructive, and professional.
 
 ## Best Practices
 
-- Env template: provided at `.env.template` — copy to `.env.local`.
+- Env template: provided at `.env.example` — copy to `.env.local`.
 - Dependabot: configured in `.github/dependabot.yml` for npm and Actions.
 - Docker: included `Dockerfile` for production builds.
 - CI/CD & linting/testing: see `package.json` scripts; integrate with your provider (GitHub Actions/Netlify) as needed.
@@ -79,7 +79,7 @@ cd overseer
 npm install
 
 # Set up environment variables
-cp .env.template .env.local
+cp .env.example .env.local
 # Edit .env.local with your credentials
 
 # Run development server
@@ -189,6 +189,8 @@ All root-level documentation files should follow these formats:
 
 - Run tests: `npm test`
 - Check coverage: `npm test -- --coverage`
+- Docker test run: `docker compose -f docker-compose.test.yml run --rm test`
+- Docker coverage run: `docker compose -f docker-compose.test.yml run --rm coverage`
 - Use health/model checks when working on AI integration: `npm run test-gemini-health`
 
 See [ROADMAP.md](./ROADMAP.md) for planned testing improvements.

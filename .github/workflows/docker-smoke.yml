@@ -1,0 +1,24 @@
+name: Docker Smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  docker-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build production image
+        run: docker build -t overseer-docker-smoke .
+
+      - name: Validate test-stack runtime command
+        run: docker compose -f docker-compose.test.yml run --rm test sh -lc "npx vitest --version"

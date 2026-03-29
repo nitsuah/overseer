@@ -55,7 +55,7 @@ cd overseer
 npm install
 
 # Set up environment variables (see CONTRIBUTING.md for details)
-cp .env.template .env.local
+cp .env.example .env.local
 # Edit .env.local with your credentials
 
 # Setup database
@@ -66,6 +66,19 @@ npm run dev
 ```
 
 **For detailed setup instructions, see [CONTRIBUTING.md](./CONTRIBUTING.md)**
+
+### Docker Validation
+
+```bash
+# Build the production image without injecting real secrets
+docker build -t overseer-devops-check .
+
+# Run unit tests in the test container
+docker compose -f docker-compose.test.yml run --rm test
+
+# Run unit coverage in the test container
+docker compose -f docker-compose.test.yml run --rm coverage
+```
 
 ### Environment Variables
 

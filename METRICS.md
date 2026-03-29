@@ -4,11 +4,11 @@
 
 | Metric              | Value  | Notes                                                                                                                                  |
 | ------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Code Coverage       | 71.51% | Overall statement coverage (vitest). Branch: 67.36%, Function: 73.23%, Line: 70.96%. All core utilities at 100%                        |
+| Code Coverage       | 62.50% | Overall statement coverage from `docker compose -f docker-compose.test.yml run --rm coverage`. Branch: 64.68%, Function: 63.44%, Line: 61.42%. |
 | Build Time          | ~6s    | Local dev build                                                                                                                        |
 | Bundle Size         | TBD    | Not measured yet                                                                                                                       |
-| Test Files          | 16     | All vitest unit tests passing (parsers, utils, github, best-practices, features, tasks, osrs, gemini-health)                           |
-| Test Cases          | 162    | All tests passing (date-utils: 24, repo-type: 40, health-score: 11, log: 6, best-practices: 25, github-client: 7, parsers: 26+)        |
+| Test Files          | 19     | All vitest test files passing in Docker; parser, repo intelligence, API route, badge, and web3 detection coverage included.            |
+| Test Cases          | 200    | Docker coverage run reports 200 passing tests and 1 skipped Gemini health check when no API key is provided.                           |
 | E2E Test Files      | 1      | Playwright E2E tests (tests/dashboard.spec.ts)                                                                                         |
 | E2E Test Cases      | 5      | Playwright tests passing (unauthenticated state, performance)                                                                          |
 | Database Tables     | 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                        |
@@ -24,11 +24,17 @@
 
 | Metric        | Value      | Notes                |
 | ------------- | ---------- | -------------------- |
-| Open Issues   | 0          | GitHub issues        |
-| PR Turnaround | < 1 day    | Typical merge time   |
-| Skipped Tests | 0          | All tests passing    |
-| Health Score  | 95/100     | Overseer's own score |
-| Last Updated  | 2025-12-11 | Last audit date      |
+| Open Issues   | 0          | GitHub issues                 |
+| PR Turnaround | < 1 day    | Typical merge time            |
+| Skipped Tests | 1          | Gemini health check skips without API key |
+| Health Score  | 95/100     | Overseer's own score          |
+| Last Updated  | 2026-03-27 | Docker test/audit refresh     |
+
+## Verification
+
+- Coverage command: `docker compose -f docker-compose.test.yml run --rm coverage`
+- Docker build smoke test: `docker build -t overseer-devops-check .`
+- Production image note: the Docker build now uses placeholder auth values only during the build stage; runtime containers still require real auth secrets.
 
 <!--
 AGENT INSTRUCTIONS:

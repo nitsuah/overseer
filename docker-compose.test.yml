@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   test:
     build:
@@ -12,7 +10,20 @@ services:
     environment:
       - NODE_ENV=test
       - CI=true
-    command: npm test
+    command: npx vitest run
+
+  coverage:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    command: npx vitest run --coverage
 
   test-watch:
     build:
@@ -53,4 +64,4 @@ services:
       - /app/node_modules
     environment:
       - CI=true
-    command: sh -c "npm run lint && npm test && npx tsc --noEmit"
+    command: sh -lc "npm run lint && npx vitest run && npx tsc --noEmit"

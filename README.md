@@ -155,7 +155,7 @@ POST /api/repos/add
 {
   "url": "owner/repo" or "https://github.com/owner/repo"
 }
-
+```
 
 ### Agent Task Queue
 
@@ -171,6 +171,8 @@ POST /api/agent/tasks
   "meta": { ... }
 }
 ```
+
+```bash
 # Hide a repository
 POST /api/repos/[name]/hide
 

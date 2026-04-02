@@ -18,15 +18,14 @@ updated: 2026-03-27
 
 ## Todo
 
-
 ### P1 - High
 
-- [x] Complete the Agent Task Queue API.
+- [/] Complete the Agent Task Queue API.
   - Priority: P1
   - Context: autonomous agent submission lacked a documented and implemented task-queue contract.
-  - Acceptance Criteria: `POST /api/agent/tasks` is defined with validation, auth, and response structure.
-  - Completed: 2026-03-27
-  - Evidence: [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md), [app/api/agent/tasks.ts](app/api/agent/tasks.ts)
+  - Acceptance Criteria: `POST /api/agent/tasks` is defined with validation, auth, and response structure; queue execution remains to be implemented.
+  - Status: Contract and validation stub delivered 2026-03-27; queue execution pending.
+  - Evidence: [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md), [app/api/agent/tasks/route.ts](app/api/agent/tasks/route.ts)
 
 ### P2 - Medium
 

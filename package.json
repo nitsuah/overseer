@@ -47,6 +47,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@netlify/functions": "^5.1.5",
     "@netlify/plugin-nextjs": "^5.15.9",
     "@playwright/test": "^1.58.2",

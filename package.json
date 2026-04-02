@@ -29,7 +29,7 @@
     "prepare": "husky || true"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.80.0",
+    "@anthropic-ai/sdk": "^0.81.0",
     "@google/generative-ai": "^0.24.1",
     "@neondatabase/serverless": "^1.0.2",
     "@octokit/plugin-retry": "^8.1.0",
@@ -39,7 +39,7 @@
     "lucide-react": "^0.576.0",
     "next": "16.2.1",
     "next-auth": "^5.0.0-beta.30",
-    "openai": "^6.32.0",
+    "openai": "^6.33.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
@@ -47,6 +47,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@netlify/functions": "^5.1.5",
     "@netlify/plugin-nextjs": "^5.15.9",
     "@playwright/test": "^1.58.2",
@@ -57,10 +58,10 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.4",
-    "@vitest/coverage-v8": "^4.1.1",
-    "baseline-browser-mapping": "^2.10.10",
+    "@vitest/coverage-v8": "^4.1.2",
+    "baseline-browser-mapping": "^2.10.12",
     "dotenv": "^17.3.1",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.4",
     "eslint-config-next": "16.2.1",
     "husky": "^9.1.7",
     "jsdom": "^29.0.1",
@@ -69,7 +70,7 @@
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5",
+    "typescript": "^6",
     "vitest": "^4.0.14"
   },
   "lint-staged": {

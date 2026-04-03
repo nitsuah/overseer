@@ -2,7 +2,8 @@
 
 import { formatLocNumber } from '@/lib/expandable-row-utils';
 import { Metric } from '@/types/repo';
-import { RefreshCw, Github } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
+import { GithubIcon } from '@/components/icons/GithubIcon';
 import { useState } from 'react';
 
 interface RepositoryStatsSectionStaticProps {
@@ -64,7 +65,7 @@ export function RepositoryStatsSectionStatic({
                 title="View on GitHub"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Github className="h-3 w-3" />
+                <GithubIcon className="h-3 w-3" />
               </a>
             )}
           {/* Refresh Button - Always Visible */}

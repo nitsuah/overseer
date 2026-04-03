@@ -1,7 +1,8 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Github, Shield, Sparkles, LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle } from "lucide-react";
+import { Shield, Sparkles, LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle } from "lucide-react";
+import { GithubIcon } from "@/components/icons/GithubIcon";
 import Image from "next/image";
 import { useGeminiStatus } from "@/hooks/useGeminiStatus";
 import { getLanguageColor } from "@/lib/language-colors";
@@ -492,7 +493,7 @@ export default function Header(props: HeaderProps = {}) {
                         onClick={() => signIn('github', { redirectTo: '/' })}
                         className="btn-raised btn-primary-gradient flex items-center gap-2 px-5 py-2"
                     >
-                        <Github className="h-5 w-5" />
+                        <GithubIcon className="h-5 w-5" />
                         <span className="font-semibold">Sign in with GitHub</span>
                     </button>
                 )}

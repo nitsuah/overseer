@@ -46,6 +46,11 @@ updated: 2026-04-03
   - Context: agent-board exposes a local model runtime; overseer's agent queue should be able to dispatch tasks to it as a backend.
   - Acceptance Criteria: a documented dispatch path exists from overseer's queue API to agent-board's session API; at least one integration smoke test passes.
 
+- [ ] Add cross-repo PMO/DEV flow tracking.
+  - Priority: P1
+  - Context: PMO planning now spans multiple repos and needs first-class visibility from branch creation through PR merge and DEV handoff.
+  - Acceptance Criteria: overseer can display each repo's PMO branch state, pending roadmap/task changes, and DEV-flow handoff readiness in one dashboard view.
+
 ### P2 - Medium
 
 - [ ] Add AI doc-improvement controls.

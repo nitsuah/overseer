@@ -21,6 +21,8 @@ updated: 2026-04-03
 
 - [ ] Add FLOW-TASKS and HANDOFF agent prompt templates to the community-standards template set.
 - [ ] Add per-repo plan-execution tracking: surface each repo's Q2 roadmap progress in the dashboard.
+- [ ] Add PMO/DEV flow tracking: surface branch and PR readiness for all managed repos in the dashboard.
+- [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly.
 - [ ] Add security inputs to the health score (Dependabot severity weighting, secret-scanning signal).
 - [ ] Add AI doc-improvement controls: inline compare-and-accept flow for existing documentation.
 - [ ] Add workflow visualization for multi-step execution paths.

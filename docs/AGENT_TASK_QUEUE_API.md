@@ -1,11 +1,15 @@
 # Agent Task Queue API
 
-Defines the contract for agent task submission and queueing.
+Defines the contract for authenticated agent task submission, queueing, execution, and task-status retrieval.
 
 ## Endpoint
 
 - **POST /api/agent/tasks**
   - Submit a new agent task to the queue.
+- **GET /api/agent/tasks?id=<taskId>**
+  - Retrieve one task by id.
+- **GET /api/agent/tasks**
+  - Retrieve all known tasks plus queue summary counts.
 
 ### Request Body
 
@@ -21,9 +25,17 @@ Defines the contract for agent task submission and queueing.
 ### Response
 - **202 Accepted**
   - `{ task, status: 'accepted', queuedAt }`
+- **200 OK** (GET)
+  - `?id=<taskId>`: `{ success: true, task }`
+  - no query: `{ success: true, tasks, summary }`
+- **401 Unauthorized**
+  - `{ error: 'Unauthorized' }`
+- **404 Not Found**
+  - `{ error: 'Task not found' }`
 - **400 Bad Request**
-  - `{ error, details }`
+  - `{ error, details }` (invalid task payload) or `{ error: 'Malformed request' }`
 
 ### Notes
-- Authentication and queue logic are TODOs for future implementation.
-- This contract is subject to extension as agent orchestration matures.
+- Authentication is required for submission and retrieval.
+- Queue execution is currently an in-memory runner with simulated dispatch response payloads.
+- Queue state resets when the API process restarts; persistence is a follow-up enhancement.

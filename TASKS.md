@@ -20,13 +20,6 @@ updated: 2026-04-03 (pmo/q2-2026-planning)
 
 ### P1 - High
 
-- [/] Complete the Agent Task Queue API.
-  - Priority: P1
-  - Context: autonomous agent submission lacked a documented and implemented task-queue contract.
-  - Acceptance Criteria: `POST /api/agent/tasks` is defined with validation, auth, and response structure; queue execution remains to be implemented.
-  - Status: Contract and validation stub delivered 2026-03-27; queue execution pending.
-  - Evidence: [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md), [app/api/agent/tasks/route.ts](app/api/agent/tasks/route.ts)
-
 - [ ] Add cross-repo PMO/DEV flow tracking.
   - Priority: P1
   - Context: PMO planning now spans multiple repos and needs first-class visibility from branch creation through PR merge and DEV handoff.
@@ -97,6 +90,9 @@ For full feature details, see FEATURES.md. For historical context, see CHANGELOG
 - [x] Add Docker smoke workflow coverage for app and test-stack checks.
   - Completed: 2026-03-27
   - Evidence: `.github/workflows/docker-smoke.yml` now builds the production image and validates the containerized test runtime command.
+- [x] Complete the Agent Task Queue API.
+  - Completed: 2026-04-03
+  - Evidence: [app/api/agent/tasks/route.ts](app/api/agent/tasks/route.ts), [tests/agent-tasks.test.ts](tests/agent-tasks.test.ts), [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md)
 
 <!--
 AGENT INSTRUCTIONS:

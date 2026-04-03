@@ -1,5 +1,5 @@
 ---
-updated: 2026-03-27
+updated: 2026-04-03 (pmo/q2-2026-planning)
 ---
 
 # TASKS
@@ -26,6 +26,11 @@ updated: 2026-03-27
   - Acceptance Criteria: `POST /api/agent/tasks` is defined with validation, auth, and response structure; queue execution remains to be implemented.
   - Status: Contract and validation stub delivered 2026-03-27; queue execution pending.
   - Evidence: [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md), [app/api/agent/tasks/route.ts](app/api/agent/tasks/route.ts)
+
+- [ ] Add cross-repo PMO/DEV flow tracking.
+  - Priority: P1
+  - Context: PMO planning now spans multiple repos and needs first-class visibility from branch creation through PR merge and DEV handoff.
+  - Acceptance Criteria: overseer can display each repo's PMO branch state, pending roadmap/task changes, and DEV-flow handoff readiness in one dashboard view.
 
 ### P2 - Medium
 

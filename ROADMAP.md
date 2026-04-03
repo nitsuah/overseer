@@ -1,5 +1,5 @@
 ---
-updated: 2026-03-27
+updated: 2026-04-03 (pmo/q2-2026-planning)
 ---
 
 # Roadmap
@@ -23,6 +23,8 @@ updated: 2026-03-27
 ## 2026 Q2 (Planned)
 
 - [x] Refresh `docs/AUDIT.md` and keep the metrics evidence current.
+- [ ] Track PMO planning branch status across all managed repos and surface branch/PR readiness in the dashboard.
+- [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly.
 - [ ] Add security inputs to the health score.
 - [ ] Expand the rate-limit, caching, and provider-reliability path where needed.
 

@@ -1,5 +1,6 @@
 ---
-updated: 2026-04-03 (pmo/q2-2026-planning)
+updated: 2026-04-03
+branch: pmo/q2-2026-planning
 ---
 
 # TASKS

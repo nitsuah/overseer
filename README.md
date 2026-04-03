@@ -155,7 +155,24 @@ POST /api/repos/add
 {
   "url": "owner/repo" or "https://github.com/owner/repo"
 }
+```
 
+### Agent Task Queue
+
+See [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md) for the full contract.
+
+```bash
+# Submit a new agent task
+POST /api/agent/tasks
+{
+  "type": "string",
+  "payload": { ... },
+  "priority": "normal", // low | normal | high
+  "meta": { ... }
+}
+```
+
+```bash
 # Hide a repository
 POST /api/repos/[name]/hide
 

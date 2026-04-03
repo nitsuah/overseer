@@ -12,7 +12,9 @@ updated: 2026-03-27
 
 ## 2026 Q1 (In Progress)
 
-- [ ] Complete the Agent Task Queue API for autonomous agent work.
+- [/] Deliver the Agent Task Queue API contract + validation stub for autonomous agent work.
+  - Status: Partial delivery recorded 2026-03-27; auth and queue execution remain to be implemented.
+  - Evidence: [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md), [app/api/agent/tasks/route.ts](app/api/agent/tasks/route.ts)
 - [ ] Add workflow visualization for multi-step execution paths.
 - [ ] Add the conversational interface foundation.
 - [ ] Add AI doc-improvement controls.

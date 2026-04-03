@@ -47,6 +47,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@netlify/functions": "^5.1.5",
     "@netlify/plugin-nextjs": "^5.15.9",
     "@playwright/test": "^1.58.2",
@@ -60,7 +61,7 @@
     "@vitest/coverage-v8": "^4.1.2",
     "baseline-browser-mapping": "^2.10.12",
     "dotenv": "^17.3.1",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.4",
     "eslint-config-next": "16.2.1",
     "husky": "^9.1.7",
     "jsdom": "^29.0.1",

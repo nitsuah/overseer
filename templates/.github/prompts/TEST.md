@@ -23,6 +23,7 @@ You are working on one of the repositories in the Overseer portfolio — a colle
 | `osrs` | Python | Pytest | Mock cv2, mock inputs |
 | `gcp` | Python | Pytest | Mock googleapiclient |
 | `games` | JavaScript | Vitest or Jest | Game route smoke tests |
+| `avatar` | JavaScript | Vitest or Jest | Legacy/deprioritized; include only when explicitly targeted |
 | `skyview` | JavaScript | Vitest + Playwright | Lighthouse + E2E |
 
 ### Prerequisite Check

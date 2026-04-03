@@ -15,7 +15,6 @@ updated: 2026-04-03
 - [x] Deliver the Agent Task Queue API contract and validation stub (queue execution continues in Q2).
 - [x] Refresh `docs/AUDIT.md` and keep the metrics evidence current.
 - [x] Add Docker smoke workflow coverage for app and test-stack checks.
-- [x] Keep Gemini failover and model evolution resilient.
 
 ## 2026 Q2 (In Progress)
 
@@ -26,6 +25,7 @@ updated: 2026-04-03
 - [ ] Add security inputs to the health score (Dependabot severity weighting, secret-scanning signal).
 - [ ] Add AI doc-improvement controls: inline compare-and-accept flow for existing documentation.
 - [ ] Add workflow visualization for multi-step execution paths.
+- [/] Keep Gemini failover and model evolution resilient.
 - [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
 - [ ] Deprioritize stash: mark private, block PRs, and add a sanitization task to TASKS.md.
 

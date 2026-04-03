@@ -21,15 +21,10 @@ updated: 2026-04-03
 
 ### P1 - High
 
-- [ ] Add FLOW-TASKS agent prompt template.
+- [/] Surface FLOW-TASKS and HANDOFF prompt templates in the community-standards auto-fix set.
   - Priority: P1
-  - Context: no standardized prompt exists for agents to triage, sequence, and execute tasks from TASKS.md across repos.
-  - Acceptance Criteria: `templates/.github/prompts/FLOW-TASKS.md` ships and is surfaced in the community-standards auto-fix set.
-
-- [ ] Add HANDOFF agent prompt template.
-  - Priority: P1
-  - Context: no standardized handoff brief exists for agents passing context between sessions or between flow agents.
-  - Acceptance Criteria: `templates/.github/prompts/HANDOFF.md` ships with a structured context-capture format and is surfaced in the community-standards set.
+  - Context: `templates/.github/prompts/FLOW-TASKS.md` and `HANDOFF.md` have shipped; they are not yet included in the community-standards fix-all-practices auto-fix set.
+  - Acceptance Criteria: both prompt templates are applied and versioned correctly when the community-standards auto-fix runs on a target repo.
 
 - [ ] Add per-repo roadmap-progress view to the dashboard.
   - Priority: P1

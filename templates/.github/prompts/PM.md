@@ -1301,6 +1301,7 @@ Overseer monitors a portfolio of repositories. When updating docs for any one re
 | nitsuah/osrs | Python | P3 | OSRS automation bot |
 | nitsuah/gcp | Python | P3 | Google Drive CLI utility |
 | nitsuah/stash | N/A | Deprioritized | Needs sanitization before re-activation |
+| nitsuah/avatar | N/A | Deprioritized | Legacy identity asset; keep docs minimal |
 
 ### Rules for Cross-Repo Documentation
 

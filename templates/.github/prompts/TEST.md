@@ -7,11 +7,27 @@
 
 ## Instructions
 
-You are working on one of the following repositories: `farm-3j`, `gcp`, `avatar`, or `osrs`. Your goal is to improve the testing backbone and coverage incrementally.
+You are working on one of the repositories in the Overseer portfolio — a collection of GitHub projects monitored and tracked by the [Overseer](https://github.com/nitsuah/overseer) meta-intelligence dashboard. Your goal is to improve the testing backbone and coverage incrementally.
+
+### Supported Repositories
+
+| Repo | Stack | Test Tool | Notes |
+| ---- | ----- | --------- | ----- |
+| `overseer` | TypeScript / Next.js | Vitest + Playwright | Primary; target >62% |
+| `agent-board` | JavaScript / Docker | Jest or Vitest | Dashboard under `dashboard/tests/` |
+| `bb-mcp` | TypeScript / Node.js | Vitest or Jest | MCP tool unit tests |
+| `farm-3j` | TypeScript / Next.js | Vitest | Game logic, API routes |
+| `darkmoon` | TypeScript / Three.js | Vitest | Solo mode, server validation |
+| `nitsuah-io` | TypeScript / Next.js | Vitest + Playwright | Unit + E2E split |
+| `kryptos` | Python | Pytest | Fast/slow partition via markers |
+| `osrs` | Python | Pytest | Mock cv2, mock inputs |
+| `gcp` | Python | Pytest | Mock googleapiclient |
+| `games` | JavaScript | Vitest or Jest | Game route smoke tests |
+| `skyview` | JavaScript | Vitest + Playwright | Lighthouse + E2E |
 
 ### Prerequisite Check
 
-1. **Identify the Stack**: Confirm if it's TypeScript/Vitest (`farm-3j`), Python/Pytest (`gcp`, `osrs`, `avatar`), or other.
+1. **Identify the Stack**: Confirm the language and test tool from the table above.
 
 2. **Verify Harness**: Run the existing test command (`npm test`, `pytest`). Ensure it executes cleanly, even if no tests exist. If it fails, **fix the harness first**.
 
@@ -35,10 +51,13 @@ _Goal: Cover pure functions and utilities that require no mocking._
 
 _Goal: Test core business logic by isolating external dependencies (APIs, Database, UI)._
 
-- **farm-3j**: Mock the Canvas/Context. Test game logic (`gameLogic.ts`, `farmReducer.ts`) purely as state transitions.
+- **overseer / farm-3j / nitsuah-io**: Mock Next.js API routes; test parser and business logic purely.
+- **agent-board**: Mock the Docker/Ollama session API. Test lifecycle and safety-layer logic as state transitions.
+- **bb-mcp**: Mock `@blackboard/learn-rest-client`. Test MCP tool handlers with fake course/content data.
+- **darkmoon**: Mock the WebSocket/Three.js canvas. Test game state transitions with deterministic inputs.
+- **kryptos**: Mock file I/O and cipher lookups. Test scoring pipelines with known inputs and expected outputs.
 - **gcp**: Mock `googleapiclient` and `fs`. Test `copy_folder` logic by providing fake file lists and verifying calls.
 - **osrs**: Mock `cv2` (OpenCV) and input listeners. Test bot decision logic (State Machine) by feeding fake screen data.
-- **avatar**: If Notebook-heavy, extract core logic into `.py` modules and test those. Or use `nbval` for smoke testing notebooks.
 - **Deliverable**: Tests for the main "Controller" or "Service" logic.
 
 ### Phase 4: Integration & Edge Cases (Target: >50%)
@@ -55,6 +74,7 @@ _Goal: Ensure components work together and handle errors gracefully._
 - **One Step at a Time**: Do not try to jump to Phase 4. Complete Phase 1 fully before moving to Phase 2.
 - **Update Metrics**: After every major PR/Commit, update `METRICS.md` with the new coverage %.
 - **Don't Break the Build**: Ensure `npm run build` or linting still passes.
+- **Docker-aware**: Some repos (overseer, agent-board, darkmoon, gcp) run tests inside Docker; confirm the test command before running.
 
 ## Example Prompt for the Bot
 

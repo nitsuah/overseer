@@ -27,15 +27,24 @@ const makeGetRequest = (query = '') =>
     method: 'GET',
   });
 
-const waitForTaskToSettle = async (taskId: string, maxAttempts = 15) => {
-  for (let i = 0; i < maxAttempts; i += 1) {
+const waitForTaskToSettle = async (
+  taskId: string,
+  timeoutMs = 5_000,
+  pollIntervalMs = 50,
+) => {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
     const response = await GET(makeGetRequest(`?id=${taskId}`));
     const data = await response.json();
+
     if (data.task?.status === 'completed' || data.task?.status === 'failed') {
       return data.task;
     }
-    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
   }
+
   throw new Error(`Task ${taskId} did not settle within expected time`);
 };
 

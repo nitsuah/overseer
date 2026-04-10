@@ -26,6 +26,21 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
 - **Community Standards**: 10 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING
 
+### 🤖 Cross-Repo Orchestration (Planned)
+
+- **Per-Repo Roadmap Progress View**: Surface each tracked repo's current-quarter roadmap items and completion state directly in the expanded detail panel
+- **Cross-Repo Dependency Mapping**: Infer and display connections between related repos sharing a stack (e.g., agent-board ↔ bb-mcp ↔ overseer)
+- **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution
+- **MCP Server Endpoint**: Expose overseer's repo intelligence as an MCP server, making `get_repo_health` and `list_tasks` tools available to any MCP-compatible agent client
+- **Webhook-Driven Sync**: Real-time incremental updates triggered by GitHub push and PR events, eliminating the need for full polling cycles
+
+### 🔄 Agent Prompt Toolkit
+
+- **FLOW-TASKS Prompt**: Standard template for agents to triage, prioritize, and sequence tasks from TASKS.md across any repo in the portfolio
+- **HANDOFF Prompt**: Structured context-capture brief enabling agents to hand off in-progress work to a new session without loss of state
+- **PM Prompt v1.2**: Extended with portfolio map, cross-repo awareness rules, and agent prompt companion reference
+- **TEST Prompt v2**: Expanded to cover all portfolio repos with per-repo stack, test tool, and mocking strategy
+
 ### 🤖 AI-Powered Features
 
 - **AI Summaries**: Google Gemini 2.0-powered repository summaries
@@ -231,4 +246,4 @@ Health scores are displayed as letter grades (A-F) with detailed component break
 
 ## 📅 Last Updated
 
-December 1, 2025 - Detail Panel Overhaul & Error Handling Complete
+April 2026 - Cross-Repo Orchestration and Agent Prompt Toolkit Added

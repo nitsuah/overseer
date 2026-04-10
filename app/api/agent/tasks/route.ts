@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { randomUUID } from 'crypto';
 
+export const runtime = 'nodejs';
+
 type TaskPriority = 'low' | 'normal' | 'high';
 type TaskStatus = 'queued' | 'in_progress' | 'completed' | 'failed';
 
@@ -40,10 +42,62 @@ interface TaskQueueItem {
   };
 }
 
+const MAX_TASKS = 1000;
+const TASK_TTL_MS = 24 * 60 * 60 * 1000;
+
 const VALID_PRIORITIES: readonly TaskPriority[] = ['low', 'normal', 'high'];
 const taskStore = new Map<string, TaskQueueItem>();
 const pendingQueue: string[] = [];
 let runnerActive = false;
+
+const isTerminalStatus = (status: TaskStatus): boolean =>
+  status === 'completed' || status === 'failed';
+
+const getTaskTimestamp = (task: TaskQueueItem): number => {
+  const ts = Date.parse(task.completedAt ?? task.updatedAt ?? task.createdAt);
+  return Number.isNaN(ts) ? 0 : ts;
+};
+
+const pruneExpiredTasks = (): void => {
+  const now = Date.now();
+  for (const [taskId, task] of taskStore.entries()) {
+    if (now - getTaskTimestamp(task) > TASK_TTL_MS) {
+      taskStore.delete(taskId);
+    }
+  }
+};
+
+const pruneTaskStore = (): void => {
+  pruneExpiredTasks();
+
+  if (taskStore.size <= MAX_TASKS) {
+    return;
+  }
+
+  const evictionOrder = [...taskStore.entries()]
+    .sort(([, a], [, b]) => {
+      const aTerminal = isTerminalStatus(a.status);
+      const bTerminal = isTerminalStatus(b.status);
+      if (aTerminal !== bTerminal) {
+        return aTerminal ? -1 : 1;
+      }
+      return getTaskTimestamp(a) - getTaskTimestamp(b);
+    })
+    .map(([id]) => id);
+
+  while (taskStore.size > MAX_TASKS && evictionOrder.length > 0) {
+    const taskId = evictionOrder.shift();
+    if (taskId) {
+      taskStore.delete(taskId);
+    }
+  }
+
+  for (let i = pendingQueue.length - 1; i >= 0; i -= 1) {
+    if (!taskStore.has(pendingQueue[i])) {
+      pendingQueue.splice(i, 1);
+    }
+  }
+};
 
 const isRecord = (value: unknown): value is TaskRecord =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -161,6 +215,7 @@ const processQueue = async () => {
 const enqueueTask = (task: TaskQueueItem) => {
   taskStore.set(task.id, task);
   pendingQueue.push(task.id);
+  pruneTaskStore();
   void processQueue();
 };
 
@@ -228,17 +283,22 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const callerEmail = session.user.email;
+
   const taskId = req.nextUrl.searchParams.get('id');
   if (taskId) {
+    pruneExpiredTasks();
     const task = taskStore.get(taskId);
-    if (!task) {
+    if (!task || task.submittedBy?.email !== callerEmail) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, task: toPublicTask(task) }, { status: 200 });
   }
 
+  pruneExpiredTasks();
   const tasks = Array.from(taskStore.values())
+    .filter((task) => task.submittedBy?.email === callerEmail)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .map(toPublicTask);
 

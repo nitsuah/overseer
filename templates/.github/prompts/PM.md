@@ -1281,12 +1281,58 @@ If you're unsure about:
 
 ---
 
+## 🔗 Cross-Repo Awareness
+
+Overseer monitors a portfolio of repositories. When updating docs for any one repo, be aware of how it fits the broader portfolio:
+
+### Portfolio Map (as of 2026 Q2)
+
+| Repo                    | Stack                 | Priority      | Role                                     |
+| ----------------------- | --------------------- | ------------- | ---------------------------------------- |
+| nitsuah/overseer        | TypeScript / Next.js  | P0            | Meta-intelligence dashboard              |
+| nitsuah/agent-board     | JavaScript / Docker   | P1            | Local LLM agent runtime                  |
+| nitsuah/bb-mcp          | TypeScript / MCP      | P1            | Blackboard LMS MCP server                |
+| Nitsuah-Labs/nitsuah-io | TypeScript / Next.js  | P1            | Portfolio and identity site              |
+| nitsuah/darkmoon        | TypeScript / Three.js | P2            | Multiplayer 3D game                      |
+| nitsuah/farm-3j         | TypeScript / Next.js  | P2            | Farm tycoon game + ecommerce site        |
+| nitsuah/kryptos         | Python                | P2            | Cipher research toolkit                  |
+| nitsuah/skyview         | JavaScript            | P2            | Drone services site                      |
+| nitsuah/games           | JavaScript            | P3            | Arcade game collection                   |
+| nitsuah/osrs            | Python                | P3            | OSRS automation bot                      |
+| nitsuah/gcp             | Python                | P3            | Google Drive CLI utility                 |
+| nitsuah/stash           | N/A                   | Deprioritized | Needs sanitization before re-activation  |
+| nitsuah/avatar          | N/A                   | Deprioritized | Legacy identity asset; keep docs minimal |
+
+### Rules for Cross-Repo Documentation
+
+1. **Don't reference sibling repos in ROADMAP/TASKS unless directly connected** — keep each repo's docs self-contained.
+2. **Connection points to note in FEATURES.md**: if a repo integrates with overseer's agent queue or exposes an MCP tool, document that relationship.
+3. **Deprioritized repos** (stash, avatar): keep docs minimal; add a `## Notes` section flagging deprioritization reason.
+4. **When a repo ships an MCP server** (bb-mcp): note compatible MCP clients in README and FEATURES.md.
+5. **Shared stacks**: agent-board, bb-mcp, nitsuah-io, and overseer all use TypeScript/Node tooling; they share linting config conventions from overseer's template set.
+
+### Agent Prompt Companion Files
+
+When working on a repo, be aware of the full agent prompt toolkit:
+
+| Prompt          | Purpose                                           |
+| --------------- | ------------------------------------------------- |
+| `PM.md`         | Full documentation compliance guide (this file)   |
+| `FLOW-TASKS.md` | Task triage and execution sequencing              |
+| `HANDOFF.md`    | Context capture for session handoffs              |
+| `MINI.md`       | Root directory minification and file organization |
+| `LOC.md`        | Lines-of-code audit and refactor planning         |
+| `TEST.md`       | Test coverage improvement strategy                |
+
+---
+
 ## 📄 Document Version
 
-- **Version**: 1.1
-- **Last Updated**: 2025-11-27
+- **Version**: 1.2
+- **Last Updated**: 2026-04-03
 - **Maintained By**: Overseer Project
 - **Source**: Based on actual Overseer parsing requirements and health score calculations
 - **Changelog**:
+  - v1.2 (2026-04-03): Added cross-repo awareness section, portfolio map, and agent prompt companion reference
   - v1.1 (2025-11-27): Added workflow guidance for user review, detailed roadmap preservation, metric estimation guidelines, and comprehensive DO/DON'T best practices
   - v1.0 (2025-11-27): Initial version with core formatting requirements and examples

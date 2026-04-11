@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { getConfiguredModel } from '../lib/gemini-model-discovery';
+import { getAvailableProviders, getPrimaryProvider } from '../lib/ai-providers';
 
 const execAsync = promisify(exec);
 
@@ -38,4 +39,69 @@ describe('Gemini API Health', () => {
       throw error;
     }
   }, 15000);
+});
+
+describe('AI provider routing', () => {
+  const originalEnv = process.env;
+
+  function resetProviderEnv(): void {
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.BYOK_GEMINI_API_KEY;
+    delete process.env.BYOK_OPENAI_API_KEY;
+    delete process.env.BYOK_ANTHROPIC_API_KEY;
+    delete process.env.AI_PROVIDER_ORDER;
+    delete process.env.AI_DEPRIORITIZE_GEMINI_ON_QUOTA;
+    delete process.env.GEMINI_QUOTA_EXCEEDED;
+  }
+
+  it('uses default ordering when all provider keys are available', () => {
+    process.env = { ...originalEnv };
+    resetProviderEnv();
+
+    process.env.GEMINI_API_KEY = 'gem-key';
+    process.env.OPENAI_API_KEY = 'openai-key';
+    process.env.ANTHROPIC_API_KEY = 'anthropic-key';
+
+    const providers = getAvailableProviders();
+
+    expect(providers.map((provider) => provider.name)).toEqual(['gemini', 'openai', 'anthropic']);
+    expect(getPrimaryProvider()?.name).toBe('gemini');
+  });
+
+  it('respects configured provider order and BYOK precedence', () => {
+    process.env = { ...originalEnv };
+    resetProviderEnv();
+
+    process.env.GEMINI_API_KEY = 'gem-default';
+    process.env.BYOK_GEMINI_API_KEY = 'gem-byok';
+    process.env.OPENAI_API_KEY = 'openai-key';
+    process.env.ANTHROPIC_API_KEY = 'anthropic-key';
+    process.env.AI_PROVIDER_ORDER = 'openai,anthropic,gemini';
+
+    const providers = getAvailableProviders();
+    const gemini = providers.find((provider) => provider.name === 'gemini');
+
+    expect(providers.map((provider) => provider.name)).toEqual(['openai', 'anthropic', 'gemini']);
+    expect(getPrimaryProvider()?.name).toBe('openai');
+    expect(gemini?.apiKey).toBe('gem-byok');
+  });
+
+  it('deprioritizes gemini when quota controls are enabled', () => {
+    process.env = { ...originalEnv };
+    resetProviderEnv();
+
+    process.env.GEMINI_API_KEY = 'gem-key';
+    process.env.OPENAI_API_KEY = 'openai-key';
+    process.env.ANTHROPIC_API_KEY = 'anthropic-key';
+    process.env.AI_PROVIDER_ORDER = 'gemini,openai,anthropic';
+    process.env.AI_DEPRIORITIZE_GEMINI_ON_QUOTA = 'true';
+    process.env.GEMINI_QUOTA_EXCEEDED = 'true';
+
+    const providers = getAvailableProviders();
+
+    expect(providers.map((provider) => provider.name)).toEqual(['openai', 'anthropic', 'gemini']);
+    expect(getPrimaryProvider()?.name).toBe('openai');
+  });
 });

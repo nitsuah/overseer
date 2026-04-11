@@ -27,6 +27,7 @@ updated: 2026-04-03
 - [ ] Add AI doc-improvement controls: inline compare-and-accept flow for existing documentation.
 - [ ] Add workflow visualization for multi-step execution paths.
 - [/] Keep Gemini failover and model evolution resilient.
+- [x] Add BYOK/provider-order routing controls and Gemini quota-based deprioritization for AI failover reliability.
 - [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
 - [ ] Deprioritize stash: mark private, block PRs, and add a sanitization task to TASKS.md.
 

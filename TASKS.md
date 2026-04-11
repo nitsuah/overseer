@@ -116,7 +116,7 @@ For full feature details, see FEATURES.md. For historical context, see CHANGELOG
 - [x] Add BYOK + quota-aware provider routing for Gemini failover.
   - Completed: 2026-04-11
   - Evidence: `lib/ai-providers.ts` now supports configurable provider order, BYOK key precedence, and Gemini quota-based deprioritization.
-  - Evidence: `tests/ai-providers.test.ts` validates default order, custom order, BYOK precedence, and quota fallback behavior.
+  - Evidence: `tests/gemini-health.test.ts` validates default order, custom order, BYOK precedence, and quota fallback behavior.
 
 - [x] Agent Task Queue API contract and validation stub.
   - Completed: 2026-03-27

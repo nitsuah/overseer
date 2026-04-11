@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { getConfiguredModel } from '../lib/gemini-model-discovery';
@@ -43,6 +43,10 @@ describe('Gemini API Health', () => {
 
 describe('AI provider routing', () => {
   const originalEnv = process.env;
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
 
   function resetProviderEnv(): void {
     delete process.env.GEMINI_API_KEY;
@@ -103,5 +107,31 @@ describe('AI provider routing', () => {
 
     expect(providers.map((provider) => provider.name)).toEqual(['openai', 'anthropic', 'gemini']);
     expect(getPrimaryProvider()?.name).toBe('openai');
+  });
+
+  it('uses BYOK key over default key for OpenAI', () => {
+    process.env = { ...originalEnv };
+    resetProviderEnv();
+
+    process.env.OPENAI_API_KEY = 'openai-default';
+    process.env.BYOK_OPENAI_API_KEY = 'openai-byok';
+
+    const providers = getAvailableProviders();
+    const openai = providers.find((provider) => provider.name === 'openai');
+
+    expect(openai?.apiKey).toBe('openai-byok');
+  });
+
+  it('uses BYOK key over default key for Anthropic', () => {
+    process.env = { ...originalEnv };
+    resetProviderEnv();
+
+    process.env.ANTHROPIC_API_KEY = 'anthropic-default';
+    process.env.BYOK_ANTHROPIC_API_KEY = 'anthropic-byok';
+
+    const providers = getAvailableProviders();
+    const anthropic = providers.find((provider) => provider.name === 'anthropic');
+
+    expect(anthropic?.apiKey).toBe('anthropic-byok');
   });
 });

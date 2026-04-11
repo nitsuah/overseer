@@ -253,9 +253,14 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date().toISOString();
+    // result.data is always defined here because result.success is true
+    const { type, payload, priority, meta } = result.data!;
     const task: TaskQueueItem = {
       id: randomUUID(),
-      ...result.data,
+      type,
+      payload,
+      priority,
+      ...(meta !== undefined ? { meta } : {}),
       status: 'queued',
       createdAt: now,
       queuedAt: now,

@@ -100,6 +100,22 @@ GEMINI_API_KEY=your_gemini_api_key
 # Optional model override
 GEMINI_MODEL_NAME=models/gemini-2.5-flash
 
+# Optional fallbacks
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4-turbo-preview
+ANTHROPIC_API_KEY=your_anthropic_api_key
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+
+# Optional BYOK overrides (preferred when set)
+BYOK_GEMINI_API_KEY=your_user_gemini_key
+BYOK_OPENAI_API_KEY=your_user_openai_key
+BYOK_ANTHROPIC_API_KEY=your_user_anthropic_key
+
+# Optional provider routing controls
+AI_PROVIDER_ORDER=gemini,openai,anthropic
+AI_DEPRIORITIZE_GEMINI_ON_QUOTA=true
+GEMINI_QUOTA_EXCEEDED=false
+
 # Optional Netlify
 NETLIFY_SITE_ID=
 NETLIFY_AUTH_TOKEN=

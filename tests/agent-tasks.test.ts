@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST } from '@/app/api/agent/tasks/route';
+import { POST, GET } from '@/app/api/agent/tasks/route';
 import { NextRequest } from 'next/server';
 
 vi.mock('@/auth', () => ({
@@ -21,6 +21,32 @@ const makeRequest = (body: unknown) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+
+const makeGetRequest = (query = '') =>
+  new NextRequest(`http://localhost:3000/api/agent/tasks${query}`, {
+    method: 'GET',
+  });
+
+const waitForTaskToSettle = async (
+  taskId: string,
+  timeoutMs = 5_000,
+  pollIntervalMs = 50,
+) => {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const response = await GET(makeGetRequest(`?id=${taskId}`));
+    const data = await response.json();
+
+    if (data.task?.status === 'completed' || data.task?.status === 'failed') {
+      return data.task;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+  }
+
+  throw new Error(`Task ${taskId} did not settle within expected time`);
+};
 
 describe('POST /api/agent/tasks', () => {
   beforeEach(() => {
@@ -63,6 +89,8 @@ describe('POST /api/agent/tasks', () => {
     expect(data.status).toBe('accepted');
     expect(data.task.type).toBe('build');
     expect(data.task.priority).toBe('normal');
+    expect(data.task.id).toBeDefined();
+    expect(['queued', 'in_progress', 'completed']).toContain(data.task.status);
     expect(data.queuedAt).toBeDefined();
   });
 
@@ -183,11 +211,73 @@ describe('POST /api/agent/tasks', () => {
     expect(data.error).toBe('Malformed request');
     expect(data.details).toBeUndefined();
   });
+
+  it('should execute queued task and expose completed result via GET by id', async () => {
+    mockAuth.mockResolvedValue({
+      user: { name: 'testuser', email: 'test@example.com' },
+      expires: new Date(Date.now() + 86400000).toISOString(),
+    } as never);
+
+    const createResponse = await POST(
+      makeRequest({ type: 'build', payload: { repo: 'owner/repo' }, priority: 'high' })
+    );
+    const createData = await createResponse.json();
+    const taskId = createData.task.id as string;
+
+    const settledTask = await waitForTaskToSettle(taskId);
+    expect(settledTask.status).toBe('completed');
+    expect(settledTask.result).toBeDefined();
+    expect(settledTask.result.type).toBe('build');
+  });
+
+  it('should expose queue summary and tasks list via GET', async () => {
+    mockAuth.mockResolvedValue({
+      user: { name: 'testuser', email: 'test@example.com' },
+      expires: new Date(Date.now() + 86400000).toISOString(),
+    } as never);
+
+    await POST(makeRequest({ type: 'deploy', payload: { env: 'staging' } }));
+
+    const response = await GET(makeGetRequest());
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(Array.isArray(data.tasks)).toBe(true);
+    expect(data.summary).toBeDefined();
+    expect(typeof data.summary.total).toBe('number');
+    expect(data.summary.total).toBeGreaterThan(0);
+  });
+
+  it('should return 404 when querying unknown task id', async () => {
+    mockAuth.mockResolvedValue({
+      user: { name: 'testuser', email: 'test@example.com' },
+      expires: new Date(Date.now() + 86400000).toISOString(),
+    } as never);
+
+    const response = await GET(makeGetRequest('?id=does-not-exist'));
+    const data = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(data.error).toBe('Task not found');
+  });
+
+  it('should require authentication on GET', async () => {
+    mockAuth.mockResolvedValue(null);
+
+    const response = await GET(makeGetRequest());
+    const data = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(data.error).toBe('Unauthorized');
+  });
 });
 
 describe('Agent Task Queue Route Export', () => {
-  it('should export POST function', () => {
+  it('should export POST and GET functions', () => {
     expect(POST).toBeDefined();
     expect(typeof POST).toBe('function');
+    expect(GET).toBeDefined();
+    expect(typeof GET).toBe('function');
   });
 });

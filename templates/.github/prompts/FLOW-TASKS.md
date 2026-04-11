@@ -42,6 +42,7 @@ For each task in order, produce a brief execution entry:
 ### Step 4: Handoff
 
 After the execution plan is produced:
+
 1. If executing: begin with the first unblocked P1 item.
 2. If handing off: write a HANDOFF brief (see HANDOFF.md prompt) so the next agent can resume without re-reading all files.
 

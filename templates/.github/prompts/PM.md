@@ -1287,21 +1287,21 @@ Overseer monitors a portfolio of repositories. When updating docs for any one re
 
 ### Portfolio Map (as of 2026 Q2)
 
-| Repo | Stack | Priority | Role |
-| ---- | ----- | -------- | ---- |
-| nitsuah/overseer | TypeScript / Next.js | P0 | Meta-intelligence dashboard |
-| nitsuah/agent-board | JavaScript / Docker | P1 | Local LLM agent runtime |
-| nitsuah/bb-mcp | TypeScript / MCP | P1 | Blackboard LMS MCP server |
-| Nitsuah-Labs/nitsuah-io | TypeScript / Next.js | P1 | Portfolio and identity site |
-| nitsuah/darkmoon | TypeScript / Three.js | P2 | Multiplayer 3D game |
-| nitsuah/farm-3j | TypeScript / Next.js | P2 | Farm tycoon game + ecommerce site |
-| nitsuah/kryptos | Python | P2 | Cipher research toolkit |
-| nitsuah/skyview | JavaScript | P2 | Drone services site |
-| nitsuah/games | JavaScript | P3 | Arcade game collection |
-| nitsuah/osrs | Python | P3 | OSRS automation bot |
-| nitsuah/gcp | Python | P3 | Google Drive CLI utility |
-| nitsuah/stash | N/A | Deprioritized | Needs sanitization before re-activation |
-| nitsuah/avatar | N/A | Deprioritized | Legacy identity asset; keep docs minimal |
+| Repo                    | Stack                 | Priority      | Role                                     |
+| ----------------------- | --------------------- | ------------- | ---------------------------------------- |
+| nitsuah/overseer        | TypeScript / Next.js  | P0            | Meta-intelligence dashboard              |
+| nitsuah/agent-board     | JavaScript / Docker   | P1            | Local LLM agent runtime                  |
+| nitsuah/bb-mcp          | TypeScript / MCP      | P1            | Blackboard LMS MCP server                |
+| Nitsuah-Labs/nitsuah-io | TypeScript / Next.js  | P1            | Portfolio and identity site              |
+| nitsuah/darkmoon        | TypeScript / Three.js | P2            | Multiplayer 3D game                      |
+| nitsuah/farm-3j         | TypeScript / Next.js  | P2            | Farm tycoon game + ecommerce site        |
+| nitsuah/kryptos         | Python                | P2            | Cipher research toolkit                  |
+| nitsuah/skyview         | JavaScript            | P2            | Drone services site                      |
+| nitsuah/games           | JavaScript            | P3            | Arcade game collection                   |
+| nitsuah/osrs            | Python                | P3            | OSRS automation bot                      |
+| nitsuah/gcp             | Python                | P3            | Google Drive CLI utility                 |
+| nitsuah/stash           | N/A                   | Deprioritized | Needs sanitization before re-activation  |
+| nitsuah/avatar          | N/A                   | Deprioritized | Legacy identity asset; keep docs minimal |
 
 ### Rules for Cross-Repo Documentation
 
@@ -1315,14 +1315,14 @@ Overseer monitors a portfolio of repositories. When updating docs for any one re
 
 When working on a repo, be aware of the full agent prompt toolkit:
 
-| Prompt | Purpose |
-| ------ | ------- |
-| `PM.md` | Full documentation compliance guide (this file) |
-| `FLOW-TASKS.md` | Task triage and execution sequencing |
-| `HANDOFF.md` | Context capture for session handoffs |
-| `MINI.md` | Root directory minification and file organization |
-| `LOC.md` | Lines-of-code audit and refactor planning |
-| `TEST.md` | Test coverage improvement strategy |
+| Prompt          | Purpose                                           |
+| --------------- | ------------------------------------------------- |
+| `PM.md`         | Full documentation compliance guide (this file)   |
+| `FLOW-TASKS.md` | Task triage and execution sequencing              |
+| `HANDOFF.md`    | Context capture for session handoffs              |
+| `MINI.md`       | Root directory minification and file organization |
+| `LOC.md`        | Lines-of-code audit and refactor planning         |
+| `TEST.md`       | Test coverage improvement strategy                |
 
 ---
 

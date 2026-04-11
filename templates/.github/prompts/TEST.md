@@ -11,20 +11,20 @@ You are working on one of the repositories in the Overseer portfolio — a colle
 
 ### Supported Repositories
 
-| Repo | Stack | Test Tool | Notes |
-| ---- | ----- | --------- | ----- |
-| `overseer` | TypeScript / Next.js | Vitest + Playwright | Primary; target >62% |
-| `agent-board` | JavaScript / Docker | Jest or Vitest | Dashboard under `dashboard/tests/` |
-| `bb-mcp` | TypeScript / Node.js | Vitest or Jest | MCP tool unit tests |
-| `farm-3j` | TypeScript / Next.js | Vitest | Game logic, API routes |
-| `darkmoon` | TypeScript / Three.js | Vitest | Solo mode, server validation |
-| `nitsuah-io` | TypeScript / Next.js | Vitest + Playwright | Unit + E2E split |
-| `kryptos` | Python | Pytest | Fast/slow partition via markers |
-| `osrs` | Python | Pytest | Mock cv2, mock inputs |
-| `gcp` | Python | Pytest | Mock googleapiclient |
-| `games` | JavaScript | Vitest or Jest | Game route smoke tests |
-| `avatar` | JavaScript | Vitest or Jest | Legacy/deprioritized; include only when explicitly targeted |
-| `skyview` | JavaScript | Vitest + Playwright | Lighthouse + E2E |
+| Repo          | Stack                 | Test Tool           | Notes                                                       |
+| ------------- | --------------------- | ------------------- | ----------------------------------------------------------- |
+| `overseer`    | TypeScript / Next.js  | Vitest + Playwright | Primary; target >62%                                        |
+| `agent-board` | JavaScript / Docker   | Jest or Vitest      | Dashboard under `dashboard/tests/`                          |
+| `bb-mcp`      | TypeScript / Node.js  | Vitest or Jest      | MCP tool unit tests                                         |
+| `farm-3j`     | TypeScript / Next.js  | Vitest              | Game logic, API routes                                      |
+| `darkmoon`    | TypeScript / Three.js | Vitest              | Solo mode, server validation                                |
+| `nitsuah-io`  | TypeScript / Next.js  | Vitest + Playwright | Unit + E2E split                                            |
+| `kryptos`     | Python                | Pytest              | Fast/slow partition via markers                             |
+| `osrs`        | Python                | Pytest              | Mock cv2, mock inputs                                       |
+| `gcp`         | Python                | Pytest              | Mock googleapiclient                                        |
+| `games`       | JavaScript            | Vitest or Jest      | Game route smoke tests                                      |
+| `avatar`      | JavaScript            | Vitest or Jest      | Legacy/deprioritized; include only when explicitly targeted |
+| `skyview`     | JavaScript            | Vitest + Playwright | Lighthouse + E2E                                            |
 
 ### Prerequisite Check
 
@@ -79,4 +79,4 @@ _Goal: Ensure components work together and handle errors gracefully._
 
 ## Example Prompt for the Bot
 
-_"I am working on [REPO_NAME]. Please implement Phase [X] of the Testing Strategy. Current coverage is [CURRENT_%]. Focus on [SPECIFIC_FILES_OR_MODULES]."_
+_"I am working on [REPO_NAME]. Please implement Phase [X] of the Testing Strategy. Current coverage is [CURRENT_%]. Focus on [SPECIFIC_FILES_OR_MODULES]."\_

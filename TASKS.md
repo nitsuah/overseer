@@ -6,12 +6,6 @@ updated: 2026-04-03
 
 ## In Progress
 
-- [/] Implement agent task queue execution path.
-  - Priority: P1
-  - Context: `POST /api/agent/tasks` contract and validation stub shipped 2026-03-27 (see Done section); auth, queue runner, and result reporting remain.
-  - Acceptance Criteria: tasks submitted to the queue are executed, results are stored, and status is queryable.
-  - Evidence: [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md), [app/api/agent/tasks/route.ts](app/api/agent/tasks/route.ts)
-
 - [/] Gemini model evolution and reliability.
   - Priority: P1
   - Context: `ai.ts` has multi-provider failover and auto-discovery; needs clearer resilience around Gemini deprecations and provider switching.
@@ -138,7 +132,10 @@ For full feature details, see FEATURES.md. For historical context, see CHANGELOG
 - [x] Refresh `docs/AUDIT.md` and metrics evidence.
 - [x] Docker smoke workflow coverage for app and test-stack checks.
   - Completed: 2026-03-27
-  - Evidence: `.github/workflows/docker-smoke.yml`
+  - Evidence: `.github/workflows/docker-smoke.yml` now builds the production image and validates the containerized test runtime command.
+- [x] Complete the Agent Task Queue API.
+  - Completed: 2026-04-03
+  - Evidence: [app/api/agent/tasks/route.ts](app/api/agent/tasks/route.ts), [tests/agent-tasks.test.ts](tests/agent-tasks.test.ts), [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md)
 
 <!--
 AGENT INSTRUCTIONS:

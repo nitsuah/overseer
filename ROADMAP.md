@@ -12,7 +12,8 @@ updated: 2026-04-03
 
 ## 2026 Q1 (Completed)
 
-- [x] Deliver the Agent Task Queue API contract and validation stub (queue execution continues in Q2).
+- [x] Deliver the Agent Task Queue API contract and execution path for autonomous agent work.
+  - Evidence: [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md), [app/api/agent/tasks/route.ts](app/api/agent/tasks/route.ts), [tests/agent-tasks.test.ts](tests/agent-tasks.test.ts)
 - [x] Refresh `docs/AUDIT.md` and keep the metrics evidence current.
 - [x] Add Docker smoke workflow coverage for app and test-stack checks.
 
@@ -36,7 +37,6 @@ updated: 2026-04-03
 - [ ] Add advanced analytics: velocity scoring, technical-debt trending, and zombie-branch detection.
 - [ ] Expand MCP tooling surface: expose overseer repo intelligence as an MCP server for agent clients.
 - [ ] Add cross-repo dependency mapping to surface shared-stack connections (e.g., agent-board ↔ bb-mcp ↔ overseer).
-- [ ] Harden the agent task queue: auth, rate-limit, and queue-execution path past the stub stage.
 
 ## 2026 Q4 (Exploratory)
 

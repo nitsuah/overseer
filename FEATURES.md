@@ -159,6 +159,33 @@ Overseer includes default repositories that are always synced and displayed:
 
 These ensure the dashboard always has content, even for non-authenticated visitors. Configure in `lib/default-repos.ts`.
 
+## 🆕 Planned & Upcoming Features
+
+- **AI-Driven Roadmap Progress**: Automated parsing and visualization of per-repo roadmap progress in the dashboard (Q2 2026)
+- **Cross-Repo Dependency Mapping**: Visualize and manage shared-stack connections (Q3 2026)
+- **Autonomous Plan Execution**: Agents read ROADMAP.md and TASKS.md, open PRs, and close items end to end (Q4 2026)
+- **Portfolio Intelligence Dashboard**: Cross-repo health roll-up, trend lines, and strategic signal view (Q4 2026)
+- **Mobile-Responsive PWA**: Lightweight PWA packaging and mobile adjustments (Q4 2026)
+
+## 🤖 AI/ML & Market Trends
+
+- **AI Model Failover**: Multi-provider AI failover (Gemini, OpenAI, Anthropic) for high availability
+- **Self-Healing AI**: Runtime model auto-discovery and hot swapping
+- **AI Doc Improvement**: Inline compare-and-accept flow for documentation
+- **AI Summaries**: Context-aware, market-trend-driven repository summaries
+- **Security Signal Integration**: Dependabot and secret-scanning signals weighted in health score
+- **Real-Time Analytics**: Velocity scoring, technical-debt trending, and zombie-branch detection
+
+## 📈 Market-Relevant Improvements
+
+- **Quarterly Review**: Features and roadmap reviewed quarterly for alignment with market trends and user feedback
+- **Community Feedback Loop**: Feature requests and roadmap items prioritized based on user and contributor input
+- **Compliance & Best Practices**: Continuous updates to match evolving open-source and enterprise standards
+
+## 📅 Last Validated
+
+April 2026 - Overseer/PM compliance review
+
 ### 📋 Tracked Documentation
 
 Overseer monitors the following documentation files in each repository:

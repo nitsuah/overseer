@@ -1,8 +1,10 @@
----
-updated: 2026-04-03
----
+## updated: 2026-04-13 (Overseer compliance review)
 
-# TASKS
+# Tasks
+
+## Done
+
+# (No completed tasks yet in this cycle)
 
 ## In Progress
 

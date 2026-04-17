@@ -1,8 +1,10 @@
----
-updated: 2026-04-03
----
+## updated: 2026-04-13 (Overseer compliance review)
 
-# TASKS
+# Tasks
+
+## Done
+
+# (No completed tasks yet in this cycle)
 
 ## In Progress
 
@@ -11,14 +13,14 @@ updated: 2026-04-03
   - Context: `ai.ts` has multi-provider failover and auto-discovery; needs clearer resilience around Gemini deprecations and provider switching.
   - Acceptance Criteria: provider health checks, fallback behavior, and model-switch logging stay reliable.
 
+- [/] Surface FLOW-TASKS and HANDOFF prompt templates in the community-standards auto-fix set.
+- Priority: P1
+- Context: `templates/.github/prompts/FLOW-TASKS.md` and `HANDOFF.md` have shipped; they are not yet included in the community-standards fix-all-practices auto-fix set.
+- Acceptance Criteria: both prompt templates are applied and versioned correctly when the community-standards auto-fix runs on a target repo.
+
 ## Todo
 
 ### P1 - High
-
-- [/] Surface FLOW-TASKS and HANDOFF prompt templates in the community-standards auto-fix set.
-  - Priority: P1
-  - Context: `templates/.github/prompts/FLOW-TASKS.md` and `HANDOFF.md` have shipped; they are not yet included in the community-standards fix-all-practices auto-fix set.
-  - Acceptance Criteria: both prompt templates are applied and versioned correctly when the community-standards auto-fix runs on a target repo.
 
 - [ ] Add per-repo roadmap-progress view to the dashboard.
   - Priority: P1

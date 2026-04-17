@@ -1,5 +1,9 @@
 # Overseer
 
+---
+
+## **Last Updated:** 2026-04-13
+
 [![CI](https://github.com/nitsuah/overseer/actions/workflows/ci.yml/badge.svg)](https://github.com/nitsuah/overseer/actions)
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/ebf5c761-34fb-495b-bd86-ea57932296b3/deploy-status)](https://app.netlify.com/projects/ghoverseer/deploys)
@@ -64,6 +68,27 @@ npm run setup-db
 # Run development server
 npm run dev
 ```
+
+## What’s New
+
+- See [CHANGELOG.md](CHANGELOG.md) for recent updates and version history
+
+## Quick Links
+
+- [Live Dashboard](https://overseer.nitsuah.io)
+- [Docs](./docs/)
+- [GitHub](https://github.com/nitsuah/overseer)
+
+## Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Please:
+
+- Fork the repo and create a feature branch
+- Add or improve tests for new features
+- Run all tests and ensure coverage does not decrease
+- Open a pull request with a clear description and screenshots if UI changes
+
+---
 
 **For detailed setup instructions, see [CONTRIBUTING.md](./CONTRIBUTING.md)**
 

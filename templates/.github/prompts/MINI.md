@@ -3,7 +3,7 @@
 - Reduces files located in the root directory of the repository by safely moving them to /config or /src as appropriate.
 - Securely tests the system to ensure no critical files are lost during the minification process.
 - Generates a summary report of the minification process, including files moved and any issues encountered.
-- Creates a pull request with the changes for review and integration.
+- Creates a pull request with the changes for review and integration (ensuring the changes are not made to main/master directly).
 - Ensures compliance with Overseer's documentation and best practices standards throughout the process.
 
 ## Folder Structure

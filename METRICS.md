@@ -1,6 +1,6 @@
 # Metrics
 
-Last Validated: 2026-04-13 (Overseer/PM compliance review)
+Last Validated: 2026-05-23 (Docker coverage validation)
 Health Score: 95/100
 Compliance: Overseer/PM core metrics and health scoring validated for Q2 2026
 
@@ -8,11 +8,11 @@ Compliance: Overseer/PM core metrics and health scoring validated for Q2 2026
 
 | Metric              | Value  | Notes                                                                                                                                          |
 | ------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Code Coverage       | 62.50% | Overall statement coverage from `docker compose -f docker-compose.test.yml run --rm coverage`. Branch: 64.68%, Function: 63.44%, Line: 61.42%. |
+| Code Coverage       | 92.09% | Overall statement coverage from `docker compose -f docker-compose.test.yml run --rm coverage`. Branch: 83.02%, Function: 92.00%, Line: 92.82%. |
 | Build Time          | ~6s    | Local dev build                                                                                                                                |
 | Bundle Size         | TBD    | Not measured yet                                                                                                                               |
-| Test Files          | 19     | All vitest test files passing in Docker; parser, repo intelligence, API route, badge, and web3 detection coverage included.                    |
-| Test Cases          | 200    | Docker coverage run reports 200 passing tests and 1 skipped Gemini health check when no API key is provided.                                   |
+| Test Files          | 22     | All vitest test files passing in Docker, including expanded GitHub client and Gemini model discovery coverage.                                  |
+| Test Cases          | 255    | Docker coverage run reports 254 passing tests and 1 skipped Gemini health check when no API key is provided.                                   |
 | E2E Test Files      | 1      | Playwright E2E tests (tests/dashboard.spec.ts)                                                                                                 |
 | E2E Test Cases      | 5      | Playwright tests passing (unauthenticated state, performance)                                                                                  |
 | Database Tables     | 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                                |
@@ -32,7 +32,7 @@ Compliance: Overseer/PM core metrics and health scoring validated for Q2 2026
 | PR Turnaround | < 1 day    | Typical merge time                        |
 | Skipped Tests | 1          | Gemini health check skips without API key |
 | Health Score  | 95/100     | Overseer's own score                      |
-| Last Updated  | 2026-03-27 | Docker test/audit refresh                 |
+| Last Updated  | 2026-05-23 | Docker test/audit refresh                 |
 
 ## Verification
 

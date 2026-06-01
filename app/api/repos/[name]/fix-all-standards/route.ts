@@ -34,6 +34,23 @@ export async function POST(
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
 
+        const standardsBackedByGithubFallback: Record<string, string> = {
+            contributing: 'CONTRIBUTING.md',
+            code_of_conduct: 'CODE_OF_CONDUCT.md',
+            security: 'SECURITY.md',
+        };
+        const standardsCoveredByFallback = new Set<string>();
+        for (const [standardType, filePath] of Object.entries(standardsBackedByGithubFallback)) {
+            try {
+                const fallbackContent = await github.getFileContent('.github', filePath, owner);
+                if (fallbackContent) {
+                    standardsCoveredByFallback.add(standardType);
+                }
+            } catch {
+                // If the fallback repo or file is not accessible, keep existing behavior.
+            }
+        }
+
         // Accept optional list of selected files with content from modal
         const body = await request.json().catch(() => ({}));
         const filesFromModal = body.files as Array<{path: string; content: string; docType: string}> | undefined;
@@ -86,11 +103,16 @@ export async function POST(
                 'copilot_instructions',
                 'funding'
             ];
-            const fixableStandards = csRows.filter(row => standardsWithTemplates.includes(row.standard_type));
+            const fixableStandards = csRows.filter(row =>
+                standardsWithTemplates.includes(row.standard_type) &&
+                !standardsCoveredByFallback.has(row.standard_type)
+            );
 
             if (fixableStandards.length === 0) {
                 return NextResponse.json({ 
-                    message: 'No fixable standards found' 
+                    message: standardsCoveredByFallback.size > 0
+                        ? 'No fixable standards found (covered by owner .github fallback where applicable)'
+                        : 'No fixable standards found'
                 }, { status: 200 });
             }
 

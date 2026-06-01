@@ -16,6 +16,11 @@
 - Context: `templates/.github/prompts/FLOW-TASKS.md` and `HANDOFF.md` have shipped; they are not yet included in the community-standards fix-all-practices auto-fix set.
 - Acceptance Criteria: both prompt templates are applied and versioned correctly when the community-standards auto-fix runs on a target repo.
 
+- [/] Implement .github fallback resolution for community health files.
+- Priority: P1
+- Context: community standards checks and fix-all behavior currently assume repo-local files and should treat owner-level `.github` as canonical fallback for `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md`.
+- Acceptance Criteria: health sync marks those standards healthy when found in `owner/.github`, and fix-all skips generating repo-local duplicates when fallback exists.
+
 ## Todo
 
 ### Dev feedback

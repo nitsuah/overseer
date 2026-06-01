@@ -11,6 +11,23 @@ import { calculateHealthScore } from './health-score';
 import { isTestFile, parseTestFile } from './parsers/test-cases';
 import logger from './log';
 
+const ORG_GITHUB_FALLBACK_CACHE = new Map<string, string[]>();
+
+async function getOrgGithubFallbackFiles(github: GitHubClient, owner: string): Promise<string[]> {
+    if (ORG_GITHUB_FALLBACK_CACHE.has(owner)) {
+        return ORG_GITHUB_FALLBACK_CACHE.get(owner) || [];
+    }
+
+    try {
+        const files = await github.getRepoFileList('.github', owner);
+        ORG_GITHUB_FALLBACK_CACHE.set(owner, files);
+        return files;
+    } catch {
+        ORG_GITHUB_FALLBACK_CACHE.set(owner, []);
+        return [];
+    }
+}
+
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
@@ -452,7 +469,11 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
 
     // Community Standards Detection
     try {
-        const communityStandardsResult = checkCommunityStandards(fileList);
+        const fallbackFiles = await getOrgGithubFallbackFiles(github, owner);
+        const communityStandardsResult = checkCommunityStandards(fileList, {
+            fallbackFiles,
+            fallbackRepo: `${owner}/.github`,
+        });
 
         await db`DELETE FROM community_standards WHERE repo_id = ${repoId}`;
         for (const standard of communityStandardsResult.standards) {

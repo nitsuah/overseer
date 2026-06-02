@@ -21,10 +21,11 @@ export async function POST(
 
         // Get repo details
         const db = getNeonClient();
-        const repoRows = await db`SELECT full_name FROM repos WHERE name = ${repoName} LIMIT 1`;
+        const repoRows = await db`SELECT id, full_name FROM repos WHERE name = ${repoName} LIMIT 1`;
         if (repoRows.length === 0) {
             return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
         }
+        const repoId = repoRows[0].id;
         const fullName = repoRows[0].full_name;
         const owner = fullName.split('/')[0];
 
@@ -34,22 +35,17 @@ export async function POST(
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
 
-        const standardsBackedByGithubFallback: Record<string, string> = {
-            contributing: 'CONTRIBUTING.md',
-            code_of_conduct: 'CODE_OF_CONDUCT.md',
-            security: 'SECURITY.md',
-        };
-        const standardsCoveredByFallback = new Set<string>();
-        for (const [standardType, filePath] of Object.entries(standardsBackedByGithubFallback)) {
-            try {
-                const fallbackContent = await github.getFileContent('.github', filePath, owner);
-                if (fallbackContent) {
-                    standardsCoveredByFallback.add(standardType);
-                }
-            } catch {
-                // If the fallback repo or file is not accessible, keep existing behavior.
-            }
-        }
+        // Use the existsInGithubFallback flag already stored by sync rather than re-querying GitHub
+        const allCsRows = await db`
+            SELECT standard_type, details
+            FROM community_standards
+            WHERE repo_id = ${repoId}
+        `;
+        const standardsCoveredByFallback = new Set<string>(
+            allCsRows
+                .filter((r: { details: { existsInGithubFallback?: boolean } }) => r.details?.existsInGithubFallback)
+                .map((r: { standard_type: string }) => r.standard_type)
+        );
 
         // Accept optional list of selected files with content from modal
         const body = await request.json().catch(() => ({}));
@@ -71,13 +67,6 @@ export async function POST(
             if (requestedStandards && Array.isArray(requestedStandards) && requestedStandards.length > 0) {
                 csRows = requestedStandards.map(s => ({ standard_type: String(s).toLowerCase() }));
             } else {
-                // Resolve repo_id from name, then get missing community standards from DB
-                const repoIdRows = await db`SELECT id FROM repos WHERE name = ${repoName} LIMIT 1`;
-                if (repoIdRows.length === 0) {
-                    return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
-                }
-                const repoId = repoIdRows[0].id;
-
                 const dbRows = await db`
                     SELECT standard_type, status 
                     FROM community_standards 

@@ -19,6 +19,24 @@ test('marks core standards healthy when present in owner .github fallback', () =
   expect(contributing?.details.existsInGithubFallback).toBe(true);
 });
 
+test('marks core standards missing when absent from both repo and fallback', () => {
+  const result = checkCommunityStandards(['README.md'], {
+    fallbackFiles: [],
+    fallbackRepo: 'nitsuah/.github',
+  });
+
+  const contributing = result.standards.find((s) => s.type === 'contributing');
+  const codeOfConduct = result.standards.find((s) => s.type === 'code_of_conduct');
+  const security = result.standards.find((s) => s.type === 'security');
+
+  expect(contributing?.status).toBe('missing');
+  expect(codeOfConduct?.status).toBe('missing');
+  expect(security?.status).toBe('missing');
+
+  expect(contributing?.details.existsInRepo).toBe(false);
+  expect(contributing?.details.existsInGithubFallback).toBe(false);
+});
+
 test('prefers repo-local presence details when both local and fallback files exist', () => {
   const result = checkCommunityStandards(['CONTRIBUTING.md', 'SECURITY.md'], {
     fallbackFiles: ['CONTRIBUTING.md', 'CODE_OF_CONDUCT.md', 'SECURITY.md'],

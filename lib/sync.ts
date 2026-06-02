@@ -11,21 +11,18 @@ import { calculateHealthScore } from './health-score';
 import { isTestFile, parseTestFile } from './parsers/test-cases';
 import logger from './log';
 
-const ORG_GITHUB_FALLBACK_CACHE = new Map<string, string[]>();
+const ORG_GITHUB_FALLBACK_CACHE = new Map<string, { files: string[]; expiresAt: number }>();
+const FALLBACK_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 async function getOrgGithubFallbackFiles(github: GitHubClient, owner: string): Promise<string[]> {
-    if (ORG_GITHUB_FALLBACK_CACHE.has(owner)) {
-        return ORG_GITHUB_FALLBACK_CACHE.get(owner) || [];
+    const cached = ORG_GITHUB_FALLBACK_CACHE.get(owner);
+    if (cached && cached.expiresAt > Date.now()) {
+        return cached.files;
     }
 
-    try {
-        const files = await github.getRepoFileList('.github', owner);
-        ORG_GITHUB_FALLBACK_CACHE.set(owner, files);
-        return files;
-    } catch {
-        ORG_GITHUB_FALLBACK_CACHE.set(owner, []);
-        return [];
-    }
+    const files = await github.getRepoFileList('.github', owner);
+    ORG_GITHUB_FALLBACK_CACHE.set(owner, { files, expiresAt: Date.now() + FALLBACK_CACHE_TTL_MS });
+    return files;
 }
 
 

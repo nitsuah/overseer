@@ -47,7 +47,7 @@
   - Acceptance Criteria: users can compare baseline and AI-enhanced content before accepting changes.
   - also allow for a prompt input on all AI usage (Besides repo summaries) so that users can customize the output and have more control over the results.
 
-- [  ] Add AI feature suggestion button to the "features" panel.
+- [ ] Add AI feature suggestion button to the "features" panel.
   - Priority: P2
   - Context: users cannot yet ask the agent for suggestions on what features to build next based on repo data.
   - Acceptance Criteria: a "suggest a feature" button triggers an AI analysis of repo health and signals, returning a prioritized list of potential features to build.

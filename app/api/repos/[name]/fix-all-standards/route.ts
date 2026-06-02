@@ -79,16 +79,18 @@ export async function POST(
                 csRows = dbRows.map((r: Record<string, string>) => ({ standard_type: r.standard_type }));
             }
 
-            // Filter standards that have templates
+            // Filter standards that have templates.
+            // codeowners excluded: single-contributor repos don't need it and it can't be org-inherited.
+            // issue_template, pr_template, funding: covered by org .github fallback, so
+            // standardsCoveredByFallback will skip them automatically when the fallback is populated.
             const standardsWithTemplates = [
-                'contributing', 
-                'code_of_conduct', 
-                'security', 
-                'license', 
-                'changelog', 
-                'issue_template', 
+                'contributing',
+                'code_of_conduct',
+                'security',
+                'license',
+                'changelog',
+                'issue_template',
                 'pr_template',
-                'codeowners',
                 'copilot_instructions',
                 'funding'
             ];

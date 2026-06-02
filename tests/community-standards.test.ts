@@ -54,3 +54,36 @@ test('prefers repo-local presence details when both local and fallback files exi
   expect(security?.details.existsInRepo).toBe(true);
   expect(security?.details.existsInGithubFallback).toBe(true);
 });
+
+test('marks funding/issue_template/pr_template healthy when present in org .github fallback', () => {
+  const result = checkCommunityStandards(['README.md'], {
+    fallbackFiles: [
+      '.github/funding.yml',
+      '.github/ISSUE_TEMPLATE/bug_report.md',
+      '.github/PULL_REQUEST_TEMPLATE.md',
+    ],
+    fallbackRepo: 'nitsuah/.github',
+  });
+
+  const funding = result.standards.find((s) => s.type === 'funding');
+  const issueTemplate = result.standards.find((s) => s.type === 'issue_template');
+  const prTemplate = result.standards.find((s) => s.type === 'pr_template');
+
+  expect(funding?.status).toBe('healthy');
+  expect(funding?.details.existsInRepo).toBe(false);
+  expect(funding?.details.existsInGithubFallback).toBe(true);
+
+  expect(issueTemplate?.status).toBe('healthy');
+  expect(issueTemplate?.details.existsInRepo).toBe(false);
+  expect(issueTemplate?.details.existsInGithubFallback).toBe(true);
+
+  expect(prTemplate?.status).toBe('healthy');
+  expect(prTemplate?.details.existsInRepo).toBe(false);
+  expect(prTemplate?.details.existsInGithubFallback).toBe(true);
+});
+
+test('codeowners is not tracked as a community standard', () => {
+  const result = checkCommunityStandards(['.github/CODEOWNERS'], {});
+  const codeowners = result.standards.find((s) => s.type === 'codeowners');
+  expect(codeowners).toBeUndefined();
+});

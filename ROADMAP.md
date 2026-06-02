@@ -31,6 +31,11 @@ Next Review: 2026-05-01
 - [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0)
 - [ ] Deprioritize stash: mark private, block PRs, and add a sanitization task to TASKS.md
 
+## Q3 2026: PMO Mode (Planned) 🏗️
+ - [ ] Allow easy management and roadmapping of TASKS, ROADMAP, FEATURES, and other core supporting MD files via a chat-driven interface in the dashboard
+ - [ ] Add a PMO mode to the dashboard that surfaces the PMO-relevant signals and controls, such as roadmap progress, plan execution status, and handoff management
+ - [ ] Add AI-assisted roadmap management features, such as auto-suggesting roadmap items based on repo intelligence, and auto-updating roadmap progress based on plan execution tracking
+
 ## Q3 2026: Analytics & MCP (Planned) 🤖
 
 - [ ] Add the conversational interface foundation: one or two chat-driven repo-hygiene workflows end to end

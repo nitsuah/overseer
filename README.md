@@ -274,3 +274,9 @@ When updating:
 6. Ensure API endpoint documentation matches actual routes
 7. Add screenshots or diagrams for major UI changes
 -->
+## Community Standards
+
+Shared community policies are centralized in https://github.com/nitsuah/.github:
+- Contributing: https://github.com/nitsuah/.github/blob/main/CONTRIBUTING.md
+- Code of Conduct: https://github.com/nitsuah/.github/blob/main/CODE_OF_CONDUCT.md
+- Security: https://github.com/nitsuah/.github/blob/main/SECURITY.md

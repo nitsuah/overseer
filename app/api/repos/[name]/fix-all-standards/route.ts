@@ -21,10 +21,11 @@ export async function POST(
 
         // Get repo details
         const db = getNeonClient();
-        const repoRows = await db`SELECT full_name FROM repos WHERE name = ${repoName} LIMIT 1`;
+        const repoRows = await db`SELECT id, full_name FROM repos WHERE name = ${repoName} LIMIT 1`;
         if (repoRows.length === 0) {
             return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
         }
+        const repoId = repoRows[0].id;
         const fullName = repoRows[0].full_name;
         const owner = fullName.split('/')[0];
 
@@ -33,6 +34,18 @@ export async function POST(
         const githubToken = (session as any).accessToken;
         if (!githubToken) throw new Error('GitHub access token not found in session');
         const github = new GitHubClient(githubToken, owner);
+
+        // Use the existsInGithubFallback flag already stored by sync rather than re-querying GitHub
+        const allCsRows = await db`
+            SELECT standard_type, details
+            FROM community_standards
+            WHERE repo_id = ${repoId}
+        `;
+        const standardsCoveredByFallback = new Set<string>(
+            allCsRows
+                .filter((r: Record<string, unknown>) => (r.details as Record<string, unknown> | null)?.existsInGithubFallback)
+                .map((r: Record<string, unknown>) => r.standard_type as string)
+        );
 
         // Accept optional list of selected files with content from modal
         const body = await request.json().catch(() => ({}));
@@ -54,13 +67,6 @@ export async function POST(
             if (requestedStandards && Array.isArray(requestedStandards) && requestedStandards.length > 0) {
                 csRows = requestedStandards.map(s => ({ standard_type: String(s).toLowerCase() }));
             } else {
-                // Resolve repo_id from name, then get missing community standards from DB
-                const repoIdRows = await db`SELECT id FROM repos WHERE name = ${repoName} LIMIT 1`;
-                if (repoIdRows.length === 0) {
-                    return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
-                }
-                const repoId = repoIdRows[0].id;
-
                 const dbRows = await db`
                     SELECT standard_type, status 
                     FROM community_standards 
@@ -86,11 +92,16 @@ export async function POST(
                 'copilot_instructions',
                 'funding'
             ];
-            const fixableStandards = csRows.filter(row => standardsWithTemplates.includes(row.standard_type));
+            const fixableStandards = csRows.filter(row =>
+                standardsWithTemplates.includes(row.standard_type) &&
+                !standardsCoveredByFallback.has(row.standard_type)
+            );
 
             if (fixableStandards.length === 0) {
                 return NextResponse.json({ 
-                    message: 'No fixable standards found' 
+                    message: standardsCoveredByFallback.size > 0
+                        ? 'No fixable standards found (covered by owner .github fallback where applicable)'
+                        : 'No fixable standards found'
                 }, { status: 200 });
             }
 

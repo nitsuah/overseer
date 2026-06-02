@@ -13,27 +13,59 @@ export interface CommunityStandardsResult {
     standards: CommunityStandard[];
 }
 
-export function checkCommunityStandards(fileList: string[]): CommunityStandardsResult {
+export interface CommunityStandardsOptions {
+    fallbackFiles?: string[];
+    fallbackRepo?: string;
+}
+
+export function checkCommunityStandards(
+    fileList: string[],
+    options: CommunityStandardsOptions = {}
+): CommunityStandardsResult {
     const lowerFiles = fileList.map(f => f.toLowerCase());
+    const fallbackFiles = (options.fallbackFiles || []).map(f => f.toLowerCase());
+    const fallbackSet = new Set(fallbackFiles);
     const standards: CommunityStandard[] = [];
+
+    const codeOfConductInRepo = lowerFiles.includes('code_of_conduct.md');
+    const codeOfConductInFallback = fallbackSet.has('code_of_conduct.md');
+    const contributingInRepo = lowerFiles.includes('contributing.md');
+    const contributingInFallback = fallbackSet.has('contributing.md');
+    const securityInRepo = lowerFiles.includes('security.md');
+    const securityInFallback = fallbackSet.has('security.md');
 
     // Core community files
     standards.push({
         type: 'code_of_conduct',
-        status: lowerFiles.includes('code_of_conduct.md') ? 'healthy' : 'missing',
-        details: { exists: lowerFiles.includes('code_of_conduct.md') }
+        status: codeOfConductInRepo || codeOfConductInFallback ? 'healthy' : 'missing',
+        details: {
+            exists: codeOfConductInRepo || codeOfConductInFallback,
+            existsInRepo: codeOfConductInRepo,
+            existsInGithubFallback: codeOfConductInFallback,
+            fallbackRepo: options.fallbackRepo || null,
+        }
     });
 
     standards.push({
         type: 'contributing',
-        status: lowerFiles.includes('contributing.md') ? 'healthy' : 'missing',
-        details: { exists: lowerFiles.includes('contributing.md') }
+        status: contributingInRepo || contributingInFallback ? 'healthy' : 'missing',
+        details: {
+            exists: contributingInRepo || contributingInFallback,
+            existsInRepo: contributingInRepo,
+            existsInGithubFallback: contributingInFallback,
+            fallbackRepo: options.fallbackRepo || null,
+        }
     });
 
     standards.push({
         type: 'security',
-        status: lowerFiles.includes('security.md') ? 'healthy' : 'missing',
-        details: { exists: lowerFiles.includes('security.md') }
+        status: securityInRepo || securityInFallback ? 'healthy' : 'missing',
+        details: {
+            exists: securityInRepo || securityInFallback,
+            existsInRepo: securityInRepo,
+            existsInGithubFallback: securityInFallback,
+            fallbackRepo: options.fallbackRepo || null,
+        }
     });
 
     standards.push({

@@ -43,8 +43,8 @@ export async function POST(
         `;
         const standardsCoveredByFallback = new Set<string>(
             allCsRows
-                .filter((r: Record<string, any>) => r.details?.existsInGithubFallback)
-                .map((r: Record<string, any>) => r.standard_type)
+                .filter((r: Record<string, unknown>) => (r.details as Record<string, unknown> | null)?.existsInGithubFallback)
+                .map((r: Record<string, unknown>) => r.standard_type as string)
         );
 
         // Accept optional list of selected files with content from modal

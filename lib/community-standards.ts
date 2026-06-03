@@ -115,6 +115,23 @@ export function checkCommunityStandards(
         details: { exists: hasCopilotInstructions }
     });
 
+    // CODEOWNERS — check .github/, root, docs/ in repo; then org .github fallback
+    const hasCodeownersInRepo = lowerFiles.includes('.github/codeowners') ||
+                                 lowerFiles.includes('codeowners') ||
+                                 lowerFiles.includes('docs/codeowners');
+    const hasCodeownersInFallback = fallbackSet.has('codeowners') ||
+                                     fallbackSet.has('.github/codeowners');
+    standards.push({
+        type: 'codeowners',
+        status: hasCodeownersInRepo || hasCodeownersInFallback ? 'healthy' : 'missing',
+        details: {
+            exists: hasCodeownersInRepo || hasCodeownersInFallback,
+            existsInRepo: hasCodeownersInRepo,
+            existsInGithubFallback: hasCodeownersInFallback,
+            fallbackRepo: options.fallbackRepo || null,
+        }
+    });
+
     // Funding configuration — check repo first, then org .github fallback
     const hasFundingInRepo = lowerFiles.includes('.github/funding.yml') || lowerFiles.includes('.github/funding.yaml');
     const hasFundingInFallback = fallbackSet.has('.github/funding.yml') || fallbackSet.has('.github/funding.yaml') || fallbackSet.has('funding.yml');

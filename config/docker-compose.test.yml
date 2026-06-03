@@ -1,10 +1,10 @@
 services:
   test:
     build:
-      context: .
-      dockerfile: Dockerfile.test
+      context: ..
+      dockerfile: config/Dockerfile.test
     volumes:
-      - .:/app
+      - ..:/app
       - /app/node_modules
       - /app/.next
     environment:
@@ -14,10 +14,10 @@ services:
 
   coverage:
     build:
-      context: .
-      dockerfile: Dockerfile.test
+      context: ..
+      dockerfile: config/Dockerfile.test
     volumes:
-      - .:/app
+      - ..:/app
       - /app/node_modules
       - /app/.next
     environment:
@@ -27,10 +27,10 @@ services:
 
   test-watch:
     build:
-      context: .
-      dockerfile: Dockerfile.test
+      context: ..
+      dockerfile: config/Dockerfile.test
     volumes:
-      - .:/app
+      - ..:/app
       - /app/node_modules
       - /app/.next
     environment:
@@ -39,28 +39,28 @@ services:
 
   lint:
     build:
-      context: .
-      dockerfile: Dockerfile.test
+      context: ..
+      dockerfile: config/Dockerfile.test
     volumes:
-      - .:/app
+      - ..:/app
       - /app/node_modules
     command: npm run lint
 
   type-check:
     build:
-      context: .
-      dockerfile: Dockerfile.test
+      context: ..
+      dockerfile: config/Dockerfile.test
     volumes:
-      - .:/app
+      - ..:/app
       - /app/node_modules
     command: npx tsc --noEmit
 
   pre-commit:
     build:
-      context: .
-      dockerfile: Dockerfile.test
+      context: ..
+      dockerfile: config/Dockerfile.test
     volumes:
-      - .:/app
+      - ..:/app
       - /app/node_modules
     environment:
       - CI=true

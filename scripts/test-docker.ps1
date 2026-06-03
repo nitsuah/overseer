@@ -14,31 +14,31 @@ Write-Host "🐳 Running tests in Docker (matching CI environment)..." -Foregrou
 switch ($Command) {
     'test' {
         Write-Host "📋 Running test suite..." -ForegroundColor Yellow
-        docker-compose -f docker-compose.test.yml run --rm test
+        docker-compose -f config/docker-compose.test.yml run --rm test
     }
     'watch' {
         Write-Host "👀 Running tests in watch mode..." -ForegroundColor Yellow
-        docker-compose -f docker-compose.test.yml run --rm test-watch
+        docker-compose -f config/docker-compose.test.yml run --rm test-watch
     }
     'lint' {
         Write-Host "🔍 Running linter..." -ForegroundColor Yellow
-        docker-compose -f docker-compose.test.yml run --rm lint
+        docker-compose -f config/docker-compose.test.yml run --rm lint
     }
     'type-check' {
         Write-Host "🔤 Running TypeScript type check..." -ForegroundColor Yellow
-        docker-compose -f docker-compose.test.yml run --rm type-check
+        docker-compose -f config/docker-compose.test.yml run --rm type-check
     }
     'pre-commit' {
         Write-Host "🔨 Running pre-commit checks (lint + test + type-check)..." -ForegroundColor Yellow
-        docker-compose -f docker-compose.test.yml run --rm pre-commit
+        docker-compose -f config/docker-compose.test.yml run --rm pre-commit
     }
     'build' {
         Write-Host "🏗️  Building test container..." -ForegroundColor Yellow
-        docker-compose -f docker-compose.test.yml build
+        docker-compose -f config/docker-compose.test.yml build
     }
     'clean' {
         Write-Host "🧹 Cleaning up test containers..." -ForegroundColor Yellow
-        docker-compose -f docker-compose.test.yml down -v
+        docker-compose -f config/docker-compose.test.yml down -v
     }
 }
 

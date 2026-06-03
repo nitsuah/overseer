@@ -80,30 +80,34 @@ export function checkCommunityStandards(
         details: { exists: lowerFiles.includes('changelog.md') }
     });
 
-    // Templates
-    const hasIssueTemplate = lowerFiles.some(f => f.includes('issue_template'));
+    // Templates — check repo first, then org .github fallback
+    const hasIssueTemplateInRepo = lowerFiles.some(f => f.includes('issue_template'));
+    const hasIssueTemplateInFallback = fallbackFiles.some(f => f.includes('issue_template'));
     standards.push({
         type: 'issue_template',
-        status: hasIssueTemplate ? 'healthy' : 'missing',
-        details: { exists: hasIssueTemplate }
+        status: hasIssueTemplateInRepo || hasIssueTemplateInFallback ? 'healthy' : 'missing',
+        details: {
+            exists: hasIssueTemplateInRepo || hasIssueTemplateInFallback,
+            existsInRepo: hasIssueTemplateInRepo,
+            existsInGithubFallback: hasIssueTemplateInFallback,
+            fallbackRepo: options.fallbackRepo || null,
+        }
     });
 
-    const hasPRTemplate = lowerFiles.some(f => f.includes('pull_request_template'));
+    const hasPRTemplateInRepo = lowerFiles.some(f => f.includes('pull_request_template'));
+    const hasPRTemplateInFallback = fallbackFiles.some(f => f.includes('pull_request_template'));
     standards.push({
         type: 'pr_template',
-        status: hasPRTemplate ? 'healthy' : 'missing',
-        details: { exists: hasPRTemplate }
+        status: hasPRTemplateInRepo || hasPRTemplateInFallback ? 'healthy' : 'missing',
+        details: {
+            exists: hasPRTemplateInRepo || hasPRTemplateInFallback,
+            existsInRepo: hasPRTemplateInRepo,
+            existsInGithubFallback: hasPRTemplateInFallback,
+            fallbackRepo: options.fallbackRepo || null,
+        }
     });
 
-    // CODEOWNERS
-    const hasCodeowners = lowerFiles.includes('.github/codeowners') || lowerFiles.includes('codeowners');
-    standards.push({
-        type: 'codeowners',
-        status: hasCodeowners ? 'healthy' : 'missing',
-        details: { exists: hasCodeowners }
-    });
-
-    // Copilot Instructions
+    // Copilot Instructions — always per-repo, no org fallback
     const hasCopilotInstructions = lowerFiles.includes('.github/copilot-instructions.md');
     standards.push({
         type: 'copilot_instructions',
@@ -111,12 +115,18 @@ export function checkCommunityStandards(
         details: { exists: hasCopilotInstructions }
     });
 
-    // Funding configuration
-    const hasFunding = lowerFiles.includes('.github/funding.yml') || lowerFiles.includes('.github/funding.yaml');
+    // Funding configuration — check repo first, then org .github fallback
+    const hasFundingInRepo = lowerFiles.includes('.github/funding.yml') || lowerFiles.includes('.github/funding.yaml');
+    const hasFundingInFallback = fallbackSet.has('.github/funding.yml') || fallbackSet.has('.github/funding.yaml') || fallbackSet.has('funding.yml');
     standards.push({
         type: 'funding',
-        status: hasFunding ? 'healthy' : 'missing',
-        details: { exists: hasFunding }
+        status: hasFundingInRepo || hasFundingInFallback ? 'healthy' : 'missing',
+        details: {
+            exists: hasFundingInRepo || hasFundingInFallback,
+            existsInRepo: hasFundingInRepo,
+            existsInGithubFallback: hasFundingInFallback,
+            fallbackRepo: options.fallbackRepo || null,
+        }
     });
 
     return { standards };

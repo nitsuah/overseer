@@ -82,8 +82,35 @@ test('marks funding/issue_template/pr_template healthy when present in org .gith
   expect(prTemplate?.details.existsInGithubFallback).toBe(true);
 });
 
-test('codeowners is not tracked as a community standard', () => {
-  const result = checkCommunityStandards(['.github/CODEOWNERS'], {});
+test('marks codeowners healthy when present in repo (.github/, root, docs/)', () => {
+  const cases = ['.github/CODEOWNERS', 'CODEOWNERS', 'docs/CODEOWNERS'];
+  for (const file of cases) {
+    const result = checkCommunityStandards([file], {});
+    const codeowners = result.standards.find((s) => s.type === 'codeowners');
+    expect(codeowners?.status, `expected healthy for ${file}`).toBe('healthy');
+    expect(codeowners?.details.existsInRepo).toBe(true);
+    expect(codeowners?.details.existsInGithubFallback).toBe(false);
+  }
+});
+
+test('marks codeowners healthy when present in org .github fallback', () => {
+  const result = checkCommunityStandards(['README.md'], {
+    fallbackFiles: ['CODEOWNERS'],
+    fallbackRepo: 'nitsuah/.github',
+  });
   const codeowners = result.standards.find((s) => s.type === 'codeowners');
-  expect(codeowners).toBeUndefined();
+  expect(codeowners?.status).toBe('healthy');
+  expect(codeowners?.details.existsInRepo).toBe(false);
+  expect(codeowners?.details.existsInGithubFallback).toBe(true);
+});
+
+test('marks codeowners missing when absent from both repo and fallback', () => {
+  const result = checkCommunityStandards(['README.md'], {
+    fallbackFiles: [],
+    fallbackRepo: 'nitsuah/.github',
+  });
+  const codeowners = result.standards.find((s) => s.type === 'codeowners');
+  expect(codeowners?.status).toBe('missing');
+  expect(codeowners?.details.existsInRepo).toBe(false);
+  expect(codeowners?.details.existsInGithubFallback).toBe(false);
 });

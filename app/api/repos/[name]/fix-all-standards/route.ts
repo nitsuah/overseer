@@ -80,8 +80,7 @@ export async function POST(
             }
 
             // Filter standards that have templates.
-            // codeowners excluded: single-contributor repos don't need it and it can't be org-inherited.
-            // issue_template, pr_template, funding: covered by org .github fallback, so
+            // codeowners, issue_template, pr_template, funding may be covered by org .github fallback, so
             // standardsCoveredByFallback will skip them automatically when the fallback is populated.
             const standardsWithTemplates = [
                 'contributing',
@@ -91,6 +90,7 @@ export async function POST(
                 'changelog',
                 'issue_template',
                 'pr_template',
+                'codeowners',
                 'copilot_instructions',
                 'funding'
             ];

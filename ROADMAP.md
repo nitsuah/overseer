@@ -1,20 +1,12 @@
-## updated: 2026-04-13 (Overseer compliance review)
+## updated: 2026-06-08
 
 # 🗺️ Overseer Roadmap
 
-Next Review: 2026-05-01
+Next Review: 2026-07-01
 
-## Q4 2025: Foundation (Completed) 🚀
+## Q4 2025 – Q1 2026 ✅
 
-- [x] Ship the foundation and UX baseline
-- [x] Add PR preview, AI enrichment, repo intelligence, and auto-fix flows
-- [x] Reach and hold the test coverage target
-
-## Q1 2026: Agent API & Audit (Completed) ✅
-
-- [x] Deliver the Agent Task Queue API contract and execution path for autonomous agent work
-- [x] Refresh `docs/AUDIT.md` and keep the metrics evidence current
-- [x] Add Docker smoke workflow coverage for app and test-stack checks
+> Completed. Foundation, UX baseline, PR preview, AI enrichment, repo intelligence, auto-fix flows, Agent Task Queue API, Docker smoke CI, and BYOK/provider-order AI routing all shipped.
 
 ## Q2 2026: AI & Orchestration (IN PROGRESS) 🏗️
 
@@ -27,14 +19,14 @@ Next Review: 2026-05-01
 - [ ] Add AI doc-improvement controls: inline compare-and-accept flow for existing documentation
 - [ ] Add workflow visualization for multi-step execution paths
 - [/] Keep Gemini failover and model evolution resilient
-- [x] Add BYOK/provider-order routing controls and Gemini quota-based deprioritization for AI failover reliability
 - [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0)
 - [ ] Deprioritize stash: mark private, block PRs, and add a sanitization task to TASKS.md
 
 ## Q3 2026: PMO Mode (Planned) 🏗️
- - [ ] Allow easy management and roadmapping of TASKS, ROADMAP, FEATURES, and other core supporting MD files via a chat-driven interface in the dashboard
- - [ ] Add a PMO mode to the dashboard that surfaces the PMO-relevant signals and controls, such as roadmap progress, plan execution status, and handoff management
- - [ ] Add AI-assisted roadmap management features, such as auto-suggesting roadmap items based on repo intelligence, and auto-updating roadmap progress based on plan execution tracking
+
+- [ ] Allow easy management and roadmapping of TASKS, ROADMAP, FEATURES, and other core supporting MD files via a chat-driven interface in the dashboard
+- [ ] Add a PMO mode to the dashboard that surfaces the PMO-relevant signals and controls, such as roadmap progress, plan execution status, and handoff management
+- [ ] Add AI-assisted roadmap management features, such as auto-suggesting roadmap items based on repo intelligence, and auto-updating roadmap progress based on plan execution tracking
 
 ## Q3 2026: Analytics & MCP (Planned) 🤖
 

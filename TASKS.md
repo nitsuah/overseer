@@ -1,8 +1,6 @@
-## updated: 2026-04-13 (Overseer compliance review)
+## updated: 2026-06-08
 
 # Tasks
-
-## Done
 
 ## In Progress
 
@@ -12,14 +10,14 @@
   - Acceptance Criteria: provider health checks, fallback behavior, and model-switch logging stay reliable.
 
 - [/] Surface FLOW-TASKS and HANDOFF prompt templates in the community-standards auto-fix set.
-- Priority: P1
-- Context: `templates/.github/prompts/FLOW-TASKS.md` and `HANDOFF.md` have shipped; they are not yet included in the community-standards fix-all-practices auto-fix set.
-- Acceptance Criteria: both prompt templates are applied and versioned correctly when the community-standards auto-fix runs on a target repo.
+  - Priority: P1
+  - Context: `templates/.github/prompts/FLOW-TASKS.md` and `HANDOFF.md` have shipped; they are not yet included in the community-standards fix-all-practices auto-fix set.
+  - Acceptance Criteria: both prompt templates are applied and versioned correctly when the community-standards auto-fix runs on a target repo.
 
 - [/] Implement .github fallback resolution for community health files.
-- Priority: P1
-- Context: community standards checks and fix-all behavior currently assume repo-local files and should treat owner-level `.github` as canonical fallback for `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md`.
-- Acceptance Criteria: health sync marks those standards healthy when found in `owner/.github`, and fix-all skips generating repo-local duplicates when fallback exists.
+  - Priority: P1
+  - Context: community standards checks and fix-all behavior currently assume repo-local files and should treat owner-level `.github` as canonical fallback for `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md`.
+  - Acceptance Criteria: health sync marks those standards healthy when found in `owner/.github`, and fix-all skips generating repo-local duplicates when fallback exists.
 
 ## Todo
 
@@ -114,39 +112,6 @@
   - Priority: P3
   - Context: commit frequency and PR merge time are captured but not yet trended over time.
   - Acceptance Criteria: a trend chart shows velocity and technical-debt signals over rolling quarters.
-
-## Done
-
-For full feature details, see FEATURES.md. For historical context, see CHANGELOG.md.
-
-- [x] Add BYOK + quota-aware provider routing for Gemini failover.
-  - Completed: 2026-04-11
-  - Evidence: `lib/ai-providers.ts` now supports configurable provider order, BYOK key precedence, and Gemini quota-based deprioritization.
-  - Evidence: `tests/gemini-health.test.ts` validates default order, custom order, BYOK precedence, and quota fallback behavior.
-
-- [x] Agent Task Queue API contract and validation stub.
-  - Completed: 2026-03-27
-  - Evidence: [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md), [app/api/agent/tasks/route.ts](app/api/agent/tasks/route.ts)
-- [x] Performance and rate-limiting improvements.
-- [x] Security and tracking improvements.
-- [x] Background refresh behavior.
-- [x] Repository intelligence and health scoring.
-- [x] AI integration and provider failover.
-- [x] PR preview modal.
-- [x] Auto-fix system.
-- [x] Testing baseline and coverage target.
-- [x] OAuth error handling.
-- [x] GitHub integration.
-- [x] Netlify deployment.
-- [x] Guided tour system.
-- [x] Core docs set.
-- [x] Refresh `docs/AUDIT.md` and metrics evidence.
-- [x] Docker smoke workflow coverage for app and test-stack checks.
-  - Completed: 2026-03-27
-  - Evidence: `.github/workflows/docker-smoke.yml` now builds the production image and validates the containerized test runtime command.
-- [x] Complete the Agent Task Queue API.
-  - Completed: 2026-04-03
-  - Evidence: [app/api/agent/tasks/route.ts](app/api/agent/tasks/route.ts), [tests/agent-tasks.test.ts](tests/agent-tasks.test.ts), [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md)
 
 <!--
 AGENT INSTRUCTIONS:

@@ -20,13 +20,6 @@
 
 - [ ] Fix loading and refresh of repos (see realtime sync on tasks below). it should happen periodically so as to avoid showing stale data, but avoid rate limits and not cause too much noise. the "refresh" of the entire app should also not be necessary as it interrupts the user experience and can cause them to lose their place in the app. ideally, we would have a "last updated" timestamp for each repo and only refresh those that are stale, or at least show the user that data is being refreshed in the background. panels should refresh not the entire app. this is a critical issue as it impacts the reliability of the data shown to users and can lead to confusion if they are seeing outdated information. periodic refresh can make it likely that users will see updated data without having to manually refresh, but it needs to be implemented in a way that is not disruptive.
 
-### P1 - High
-
-- [ ] Add per-repo roadmap-progress view to the dashboard.
-  - Priority: P1
-  - Context: overseer parses ROADMAP.md per repo but the dashboard only shows aggregate health; no view surfaces each repo's Q2/Q3 progress against its own plan.
-  - Acceptance Criteria: the expanded row within the roadmap shows the current-quarter roadmap items and a progress bar indicating their completion state for the selected repo.
-
 ### P2 - Medium
 
 - [ ] Add AI doc-improvement controls.

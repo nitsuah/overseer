@@ -11,7 +11,7 @@ Next Review: 2026-07-01
 ## Q2 2026: AI & Orchestration (IN PROGRESS) 🏗️
 
 - [x] Add FLOW-TASKS and HANDOFF agent prompt templates to the community-standards template set
-- [ ] Add per-repo plan-execution tracking: surface each repo's Q2 roadmap progress in the dashboard
+- [x] Add per-repo plan-execution tracking: surface each repo's Q2 roadmap progress in the dashboard
 - [ ] Add PMO/DEV flow tracking: surface branch and PR readiness for all managed repos in the dashboard
 - [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly
 - [ ] Add .github repo awareness: resolve community health files from owner/.github before flagging per-repo absence in health scoring and standards auto-fix

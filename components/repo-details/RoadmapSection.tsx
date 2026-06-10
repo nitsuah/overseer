@@ -64,6 +64,21 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
 
   const completedCount = roadmapItems.filter(item => item.status === 'completed').length;
 
+  // Track total/completed counts per quarter across all items (including
+  // completed ones) so progress bars stay accurate even when completed
+  // items are hidden from the list.
+  const quarterTotals: Record<string, { completed: number; total: number }> = {};
+  roadmapItems.forEach(item => {
+    const quarter = item.quarter || 'No Quarter';
+    if (!quarterTotals[quarter]) {
+      quarterTotals[quarter] = { completed: 0, total: 0 };
+    }
+    quarterTotals[quarter].total += 1;
+    if (item.status === 'completed') {
+      quarterTotals[quarter].completed += 1;
+    }
+  });
+
   // Group by quarter across all statuses
   const quarterGroups: Record<string, RoadmapItem[]> = {};
   filteredItems.forEach(item => {
@@ -75,9 +90,16 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
   });
 
   const quarters = Object.keys(quarterGroups).reverse();
-  
+
+  // Prefer the quarter explicitly marked "(IN PROGRESS)" in ROADMAP.md as the
+  // current quarter so it surfaces first regardless of section ordering.
+  const inProgressIndex = quarters.findIndex(q => /in progress/i.test(q));
+  const orderedQuarters = inProgressIndex > 0
+    ? [quarters[inProgressIndex], ...quarters.filter((_, idx) => idx !== inProgressIndex)]
+    : quarters;
+
   // When showing completed, show all quarters by default
-  const displayedQuarters = (showAllPlanned || showCompleted) ? quarters : quarters.slice(0, 1);
+  const displayedQuarters = (showAllPlanned || showCompleted) ? orderedQuarters : orderedQuarters.slice(0, 1);
 
   return (
     <div className="bg-gradient-to-br from-purple-900/30 via-slate-800/50 to-purple-800/20 rounded-lg overflow-hidden border border-purple-500/40 shadow-lg shadow-purple-500/10 hover:border-purple-400/50 transition-colors" data-tour="roadmap-section">
@@ -141,7 +163,10 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
             const isCompleted = group.items.every(item => item.status === 'completed');
             const headerColor = isCompleted ? 'text-green-400' : 'text-purple-400';
             const linkColor = isCompleted ? 'text-green-400 hover:text-green-300' : 'text-blue-400 hover:text-blue-300';
-            
+            const totals = quarterTotals[group.quarter] || { completed: 0, total: group.items.length };
+            const progressPct = totals.total > 0 ? Math.round((totals.completed / totals.total) * 100) : 0;
+            const progressColor = progressPct === 100 ? 'bg-green-500' : progressPct > 0 ? 'bg-purple-500' : 'bg-slate-600';
+
             return (
               <div key={i} className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-slate-600/50 transition-colors">
                 <button
@@ -154,6 +179,17 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
                       <span className="text-[11px] text-slate-500">({group.items.length} items)</span>
                     </div>
                     <span className="text-slate-500 text-xs">{isCardExpanded ? '▼' : '▶'}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2" title={`${totals.completed}/${totals.total} completed`}>
+                    <div className="flex-1 bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${progressColor}`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-500 tabular-nums shrink-0">
+                      {totals.completed}/{totals.total} done
+                    </span>
                   </div>
                 </button>
                 {isCardExpanded && (

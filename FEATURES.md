@@ -28,7 +28,6 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 ### 🤖 Cross-Repo Orchestration (Planned)
 
-- **Per-Repo Roadmap Progress View**: Surface each tracked repo's current-quarter roadmap items and completion state directly in the expanded detail panel
 - **Cross-Repo Dependency Mapping**: Infer and display connections between related repos sharing a stack (e.g., agent-board ↔ bb-mcp ↔ overseer)
 - **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution
 - **MCP Server Endpoint**: Expose overseer's repo intelligence as an MCP server, making `get_repo_health` and `list_tasks` tools available to any MCP-compatible agent client
@@ -85,6 +84,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 - **Task Management**: Parse and display tasks by status (Todo, In Progress, Done)
 - **Roadmap Visualization**: Quarterly planning with status tracking (Planned, In Progress, Completed)
+- **Per-Repo Roadmap Progress**: Expanded detail panel surfaces the current ("(IN PROGRESS)") roadmap quarter first, with a completion progress bar per quarter card
 - **Metrics Tracking**: Custom metrics per repository
 - **Testing Metrics**: Test file count and test case count prominently displayed
 - **CI/CD Monitoring**: Live workflow status with last run timestamp
@@ -161,7 +161,6 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 ## 🆕 Planned & Upcoming Features
 
-- **AI-Driven Roadmap Progress**: Automated parsing and visualization of per-repo roadmap progress in the dashboard (Q2 2026)
 - **Cross-Repo Dependency Mapping**: Visualize and manage shared-stack connections (Q3 2026)
 - **Autonomous Plan Execution**: Agents read ROADMAP.md and TASKS.md, open PRs, and close items end to end (Q4 2026)
 - **Portfolio Intelligence Dashboard**: Cross-repo health roll-up, trend lines, and strategic signal view (Q4 2026)

@@ -6,7 +6,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 ### 📊 Repository Intelligence
 
-- **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, and activity with component breakdown display
+- **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, activity, and security with component breakdown display
 - **Documentation Tracking**: Monitors presence and status of key docs with 4-state health model (Missing, Dormant, Malformed, Healthy)
 - **Template Health Detection**: Content hashing to detect unchanged/stale templates marked as "dormant" state
 - **Template Version Tracking**: Tracks which template version docs are based on with template_version column
@@ -17,7 +17,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Lines of Code (LOC)**: Total LOC calculated from GitHub language stats with K suffix formatting (e.g., "12.5K")
 - **Test Case Counting**: Automatic parsing of test files to count it(), test(), describe() calls
 - **CI/CD Status**: Live build status from GitHub Actions (passing/failing with workflow name and last run)
-- **Vulnerability Tracking**: Open Dependabot alerts with count and severity (critical/high) color-coded display
+- **Vulnerability Tracking**: Open Dependabot alerts with count and severity (critical/high) color-coded display, weighted into the security health score component alongside open secret-scanning alerts
 - **Contributor Analytics**: Track contributor count, commit frequency (commits/week), bus factor, PR merge time
 - **Bus Factor Analysis**: Contributor concentration risk using 80/20 rule
 - **Commit Frequency**: Average commits/week from last 12 weeks
@@ -233,15 +233,16 @@ Overseer tracks adherence to development and community standards with 4-state he
 
 ## 💯 Health Score System
 
-Overseer calculates comprehensive health scores (0-100) based on 5 weighted components:
+Overseer calculates comprehensive health scores (0-100) based on 6 weighted components:
 
 | Component             | Weight | What It Measures                                                                                                                                                                    |
 | --------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Documentation Health  | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md                                                          |
-| Testing & Quality     | 20%    | Test coverage, framework detection, CI/CD status                                                                                                                                    |
-| Best Practices        | 20%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker                                                      |
-| Community Standards   | 15%    | 12 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt |
-| Activity & Engagement | 15%    | Commit frequency, PR/Issue counts, contributor activity                                                                                                                             |
+| Documentation Health  | 20%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md                                                          |
+| Testing & Quality     | 25%    | Test coverage, framework detection, CI/CD status                                                                                                                                    |
+| Best Practices        | 25%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker                                                      |
+| Community Standards   | 10%    | 12 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt |
+| Activity & Engagement | 10%    | Commit frequency, PR/Issue counts, contributor activity                                                                                                                             |
+| Security              | 10%    | Critical/high Dependabot vulnerability alerts and open secret-scanning alerts                                                                                                       |
 
 Health scores are displayed as letter grades (A-F) with detailed component breakdowns available in the expandable detail panel.
 

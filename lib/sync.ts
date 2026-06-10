@@ -516,6 +516,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             lastCommitDays: daysSinceCommit,
             openIssuesCount: repo.openIssues,
             openPRsCount: openPrs,
+            vulnCriticalCount,
+            vulnHighCount,
+            secretScanningAlertCount,
         });
 
         await db`

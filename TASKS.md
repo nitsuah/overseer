@@ -27,11 +27,6 @@
   - Context: overseer parses ROADMAP.md per repo but the dashboard only shows aggregate health; no view surfaces each repo's Q2/Q3 progress against its own plan.
   - Acceptance Criteria: the expanded row within the roadmap shows the current-quarter roadmap items and a progress bar indicating their completion state for the selected repo.
 
-- [ ] Add security inputs to the health score.
-  - Priority: P1
-  - Context: Dependabot alert severity and secret-scanning findings are fetched but not yet weighted into the health score.
-  - Acceptance Criteria: critical/high Dependabot alerts and open secret-scanning alerts reduce the health score measurably.
-
 ### P2 - Medium
 
 - [ ] Add AI doc-improvement controls.

@@ -12,6 +12,9 @@ export interface HealthScoreInputs {
     lastCommitDays: number;
     openIssuesCount: number;
     openPRsCount: number;
+    vulnCriticalCount?: number;
+    vulnHighCount?: number;
+    secretScanningAlertCount?: number;
 }
 
 export interface HealthScoreBreakdown {
@@ -21,17 +24,19 @@ export interface HealthScoreBreakdown {
     bestPractices: number;
     community: number;
     activity: number;
+    security: number;
 }
 
 /**
  * Calculate overall repository health score (0-100)
- * 
+ *
  * Weights:
  * - Best Practices: 25%
  * - Testing: 25%
  * - Documentation: 20%
  * - Community Standards: 10%
  * - Activity: 10%
+ * - Security: 10%
  */
 export function calculateHealthScore(inputs: HealthScoreInputs): HealthScoreBreakdown {
     // Documentation Score (0-100)
@@ -85,13 +90,24 @@ export function calculateHealthScore(inputs: HealthScoreInputs): HealthScoreBrea
     
     activityScore = Math.max(activityScore, 0);
 
+    // Security Score (0-100)
+    // Critical/high Dependabot vulnerability alerts and open secret-scanning
+    // alerts each reduce the score, with secrets weighted heaviest since an
+    // exposed credential is an active incident rather than a latent risk.
+    let securityScore = 100;
+    securityScore -= Math.min((inputs.vulnCriticalCount ?? 0) * 15, 60);
+    securityScore -= Math.min((inputs.vulnHighCount ?? 0) * 8, 30);
+    securityScore -= Math.min((inputs.secretScanningAlertCount ?? 0) * 20, 60);
+    securityScore = Math.max(securityScore, 0);
+
     // Weighted Total
     const total = Math.round(
         docScore * 0.20 +
         testScore * 0.25 +
         bestPracticesScore * 0.25 +
         communityScore * 0.10 +
-        activityScore * 0.10
+        activityScore * 0.10 +
+        securityScore * 0.10
     );
 
     return {
@@ -101,6 +117,7 @@ export function calculateHealthScore(inputs: HealthScoreInputs): HealthScoreBrea
         bestPractices: Math.round(bestPracticesScore),
         community: Math.round(communityScore),
         activity: Math.round(activityScore),
+        security: Math.round(securityScore),
     };
 }
 

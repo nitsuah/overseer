@@ -232,7 +232,9 @@ export function useRepoActions(
         'copilot_instructions',
         'funding',
         'pr_template',
-        'issue_template'
+        'issue_template',
+        'flow_tasks_prompt',
+        'handoff_prompt'
       ];
 
       const missingStandards: string[] = (details.communityStandards || [])

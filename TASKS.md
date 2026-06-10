@@ -1,4 +1,4 @@
-## updated: 2026-06-08
+## updated: 2026-06-10
 
 # Tasks
 
@@ -8,11 +8,6 @@
   - Priority: P1
   - Context: `ai.ts` has multi-provider failover and auto-discovery; needs clearer resilience around Gemini deprecations and provider switching.
   - Acceptance Criteria: provider health checks, fallback behavior, and model-switch logging stay reliable.
-
-- [/] Surface FLOW-TASKS and HANDOFF prompt templates in the community-standards auto-fix set.
-  - Priority: P1
-  - Context: `templates/.github/prompts/FLOW-TASKS.md` and `HANDOFF.md` have shipped; they are not yet included in the community-standards fix-all-practices auto-fix set.
-  - Acceptance Criteria: both prompt templates are applied and versioned correctly when the community-standards auto-fix runs on a target repo.
 
 - [/] Implement .github fallback resolution for community health files.
   - Priority: P1

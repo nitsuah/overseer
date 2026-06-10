@@ -24,7 +24,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **PR Merge Time**: Average hours from creation to merge for last 30 PRs
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
-- **Community Standards**: 10 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING
+- **Community Standards**: 12 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt
 
 ### 🤖 Cross-Repo Orchestration (Planned)
 
@@ -61,7 +61,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Inline Edit/Generate Toggle**: Switch between manual template editing and AI-powered generation
 - **Auto-Fix Missing Docs**: One-click PR creation for missing documentation (8 doc types)
 - **Auto-Fix Best Practices**: One-click PR creation for missing best practices (4 types: Dependabot, Env Template, Docker, Netlify Badge)
-- **Auto-Fix Community Standards**: One-click PR creation for missing standards (10 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions, FUNDING)
+- **Auto-Fix Community Standards**: One-click PR creation for missing standards (12 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt)
 - **Batch Operations**: Fix all missing docs or all missing standards with single PR
 - **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, and community standards templates
 - **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Overseer compliance and avoiding hallucination
@@ -215,6 +215,8 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **CODEOWNERS** - Code ownership and review assignments (template available)
 - **Copilot Instructions** - AI assistant guidance file (template available)
 - **FUNDING.yml** - Funding/sponsorship information (template available)
+- **FLOW-TASKS Prompt** - Agent task triage and execution sequencing prompt (template available)
+- **HANDOFF Prompt** - Agent session handoff brief prompt (template available)
 
 ### ✅ Best Practices
 
@@ -233,13 +235,13 @@ Overseer tracks adherence to development and community standards with 4-state he
 
 Overseer calculates comprehensive health scores (0-100) based on 5 weighted components:
 
-| Component             | Weight | What It Measures                                                                                                                       |
-| --------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Documentation Health  | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md             |
-| Testing & Quality     | 20%    | Test coverage, framework detection, CI/CD status                                                                                       |
-| Best Practices        | 20%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker         |
-| Community Standards   | 15%    | 9 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates, CODEOWNERS, Copilot Instructions |
-| Activity & Engagement | 15%    | Commit frequency, PR/Issue counts, contributor activity                                                                                |
+| Component             | Weight | What It Measures                                                                                                                                                                    |
+| --------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Documentation Health  | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md                                                          |
+| Testing & Quality     | 20%    | Test coverage, framework detection, CI/CD status                                                                                                                                    |
+| Best Practices        | 20%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker                                                      |
+| Community Standards   | 15%    | 12 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt |
+| Activity & Engagement | 15%    | Commit frequency, PR/Issue counts, contributor activity                                                                                                                             |
 
 Health scores are displayed as letter grades (A-F) with detailed component breakdowns available in the expandable detail panel.
 

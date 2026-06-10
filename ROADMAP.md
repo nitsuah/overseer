@@ -1,4 +1,4 @@
-## updated: 2026-06-08
+## updated: 2026-06-10
 
 # 🗺️ Overseer Roadmap
 
@@ -10,7 +10,7 @@ Next Review: 2026-07-01
 
 ## Q2 2026: AI & Orchestration (IN PROGRESS) 🏗️
 
-- [ ] Add FLOW-TASKS and HANDOFF agent prompt templates to the community-standards template set
+- [x] Add FLOW-TASKS and HANDOFF agent prompt templates to the community-standards template set
 - [ ] Add per-repo plan-execution tracking: surface each repo's Q2 roadmap progress in the dashboard
 - [ ] Add PMO/DEV flow tracking: surface branch and PR readiness for all managed repos in the dashboard
 - [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly

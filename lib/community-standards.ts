@@ -115,6 +115,22 @@ export function checkCommunityStandards(
         details: { exists: hasCopilotInstructions }
     });
 
+    // FLOW-TASKS agent prompt — always per-repo, no org fallback
+    const hasFlowTasksPrompt = lowerFiles.includes('.github/prompts/flow-tasks.md');
+    standards.push({
+        type: 'flow_tasks_prompt',
+        status: hasFlowTasksPrompt ? 'healthy' : 'missing',
+        details: { exists: hasFlowTasksPrompt }
+    });
+
+    // HANDOFF agent prompt — always per-repo, no org fallback
+    const hasHandoffPrompt = lowerFiles.includes('.github/prompts/handoff.md');
+    standards.push({
+        type: 'handoff_prompt',
+        status: hasHandoffPrompt ? 'healthy' : 'missing',
+        details: { exists: hasHandoffPrompt }
+    });
+
     // CODEOWNERS — check .github/, root, docs/ in repo; then org .github fallback
     const hasCodeownersInRepo = lowerFiles.includes('.github/codeowners') ||
                                  lowerFiles.includes('codeowners') ||

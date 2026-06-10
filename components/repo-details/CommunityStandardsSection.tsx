@@ -51,6 +51,8 @@ export function CommunityStandardsSection({
       'codeowners': 'CODEOWNERS',
       'copilot_instructions': 'COPILOT',
       'funding': 'FUNDING',
+      'flow_tasks_prompt': 'FLOW-TASKS',
+      'handoff_prompt': 'HANDOFF',
     };
     return labels[type] || type
       .split('_')
@@ -69,7 +71,9 @@ export function CommunityStandardsSection({
       'pr_template',
       'codeowners',
       'copilot_instructions',
-      'funding'
+      'funding',
+      'flow_tasks_prompt',
+      'handoff_prompt'
     ].includes(s.standard_type)
   );
 
@@ -128,6 +132,8 @@ export function CommunityStandardsSection({
                 'codeowners',
                 'security',
                 'copilot_instructions',
+                'flow_tasks_prompt',
+                'handoff_prompt',
                 'funding',
                 'license',
                 'issue_template',
@@ -152,7 +158,9 @@ export function CommunityStandardsSection({
               'pr_template',
               'codeowners',
               'copilot_instructions',
-              'funding'
+              'funding',
+              'flow_tasks_prompt',
+              'handoff_prompt'
             ].includes(standard.standard_type);
             const isMissing = standard.status === 'missing';
 

@@ -166,6 +166,9 @@ export async function POST(request: NextRequest) {
       issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
       pr_template: path.join('.github', 'pull_request_template.md'),
       pull_request_template: path.join('.github', 'pull_request_template.md'),
+      // Agent prompt companion files
+      flow_tasks_prompt: path.join('.github', 'prompts', 'FLOW-TASKS.md'),
+      handoff_prompt: path.join('.github', 'prompts', 'HANDOFF.md'),
       // Best practices with files we can preview
       docker: 'Dockerfile',
       env_template: '.env.example',
@@ -197,6 +200,9 @@ export async function POST(request: NextRequest) {
       issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
       pr_template: path.join('.github', 'pull_request_template.md'),
       pull_request_template: path.join('.github', 'pull_request_template.md'),
+      // Agent prompt companion files
+      flow_tasks_prompt: path.join('.github', 'prompts', 'FLOW-TASKS.md'),
+      handoff_prompt: path.join('.github', 'prompts', 'HANDOFF.md'),
       // Best practices
       docker: 'Dockerfile',
       env_template: '.env.example',

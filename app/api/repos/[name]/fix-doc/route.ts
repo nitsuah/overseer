@@ -65,8 +65,10 @@ export async function POST(
                 issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
                 pr_template: path.join('.github', 'pull_request_template.md'),
                 pull_request_template: path.join('.github', 'pull_request_template.md'),
+                flow_tasks_prompt: path.join('.github', 'prompts', 'FLOW-TASKS.md'),
+                handoff_prompt: path.join('.github', 'prompts', 'HANDOFF.md'),
             };
-            
+
             // Map logical doc types to target paths (where they should go in the repo)
             const TARGET_PATHS: Record<string, string> = {
                 // Core docs go in root
@@ -89,6 +91,8 @@ export async function POST(
                 issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
                 pr_template: path.join('.github', 'pull_request_template.md'),
                 pull_request_template: path.join('.github', 'pull_request_template.md'),
+                flow_tasks_prompt: path.join('.github', 'prompts', 'FLOW-TASKS.md'),
+                handoff_prompt: path.join('.github', 'prompts', 'HANDOFF.md'),
             };
 
             const normalized = String(docType).toLowerCase();

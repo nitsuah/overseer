@@ -11,11 +11,29 @@
 
 ## Todo
 
-### Dev feedback
+### P1 - High
 
-- [ ] Fix loading and refresh of repos (see realtime sync on tasks below). it should happen periodically so as to avoid showing stale data, but avoid rate limits and not cause too much noise. the "refresh" of the entire app should also not be necessary as it interrupts the user experience and can cause them to lose their place in the app. ideally, we would have a "last updated" timestamp for each repo and only refresh those that are stale, or at least show the user that data is being refreshed in the background. panels should refresh not the entire app. this is a critical issue as it impacts the reliability of the data shown to users and can lead to confusion if they are seeing outdated information. periodic refresh can make it likely that users will see updated data without having to manually refresh, but it needs to be implemented in a way that is not disruptive.
+- [ ] Add PMO/DEV flow tracking: surface branch and PR readiness for all managed repos.
+  - Priority: P1
+  - Context: overseer already shows open PR/issue counts per repo, but the dashboard has no view of branch/PR readiness for promoting ROADMAP work into implementation (e.g., PRs awaiting review/merge vs. blocked on CI or changes-requested).
+  - Acceptance Criteria: the dashboard surfaces, per repo, open PR counts broken down by review/CI state (ready-to-merge vs. blocked) so PMO users can see which repos have work ready to land.
+
+- [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly.
+  - Priority: P1
+  - Context: ROADMAP items move from "Planned" to "In Progress" manually, with no link between a roadmap item and the Agent Task Queue or an implementation branch/PR.
+  - Acceptance Criteria: a roadmap item marked `[/]` (in progress) can be associated with an Agent Task Queue entry and/or a tracked PR, and that link is visible in the per-repo roadmap progress view.
 
 ### P2 - Medium
+
+- [ ] Add workflow visualization for multi-step execution paths.
+  - Priority: P2
+  - Context: the FLOW-TASKS/HANDOFF/PMO/DEV/QA agent pipeline (see `templates/.github/prompts`) has no visual representation in the dashboard; users can't see where a repo's active work sits in that pipeline.
+  - Acceptance Criteria: the dashboard shows a simple stage indicator (e.g., Planned -> In Progress -> Review -> Done) per active roadmap item or task, derived from existing status markers and PR/issue state.
+
+- [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
+  - Priority: P2
+  - Context: overseer exposes an Agent Task Queue API and agent-board runs a local model runtime, but no bridge routes tasks between them.
+  - Acceptance Criteria: a v0 bridge dispatches at least one queued overseer task to agent-board's runtime and reports completion status back to the queue.
 
 - [ ] Add AI doc-improvement controls.
   - Priority: P2

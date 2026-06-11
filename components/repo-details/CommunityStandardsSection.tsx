@@ -163,6 +163,12 @@ export function CommunityStandardsSection({
               'handoff_prompt'
             ].includes(standard.standard_type);
             const isMissing = standard.status === 'missing';
+            // Healthy solely because the org-level owner/.github repo provides
+            // this file (no repo-local copy exists)
+            const fromGithubFallback = standard.status === 'healthy'
+              && standard.details?.existsInGithubFallback === true
+              && standard.details?.existsInRepo === false;
+            const fallbackRepo = standard.details?.fallbackRepo as string | undefined;
 
             return (
               <div key={i} className="flex items-center justify-between text-xs gap-2">
@@ -189,11 +195,14 @@ export function CommunityStandardsSection({
                   <span
                     className={`text-[10px] px-1.5 py-0.5 rounded ${
                       standard.status === 'healthy'
-                        ? 'bg-green-500/20 text-green-400'
+                        ? fromGithubFallback
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'bg-green-500/20 text-green-400'
                         : 'bg-red-500/20 text-red-400'
                     }`}
+                    title={fromGithubFallback && fallbackRepo ? `Provided by ${fallbackRepo}` : undefined}
                   >
-                    {standard.status === 'healthy' ? 'Present' : 'Missing'}
+                    {standard.status === 'healthy' ? (fromGithubFallback ? 'Org' : 'Present') : 'Missing'}
                   </span>
                 </div>
               </div>

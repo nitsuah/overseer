@@ -14,7 +14,7 @@ Next Review: 2026-07-01
 - [x] Add per-repo plan-execution tracking: surface each repo's Q2 roadmap progress in the dashboard
 - [ ] Add PMO/DEV flow tracking: surface branch and PR readiness for all managed repos in the dashboard
 - [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly
-- [ ] Add .github repo awareness: resolve community health files from owner/.github before flagging per-repo absence in health scoring and standards auto-fix
+- [x] Add .github repo awareness: resolve community health files from owner/.github before flagging per-repo absence in health scoring and standards auto-fix
 - [x] Add security inputs to the health score (Dependabot severity weighting, secret-scanning signal)
 - [ ] Add AI doc-improvement controls: inline compare-and-accept flow for existing documentation
 - [ ] Add workflow visualization for multi-step execution paths

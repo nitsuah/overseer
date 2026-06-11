@@ -25,6 +25,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
 - **Community Standards**: 12 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt
+- **Org-Level Fallback Awareness**: Community standards satisfied solely by the owner's `.github` repo (no repo-local copy) are marked with a distinct "Org" badge and a tooltip naming the source repo, instead of an indistinguishable "Present"
 
 ### 🤖 Cross-Repo Orchestration (Planned)
 

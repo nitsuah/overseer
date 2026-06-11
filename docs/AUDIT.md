@@ -1,21 +1,22 @@
 # Overseer Feature Audit
 
-Last Updated: March 27, 2026
+Last Updated: June 10, 2026
 
 ## Summary
 
 Documentation and implementation are aligned across the project. Key validations:
 
+- **Test Coverage**: 93.28% statement coverage (85.42% branch, 93.41% function, 94.06% line) — Docker-validated via `docker compose -f config/docker-compose.test.yml run --rm coverage`. 22 test files, 255 tests (254 passing, 1 skipped Gemini health check without API key).
+- **Production OAuth**: Verified working on Netlify (NextAuth v5 + GitHub OAuth) — no longer a blocker.
+- **AI / Gemini**: Multi-provider failover (Gemini, GPT-4, Claude) with auto-discovery, hot model swapping, and BYOK provider-order routing shipped (Q4 2025–Q1 2026) — see HANDOFF-byok-quota-provider-fallback-20260411.
 - **Community Standards**: All 10 standards have templates and modal-based PR creation ✅
 - **Documentation**: All 5 core docs (ROADMAP, TASKS, METRICS, FEATURES, README) have templates and modal-based PR creation ✅
-- **Best Practices**: All 4 template-based practices (Dependabot, Env Template, Docker, Netlify Badge) have modal-based PR creation ✅
+- **Best Practices**: 4 of 10 template-based practices (Dependabot, Env Template, Docker, Netlify Badge) have modal-based PR creation ✅
 - Centralized server-side logging via `lib/log.ts`; server routes and scripts use `logger` consistently.
-- `.env.example` exists and is referenced in README and CONTRIBUTING; Dependabot and Docker are configured;
-- ⚠️ Deploy Badge in README includes Netlify badge section but needs ability to update existing if present.
-- METRICS now reflect the Docker-validated unit suite: 19 test files, 200 passing tests, 1 skipped Gemini health check, and 62.50% statement coverage.
-- **Security Enhancement**: Markdown rendering now uses react-markdown with rehype-sanitize plugin for XSS protection ✅
+- `.env.example` exists and is referenced in README and CONTRIBUTING; Dependabot and Docker are configured.
+- **Security Enhancement**: Markdown rendering uses react-markdown with rehype-sanitize plugin for XSS protection ✅
 - **Authentication UI**: Sync All button restricted to authenticated users only ✅
-- **Docker Validation**: `docker build -t overseer-devops-check .` now completes without real secrets injected at build time; runtime secrets are still required ✅
+- **Docker Validation**: `docker build -t overseer-devops-check .` completes without real secrets injected at build time; runtime secrets are still required ✅
 
 _For historical improvements and version history, see CHANGELOG.md._
 
@@ -104,47 +105,35 @@ Modal-based fixes are reflected directly in the "Automated Fix" column (e.g., "�
 
 ## 🔴 Remaining Gaps
 
-### 1. Documentation Fix Modal (5 docs with templates)
+Sourced from ROADMAP.md / TASKS.md (updated 2026-06-08).
 
-Current: 5 core documentation files have Fix buttons with modal preview:
+### 1. Gemini Reliability Polish (Q2 P1, In Progress)
 
-- ROADMAP.md ✅
-- TASKS.md ✅
-- METRICS.md ✅
-- FEATURES.md ✅
-- README.md ✅
+`lib/ai-providers.ts` already has multi-provider failover, auto-discovery, and BYOK provider-order routing. Remaining work: clearer resilience around Gemini deprecations and provider switching, plus the optional follow-up from HANDOFF-byok-quota-provider-fallback — wire runtime quota detection to auto-toggle `GEMINI_QUOTA_EXCEEDED` without manual env changes.
 
-Additional docs tracked but not yet with Fix buttons:
+**Priority**: P1 — in progress
 
-- CONTRIBUTING.md (tracked in both docs and community standards)
+### 2. Agent Prompt Templates in Auto-Fix Set (Q2 P1, In Progress)
 
-### 4. Security Configuration Tracking (Phase 7)ty standards)
+`templates/.github/prompts/FLOW-TASKS.md` and `HANDOFF.md` have shipped but are not yet included in the community-standards fix-all-practices auto-fix set.
 
-- LICENSE (tracked in both docs and community standards)
+**Priority**: P1 — in progress
 
-**Priority**: LOW - Already covered via Community Standards section
+### 3. .github Fallback Resolution (Q2 P1, In Progress)
 
-### 2. Best Practices Fix Modal (Currently 4, could expand)
+Community standards checks and fix-all behavior currently assume repo-local files. Should treat owner-level `.github` as canonical fallback for `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md` — health sync should mark those standards healthy when found in `owner/.github`, and fix-all should skip generating repo-local duplicates when the fallback exists.
 
-Current: 4 best practices have Fix buttons with modal preview:
+**Priority**: P1 — in progress
 
-- Dependabot ✅
-- .env.example ✅
-- Docker ✅
-- Netlify Badge ✅
+### 4. Best Practices Fix Modal (Currently 4 of 10)
 
-Tracked but no Fix buttons (6 remaining):
+Current: 4 best practices have Fix buttons with modal preview — Dependabot ✅, .env.example ✅, Docker ✅, Netlify Badge ✅.
 
-- CI/CD configuration
-- Pre-commit Hooks
-- Linting configuration
-- Branch Protection
-- Testing Framework
-- .gitignore
+Tracked but no Fix buttons (6 remaining): CI/CD configuration, Pre-commit Hooks, Linting configuration, Branch Protection, Testing Framework, .gitignore.
 
 **Priority**: MEDIUM - Would complete automated fix coverage for best practices
 
-### 3. AI-Enhanced Community Standards (Dogfooding)
+### 5. AI-Enhanced Community Standards (Dogfooding)
 
 Overseer tracks these but doesn't have them itself at root. Could use AI to generate personalized versions:
 
@@ -155,24 +144,30 @@ Overseer tracks these but doesn't have them itself at root. Could use AI to gene
 
 **Priority**: LOW - Templates exist, just need to apply them to overseer itself
 
-### 4. Security Configuration Tracking (Phase 7)
+### 6. Security Configuration Tracking (Q2 Roadmap)
 
-From ROADMAP Phase 7, not yet implemented:
+From ROADMAP Q2 2026, not yet implemented:
 
 - Security policy presence tracking
 - Security advisory configuration
 - Private vulnerability reporting status
-- Dependabot alerts status (enabled/disabled)
+- Dependabot alerts status (enabled/disabled), with severity weighting in the health score
 - Code scanning alerts configuration
-- Secret scanning alerts configuration
+- Secret scanning alerts configuration / signal in health score
 
 **Priority**: MEDIUM - Would complete the security visibility story
+
+### 7. Cross-Repo Orchestration (Planned)
+
+Per FEATURES.md "Planned" section: per-repo roadmap progress view, cross-repo dependency mapping, agent dispatch bridge to agent-board, MCP server endpoint (`get_repo_health`, `list_tasks`), webhook-driven sync.
+
+**Priority**: Planned - Q3 2026 PMO Mode candidate
 
 ## 🚀 Recommended Next Steps
 
 **Next Priority Items**:
 
-1. **GitHub OAuth Production Fix** - Blocking production deployment
-2. **Gemini API Integration Fix** - AI summaries not working
-3. **Test Status Integration** - Populate test status from CI/CD
-4. **Security in Health Score** - Include vulnerability metrics in overall score calculation
+1. Close out the 3 in-progress Q2 P1 items: Gemini reliability polish, agent prompt template auto-fix coverage, and `.github` fallback resolution.
+2. Add security inputs to the health score (Dependabot severity weighting + secret-scanning signal) — completes the security visibility story (gap #6).
+3. Expand the Best Practices Fix Modal to the remaining 6 checks (gap #4).
+4. Begin scoping Q3 2026 PMO Mode (chat-driven TASKS/ROADMAP management, cross-repo orchestration) once the Q2 P1 items close.

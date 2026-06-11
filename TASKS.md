@@ -13,11 +13,6 @@
 
 ### P1 - High
 
-- [ ] Add PMO/DEV flow tracking: surface branch and PR readiness for all managed repos.
-  - Priority: P1
-  - Context: overseer already shows open PR/issue counts per repo, but the dashboard has no view of branch/PR readiness for promoting ROADMAP work into implementation (e.g., PRs awaiting review/merge vs. blocked on CI or changes-requested).
-  - Acceptance Criteria: the dashboard surfaces, per repo, open PR counts broken down by review/CI state (ready-to-merge vs. blocked) so PMO users can see which repos have work ready to land.
-
 - [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly.
   - Priority: P1
   - Context: ROADMAP items move from "Planned" to "In Progress" manually, with no link between a roadmap item and the Agent Task Queue or an implementation branch/PR.

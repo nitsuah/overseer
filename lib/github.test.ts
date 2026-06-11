@@ -20,6 +20,7 @@ const mockGitGetRef = vi.fn();
 const mockGitCreateRef = vi.fn();
 const mockActionsListWorkflowRunsForRepo = vi.fn();
 const mockRequest = vi.fn();
+const mockGraphql = vi.fn();
 
 const mockOctokitInstance = {
     repos: {
@@ -45,6 +46,7 @@ const mockOctokitInstance = {
         listWorkflowRunsForRepo: mockActionsListWorkflowRunsForRepo,
     },
     request: mockRequest,
+    graphql: mockGraphql,
 };
 
 vi.mock('@octokit/rest', () => {
@@ -281,6 +283,62 @@ describe('GitHubClient', () => {
                 labels: ['docs', 'enhancement'],
             })
         );
+    });
+
+    it('should classify open PRs by review/CI readiness', async () => {
+        mockGraphql.mockResolvedValue({
+            repository: {
+                pullRequests: {
+                    nodes: [
+                        // Ready: not draft, no changes requested, CI passing
+                        {
+                            isDraft: false,
+                            reviewDecision: 'APPROVED',
+                            mergeable: 'MERGEABLE',
+                            commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                        },
+                        // Blocked: draft
+                        {
+                            isDraft: true,
+                            reviewDecision: null,
+                            mergeable: 'MERGEABLE',
+                            commits: { nodes: [] },
+                        },
+                        // Blocked: changes requested
+                        {
+                            isDraft: false,
+                            reviewDecision: 'CHANGES_REQUESTED',
+                            mergeable: 'MERGEABLE',
+                            commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                        },
+                        // Blocked: CI failing
+                        {
+                            isDraft: false,
+                            reviewDecision: null,
+                            mergeable: 'MERGEABLE',
+                            commits: { nodes: [{ commit: { statusCheckRollup: { state: 'FAILURE' } } }] },
+                        },
+                        // Blocked: merge conflict
+                        {
+                            isDraft: false,
+                            reviewDecision: null,
+                            mergeable: 'CONFLICTING',
+                            commits: { nodes: [{ commit: { statusCheckRollup: null } }] },
+                        },
+                    ],
+                },
+            },
+        });
+
+        const readiness = await client.getPullRequestReadiness('repo-1');
+        expect(readiness).toEqual({ readyCount: 1, blockedCount: 4 });
+    });
+
+    it('should return zero counts when PR readiness query fails', async () => {
+        mockGraphql.mockRejectedValue(new Error('GraphQL error'));
+
+        const readiness = await client.getPullRequestReadiness('repo-1');
+        expect(readiness).toEqual({ readyCount: 0, blockedCount: 0 });
     });
 
     it('should create PR for a single file', async () => {

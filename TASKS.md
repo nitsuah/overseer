@@ -1,4 +1,4 @@
-## updated: 2026-06-10
+## updated: 2026-06-12
 
 # Tasks
 
@@ -69,6 +69,11 @@
 ### DB & backend scaling
 
 - [ ] we may need to assess current DB design for scalability as well.
+
+- [ ] Batch the per-repo detail queries in `/api/repo-details/[name]` into a single `db.transaction([...])` call.
+  - Priority: P2
+  - Context: that route issues up to 8 sequential tagged-template queries (repos, tasks, roadmap_items, metrics, features, doc_status, best_practices, community_standards), and the dashboard fans this out across every repo on first load via `fetchAllRepoDetails`. Each query is a separate HTTPS round trip with Neon's serverless driver, so per-repo latency scales linearly with the table count.
+  - Acceptance Criteria: the route fetches all per-repo tables via one `sql.transaction([...])` call (or equivalent) so each repo's detail panel resolves in a single round trip; behavior and response shape are unchanged.
 
 ### P3 - Exploratory
 

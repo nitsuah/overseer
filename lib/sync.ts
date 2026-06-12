@@ -9,6 +9,7 @@ import { checkBestPractices } from './best-practices';
 import { checkCommunityStandards } from './community-standards';
 import { calculateHealthScore } from './health-score';
 import { isTestFile, parseTestFile } from './parsers/test-cases';
+import { ensureSchema } from './db';
 import logger from './log';
 
 const ORG_GITHUB_FALLBACK_CACHE = new Map<string, { files: string[]; expiresAt: number }>();
@@ -28,6 +29,8 @@ async function getOrgGithubFallbackFiles(github: GitHubClient, owner: string): P
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
+    await ensureSchema(db);
+
     const lastCommitDate = repo.pushedAt; // Approximation
 
     await db`
@@ -58,6 +61,8 @@ export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any) {
+    await ensureSchema(db);
+
     const owner = repo.fullName.split('/')[0];
 
     // Fetch additional metrics

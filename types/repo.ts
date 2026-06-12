@@ -81,6 +81,8 @@ export interface Repo {
   ai_summary?: string;
   last_commit_date?: string | null;
   open_prs?: number;
+  prs_ready_count?: number;
+  prs_blocked_count?: number;
   open_issues_count?: number;
   readme_last_updated?: string | null;
   total_loc?: number;

@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS repos (
   forks INTEGER DEFAULT 0,
   open_issues INTEGER DEFAULT 0,
   open_prs INTEGER DEFAULT 0,
+  prs_ready_count INTEGER DEFAULT 0,
+  prs_blocked_count INTEGER DEFAULT 0,
   branches_count INTEGER DEFAULT 0,
   url TEXT NOT NULL,
   homepage TEXT,

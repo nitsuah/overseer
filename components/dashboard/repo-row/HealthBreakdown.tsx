@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FileText, FlaskConical, Shield, Clock } from 'lucide-react';
+import { FileText, FlaskConical, Shield, ShieldAlert, Clock } from 'lucide-react';
 import { Repo, RepoDetails } from '@/types/repo';
 import { detectRepoType, RepoType } from '@/lib/repo-type';
 import { calculateDocHealth } from '@/lib/doc-health';
@@ -111,12 +111,26 @@ export function HealthBreakdown({ repo, details, health, expanded, onToggle }: H
     else if (activityScore < 60) activityColor = 'orange';
     else if (activityScore < 80) activityColor = 'yellow';
 
+    // Calculate security score: critical/high Dependabot alerts and open
+    // secret-scanning alerts each reduce the score (secrets weighted heaviest)
+    let securityScore = 100;
+    securityScore -= Math.min((repo.vuln_critical_count || 0) * 15, 60);
+    securityScore -= Math.min((repo.vuln_high_count || 0) * 8, 30);
+    securityScore -= Math.min((repo.secret_scanning_alert_count || 0) * 20, 60);
+    securityScore = Math.max(0, Math.round(securityScore));
+
+    let securityColor = 'green';
+    if (securityScore < 40) securityColor = 'red';
+    else if (securityScore < 60) securityColor = 'orange';
+    else if (securityScore < 80) securityColor = 'yellow';
+
     return [
       { label: 'Community', score: csScore, color: 'green', weight: '10%' },
       { label: 'Best Practices', score: bpScore, color: 'purple', weight: '25%' },
       { label: 'Testing', score: testScore, color: 'blue', weight: '25%' },
       { label: 'Documentation', score: docScore, color: 'slate', weight: '20%' },
       { label: 'Activity', score: activityScore, color: activityColor, weight: '10%' },
+      { label: 'Security', score: securityScore, color: securityColor, weight: '10%' },
     ];
   }, [repo, details, now]);
 
@@ -169,6 +183,7 @@ export function HealthBreakdown({ repo, details, health, expanded, onToggle }: H
                 'Best Practices': <Shield className="h-3.5 w-3.5 text-purple-400" />,
                 'Community': <Shield className="h-3.5 w-3.5 text-green-400" />,
                 'Activity': <Clock className="h-3.5 w-3.5 text-green-400" />,
+                'Security': <ShieldAlert className="h-3.5 w-3.5 text-red-400" />,
               };
               
               return (

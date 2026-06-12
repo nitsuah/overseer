@@ -143,18 +143,35 @@ export function RepoTableRow({
                 <Play className="h-4 w-4 fill-current" />
               </a>
             )}
-            {!repo.is_hidden && repo.open_prs !== undefined && repo.open_prs > 0 && (
-              <a
-                href={`${repo.url}/pulls`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors"
-                title={`${repo.open_prs} open PRs`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <GitPullRequest className="h-4 w-4" />
-              </a>
-            )}
+            {!repo.is_hidden && repo.open_prs !== undefined && repo.open_prs > 0 && (() => {
+              const blocked = repo.prs_blocked_count ?? 0;
+              const ready = repo.prs_ready_count ?? 0;
+              const readinessKnown = blocked + ready > 0;
+              const readinessSuffix = readinessKnown
+                ? ` (${ready} ready to merge, ${blocked} blocked)`
+                : '';
+              return (
+                <a
+                  href={`${repo.url}/pulls`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`relative p-1 rounded transition-colors ${
+                    readinessKnown && blocked === 0
+                      ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                      : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                  }`}
+                  title={`${repo.open_prs} open PRs${readinessSuffix}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GitPullRequest className="h-4 w-4" />
+                  {blocked > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                      {blocked}
+                    </span>
+                  )}
+                </a>
+              );
+            })()}
             {/* Open Issues and Vulnerability Alerts */}
             {!repo.is_hidden && repo.open_issues_count !== undefined && repo.open_issues_count > 0 && (
               <a

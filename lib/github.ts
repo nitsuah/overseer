@@ -222,6 +222,80 @@ export class GitHubClient {
     }));
   }
 
+  /**
+   * Classify open PRs by review/CI readiness using a single GraphQL call.
+   * "Blocked" covers drafts, changes-requested reviews, failing/erroring CI,
+   * and merge conflicts; everything else is considered ready to merge.
+   */
+  async getPullRequestReadiness(repo: string, owner?: string): Promise<{
+    readyCount: number;
+    blockedCount: number;
+  }> {
+    const ownerName = owner || this.owner;
+
+    try {
+      const result = await this.octokit.graphql<{
+        repository: {
+          pullRequests: {
+            nodes: Array<{
+              isDraft: boolean;
+              reviewDecision: string | null;
+              mergeable: string;
+              commits: {
+                nodes: Array<{
+                  commit: {
+                    statusCheckRollup: { state: string } | null;
+                  };
+                }>;
+              };
+            }>;
+          } | null;
+        } | null;
+      }>(
+        `query($owner: String!, $repo: String!) {
+          repository(owner: $owner, name: $repo) {
+            pullRequests(states: OPEN, first: 50) {
+              nodes {
+                isDraft
+                reviewDecision
+                mergeable
+                commits(last: 1) {
+                  nodes {
+                    commit {
+                      statusCheckRollup { state }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }`,
+        { owner: ownerName, repo }
+      );
+
+      const nodes = result.repository?.pullRequests?.nodes || [];
+      let readyCount = 0;
+      let blockedCount = 0;
+
+      for (const pr of nodes) {
+        const ciState = pr.commits?.nodes?.[0]?.commit?.statusCheckRollup?.state;
+        const ciFailing = ciState === 'FAILURE' || ciState === 'ERROR';
+        const changesRequested = pr.reviewDecision === 'CHANGES_REQUESTED';
+        const hasConflicts = pr.mergeable === 'CONFLICTING';
+
+        if (pr.isDraft || changesRequested || ciFailing || hasConflicts) {
+          blockedCount++;
+        } else {
+          readyCount++;
+        }
+      }
+
+      return { readyCount, blockedCount };
+    } catch {
+      return { readyCount: 0, blockedCount: 0 };
+    }
+  }
+
   async createPrForFile(
     repo: string,
     branchName: string,

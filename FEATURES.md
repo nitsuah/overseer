@@ -6,7 +6,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 ### 📊 Repository Intelligence
 
-- **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, and activity with component breakdown display
+- **Health Scoring**: Comprehensive health scores (0-100) based on documentation, testing, best practices, community standards, activity, and security with component breakdown display
 - **Documentation Tracking**: Monitors presence and status of key docs with 4-state health model (Missing, Dormant, Malformed, Healthy)
 - **Template Health Detection**: Content hashing to detect unchanged/stale templates marked as "dormant" state
 - **Template Version Tracking**: Tracks which template version docs are based on with template_version column
@@ -17,18 +17,18 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Lines of Code (LOC)**: Total LOC calculated from GitHub language stats with K suffix formatting (e.g., "12.5K")
 - **Test Case Counting**: Automatic parsing of test files to count it(), test(), describe() calls
 - **CI/CD Status**: Live build status from GitHub Actions (passing/failing with workflow name and last run)
-- **Vulnerability Tracking**: Open Dependabot alerts with count and severity (critical/high) color-coded display
+- **Vulnerability Tracking**: Open Dependabot alerts with count and severity (critical/high) color-coded display, weighted into the security health score component alongside open secret-scanning alerts
 - **Contributor Analytics**: Track contributor count, commit frequency (commits/week), bus factor, PR merge time
 - **Bus Factor Analysis**: Contributor concentration risk using 80/20 rule
 - **Commit Frequency**: Average commits/week from last 12 weeks
 - **PR Merge Time**: Average hours from creation to merge for last 30 PRs
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
-- **Community Standards**: 10 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING
+- **Community Standards**: 12 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt
+- **Org-Level Fallback Awareness**: Community standards satisfied solely by the owner's `.github` repo (no repo-local copy) are marked with a distinct "Org" badge and a tooltip naming the source repo, instead of an indistinguishable "Present"
 
 ### 🤖 Cross-Repo Orchestration (Planned)
 
-- **Per-Repo Roadmap Progress View**: Surface each tracked repo's current-quarter roadmap items and completion state directly in the expanded detail panel
 - **Cross-Repo Dependency Mapping**: Infer and display connections between related repos sharing a stack (e.g., agent-board ↔ bb-mcp ↔ overseer)
 - **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution
 - **MCP Server Endpoint**: Expose overseer's repo intelligence as an MCP server, making `get_repo_health` and `list_tasks` tools available to any MCP-compatible agent client
@@ -61,7 +61,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Inline Edit/Generate Toggle**: Switch between manual template editing and AI-powered generation
 - **Auto-Fix Missing Docs**: One-click PR creation for missing documentation (8 doc types)
 - **Auto-Fix Best Practices**: One-click PR creation for missing best practices (4 types: Dependabot, Env Template, Docker, Netlify Badge)
-- **Auto-Fix Community Standards**: One-click PR creation for missing standards (10 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions, FUNDING)
+- **Auto-Fix Community Standards**: One-click PR creation for missing standards (12 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt)
 - **Batch Operations**: Fix all missing docs or all missing standards with single PR
 - **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, and community standards templates
 - **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Overseer compliance and avoiding hallucination
@@ -85,6 +85,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 - **Task Management**: Parse and display tasks by status (Todo, In Progress, Done)
 - **Roadmap Visualization**: Quarterly planning with status tracking (Planned, In Progress, Completed)
+- **Per-Repo Roadmap Progress**: Expanded detail panel surfaces the current ("(IN PROGRESS)") roadmap quarter first, with a completion progress bar per quarter card
 - **Metrics Tracking**: Custom metrics per repository
 - **Testing Metrics**: Test file count and test case count prominently displayed
 - **CI/CD Monitoring**: Live workflow status with last run timestamp
@@ -161,7 +162,6 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 ## 🆕 Planned & Upcoming Features
 
-- **AI-Driven Roadmap Progress**: Automated parsing and visualization of per-repo roadmap progress in the dashboard (Q2 2026)
 - **Cross-Repo Dependency Mapping**: Visualize and manage shared-stack connections (Q3 2026)
 - **Autonomous Plan Execution**: Agents read ROADMAP.md and TASKS.md, open PRs, and close items end to end (Q4 2026)
 - **Portfolio Intelligence Dashboard**: Cross-repo health roll-up, trend lines, and strategic signal view (Q4 2026)
@@ -215,6 +215,8 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **CODEOWNERS** - Code ownership and review assignments (template available)
 - **Copilot Instructions** - AI assistant guidance file (template available)
 - **FUNDING.yml** - Funding/sponsorship information (template available)
+- **FLOW-TASKS Prompt** - Agent task triage and execution sequencing prompt (template available)
+- **HANDOFF Prompt** - Agent session handoff brief prompt (template available)
 
 ### ✅ Best Practices
 
@@ -231,15 +233,16 @@ Overseer tracks adherence to development and community standards with 4-state he
 
 ## 💯 Health Score System
 
-Overseer calculates comprehensive health scores (0-100) based on 5 weighted components:
+Overseer calculates comprehensive health scores (0-100) based on 6 weighted components:
 
-| Component             | Weight | What It Measures                                                                                                                       |
-| --------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Documentation Health  | 30%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md             |
-| Testing & Quality     | 20%    | Test coverage, framework detection, CI/CD status                                                                                       |
-| Best Practices        | 20%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker         |
-| Community Standards   | 15%    | 9 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates, CODEOWNERS, Copilot Instructions |
-| Activity & Engagement | 15%    | Commit frequency, PR/Issue counts, contributor activity                                                                                |
+| Component             | Weight | What It Measures                                                                                                                                                                    |
+| --------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Documentation Health  | 20%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md                                                          |
+| Testing & Quality     | 25%    | Test coverage, framework detection, CI/CD status                                                                                                                                    |
+| Best Practices        | 25%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker                                                      |
+| Community Standards   | 10%    | 12 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt |
+| Activity & Engagement | 10%    | Commit frequency, PR/Issue counts, contributor activity                                                                                                                             |
+| Security              | 10%    | Critical/high Dependabot vulnerability alerts and open secret-scanning alerts                                                                                                       |
 
 Health scores are displayed as letter grades (A-F) with detailed component breakdowns available in the expandable detail panel.
 

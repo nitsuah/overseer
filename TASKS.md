@@ -1,4 +1,4 @@
-## updated: 2026-06-08
+## updated: 2026-06-10
 
 # Tasks
 
@@ -9,35 +9,26 @@
   - Context: `ai.ts` has multi-provider failover and auto-discovery; needs clearer resilience around Gemini deprecations and provider switching.
   - Acceptance Criteria: provider health checks, fallback behavior, and model-switch logging stay reliable.
 
-- [/] Surface FLOW-TASKS and HANDOFF prompt templates in the community-standards auto-fix set.
-  - Priority: P1
-  - Context: `templates/.github/prompts/FLOW-TASKS.md` and `HANDOFF.md` have shipped; they are not yet included in the community-standards fix-all-practices auto-fix set.
-  - Acceptance Criteria: both prompt templates are applied and versioned correctly when the community-standards auto-fix runs on a target repo.
-
-- [/] Implement .github fallback resolution for community health files.
-  - Priority: P1
-  - Context: community standards checks and fix-all behavior currently assume repo-local files and should treat owner-level `.github` as canonical fallback for `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md`.
-  - Acceptance Criteria: health sync marks those standards healthy when found in `owner/.github`, and fix-all skips generating repo-local duplicates when fallback exists.
-
 ## Todo
-
-### Dev feedback
-
-- [ ] Fix loading and refresh of repos (see realtime sync on tasks below). it should happen periodically so as to avoid showing stale data, but avoid rate limits and not cause too much noise. the "refresh" of the entire app should also not be necessary as it interrupts the user experience and can cause them to lose their place in the app. ideally, we would have a "last updated" timestamp for each repo and only refresh those that are stale, or at least show the user that data is being refreshed in the background. panels should refresh not the entire app. this is a critical issue as it impacts the reliability of the data shown to users and can lead to confusion if they are seeing outdated information. periodic refresh can make it likely that users will see updated data without having to manually refresh, but it needs to be implemented in a way that is not disruptive.
 
 ### P1 - High
 
-- [ ] Add per-repo roadmap-progress view to the dashboard.
+- [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly.
   - Priority: P1
-  - Context: overseer parses ROADMAP.md per repo but the dashboard only shows aggregate health; no view surfaces each repo's Q2/Q3 progress against its own plan.
-  - Acceptance Criteria: the expanded row within the roadmap shows the current-quarter roadmap items and a progress bar indicating their completion state for the selected repo.
-
-- [ ] Add security inputs to the health score.
-  - Priority: P1
-  - Context: Dependabot alert severity and secret-scanning findings are fetched but not yet weighted into the health score.
-  - Acceptance Criteria: critical/high Dependabot alerts and open secret-scanning alerts reduce the health score measurably.
+  - Context: ROADMAP items move from "Planned" to "In Progress" manually, with no link between a roadmap item and the Agent Task Queue or an implementation branch/PR.
+  - Acceptance Criteria: a roadmap item marked `[/]` (in progress) can be associated with an Agent Task Queue entry and/or a tracked PR, and that link is visible in the per-repo roadmap progress view.
 
 ### P2 - Medium
+
+- [ ] Add workflow visualization for multi-step execution paths.
+  - Priority: P2
+  - Context: the FLOW-TASKS/HANDOFF/PMO/DEV/QA agent pipeline (see `templates/.github/prompts`) has no visual representation in the dashboard; users can't see where a repo's active work sits in that pipeline.
+  - Acceptance Criteria: the dashboard shows a simple stage indicator (e.g., Planned -> In Progress -> Review -> Done) per active roadmap item or task, derived from existing status markers and PR/issue state.
+
+- [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
+  - Priority: P2
+  - Context: overseer exposes an Agent Task Queue API and agent-board runs a local model runtime, but no bridge routes tasks between them.
+  - Acceptance Criteria: a v0 bridge dispatches at least one queued overseer task to agent-board's runtime and reports completion status back to the queue.
 
 - [ ] Add AI doc-improvement controls.
   - Priority: P2

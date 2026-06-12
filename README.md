@@ -25,7 +25,7 @@ Overseer bridges human intent and AI execution through enforced documentation st
 
 - 📊 **Repository Intelligence** - Health scoring, doc tracking, activity monitoring
 - 🤖 **AI Automation** - Gemini-powered summaries, failover, and context-aware doc generation with multi-stage RAG
-- 🔧 **One-Click Fixes** - PR creation for docs, 9 best practices, 10 community standards
+- 🔧 **One-Click Fixes** - PR creation for docs, 9 best practices, 12 community standards
 - 🎯 **Interactive Onboarding** - 16-step guided tour with spotlight highlighting
 - 🔗 **GitHub Integration** - OAuth auth, full metadata sync, rate limit monitoring, custom repo paths
 - 📈 **Composite Metrics** - Testing (60%+ coverage), vulnerabilities, contributor analytics
@@ -274,9 +274,11 @@ When updating:
 6. Ensure API endpoint documentation matches actual routes
 7. Add screenshots or diagrams for major UI changes
 -->
+
 ## Community Standards
 
 Shared community policies are centralized in https://github.com/nitsuah/.github:
+
 - Contributing: https://github.com/nitsuah/.github/blob/main/CONTRIBUTING.md
 - Code of Conduct: https://github.com/nitsuah/.github/blob/main/CODE_OF_CONDUCT.md
 - Security: https://github.com/nitsuah/.github/blob/main/SECURITY.md

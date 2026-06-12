@@ -92,7 +92,9 @@ export async function POST(
                 'pr_template',
                 'codeowners',
                 'copilot_instructions',
-                'funding'
+                'funding',
+                'flow_tasks_prompt',
+                'handoff_prompt'
             ];
             const fixableStandards = csRows.filter(row =>
                 standardsWithTemplates.includes(row.standard_type) &&
@@ -133,6 +135,12 @@ export async function POST(
                 } else if (standard.standard_type === 'license') {
                     templatePath = path.join(process.cwd(), 'templates', 'LICENSE');
                     targetPath = 'LICENSE';
+                } else if (standard.standard_type === 'flow_tasks_prompt') {
+                    templatePath = path.join(process.cwd(), 'templates', '.github', 'prompts', 'FLOW-TASKS.md');
+                    targetPath = '.github/prompts/FLOW-TASKS.md';
+                } else if (standard.standard_type === 'handoff_prompt') {
+                    templatePath = path.join(process.cwd(), 'templates', '.github', 'prompts', 'HANDOFF.md');
+                    targetPath = '.github/prompts/HANDOFF.md';
                 } else {
                     templatePath = path.join(process.cwd(), 'templates', `${standard.standard_type.toUpperCase()}.md`);
                     targetPath = `${standard.standard_type.toUpperCase()}.md`;

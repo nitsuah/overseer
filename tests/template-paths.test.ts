@@ -76,6 +76,16 @@ describe('Template File Paths', () => {
       const templatePath = path.join(githubDir, 'ISSUE_TEMPLATE', 'bug_report.md');
       await expect(fs.access(templatePath)).resolves.not.toThrow();
     });
+
+    it('should have FLOW-TASKS.md prompt template', async () => {
+      const templatePath = path.join(githubDir, 'prompts', 'FLOW-TASKS.md');
+      await expect(fs.access(templatePath)).resolves.not.toThrow();
+    });
+
+    it('should have HANDOFF.md prompt template', async () => {
+      const templatePath = path.join(githubDir, 'prompts', 'HANDOFF.md');
+      await expect(fs.access(templatePath)).resolves.not.toThrow();
+    });
   });
   
   describe('Other Templates', () => {

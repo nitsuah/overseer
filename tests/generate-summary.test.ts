@@ -4,8 +4,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 import { POST } from '@/app/api/repos/[name]/generate-summary/route';
 import { NextRequest } from 'next/server';
+import type { Session } from 'next-auth';
 
 // Mock dependencies - use factory functions to avoid hoisting issues
 vi.mock('@/auth', () => ({
@@ -30,7 +32,10 @@ import { getNeonClient } from '@/lib/db';
 import { GitHubClient } from '@/lib/github';
 import { generateRepoSummary } from '@/lib/ai';
 
-const mockAuth = vi.mocked(auth);
+// next-auth's `auth` export has a 5-overload type whose last overload
+// (middleware wrapper) is what vi.mocked() infers; cast to the actual
+// session-lookup signature used by route handlers.
+const mockAuth = vi.mocked(auth) as unknown as Mock<() => Promise<Session | null>>;
 const mockGetNeonClient = vi.mocked(getNeonClient);
 const mockGenerateRepoSummary = vi.mocked(generateRepoSummary);
 const mockGitHubClient = vi.mocked(GitHubClient);

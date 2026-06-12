@@ -4,8 +4,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 import { POST, GET } from '@/app/api/agent/tasks/route';
 import { NextRequest } from 'next/server';
+import type { Session } from 'next-auth';
 
 vi.mock('@/auth', () => ({
   auth: vi.fn(),
@@ -13,7 +15,10 @@ vi.mock('@/auth', () => ({
 
 import { auth } from '@/auth';
 
-const mockAuth = vi.mocked(auth);
+// next-auth's `auth` export has a 5-overload type whose last overload
+// (middleware wrapper) is what vi.mocked() infers; cast to the actual
+// session-lookup signature used by route handlers.
+const mockAuth = vi.mocked(auth) as unknown as Mock<() => Promise<Session | null>>;
 
 const makeRequest = (body: unknown) =>
   new NextRequest('http://localhost:3000/api/agent/tasks', {

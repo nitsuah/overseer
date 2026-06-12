@@ -63,6 +63,8 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     // Fetch additional metrics
     let lastCommitDate = null;
     let openPrs = 0;
+    let prsReadyCount = 0;
+    let prsBlockedCount = 0;
 
     try {
         // Use pushedAt from repo metadata as last commit approximation
@@ -77,6 +79,16 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         openPrs = prs.length;
     } catch (e) {
         console.warn(`Failed to fetch PRs for ${repo.fullName}`, e);
+    }
+
+    if (openPrs > 0) {
+        try {
+            const readiness = await github.getPullRequestReadiness(repo.name, owner);
+            prsReadyCount = readiness.readyCount;
+            prsBlockedCount = readiness.blockedCount;
+        } catch (e) {
+            console.warn(`Failed to fetch PR readiness for ${repo.fullName}`, e);
+        }
     }
 
     // Fetch branches count
@@ -185,7 +197,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const repoRows = await db`
         INSERT INTO repos (
             name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, 
-            last_synced, updated_at, last_commit_date, open_prs, branches_count, readme_last_updated,
+            last_synced, updated_at, last_commit_date, open_prs, prs_ready_count, prs_blocked_count, branches_count, readme_last_updated,
             total_loc, loc_language_breakdown, ci_status, ci_last_run, ci_workflow_name,
             vuln_alert_count, vuln_critical_count, vuln_high_count, vuln_last_checked,
             contributor_count, commit_frequency, bus_factor, avg_pr_merge_time_hours, contributors_last_checked,
@@ -194,9 +206,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             secret_scanning_enabled, secret_scanning_alert_count, security_last_checked
         )
         VALUES (
-            ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars}, 
-            ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
-            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${branchesCount}, ${readmeLastUpdated},
+            ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars},
+            ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics},
+            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${prsReadyCount}, ${prsBlockedCount}, ${branchesCount}, ${readmeLastUpdated},
             ${totalLoc}, ${JSON.stringify(locLanguageBreakdown)}, ${ciStatus}, ${ciLastRun}, ${ciWorkflowName},
             ${vulnAlertCount}, ${vulnCriticalCount}, ${vulnHighCount}, NOW(),
             ${contributorCount}, ${commitFrequency}, ${busFactor}, ${avgPrMergeTimeHours}, NOW(),
@@ -217,6 +229,8 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           updated_at = NOW(),
           last_commit_date = EXCLUDED.last_commit_date,
           open_prs = EXCLUDED.open_prs,
+          prs_ready_count = EXCLUDED.prs_ready_count,
+          prs_blocked_count = EXCLUDED.prs_blocked_count,
           branches_count = EXCLUDED.branches_count,
           readme_last_updated = EXCLUDED.readme_last_updated,
           total_loc = EXCLUDED.total_loc,
@@ -516,6 +530,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             lastCommitDays: daysSinceCommit,
             openIssuesCount: repo.openIssues,
             openPRsCount: openPrs,
+            vulnCriticalCount,
+            vulnHighCount,
+            secretScanningAlertCount,
         });
 
         await db`

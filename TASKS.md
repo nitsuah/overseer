@@ -1,4 +1,4 @@
-## updated: 2026-06-12
+## updated: 2026-06-13
 
 # Tasks
 
@@ -13,12 +13,14 @@
 
 ### P1 - High
 
-- [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly.
-  - Priority: P1
-  - Context: ROADMAP items move from "Planned" to "In Progress" manually, with no link between a roadmap item and the Agent Task Queue or an implementation branch/PR.
-  - Acceptance Criteria: a roadmap item marked `[/]` (in progress) can be associated with an Agent Task Queue entry and/or a tracked PR, and that link is visible in the per-repo roadmap progress view.
+(none currently)
 
 ### P2 - Medium
+
+- [ ] Add a UI control to set/clear a roadmap item's linked PR and Agent Task Queue id from the dashboard.
+  - Priority: P2
+  - Context: `PATCH /api/repos/[name]/roadmap-items/[id]` and the `linked_pr_number`/`agent_task_id` columns now exist and are rendered (PR badge) in the roadmap progress view, but the link can only be set via direct API call - there's no in-dashboard control yet.
+  - Acceptance Criteria: from the roadmap progress view, a user can set or clear a roadmap item's linked PR number and/or agent task id, and the badge updates accordingly.
 
 - [ ] Add workflow visualization for multi-step execution paths.
   - Priority: P2

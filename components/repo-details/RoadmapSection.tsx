@@ -1,6 +1,6 @@
 "use client";
 
-import { Map } from 'lucide-react';
+import { Map, GitPullRequest } from 'lucide-react';
 import { RoadmapItem } from '@/types/repo';
 import { parseBoldText } from '@/lib/markdown-utils';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ interface RoadmapSectionProps {
   roadmapItems: RoadmapItem[];
   isExpanded?: boolean;
   onToggleExpanded?: () => void;
+  repoUrl?: string;
 }
 
 // Helper to get status icon and color
@@ -23,7 +24,7 @@ function getStatusDisplay(status: string) {
   }
 }
 
-export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onToggleExpanded }: RoadmapSectionProps) {
+export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onToggleExpanded, repoUrl }: RoadmapSectionProps) {
   const [internalExpanded, setInternalExpanded] = useState(true);
   const isMainExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
   const setIsMainExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
@@ -208,6 +209,18 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
                             <span className={item.status === 'completed' ? 'line-through text-slate-500' : ''}>
                               {parseBoldText(item.title)}
                             </span>
+                            {item.linked_pr_number && repoUrl && (
+                              <a
+                                href={`${repoUrl}/pull/${item.linked_pr_number}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={`Linked PR #${item.linked_pr_number}`}
+                                className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors shrink-0"
+                              >
+                                <GitPullRequest className="h-2.5 w-2.5" />
+                                #{item.linked_pr_number}
+                              </a>
+                            )}
                           </li>
                         );
                       })}

@@ -1,6 +1,6 @@
 
 import { GitHubClient, RepoMetadata } from './github';
-import { parseRoadmap } from './parsers/roadmap';
+import { parseRoadmap, diffRoadmapItems } from './parsers/roadmap';
 import { parseTasks } from './parsers/tasks';
 import { parseMetrics } from './parsers/metrics';
 import { parseFeatures } from './parsers/features';
@@ -316,12 +316,26 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         if (roadmapData.items.length === 0) {
             logger.debug(`[SYNC] ${repo.name} - Roadmap content preview:`, roadmapContent.substring(0, 200));
         }
-        await db`DELETE FROM roadmap_items WHERE repo_id = ${repoId}`;
-        for (const item of roadmapData.items) {
+        // Merge instead of delete+insert so DB-only fields (e.g. linked_pr_number,
+        // agent_task_id) survive re-syncs - only items no longer present in
+        // ROADMAP.md are removed.
+        const existingItems = await db`SELECT id, title FROM roadmap_items WHERE repo_id = ${repoId}`;
+        const plan = diffRoadmapItems(existingItems, roadmapData.items);
+        for (const item of plan.toUpdate) {
+            await db`
+                UPDATE roadmap_items
+                SET quarter = ${item.quarter}, status = ${item.status}, updated_at = NOW()
+                WHERE id = ${item.id}
+            `;
+        }
+        for (const item of plan.toInsert) {
             await db`
                 INSERT INTO roadmap_items (repo_id, title, quarter, status)
                 VALUES (${repoId}, ${item.title}, ${item.quarter}, ${item.status})
             `;
+        }
+        for (const staleId of plan.toDeleteIds) {
+            await db`DELETE FROM roadmap_items WHERE id = ${staleId}`;
         }
     }
     await db`

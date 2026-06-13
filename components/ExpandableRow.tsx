@@ -160,10 +160,11 @@ export default function ExpandableRow({
             />
 
             {/* Roadmap */}
-            <RoadmapSection 
+            <RoadmapSection
               roadmapItems={roadmapItems}
               isExpanded={projectSectionsExpanded}
               onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
+              repoUrl={repoUrl}
             />
 
             {/* Tasks */}

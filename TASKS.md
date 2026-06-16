@@ -1,4 +1,4 @@
-## updated: 2026-06-12
+## updated: 2026-06-13
 
 # Tasks
 
@@ -13,10 +13,7 @@
 
 ### P1 - High
 
-- [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly.
-  - Priority: P1
-  - Context: ROADMAP items move from "Planned" to "In Progress" manually, with no link between a roadmap item and the Agent Task Queue or an implementation branch/PR.
-  - Acceptance Criteria: a roadmap item marked `[/]` (in progress) can be associated with an Agent Task Queue entry and/or a tracked PR, and that link is visible in the per-repo roadmap progress view.
+(none currently)
 
 ### P2 - Medium
 

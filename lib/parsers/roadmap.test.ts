@@ -1,6 +1,6 @@
 
 import { describe, it, expect } from 'vitest';
-import { parseRoadmap } from './roadmap';
+import { parseRoadmap, diffRoadmapItems } from './roadmap';
 
 describe('parseRoadmap', () => {
     it('should parse roadmap items correctly', () => {
@@ -54,5 +54,46 @@ priority: high
     it('should handle empty content', () => {
         const result = parseRoadmap('');
         expect(result.items).toHaveLength(0);
+    });
+});
+
+describe('diffRoadmapItems', () => {
+    const item = (title: string, quarter: string | null, status: 'planned' | 'in-progress' | 'completed') => ({
+        title,
+        quarter,
+        status,
+        section: quarter || '',
+    });
+
+    it('matches existing rows by title for update and preserves their ids', () => {
+        const existing = [{ id: 'row-1', title: 'Feature A' }];
+        const parsed = [item('Feature A', 'Q2 2025', 'in-progress')];
+
+        const plan = diffRoadmapItems(existing, parsed);
+
+        expect(plan.toUpdate).toEqual([{ id: 'row-1', title: 'Feature A', quarter: 'Q2 2025', status: 'in-progress' }]);
+        expect(plan.toInsert).toHaveLength(0);
+        expect(plan.toDeleteIds).toHaveLength(0);
+    });
+
+    it('queues new titles for insert', () => {
+        const existing: { id: string; title: string }[] = [];
+        const parsed = [item('Feature A', 'Q1 2025', 'planned')];
+
+        const plan = diffRoadmapItems(existing, parsed);
+
+        expect(plan.toInsert).toEqual([{ title: 'Feature A', quarter: 'Q1 2025', status: 'planned' }]);
+        expect(plan.toUpdate).toHaveLength(0);
+        expect(plan.toDeleteIds).toHaveLength(0);
+    });
+
+    it('queues rows whose titles disappeared from ROADMAP.md for delete', () => {
+        const existing = [{ id: 'row-1', title: 'Feature A' }, { id: 'row-2', title: 'Removed Feature' }];
+        const parsed = [item('Feature A', 'Q1 2025', 'completed')];
+
+        const plan = diffRoadmapItems(existing, parsed);
+
+        expect(plan.toUpdate).toEqual([{ id: 'row-1', title: 'Feature A', quarter: 'Q1 2025', status: 'completed' }]);
+        expect(plan.toDeleteIds).toEqual(['row-2']);
     });
 });

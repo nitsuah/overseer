@@ -17,12 +17,43 @@ CREATE TABLE IF NOT EXISTS repos (
   topics TEXT[] DEFAULT '{}',
   last_commit_date TIMESTAMP WITH TIME ZONE,
   is_fork BOOLEAN DEFAULT FALSE,
+  is_archived BOOLEAN DEFAULT FALSE,
   is_hidden BOOLEAN DEFAULT FALSE,
   repo_type TEXT CHECK (repo_type IN ('web-app', 'game', 'tool', 'library', 'bot', 'research', 'other')) DEFAULT 'other',
   ai_summary TEXT,
   health_score INTEGER DEFAULT 0,
   testing_status TEXT,
   coverage_score NUMERIC,
+  readme_last_updated TIMESTAMP WITH TIME ZONE,
+  total_loc INTEGER,
+  avg_loc_per_file INTEGER,
+  max_file_size INTEGER,
+  loc_language_breakdown JSONB,
+  test_case_count INTEGER DEFAULT 0,
+  test_describe_count INTEGER DEFAULT 0,
+  ci_status TEXT,
+  ci_last_run TIMESTAMP WITH TIME ZONE,
+  ci_workflow_name TEXT,
+  vuln_alert_count INTEGER DEFAULT 0,
+  vuln_critical_count INTEGER DEFAULT 0,
+  vuln_high_count INTEGER DEFAULT 0,
+  vuln_last_checked TIMESTAMP WITH TIME ZONE,
+  contributor_count INTEGER DEFAULT 0,
+  commit_frequency NUMERIC,
+  bus_factor INTEGER,
+  avg_pr_merge_time_hours NUMERIC,
+  contributors_last_checked TIMESTAMP WITH TIME ZONE,
+  open_issues_count INTEGER DEFAULT 0,
+  has_security_policy BOOLEAN DEFAULT FALSE,
+  has_security_advisories BOOLEAN DEFAULT FALSE,
+  private_vuln_reporting_enabled BOOLEAN DEFAULT FALSE,
+  dependabot_alerts_enabled BOOLEAN DEFAULT FALSE,
+  dependabot_alert_count INTEGER DEFAULT 0,
+  code_scanning_enabled BOOLEAN DEFAULT FALSE,
+  code_scanning_alert_count INTEGER DEFAULT 0,
+  secret_scanning_enabled BOOLEAN DEFAULT FALSE,
+  secret_scanning_alert_count INTEGER DEFAULT 0,
+  security_last_checked TIMESTAMP WITH TIME ZONE,
   last_synced TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -74,6 +105,7 @@ CREATE TABLE IF NOT EXISTS doc_status (
   health_state TEXT CHECK (health_state IN ('missing', 'dormant', 'malformed', 'healthy')) DEFAULT 'missing',
   last_checked TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   template_hash TEXT,
+  template_version TEXT,
   content_hash TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -121,6 +153,12 @@ CREATE TABLE IF NOT EXISTS community_standards (
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_repos_type ON repos(repo_type);
 CREATE INDEX IF NOT EXISTS idx_repos_hidden ON repos(is_hidden);
+CREATE INDEX IF NOT EXISTS idx_repos_health_score ON repos(health_score);
+CREATE INDEX IF NOT EXISTS idx_repos_coverage_score ON repos(coverage_score);
+CREATE INDEX IF NOT EXISTS idx_repos_last_commit ON repos(last_commit_date);
+CREATE INDEX IF NOT EXISTS idx_repos_contributor_count ON repos(contributor_count);
+CREATE INDEX IF NOT EXISTS idx_repos_security_policy ON repos(has_security_policy);
+CREATE INDEX IF NOT EXISTS idx_repos_security_last_checked ON repos(security_last_checked);
 CREATE INDEX IF NOT EXISTS idx_tasks_repo_id ON tasks(repo_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_subsection ON tasks(subsection);

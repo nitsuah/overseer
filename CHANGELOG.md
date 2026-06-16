@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Repo-detail query batching:** `GET /api/repo-details/[name]` now fetches all seven per-repo detail tables (tasks, roadmap_items, metrics, features, doc_status, best_practices, community_standards) in a single `db.transaction([...])` call instead of seven sequential round trips, reducing per-repo load latency by ~7×
 - **Default Model Updated:** Changed from deprecated `models/gemini-2.0-flash-exp` to `models/gemini-2.5-flash` (current working model as of Feb 2026)
 - **Model Configuration:** All files now import from centralized `gemini-model-discovery` instead of hardcoding strings
 - **AI Failover Integration:** Integrated new discovery system with existing failover logic

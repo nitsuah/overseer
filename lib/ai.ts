@@ -90,6 +90,52 @@ Context: ${contextFiles}`;
     }
 }
 
+export interface FeatureSuggestionContext {
+    language: string | null;
+    healthScore: number | null;
+    existingFeatureCategories: string[];
+    plannedRoadmapItems: string[];
+    userPrompt?: string;
+}
+
+/**
+ * Generate prioritized feature suggestions for a repo using AI.
+ */
+export async function generateFeatureSuggestions(
+    repoName: string,
+    context: FeatureSuggestionContext
+): Promise<string | null> {
+    const { language, healthScore, existingFeatureCategories, plannedRoadmapItems, userPrompt } = context;
+
+    const prompt = `You are an expert Technical Product Manager reviewing the "${repoName}" repository.
+
+Repository context:
+- Primary language: ${language || 'Unknown'}
+- Health score: ${healthScore !== null ? `${healthScore}/100` : 'Unknown'}
+- Current feature categories: ${existingFeatureCategories.length > 0 ? existingFeatureCategories.join(', ') : 'none documented'}
+- Planned roadmap items: ${plannedRoadmapItems.length > 0 ? plannedRoadmapItems.slice(0, 10).join('; ') : 'none'}
+${userPrompt ? `\nUser request: ${userPrompt}` : ''}
+
+Suggest 3-5 concrete, high-impact features to build next. Avoid duplicating existing features or roadmap items.
+
+For each suggestion output exactly this format:
+**Feature Title** — one sentence explaining the value and why it should be prioritized.
+
+Be specific to this repo's domain and tech stack. Prioritize by impact.`;
+
+    try {
+        return await generateWithFailover(prompt, { useShortResponse: false });
+    } catch (error) {
+        logger.warn('All AI providers failed for feature suggestions:', error);
+        if (error instanceof Error) {
+            if (error.message.includes('API_KEY') || error.message.includes('not configured')) {
+                return null;
+            }
+        }
+        return null;
+    }
+}
+
 /**
  * Generate AI content with automatic failover across providers.
  */

@@ -165,6 +165,8 @@ export default function ExpandableRow({
               isExpanded={projectSectionsExpanded}
               onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
               repoUrl={repoUrl}
+              repoName={repoName}
+              isAuthenticated={isAuthenticated}
             />
 
             {/* Tasks */}

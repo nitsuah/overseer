@@ -31,6 +31,17 @@ function getStatusDisplay(status: string) {
   }
 }
 
+type WorkflowStage = 'planned' | 'in-progress' | 'in-review' | 'done';
+
+// Maps roadmap item status + linked PR presence to a pipeline stage.
+// "In Review" is a sub-state of "in-progress" visible only when a PR is linked.
+function getWorkflowStage(status: string, link: RoadmapLink): WorkflowStage {
+  if (status === 'completed') return 'done';
+  if (status === 'in-progress' && link.linked_pr_number) return 'in-review';
+  if (status === 'in-progress') return 'in-progress';
+  return 'planned';
+}
+
 export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onToggleExpanded, repoUrl, repoName, isAuthenticated }: RoadmapSectionProps) {
   const [internalExpanded, setInternalExpanded] = useState(true);
   const isMainExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
@@ -176,6 +187,13 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
   // When showing completed, show all quarters by default
   const displayedQuarters = (showAllPlanned || showCompleted) ? orderedQuarters : orderedQuarters.slice(0, 1);
 
+  // Count items per pipeline stage for the summary bar
+  const stageCounts: Record<WorkflowStage, number> = { planned: 0, 'in-progress': 0, 'in-review': 0, done: 0 };
+  roadmapItems.forEach(item => {
+    stageCounts[getWorkflowStage(item.status, getEffectiveLink(item))]++;
+  });
+  const hasActiveWork = stageCounts['in-progress'] + stageCounts['in-review'] > 0;
+
   return (
     <div className="bg-gradient-to-br from-purple-900/30 via-slate-800/50 to-purple-800/20 rounded-lg overflow-hidden border border-purple-500/40 shadow-lg shadow-purple-500/10 hover:border-purple-400/50 transition-colors" data-tour="roadmap-section">
       <div
@@ -226,6 +244,25 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
       </div>
       {isMainExpanded && (
         <div className="p-4 space-y-4">
+          {hasActiveWork && (
+            <div className="flex items-center gap-1 flex-wrap" title="Workflow pipeline stage breakdown">
+              {(
+                [
+                  { stage: 'planned' as WorkflowStage, label: 'Planned', active: 'bg-purple-500/20 text-purple-400', inactive: 'bg-slate-800/50 text-slate-600' },
+                  { stage: 'in-progress' as WorkflowStage, label: 'In Progress', active: 'bg-blue-500/20 text-blue-400', inactive: 'bg-slate-800/50 text-slate-600' },
+                  { stage: 'in-review' as WorkflowStage, label: 'In Review', active: 'bg-cyan-500/20 text-cyan-400', inactive: 'bg-slate-800/50 text-slate-600' },
+                  { stage: 'done' as WorkflowStage, label: 'Done', active: 'bg-green-500/20 text-green-400', inactive: 'bg-slate-800/50 text-slate-600' },
+                ] as const
+              ).map(({ stage, label, active, inactive }, idx) => (
+                <span key={stage} className="flex items-center gap-1">
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${stageCounts[stage] > 0 ? active : inactive}`}>
+                    {stageCounts[stage]} {label}
+                  </span>
+                  {idx < 3 && <span className="text-slate-600 text-[10px]">→</span>}
+                </span>
+              ))}
+            </div>
+          )}
           {roadmapItems.length === 0 ? (
             <div className="bg-slate-800/30 rounded-lg p-4">
               <p className="text-xs text-slate-500 italic">No roadmap items</p>
@@ -276,12 +313,16 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
                       ).map((item, j) => {
                         const statusDisplay = getStatusDisplay(item.status);
                         const link = getEffectiveLink(item);
+                        const stage = getWorkflowStage(item.status, link);
                         const isEditing = editingItemId === item.id;
                         return (
                           <li key={j} className="text-xs text-slate-300 flex flex-col gap-1">
                             <div className="flex items-start gap-2">
-                              <span className={`mt-1 text-[10px] ${statusDisplay.color}`} title={statusDisplay.label}>
-                                {statusDisplay.icon}
+                              <span
+                                className={`mt-1 text-[10px] ${statusDisplay.color}`}
+                                title={stage === 'in-review' ? 'In Review' : statusDisplay.label}
+                              >
+                                {stage === 'in-review' ? '⬤' : statusDisplay.icon}
                               </span>
                               <span className={item.status === 'completed' ? 'line-through text-slate-500' : ''}>
                                 {parseBoldText(item.title)}

@@ -13,17 +13,15 @@
 
 ### P1 - High
 
-- [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly.
-  - Priority: P1
-  - Context: ROADMAP items move from "Planned" to "In Progress" manually, with no link between a roadmap item and the Agent Task Queue or an implementation branch/PR.
-  - Acceptance Criteria: a roadmap item marked `[/]` (in progress) can be associated with an Agent Task Queue entry and/or a tracked PR, and that link is visible in the per-repo roadmap progress view.
+(none currently)
 
 ### P2 - Medium
 
-- [ ] Add workflow visualization for multi-step execution paths.
+- [x] Add workflow visualization for multi-step execution paths.
   - Priority: P2
   - Context: the FLOW-TASKS/HANDOFF/PMO/DEV/QA agent pipeline (see `templates/.github/prompts`) has no visual representation in the dashboard; users can't see where a repo's active work sits in that pipeline.
   - Acceptance Criteria: the dashboard shows a simple stage indicator (e.g., Planned -> In Progress -> Review -> Done) per active roadmap item or task, derived from existing status markers and PR/issue state.
+  - Completed: PR #131 — pipeline summary bar (Planned → In Progress → In Review → Done) in roadmap section; "In Review" derived from linked_pr_number on in-progress items.
 
 - [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
   - Priority: P2
@@ -69,6 +67,11 @@
 ### DB & backend scaling
 
 - [ ] we may need to assess current DB design for scalability as well.
+
+- [ ] Batch the per-repo detail queries in `/api/repo-details/[name]` into a single `db.transaction([...])` call.
+  - Priority: P2
+  - Context: that route issues up to 8 sequential tagged-template queries (repos, tasks, roadmap_items, metrics, features, doc_status, best_practices, community_standards), and the dashboard fans this out across every repo on first load via `fetchAllRepoDetails`. Each query is a separate HTTPS round trip with Neon's serverless driver, so per-repo latency scales linearly with the table count.
+  - Acceptance Criteria: the route fetches all per-repo tables via one `sql.transaction([...])` call (or equivalent) so each repo's detail panel resolves in a single round trip; behavior and response shape are unchanged.
 
 ### P3 - Exploratory
 

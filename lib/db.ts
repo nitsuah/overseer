@@ -1,4 +1,6 @@
 import { neon } from '@neondatabase/serverless';
+import { SCHEMA_MIGRATIONS } from './schema-migrations';
+import logger from './log';
 
 // Neon serverless Postgres client
 export function getNeonClient() {
@@ -9,6 +11,30 @@ export function getNeonClient() {
         throw new Error('DATABASE_URL or NETLIFY_DATABASE_URL not configured');
     }
     return neon(databaseUrl);
+}
+
+let schemaEnsured = false;
+
+/**
+ * Applies SCHEMA_MIGRATIONS so the live database self-heals when code starts
+ * relying on columns/indexes that haven't been added to production yet.
+ * Cached per warm serverless instance - subsequent calls are no-ops.
+ */
+export async function ensureSchema(db: ReturnType<typeof getNeonClient>): Promise<void> {
+    if (schemaEnsured) return;
+
+    for (const statement of SCHEMA_MIGRATIONS) {
+        try {
+            await db.query(statement);
+        } catch (error) {
+            const err = error as Error & { code?: string };
+            if (!err.message?.includes('already exists') && err.code !== '42701') {
+                logger.warn(`Schema migration statement failed: ${statement}`, err.message);
+            }
+        }
+    }
+
+    schemaEnsured = true;
 }
 
 // Database types

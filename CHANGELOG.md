@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Roadmap-to-DEV-flow handoff linkage:** Roadmap items can now be linked to a tracked PR and/or an Agent Task Queue entry via `PATCH /api/repos/[name]/roadmap-items/[id]`. Linked PRs and agent tasks are shown as badges in the per-repo roadmap progress view, with an inline edit/clear control available to authenticated users directly from the dashboard. `lib/sync.ts` now merges (rather than delete+inserts) `roadmap_items` so these DB-only links survive re-syncs
 - **Centralized Gemini Model Discovery:** New `gemini-model-discovery.ts` module provides single source of truth for model configuration
 - **Auto-Discovery Fallback:** Automatically searches for working models when configured model fails (tries version 3, 2.5, 2.0, then pro models)
 - **Model Caching:** Discovered working models are cached for 1 hour to reduce API calls

@@ -153,17 +153,22 @@ export default function ExpandableRow({
           {/* Single 3x3 Grid: All sections in order */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Features */}
-            <FeaturesSection 
+            <FeaturesSection
               features={features}
               isExpanded={projectSectionsExpanded}
               onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
+              repoName={repoName}
+              isAuthenticated={isAuthenticated}
             />
 
             {/* Roadmap */}
-            <RoadmapSection 
+            <RoadmapSection
               roadmapItems={roadmapItems}
               isExpanded={projectSectionsExpanded}
               onToggleExpanded={() => setProjectSectionsExpanded(!projectSectionsExpanded)}
+              repoUrl={repoUrl}
+              repoName={repoName}
+              isAuthenticated={isAuthenticated}
             />
 
             {/* Tasks */}

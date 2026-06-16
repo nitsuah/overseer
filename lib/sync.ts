@@ -1,6 +1,6 @@
 
 import { GitHubClient, RepoMetadata } from './github';
-import { parseRoadmap } from './parsers/roadmap';
+import { parseRoadmap, diffRoadmapItems } from './parsers/roadmap';
 import { parseTasks } from './parsers/tasks';
 import { parseMetrics } from './parsers/metrics';
 import { parseFeatures } from './parsers/features';
@@ -9,6 +9,7 @@ import { checkBestPractices } from './best-practices';
 import { checkCommunityStandards } from './community-standards';
 import { calculateHealthScore } from './health-score';
 import { isTestFile, parseTestFile } from './parsers/test-cases';
+import { ensureSchema } from './db';
 import logger from './log';
 
 const ORG_GITHUB_FALLBACK_CACHE = new Map<string, { files: string[]; expiresAt: number }>();
@@ -28,6 +29,8 @@ async function getOrgGithubFallbackFiles(github: GitHubClient, owner: string): P
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
+    await ensureSchema(db);
+
     const lastCommitDate = repo.pushedAt; // Approximation
 
     await db`
@@ -58,6 +61,8 @@ export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any) {
+    await ensureSchema(db);
+
     const owner = repo.fullName.split('/')[0];
 
     // Fetch additional metrics
@@ -311,12 +316,26 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         if (roadmapData.items.length === 0) {
             logger.debug(`[SYNC] ${repo.name} - Roadmap content preview:`, roadmapContent.substring(0, 200));
         }
-        await db`DELETE FROM roadmap_items WHERE repo_id = ${repoId}`;
-        for (const item of roadmapData.items) {
+        // Merge instead of delete+insert so DB-only fields (e.g. linked_pr_number,
+        // agent_task_id) survive re-syncs - only items no longer present in
+        // ROADMAP.md are removed.
+        const existingItems = await db`SELECT id, title FROM roadmap_items WHERE repo_id = ${repoId}`;
+        const plan = diffRoadmapItems(existingItems, roadmapData.items);
+        for (const item of plan.toUpdate) {
+            await db`
+                UPDATE roadmap_items
+                SET quarter = ${item.quarter}, status = ${item.status}, updated_at = NOW()
+                WHERE id = ${item.id}
+            `;
+        }
+        for (const item of plan.toInsert) {
             await db`
                 INSERT INTO roadmap_items (repo_id, title, quarter, status)
                 VALUES (${repoId}, ${item.title}, ${item.quarter}, ${item.status})
             `;
+        }
+        for (const staleId of plan.toDeleteIds) {
+            await db`DELETE FROM roadmap_items WHERE id = ${staleId}`;
         }
     }
     await db`

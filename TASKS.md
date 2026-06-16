@@ -17,11 +17,6 @@
 
 ### P2 - Medium
 
-- [ ] Add a UI control to set/clear a roadmap item's linked PR and Agent Task Queue id from the dashboard.
-  - Priority: P2
-  - Context: `PATCH /api/repos/[name]/roadmap-items/[id]` and the `linked_pr_number`/`agent_task_id` columns now exist and are rendered (PR badge) in the roadmap progress view, but the link can only be set via direct API call - there's no in-dashboard control yet.
-  - Acceptance Criteria: from the roadmap progress view, a user can set or clear a roadmap item's linked PR number and/or agent task id, and the badge updates accordingly.
-
 - [ ] Add workflow visualization for multi-step execution paths.
   - Priority: P2
   - Context: the FLOW-TASKS/HANDOFF/PMO/DEV/QA agent pipeline (see `templates/.github/prompts`) has no visual representation in the dashboard; users can't see where a repo's active work sits in that pipeline.

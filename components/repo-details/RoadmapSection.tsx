@@ -1,6 +1,6 @@
 "use client";
 
-import { Map, GitPullRequest } from 'lucide-react';
+import { Map, GitPullRequest, Bot, Link2 } from 'lucide-react';
 import { RoadmapItem } from '@/types/repo';
 import { parseBoldText } from '@/lib/markdown-utils';
 import { useState } from 'react';
@@ -10,6 +10,13 @@ interface RoadmapSectionProps {
   isExpanded?: boolean;
   onToggleExpanded?: () => void;
   repoUrl?: string;
+  repoName?: string;
+  isAuthenticated?: boolean;
+}
+
+interface RoadmapLink {
+  linked_pr_number: number | null;
+  agent_task_id: string | null;
 }
 
 // Helper to get status icon and color
@@ -24,7 +31,7 @@ function getStatusDisplay(status: string) {
   }
 }
 
-export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onToggleExpanded, repoUrl }: RoadmapSectionProps) {
+export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onToggleExpanded, repoUrl, repoName, isAuthenticated }: RoadmapSectionProps) {
   const [internalExpanded, setInternalExpanded] = useState(true);
   const isMainExpanded = isExpandedProp !== undefined ? isExpandedProp : internalExpanded;
   const setIsMainExpanded = onToggleExpanded || (() => setInternalExpanded(!internalExpanded));
@@ -33,10 +40,77 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
   const [showCompleted, setShowCompleted] = useState(false);
   const [showAllPlanned, setShowAllPlanned] = useState(false);
 
+  // Local overrides applied after a successful link save, keyed by item id,
+  // so the badge updates immediately without waiting for the next sync.
+  const [linkOverrides, setLinkOverrides] = useState<Record<string, RoadmapLink>>({});
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [prInput, setPrInput] = useState('');
+  const [taskInput, setTaskInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   // Hide section if no roadmap items
   if (!roadmapItems || roadmapItems.length === 0) {
     return null;
   }
+
+  const getEffectiveLink = (item: RoadmapItem): RoadmapLink =>
+    linkOverrides[item.id] || {
+      linked_pr_number: item.linked_pr_number ?? null,
+      agent_task_id: item.agent_task_id ?? null,
+    };
+
+  const handleEditToggle = (item: RoadmapItem) => {
+    if (editingItemId === item.id) {
+      setEditingItemId(null);
+      return;
+    }
+    const effective = getEffectiveLink(item);
+    setPrInput(effective.linked_pr_number ? String(effective.linked_pr_number) : '');
+    setTaskInput(effective.agent_task_id || '');
+    setSaveError(null);
+    setEditingItemId(item.id);
+  };
+
+  const saveLink = async (itemId: string, linkedPrNumber: number | null, agentTaskId: string | null) => {
+    if (!repoName) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch(`/api/repos/${repoName}/roadmap-items/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ linkedPrNumber, agentTaskId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setSaveError(data.error || 'Failed to save link');
+        return;
+      }
+      setLinkOverrides(prev => ({ ...prev, [itemId]: { linked_pr_number: linkedPrNumber, agent_task_id: agentTaskId } }));
+      setEditingItemId(null);
+    } catch {
+      setSaveError('Failed to save link');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSave = (itemId: string) => {
+    const trimmedPr = prInput.trim();
+    const prNum = trimmedPr ? parseInt(trimmedPr, 10) : null;
+    if (trimmedPr && (Number.isNaN(prNum) || (prNum as number) <= 0)) {
+      setSaveError('PR # must be a positive number');
+      return;
+    }
+    saveLink(itemId, prNum, taskInput.trim() || null);
+  };
+
+  const handleClear = (itemId: string) => {
+    setPrInput('');
+    setTaskInput('');
+    saveLink(itemId, null, null);
+  };
 
   const toggleCard = (cardKey: string) => {
     const newExpanded = new Set(expandedCards);
@@ -201,25 +275,89 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
                         : group.items.slice(0, 5)
                       ).map((item, j) => {
                         const statusDisplay = getStatusDisplay(item.status);
+                        const link = getEffectiveLink(item);
+                        const isEditing = editingItemId === item.id;
                         return (
-                          <li key={j} className="text-xs text-slate-300 flex items-start gap-2">
-                            <span className={`mt-1 text-[10px] ${statusDisplay.color}`} title={statusDisplay.label}>
-                              {statusDisplay.icon}
-                            </span>
-                            <span className={item.status === 'completed' ? 'line-through text-slate-500' : ''}>
-                              {parseBoldText(item.title)}
-                            </span>
-                            {item.linked_pr_number && repoUrl && (
-                              <a
-                                href={`${repoUrl}/pull/${item.linked_pr_number}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title={`Linked PR #${item.linked_pr_number}`}
-                                className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors shrink-0"
-                              >
-                                <GitPullRequest className="h-2.5 w-2.5" />
-                                #{item.linked_pr_number}
-                              </a>
+                          <li key={j} className="text-xs text-slate-300 flex flex-col gap-1">
+                            <div className="flex items-start gap-2">
+                              <span className={`mt-1 text-[10px] ${statusDisplay.color}`} title={statusDisplay.label}>
+                                {statusDisplay.icon}
+                              </span>
+                              <span className={item.status === 'completed' ? 'line-through text-slate-500' : ''}>
+                                {parseBoldText(item.title)}
+                              </span>
+                              {link.linked_pr_number && repoUrl && (
+                                <a
+                                  href={`${repoUrl}/pull/${link.linked_pr_number}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title={`Linked PR #${link.linked_pr_number}`}
+                                  className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors shrink-0"
+                                >
+                                  <GitPullRequest className="h-2.5 w-2.5" />
+                                  #{link.linked_pr_number}
+                                </a>
+                              )}
+                              {link.agent_task_id && (
+                                <span
+                                  title={`Linked agent task: ${link.agent_task_id}`}
+                                  className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-medium bg-indigo-500/20 text-indigo-400 shrink-0 max-w-[8rem] truncate"
+                                >
+                                  <Bot className="h-2.5 w-2.5 shrink-0" />
+                                  {link.agent_task_id}
+                                </span>
+                              )}
+                              {isAuthenticated && repoName && (
+                                <button
+                                  onClick={() => handleEditToggle(item)}
+                                  title="Link to a PR or Agent Task Queue entry"
+                                  className={`inline-flex items-center px-1 py-0.5 rounded text-[10px] shrink-0 transition-colors ${
+                                    isEditing ? 'bg-slate-600/60 text-slate-200' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-700/50'
+                                  }`}
+                                >
+                                  <Link2 className="h-2.5 w-2.5" />
+                                </button>
+                              )}
+                            </div>
+                            {isEditing && (
+                              <div className="ml-5 flex items-center gap-1.5 flex-wrap">
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  placeholder="PR #"
+                                  value={prInput}
+                                  onChange={(e) => setPrInput(e.target.value)}
+                                  className="w-16 bg-slate-900/60 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-200 focus:outline-none focus:border-blue-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Agent task ID"
+                                  value={taskInput}
+                                  onChange={(e) => setTaskInput(e.target.value)}
+                                  className="w-32 bg-slate-900/60 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-200 focus:outline-none focus:border-blue-500"
+                                />
+                                <button
+                                  onClick={() => handleSave(item.id)}
+                                  disabled={saving}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => handleClear(item.id)}
+                                  disabled={saving}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors disabled:opacity-50"
+                                >
+                                  Clear
+                                </button>
+                                <button
+                                  onClick={() => setEditingItemId(null)}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-slate-200 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                                {saveError && <span className="text-[10px] text-red-400">{saveError}</span>}
+                              </div>
                             )}
                           </li>
                         );

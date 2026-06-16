@@ -1,5 +1,6 @@
 
 import { GitHubClient, RepoMetadata } from './github';
+import { ensureSchema } from './db';
 import { parseRoadmap } from './parsers/roadmap';
 import { parseTasks } from './parsers/tasks';
 import { parseMetrics } from './parsers/metrics';
@@ -58,6 +59,8 @@ export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any) {
+    await ensureSchema(db);
+
     const owner = repo.fullName.split('/')[0];
 
     // Fetch additional metrics

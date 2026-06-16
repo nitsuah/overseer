@@ -1,4 +1,17 @@
 import { neon } from '@neondatabase/serverless';
+import { SCHEMA_MIGRATIONS } from './schema-migrations';
+
+// Runs once per warm serverless instance; safe to call before every sync
+let schemaEnsured = false;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function ensureSchema(db: any): Promise<void> {
+    if (schemaEnsured) return;
+    for (const sql of SCHEMA_MIGRATIONS) {
+        // Must use db.query() — db.unsafe() never executes when awaited
+        await db.query(sql);
+    }
+    schemaEnsured = true;
+}
 
 // Neon serverless Postgres client
 export function getNeonClient() {

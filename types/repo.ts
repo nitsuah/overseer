@@ -14,6 +14,8 @@ export interface RoadmapItem {
   title: string;
   quarter: string | null;
   status: 'planned' | 'in-progress' | 'completed';
+  linked_pr_number?: number | null;
+  agent_task_id?: string | null;
 }
 
 export interface DocStatus {

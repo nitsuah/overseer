@@ -72,6 +72,11 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     // tasks
     `ALTER TABLE tasks ADD COLUMN IF NOT EXISTS subsection TEXT`,
 
+    // roadmap_items: DEV-flow handoff linkage (link a roadmap item to a
+    // tracked PR and/or an Agent Task Queue entry)
+    `ALTER TABLE roadmap_items ADD COLUMN IF NOT EXISTS linked_pr_number INTEGER`,
+    `ALTER TABLE roadmap_items ADD COLUMN IF NOT EXISTS agent_task_id TEXT`,
+
     // indexes
     `CREATE INDEX IF NOT EXISTS idx_repos_health_score ON repos(health_score)`,
     `CREATE INDEX IF NOT EXISTS idx_repos_coverage_score ON repos(coverage_score)`,

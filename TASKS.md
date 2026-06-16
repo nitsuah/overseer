@@ -1,4 +1,4 @@
-## updated: 2026-06-13
+## updated: 2026-06-15
 
 # Tasks
 
@@ -17,10 +17,11 @@
 
 ### P2 - Medium
 
-- [ ] Add workflow visualization for multi-step execution paths.
+- [x] Add workflow visualization for multi-step execution paths.
   - Priority: P2
   - Context: the FLOW-TASKS/HANDOFF/PMO/DEV/QA agent pipeline (see `templates/.github/prompts`) has no visual representation in the dashboard; users can't see where a repo's active work sits in that pipeline.
   - Acceptance Criteria: the dashboard shows a simple stage indicator (e.g., Planned -> In Progress -> Review -> Done) per active roadmap item or task, derived from existing status markers and PR/issue state.
+  - Completed: PR #131 — pipeline summary bar (Planned → In Progress → In Review → Done) in roadmap section; "In Review" derived from linked_pr_number on in-progress items.
 
 - [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
   - Priority: P2

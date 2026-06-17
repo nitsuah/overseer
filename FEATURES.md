@@ -31,7 +31,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 - **Cross-Repo Dependency Mapping**: Infer and display connections between related repos sharing a stack (e.g., agent-board ↔ bb-mcp ↔ overseer)
 - **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution
-- **MCP Server Endpoint**: Expose overseer's repo intelligence as an MCP server, making `get_repo_health` and `list_tasks` tools available to any MCP-compatible agent client
+- **MCP Server**: `POST /api/mcp` — JSON-RPC 2.0 endpoint (MCP spec 2024-11-05) exposing `get_repo_health` (health score, CI, vuln counts, activity) and `list_tasks` (per-repo tasks with optional status filter) to any MCP-compatible agent client; Bearer token auth via `MCP_API_KEY` env var; 60 req/min rate limit; `GET /api/mcp` returns public capability doc
 
 ### 🔄 Agent Prompt Toolkit
 

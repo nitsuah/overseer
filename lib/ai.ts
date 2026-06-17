@@ -35,7 +35,7 @@ Files provided:
         return await generateWithFailover(prompt, { useShortResponse: true });
     } catch (error) {
         logger.warn('All AI providers failed for repo summary:', error);
-        
+
         // Return more specific error messages
         if (error instanceof Error) {
             if (error.message.includes('API_KEY') || error.message.includes('not configured')) {
@@ -48,7 +48,7 @@ Files provided:
                 return 'Summary unavailable (API Quota Exceeded)';
             }
         }
-        
+
         return 'Summary unavailable (AI Service Error)';
     }
 }
@@ -72,7 +72,7 @@ Context: ${contextFiles}`;
         return await generateWithFailover(prompt);
     } catch (error) {
         logger.warn('All AI providers failed for missing doc:', error);
-        
+
         // Throw with more context
         if (error instanceof Error) {
             if (error.message.includes('API_KEY') || error.message.includes('not configured')) {
@@ -85,7 +85,7 @@ Context: ${contextFiles}`;
                 throw new Error('AI API quota exceeded');
             }
         }
-        
+
         throw new Error('Failed to generate documentation: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
 }
@@ -136,6 +136,41 @@ Be specific to this repo's domain and tech stack. Prioritize by impact.`;
     }
 }
 
+export interface DocImprovementContext {
+    docType: string;
+    currentContent: string;
+    repoName: string;
+    userPrompt?: string;
+}
+
+/**
+ * Generate an improved version of an existing doc using AI.
+ * Returns null if all providers fail (caller should surface a 503).
+ */
+export async function generateDocImprovement(
+    context: DocImprovementContext
+): Promise<string | null> {
+    const docTypeLabel = context.docType.toUpperCase();
+    const customInstruction = context.userPrompt
+        ? `\n\nAdditional guidance from the user: ${context.userPrompt}`
+        : '';
+
+    const prompt = `You are a senior technical writer improving repository documentation for "${context.repoName}".
+
+Below is the current content of ${docTypeLabel}.md. Rewrite it to be clearer, more complete, and better structured — while keeping all existing factual information intact. Preserve the document's intent and audience. Output only the improved Markdown, no preamble or explanation.${customInstruction}
+
+--- CURRENT ${docTypeLabel}.md ---
+${context.currentContent.slice(0, 8000)}
+--- END ---`;
+
+    try {
+        return await generateWithFailover(prompt, { useShortResponse: false });
+    } catch (error) {
+        logger.warn('All AI providers failed for doc improvement:', error);
+        return null;
+    }
+}
+
 /**
  * Generate AI content with automatic failover across providers.
  */
@@ -144,7 +179,7 @@ export async function generateAIContent(prompt: string): Promise<string> {
         return await generateWithFailover(prompt);
     } catch (error) {
         logger.warn('All AI providers failed for AI content:', error);
-        
+
         // Throw with more context
         if (error instanceof Error) {
             if (error.message.includes('API_KEY') || error.message.includes('not configured')) {
@@ -157,7 +192,7 @@ export async function generateAIContent(prompt: string): Promise<string> {
                 throw new Error('AI API quota exceeded');
             }
         }
-        
+
         throw new Error('Failed to generate AI content: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
 }

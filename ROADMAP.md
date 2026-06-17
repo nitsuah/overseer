@@ -1,4 +1,4 @@
-## updated: 2026-06-11
+## updated: 2026-06-16
 
 # 🗺️ Overseer Roadmap
 
@@ -8,30 +8,32 @@ Next Review: 2026-07-01
 
 > Completed. Foundation, UX baseline, PR preview, AI enrichment, repo intelligence, auto-fix flows, Agent Task Queue API, Docker smoke CI, and BYOK/provider-order AI routing all shipped.
 
-## Q2 2026: AI & Orchestration (IN PROGRESS) 🏗️
+## Q2 2026: AI & Orchestration ✅
 
 - [x] Add FLOW-TASKS and HANDOFF agent prompt templates to the community-standards template set
 - [x] Add per-repo plan-execution tracking: surface each repo's Q2 roadmap progress in the dashboard
 - [x] Add PMO/DEV flow tracking: surface branch and PR readiness for all managed repos in the dashboard
-- [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly
 - [x] Add .github repo awareness: resolve community health files from owner/.github before flagging per-repo absence in health scoring and standards auto-fix
 - [x] Add security inputs to the health score (Dependabot severity weighting, secret-scanning signal)
-- [ ] Add AI doc-improvement controls: inline compare-and-accept flow for existing documentation
-- [ ] Add workflow visualization for multi-step execution paths
-- [/] Keep Gemini failover and model evolution resilient
-- [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0)
+- [x] Add AI feature suggestion button to the Features panel with optional prompt input (PR #132)
+- [x] Add AI doc-improvement controls: inline compare-and-accept flow for existing documentation (PR #133)
+- [x] Add workflow visualization for multi-step execution paths: pipeline stage bar (Planned → In Progress → In Review → Done) per roadmap item (PR #131)
+- [x] Add real-time webhook-driven sync: HMAC-validated GitHub push webhook triggers background sync (PR #134)
+- [x] Batch per-repo detail queries into a single db.transaction() call to reduce Neon round trips (PR #128)
+- [/] Keep Gemini failover and model evolution resilient (ongoing)
+- [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly
 - [ ] Deprioritize stash: mark private, block PRs, and add a sanitization task to TASKS.md
 
-## Q3 2026: PMO Mode (Planned) 🏗️
+## Q3 2026: PMO Mode 🏗️
 
-- [ ] Allow easy management and roadmapping of TASKS, ROADMAP, FEATURES, and other core supporting MD files via a chat-driven interface in the dashboard
-- [ ] Add a PMO mode to the dashboard that surfaces the PMO-relevant signals and controls, such as roadmap progress, plan execution status, and handoff management
-- [ ] Add AI-assisted roadmap management features, such as auto-suggesting roadmap items based on repo intelligence, and auto-updating roadmap progress based on plan execution tracking
+- [ ] Add PMO mode to the dashboard: portfolio-wide roadmap progress, plan execution status, and handoff management view
+- [ ] Add AI-assisted roadmap management: auto-suggest items from repo health signals and auto-update progress from linked PR/issue state
+- [ ] Add DEV-flow handoff UI: promote in-progress roadmap items into the agent task queue with pre-filled context
+- [ ] Allow easy management of TASKS, ROADMAP, FEATURES via a chat-driven interface in the dashboard
 
-## Q3 2026: Analytics & MCP (Planned) 🤖
+## Q3 2026: Analytics & MCP 🤖
 
 - [ ] Add the conversational interface foundation: one or two chat-driven repo-hygiene workflows end to end
-- [ ] Add real-time webhook-driven sync for push and PR events across tracked repos
 - [ ] Add advanced analytics: velocity scoring, technical-debt trending, and zombie-branch detection
 - [ ] Expand MCP tooling surface: expose overseer repo intelligence as an MCP server for agent clients
 - [ ] Add cross-repo dependency mapping to surface shared-stack connections (e.g., agent-board ↔ bb-mcp ↔ overseer)

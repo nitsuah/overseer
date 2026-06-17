@@ -136,6 +136,51 @@ Be specific to this repo's domain and tech stack. Prioritize by impact.`;
     }
 }
 
+export interface RoadmapSuggestionContext {
+    language: string | null;
+    healthScore: number | null;
+    existingItems: Array<{ title: string; quarter: string | null; status: string }>;
+    userPrompt?: string;
+}
+
+export async function generateRoadmapSuggestions(
+    repoName: string,
+    context: RoadmapSuggestionContext
+): Promise<string | null> {
+    const { language, healthScore, existingItems, userPrompt } = context;
+
+    const byQuarter = existingItems.reduce<Record<string, string[]>>((acc, item) => {
+        const q = item.quarter || 'Unscheduled';
+        (acc[q] = acc[q] || []).push(`[${item.status}] ${item.title}`);
+        return acc;
+    }, {});
+    const roadmapSummary = Object.entries(byQuarter)
+        .map(([q, items]) => `${q}:\n${items.map(t => `  - ${t}`).join('\n')}`)
+        .join('\n\n');
+
+    const prompt = `You are an expert Technical Product Manager planning the roadmap for the "${repoName}" repository.
+
+Repository context:
+- Primary language: ${language || 'Unknown'}
+- Health score: ${healthScore !== null ? `${healthScore}/100` : 'Unknown'}
+${userPrompt ? `- User focus: ${userPrompt}` : ''}
+
+Current roadmap:
+${roadmapSummary || '(empty)'}
+
+Propose 2-3 new quarterly roadmap items that would meaningfully improve this repository. Do not duplicate or reword existing items. Prioritize by impact.
+
+For each suggestion output EXACTLY this format (one per line, no numbering, no extra commentary):
+**Goal Title** — one sentence describing the user value and why this quarter.`;
+
+    try {
+        return await generateWithFailover(prompt, { useShortResponse: true });
+    } catch (error) {
+        logger.warn('All AI providers failed for roadmap suggestions:', error);
+        return null;
+    }
+}
+
 export interface DocImprovementContext {
     docType: string;
     currentContent: string;

@@ -85,32 +85,30 @@ export async function discoverWorkingModel(apiKey: string): Promise<string | nul
     return cachedWorkingModel;
   }
   
-  logger.info('[Gemini] Auto-discovering working model...');
-  
-  // Try configured model first
   const configuredModel = getConfiguredModel();
+  logger.info(`[Gemini] Auto-discovering working model (configured: ${configuredModel})...`);
+
   if (await testModel(apiKey, configuredModel)) {
     cachedWorkingModel = configuredModel;
     lastDiscoveryTime = now;
     logger.info(`[Gemini] ✓ Configured model works: ${configuredModel}`);
     return configuredModel;
   }
-  
-  logger.warn(`[Gemini] Configured model "${configuredModel}" failed, trying alternatives...`);
-  
-  // Try other candidates
+
+  logger.warn(`[Gemini] Configured model "${configuredModel}" unavailable, scanning candidates...`);
+
   for (const candidate of MODEL_CANDIDATES) {
-    if (candidate === configuredModel) continue; // Already tried
-    
+    if (candidate === configuredModel) continue;
+
     logger.info(`[Gemini] Testing: ${candidate}`);
     if (await testModel(apiKey, candidate)) {
       cachedWorkingModel = candidate;
       lastDiscoveryTime = now;
-      logger.info(`[Gemini] ✓ Found working model: ${candidate}`);
+      logger.warn(`[Gemini] MODEL_SWITCHED: ${configuredModel} → ${candidate} (configured model unavailable)`);
       return candidate;
     }
   }
-  
+
   logger.error('[Gemini] No working models found among candidates');
   return null;
 }

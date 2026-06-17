@@ -1,7 +1,8 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Shield, Sparkles, LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle } from "lucide-react";
+import { Shield, Sparkles, LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle, LayoutDashboard } from "lucide-react";
+import Link from "next/link";
 import { GithubIcon } from "@/components/icons/GithubIcon";
 import Image from "next/image";
 import { useGeminiStatus } from "@/hooks/useGeminiStatus";
@@ -314,6 +315,18 @@ export default function Header(props: HeaderProps = {}) {
                             </div>
                         </button>
                     </div>
+                )}
+
+                {/* PMO Link */}
+                {session && (
+                    <Link
+                        href="/pmo"
+                        className="flex items-center gap-1.5 px-3 py-2 bg-slate-800/90 border border-slate-700 hover:border-indigo-500/50 hover:text-indigo-300 rounded-lg text-sm font-medium text-slate-300 transition-all duration-200"
+                        title="PMO Dashboard"
+                    >
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>PMO</span>
+                    </Link>
                 )}
 
                 {/* Sync Button */}

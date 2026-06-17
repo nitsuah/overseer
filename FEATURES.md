@@ -92,6 +92,8 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Roadmap Visualization**: Quarterly planning with status tracking (Planned, In Progress, Completed)
 - **Per-Repo Roadmap Progress**: Expanded detail panel surfaces the current ("(IN PROGRESS)") roadmap quarter first, with a completion progress bar per quarter card
 - **Workflow Pipeline Stage Indicator**: Visual pipeline bar (Planned → In Progress → In Review → Done) per roadmap item derived from linked PR state; "In Review" inferred from `linked_pr_number` on in-progress items (PR #131)
+- **PMO Mode Dashboard**: Portfolio-wide roadmap progress view at `/pmo`; 4-stage pipeline summary cards, per-repo health/CI/stale-item cards, and progress bars across all tracked repos; accessible via PMO nav link in the header for authenticated users (PR #136)
+- **DEV-Flow Handoff**: One-click "Hand off" button on every in-progress roadmap item in the PMO view; POSTs to the Agent Task Queue (`/api/agent/tasks`) and links the returned `agent_task_id` back to the roadmap item in one round trip (PR #136)
 - **Metrics Tracking**: Custom metrics per repository
 - **Testing Metrics**: Test file count and test case count prominently displayed
 - **CI/CD Monitoring**: Live workflow status with last run timestamp
@@ -169,9 +171,7 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 ## 🆕 Planned & Upcoming Features
 
-- **PMO Mode Dashboard**: Portfolio-wide roadmap progress, plan execution status, and handoff management view (Q3 2026)
 - **AI-Assisted Roadmap Management**: Auto-suggest roadmap items from repo health signals; auto-update progress from linked PR/issue state (Q3 2026)
-- **DEV-Flow Handoff UI**: Promote in-progress roadmap items into the agent task queue with pre-filled context and acceptance criteria (Q3 2026)
 - **Conversational Interface**: Messenger-style chat panel with repo data as context for natural-language repo-hygiene workflows (Q3 2026)
 - **Cross-Repo Dependency Mapping**: Interactive 3D graph visualizing shared-stack connections across the portfolio (Q3 2026)
 - **MCP Server**: Expose `get_repo_health` and `list_tasks` as MCP tools for any agent client (Q3 2026)
@@ -197,7 +197,7 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 ## 📅 Last Validated
 
-June 2026 - PMO review; Q2 2026 items reconciled (PRs #128, #131, #132, #133, #134)
+June 2026 - PMO review; Q2 2026 fully reconciled (PRs #128, #131, #132, #133, #134, #136, #137); PMO Mode and DEV-Flow Handoff moved from Planned to shipped
 
 ### 📋 Tracked Documentation
 

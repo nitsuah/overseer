@@ -1,4 +1,4 @@
-## updated: 2026-06-16
+## updated: 2026-06-17
 
 # 🗺️ Overseer Roadmap
 
@@ -20,15 +20,15 @@ Next Review: 2026-07-01
 - [x] Add workflow visualization for multi-step execution paths: pipeline stage bar (Planned → In Progress → In Review → Done) per roadmap item (PR #131)
 - [x] Add real-time webhook-driven sync: HMAC-validated GitHub push webhook triggers background sync (PR #134)
 - [x] Batch per-repo detail queries into a single db.transaction() call to reduce Neon round trips (PR #128)
-- [/] Keep Gemini failover and model evolution resilient (ongoing)
-- [ ] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly
+- [x] Keep Gemini failover and model evolution resilient (PR #137)
+- [x] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly (PR #136)
 - [ ] Deprioritize stash: mark private, block PRs, and add a sanitization task to TASKS.md
 
 ## Q3 2026: PMO Mode 🏗️
 
-- [ ] Add PMO mode to the dashboard: portfolio-wide roadmap progress, plan execution status, and handoff management view
+- [x] Add PMO mode to the dashboard: portfolio-wide roadmap progress, plan execution status, and handoff management view (PR #136)
 - [ ] Add AI-assisted roadmap management: auto-suggest items from repo health signals and auto-update progress from linked PR/issue state
-- [ ] Add DEV-flow handoff UI: promote in-progress roadmap items into the agent task queue with pre-filled context
+- [x] Add DEV-flow handoff UI: promote in-progress roadmap items into the agent task queue with pre-filled context (PR #136)
 - [ ] Allow easy management of TASKS, ROADMAP, FEATURES via a chat-driven interface in the dashboard
 
 ## Q3 2026: Analytics & MCP 🤖

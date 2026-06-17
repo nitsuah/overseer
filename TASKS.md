@@ -1,4 +1,4 @@
-## updated: 2026-06-16
+## updated: 2026-06-17
 
 # Tasks
 
@@ -14,16 +14,6 @@
   - Acceptance Criteria: repo is private, branch protection blocks new PRs, and a sanitization checklist item is documented.
 
 ### P2 - Medium
-
-- [ ] Add DEV-flow handoff: UI to promote active roadmap items into the agent task queue.
-  - Priority: P2
-  - Context: PMO roadmap items reach "In Progress" state but there is no in-app path to formally hand off to an implementation queue or agent session; users must copy context manually.
-  - Acceptance Criteria: a "Hand off to dev" action on an in-progress roadmap item creates a pre-filled Agent Task Queue entry with context (title, acceptance criteria, linked PR if any) and marks the roadmap item as queued.
-
-- [ ] Add PMO mode dashboard view.
-  - Priority: P2
-  - Context: the dashboard is repo-centric; there is no aggregate PMO view showing portfolio-wide roadmap progress, plan execution status, and handoff health across all tracked repos.
-  - Acceptance Criteria: a `/pmo` route or top-level tab surfaces: roadmap completion % per repo, items in each pipeline stage across all repos, overdue/stale items flagged, and links to per-repo handoff actions.
 
 - [ ] Add AI-assisted roadmap management.
   - Priority: P2

@@ -1,6 +1,6 @@
 "use client";
 
-import { Map, GitPullRequest, Bot, Link2 } from 'lucide-react';
+import { Map, GitPullRequest, Bot, Link2, Sparkles, Loader2 } from 'lucide-react';
 import { RoadmapItem } from '@/types/repo';
 import { parseBoldText } from '@/lib/markdown-utils';
 import { useState } from 'react';
@@ -50,6 +50,36 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showCompleted, setShowCompleted] = useState(false);
   const [showAllPlanned, setShowAllPlanned] = useState(false);
+
+  const [showSuggest, setShowSuggest] = useState(false);
+  const [userPrompt, setUserPrompt] = useState('');
+  const [suggestions, setSuggestions] = useState<string | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
+
+  const handleSuggest = async () => {
+    if (!repoName) return;
+    setSuggesting(true);
+    setSuggestError(null);
+    setSuggestions(null);
+    try {
+      const res = await fetch(`/api/repos/${repoName}/suggest-roadmap`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userPrompt: userPrompt.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSuggestError(data.error || 'Failed to get suggestions');
+        return;
+      }
+      setSuggestions(data.suggestions);
+    } catch {
+      setSuggestError('Failed to get suggestions');
+    } finally {
+      setSuggesting(false);
+    }
+  };
 
   // Local overrides applied after a successful link save, keyed by item id,
   // so the badge updates immediately without waiting for the next sync.
@@ -217,6 +247,22 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {isAuthenticated && repoName && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSuggest(!showSuggest);
+                if (!showSuggest) setSuggestions(null);
+              }}
+              title="Get AI-powered roadmap suggestions"
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                showSuggest ? 'bg-purple-500/30 text-purple-300' : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+              }`}
+            >
+              <Sparkles className="h-2.5 w-2.5" />
+              Suggest
+            </button>
+          )}
           {quarters.length > 1 && !showCompleted && (
             <button
               onClick={(e) => {
@@ -244,6 +290,40 @@ export function RoadmapSection({ roadmapItems, isExpanded: isExpandedProp, onTog
       </div>
       {isMainExpanded && (
         <div className="p-4 space-y-4">
+          {showSuggest && isAuthenticated && repoName && (
+            <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                <span className="text-[11px] font-semibold text-purple-300">AI Roadmap Suggestions</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Optional: focus area (e.g. 'performance', 'developer experience')"
+                  value={userPrompt}
+                  onChange={(e) => setUserPrompt(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !suggesting && handleSuggest()}
+                  className="flex-1 bg-slate-900/60 border border-slate-700 rounded px-2 py-1 text-[10px] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                />
+                <button
+                  onClick={handleSuggest}
+                  disabled={suggesting}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-50 shrink-0"
+                >
+                  {suggesting ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Sparkles className="h-2.5 w-2.5" />}
+                  {suggesting ? 'Thinking…' : 'Suggest'}
+                </button>
+              </div>
+              {suggestError && <p className="text-[10px] text-red-400">{suggestError}</p>}
+              {suggestions && (
+                <div className="mt-2 space-y-1">
+                  {suggestions.split('\n').filter(line => line.trim()).map((line, i) => (
+                    <p key={i} className="text-[10px] text-slate-300 leading-relaxed">{line}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {hasActiveWork && (
             <div className="flex items-center gap-1 flex-wrap" title="Workflow pipeline stage breakdown">
               {(

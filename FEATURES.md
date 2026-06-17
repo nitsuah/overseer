@@ -32,7 +32,6 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Cross-Repo Dependency Mapping**: Infer and display connections between related repos sharing a stack (e.g., agent-board ↔ bb-mcp ↔ overseer)
 - **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution
 - **MCP Server Endpoint**: Expose overseer's repo intelligence as an MCP server, making `get_repo_health` and `list_tasks` tools available to any MCP-compatible agent client
-- **Webhook-Driven Sync**: Real-time incremental updates triggered by GitHub push and PR events, eliminating the need for full polling cycles
 
 ### 🔄 Agent Prompt Toolkit
 
@@ -52,6 +51,8 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **AI Template Enrichment**: Context-aware documentation generation using repo metadata, structure, and content
 - **Smart Repo Type Detection**: Automatically categorizes repos (web-app, game, tool, library, bot, research)
 - **Gemini Health Monitoring**: Automated CI/CD health checks to detect model deprecations (tests fail when model breaks)
+- **AI Feature Suggestions**: "Suggest features" button in the Features panel; analyzes repo health score, language, existing feature categories, and planned roadmap items to produce 3-5 prioritized feature ideas; supports an optional freeform prompt for user-directed output (PR #132)
+- **AI Doc Improvement**: Inline compare-and-accept flow for existing documentation; fetches the current file from GitHub, generates an AI-improved version, and shows a side-by-side before/after preview before creating a PR; supports an optional user prompt to guide the rewrite (PR #133)
 
 ### 📝 Documentation Management
 
@@ -80,12 +81,14 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Windows Line Endings Support**: Parser compatibility with CRLF line endings using split(/\r?\n/)
 - **GraphQL Rate Limit Safety**: Null checks for optional GraphQL rate limit data
 - **TypeScript Build Stability**: Session type extensions, array mutation fixes, centralized repo detection
+- **Batched DB Queries**: Per-repo detail queries consolidated into a single `db.transaction()` call, reducing Neon serverless round trips from up to 8 sequential requests to one per repo (PR #128)
 
 ### 🎯 Project Tracking
 
 - **Task Management**: Parse and display tasks by status (Todo, In Progress, Done)
 - **Roadmap Visualization**: Quarterly planning with status tracking (Planned, In Progress, Completed)
 - **Per-Repo Roadmap Progress**: Expanded detail panel surfaces the current ("(IN PROGRESS)") roadmap quarter first, with a completion progress bar per quarter card
+- **Workflow Pipeline Stage Indicator**: Visual pipeline bar (Planned → In Progress → In Review → Done) per roadmap item derived from linked PR state; "In Review" inferred from `linked_pr_number` on in-progress items (PR #131)
 - **Metrics Tracking**: Custom metrics per repository
 - **Testing Metrics**: Test file count and test case count prominently displayed
 - **CI/CD Monitoring**: Live workflow status with last run timestamp
@@ -146,6 +149,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 - **Manual Sync**: On-demand repository synchronization
 - **Automated Sync**: Netlify scheduled functions for background updates
+- **Webhook-Driven Sync**: Real-time incremental sync via GitHub push webhooks; validates HMAC-SHA256 signatures, ignores untracked repos, and fires a background `syncRepo` within seconds of a push event with a 200 response before the sync completes (PR #134)
 - **Default Repositories**: Always-visible demo repositories
 - **Custom Repository Support**: Add any public GitHub repository
 - **Rate Limit Monitoring**: Check GitHub API rate limit status via /api/github-rate-limit endpoint
@@ -162,7 +166,12 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 ## 🆕 Planned & Upcoming Features
 
-- **Cross-Repo Dependency Mapping**: Visualize and manage shared-stack connections (Q3 2026)
+- **PMO Mode Dashboard**: Portfolio-wide roadmap progress, plan execution status, and handoff management view (Q3 2026)
+- **AI-Assisted Roadmap Management**: Auto-suggest roadmap items from repo health signals; auto-update progress from linked PR/issue state (Q3 2026)
+- **DEV-Flow Handoff UI**: Promote in-progress roadmap items into the agent task queue with pre-filled context and acceptance criteria (Q3 2026)
+- **Conversational Interface**: Messenger-style chat panel with repo data as context for natural-language repo-hygiene workflows (Q3 2026)
+- **Cross-Repo Dependency Mapping**: Interactive 3D graph visualizing shared-stack connections across the portfolio (Q3 2026)
+- **MCP Server**: Expose `get_repo_health` and `list_tasks` as MCP tools for any agent client (Q3 2026)
 - **Autonomous Plan Execution**: Agents read ROADMAP.md and TASKS.md, open PRs, and close items end to end (Q4 2026)
 - **Portfolio Intelligence Dashboard**: Cross-repo health roll-up, trend lines, and strategic signal view (Q4 2026)
 - **Mobile-Responsive PWA**: Lightweight PWA packaging and mobile adjustments (Q4 2026)
@@ -171,10 +180,11 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 - **AI Model Failover**: Multi-provider AI failover (Gemini, OpenAI, Anthropic) for high availability
 - **Self-Healing AI**: Runtime model auto-discovery and hot swapping
-- **AI Doc Improvement**: Inline compare-and-accept flow for documentation
+- **AI Doc Improvement**: Inline compare-and-accept flow for documentation (shipped PR #133)
+- **AI Feature Suggestions**: Repo-context-aware feature ideation with optional user prompt (shipped PR #132)
 - **AI Summaries**: Context-aware, market-trend-driven repository summaries
 - **Security Signal Integration**: Dependabot and secret-scanning signals weighted in health score
-- **Real-Time Analytics**: Velocity scoring, technical-debt trending, and zombie-branch detection
+- **Real-Time Analytics**: Velocity scoring, technical-debt trending, and zombie-branch detection (planned Q3)
 
 ## 📈 Market-Relevant Improvements
 
@@ -184,7 +194,7 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 ## 📅 Last Validated
 
-April 2026 - Overseer/PM compliance review
+June 2026 - PMO review; Q2 2026 items reconciled (PRs #128, #131, #132, #133, #134)
 
 ### 📋 Tracked Documentation
 
@@ -276,4 +286,4 @@ Health scores are displayed as letter grades (A-F) with detailed component break
 
 ## 📅 Last Updated
 
-April 2026 - Cross-Repo Orchestration and Agent Prompt Toolkit Added
+June 2026 - Q2 2026 shipped features added; Planned section updated for Q3

@@ -94,6 +94,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Workflow Pipeline Stage Indicator**: Visual pipeline bar (Planned → In Progress → In Review → Done) per roadmap item derived from linked PR state; "In Review" inferred from `linked_pr_number` on in-progress items (PR #131)
 - **PMO Mode Dashboard**: Portfolio-wide roadmap progress view at `/pmo`; 4-stage pipeline summary cards, per-repo health/CI/stale-item cards, and progress bars across all tracked repos; accessible via PMO nav link in the header for authenticated users (PR #136)
 - **DEV-Flow Handoff**: One-click "Hand off" button on every in-progress roadmap item in the PMO view; POSTs to the Agent Task Queue (`/api/agent/tasks`) and links the returned `agent_task_id` back to the roadmap item in one round trip (PR #136)
+- **AI Roadmap Suggestions**: "Suggest" button in the per-repo Roadmap section panel; analyzes repo health score, language, and all existing roadmap items (grouped by quarter and status) to propose 2-3 non-duplicate quarterly goals; supports an optional focus-area prompt (e.g. "performance") to guide the output
 - **Metrics Tracking**: Custom metrics per repository
 - **Testing Metrics**: Test file count and test case count prominently displayed
 - **CI/CD Monitoring**: Live workflow status with last run timestamp

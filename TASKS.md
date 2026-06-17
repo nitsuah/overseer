@@ -15,11 +15,6 @@
 
 ### P2 - Medium
 
-- [ ] Add AI-assisted roadmap management.
-  - Priority: P2
-  - Context: roadmap items are manually written; the system has enough repo health and activity data to suggest new items and auto-update progress.
-  - Acceptance Criteria: (1) a "Suggest roadmap items" button analyzes repo health signals and proposes 2-3 actionable quarterly goals; (2) roadmap item progress is auto-updated from linked PR/issue state on each sync.
-
 - [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
   - Priority: P2
   - Context: overseer exposes an Agent Task Queue API and agent-board runs a local model runtime, but no bridge routes tasks between them.

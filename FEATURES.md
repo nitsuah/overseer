@@ -53,6 +53,9 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Gemini Health Monitoring**: Automated CI/CD health checks to detect model deprecations (tests fail when model breaks)
 - **AI Feature Suggestions**: "Suggest features" button in the Features panel; analyzes repo health score, language, existing feature categories, and planned roadmap items to produce 3-5 prioritized feature ideas; supports an optional freeform prompt for user-directed output (PR #132)
 - **AI Doc Improvement**: Inline compare-and-accept flow for existing documentation; fetches the current file from GitHub, generates an AI-improved version, and shows a side-by-side before/after preview before creating a PR; supports an optional user prompt to guide the rewrite (PR #133)
+- **Provider Circuit Breaker**: Per-provider circuit breaker in `ai-failover.ts` auto-opens on quota/rate-limit errors (30 min backoff) or transient errors (5 min backoff); skips open circuits with logged reopen time; resets on first success — no manual `GEMINI_QUOTA_EXCEEDED` env var needed
+- **Structured Model-Switch Logging**: `MODEL_SWITCHED: <old> → <new>` warning logged whenever Gemini model discovery selects a different model than the configured default (e.g. after a deprecation)
+- **Non-Inferential Health Endpoint**: `GET /api/health` now reports circuit breaker state and configured providers without making inference API calls on every poll; supports `?probe=true` for lightweight provider-reachability checks via list APIs
 
 ### 📝 Documentation Management
 

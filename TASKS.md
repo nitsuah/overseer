@@ -4,11 +4,6 @@
 
 ## In Progress
 
-- [/] Gemini model evolution and reliability.
-  - Priority: P1
-  - Context: `ai.ts` has multi-provider failover and auto-discovery; needs clearer resilience around Gemini deprecations and provider switching.
-  - Acceptance Criteria: provider health checks, fallback behavior, and model-switch logging stay reliable.
-
 ## Todo
 
 ### P1 - High

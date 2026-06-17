@@ -1,80 +1,49 @@
-// Gemini API health status endpoint
-// Returns cached status to avoid overwhelming the API
-
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getConfiguredModel } from '@/lib/gemini-model-discovery';
-
-// Cache status for 5 minutes to avoid excessive API calls
-let cachedStatus: { healthy: boolean; timestamp: number; model: string } | null = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+import { getProviderHealthStatus } from '@/lib/ai-failover';
+import { getConfiguredModel, discoverWorkingModel } from '@/lib/gemini-model-discovery';
 
 export async function GET() {
+  const apiKey = process.env.BYOK_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  const circuitStatus = getProviderHealthStatus();
+  const gemini = circuitStatus['gemini'];
+  const configuredModel = getConfiguredModel();
+
+  if (!apiKey) {
+    return NextResponse.json({
+      healthy: false,
+      model: configuredModel,
+      error: 'API key not configured',
+    });
+  }
+
+  // If we've seen recent success and the circuit is closed, report healthy without probing
+  if (gemini.healthy && gemini.lastSuccessAt) {
+    return NextResponse.json({
+      healthy: true,
+      model: configuredModel,
+      lastSuccessAt: gemini.lastSuccessAt,
+      source: 'circuit',
+    });
+  }
+
+  // Circuit is open or no history yet — run discovery to get an authoritative answer
   try {
-    const now = Date.now();
-    
-    // Return cached status if still valid
-    if (cachedStatus && (now - cachedStatus.timestamp) < CACHE_DURATION) {
-      return NextResponse.json({
-        healthy: cachedStatus.healthy,
-        model: cachedStatus.model,
-        cached: true,
-        age: Math.floor((now - cachedStatus.timestamp) / 1000)
-      });
-    }
-
-    // Check Gemini health
-    const apiKey = process.env.GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      cachedStatus = { healthy: false, timestamp: now, model: 'unknown' };
-      return NextResponse.json({ 
-        healthy: false, 
-        error: 'API key not configured',
-        cached: false
-      });
-    }
-
-    // Use the same model as configured via centralized discovery
-    const modelName = getConfiguredModel();
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    try {
-      const model = genAI.getGenerativeModel({ model: modelName });
-      
-      // Quick test with timeout
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 5000)
-      );
-      
-      const testPromise = model.generateContent('ok');
-      
-      await Promise.race([testPromise, timeoutPromise]);
-      
-      // Success - cache and return
-      cachedStatus = { healthy: true, timestamp: now, model: modelName };
-      return NextResponse.json({ 
-        healthy: true, 
-        model: modelName,
-        cached: false
-      });
-      
-    } catch (error) {
-      // Model test failed
-      cachedStatus = { healthy: false, timestamp: now, model: modelName };
-      return NextResponse.json({ 
-        healthy: false, 
-        model: modelName,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        cached: false
-      });
-    }
-    
+    const workingModel = await discoverWorkingModel(apiKey);
+    return NextResponse.json({
+      healthy: !!workingModel,
+      model: workingModel ?? configuredModel,
+      ...(workingModel !== configuredModel && workingModel && {
+        switched: true,
+        configuredModel,
+      }),
+      ...(gemini.unhealthyUntil && { unhealthyUntil: gemini.unhealthyUntil }),
+      ...(gemini.lastError       && { lastError: gemini.lastError }),
+    });
   } catch (error) {
-    return NextResponse.json({ 
-      healthy: false, 
-      error: error instanceof Error ? error.message : 'Unknown error',
-      cached: false
-    }, { status: 500 });
+    return NextResponse.json({
+      healthy: false,
+      model: configuredModel,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }

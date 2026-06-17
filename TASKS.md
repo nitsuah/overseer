@@ -1,4 +1,4 @@
-## updated: 2026-06-15
+## updated: 2026-06-16
 
 # Tasks
 
@@ -13,74 +13,61 @@
 
 ### P1 - High
 
-(none currently)
+- [ ] Deprioritize stash repo: mark private, block new PRs, and add a one-time sanitization task to remove any sensitive history.
+  - Priority: P1
+  - Context: stash repo has been lingering without formal decommission; blocks clean portfolio hygiene.
+  - Acceptance Criteria: repo is private, branch protection blocks new PRs, and a sanitization checklist item is documented.
 
 ### P2 - Medium
 
-- [x] Add workflow visualization for multi-step execution paths.
+- [ ] Add DEV-flow handoff: UI to promote active roadmap items into the agent task queue.
   - Priority: P2
-  - Context: the FLOW-TASKS/HANDOFF/PMO/DEV/QA agent pipeline (see `templates/.github/prompts`) has no visual representation in the dashboard; users can't see where a repo's active work sits in that pipeline.
-  - Acceptance Criteria: the dashboard shows a simple stage indicator (e.g., Planned -> In Progress -> Review -> Done) per active roadmap item or task, derived from existing status markers and PR/issue state.
-  - Completed: PR #131 — pipeline summary bar (Planned → In Progress → In Review → Done) in roadmap section; "In Review" derived from linked_pr_number on in-progress items.
+  - Context: PMO roadmap items reach "In Progress" state but there is no in-app path to formally hand off to an implementation queue or agent session; users must copy context manually.
+  - Acceptance Criteria: a "Hand off to dev" action on an in-progress roadmap item creates a pre-filled Agent Task Queue entry with context (title, acceptance criteria, linked PR if any) and marks the roadmap item as queued.
+
+- [ ] Add PMO mode dashboard view.
+  - Priority: P2
+  - Context: the dashboard is repo-centric; there is no aggregate PMO view showing portfolio-wide roadmap progress, plan execution status, and handoff health across all tracked repos.
+  - Acceptance Criteria: a `/pmo` route or top-level tab surfaces: roadmap completion % per repo, items in each pipeline stage across all repos, overdue/stale items flagged, and links to per-repo handoff actions.
+
+- [ ] Add AI-assisted roadmap management.
+  - Priority: P2
+  - Context: roadmap items are manually written; the system has enough repo health and activity data to suggest new items and auto-update progress.
+  - Acceptance Criteria: (1) a "Suggest roadmap items" button analyzes repo health signals and proposes 2-3 actionable quarterly goals; (2) roadmap item progress is auto-updated from linked PR/issue state on each sync.
 
 - [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
   - Priority: P2
   - Context: overseer exposes an Agent Task Queue API and agent-board runs a local model runtime, but no bridge routes tasks between them.
   - Acceptance Criteria: a v0 bridge dispatches at least one queued overseer task to agent-board's runtime and reports completion status back to the queue.
 
-- [ ] Add AI doc-improvement controls.
+- [ ] Add a conversational interface foundation.
   - Priority: P2
-  - Context: the app lacks inline improve-and-accept flows for existing documentation.
-  - Acceptance Criteria: users can compare baseline and AI-enhanced content before accepting changes.
-  - also allow for a prompt input on all AI usage (Besides repo summaries) so that users can customize the output and have more control over the results.
-
-- [ ] Add AI feature suggestion button to the "features" panel.
-  - Priority: P2
-  - Context: users cannot yet ask the agent for suggestions on what features to build next based on repo data.
-  - Acceptance Criteria: a "suggest a feature" button triggers an AI analysis of repo health and signals, returning a prioritized list of potential features to build.
-
-- [ ] Add real-time webhook-driven sync.
-  - Priority: P2
-  - Context: repo data only refreshes on demand or via scheduled function; push and PR events should trigger incremental updates.
-  - Acceptance Criteria: a GitHub webhook endpoint updates the relevant repo row within 30 seconds of a push event.
-
-- [ ] Add a conversational interface foundation that consumes visible or sync data as context for a conversation with the user about their repos (messenger type chat window, "friend" per chat).
-  - Priority: P2
-  - Context: natural-language routing for repo hygiene and doc work is still only a concept.
-  - Acceptance Criteria: one or two chat-driven workflows work end to end.
+  - Context: natural-language routing for repo hygiene and doc work is still only a concept; the Q3 PMO mode and AI-assisted roadmap management both benefit from a chat entry point.
+  - Acceptance Criteria: a messenger-style chat panel (one "friend" per chat) consumes visible dashboard data as context; one or two repo-hygiene workflows (e.g., "summarize my stale docs", "what should I work on next?") work end to end.
 
 - [ ] Add cross-repo dependency mapping.
   - Priority: P2
   - Context: agent-board, bb-mcp, nitsuah-io, and overseer share overlapping stacks and could benefit from surfaced cross-repo links.
-  - Acceptance Criteria: the dashboard shows inferred or declared connections between related repos and surfaces shared-stack signals.
-  - visualize as an interactive 3d "graph/map" of repos with lines showing connections and shared signals, allowing users to explore how their repositories are interconnected and identify potential areas of improvement or risk. with the ability to filter and click on things to learn more.
+  - Acceptance Criteria: the dashboard shows inferred or declared connections between related repos and surfaces shared-stack signals; visualized as an interactive 3D graph with filter and click-to-detail interactions.
 
 - [ ] Expose overseer repo intelligence as an MCP server.
   - Priority: P2
   - Context: MCP is gaining traction as the standard agent-tool protocol; overseer's health and task data would be valuable to agent clients.
-  - Acceptance Criteria: a minimal MCP server endpoint exposes `get_repo_health` and `list_tasks` tools consumable by any MCP-compatible client.
-  - API design should consider authentication, rate limits, and data freshness guarantees.
-  - documentation should be provided for how to integrate with the MCP server and interpret the health and task data.
-  - mcp server should be tested for reliability and performance under expected load.
-  - security considerations should be addressed, especially if the health data includes sensitive information about the repos.
+  - Acceptance Criteria: a minimal MCP server endpoint exposes `get_repo_health` and `list_tasks` tools consumable by any MCP-compatible client, with auth, rate limits, data-freshness docs, and load tests.
 
 ### DB & backend scaling
 
-- [ ] we may need to assess current DB design for scalability as well.
-
-- [ ] Batch the per-repo detail queries in `/api/repo-details/[name]` into a single `db.transaction([...])` call.
+- [ ] Assess current DB design for scalability as repo and user count grows.
   - Priority: P2
-  - Context: that route issues up to 8 sequential tagged-template queries (repos, tasks, roadmap_items, metrics, features, doc_status, best_practices, community_standards), and the dashboard fans this out across every repo on first load via `fetchAllRepoDetails`. Each query is a separate HTTPS round trip with Neon's serverless driver, so per-repo latency scales linearly with the table count.
-  - Acceptance Criteria: the route fetches all per-repo tables via one `sql.transaction([...])` call (or equivalent) so each repo's detail panel resolves in a single round trip; behavior and response shape are unchanged.
+  - Context: the current schema works at small scale; no formal review has been done for indexing strategy, query patterns at 100+ repos, or connection pooling limits.
+  - Acceptance Criteria: a brief written assessment covers index coverage, slow-query candidates, and a recommendation on whether schema changes are needed before Q3 feature work.
 
 ### P3 - Exploratory
 
 - [ ] Add zombie-branch detection.
   - Priority: P3
   - Context: the UI does not yet surface stale long-lived branches.
-  - Acceptance Criteria: stale branches are detected and flagged in the interface.
-  - ie: delete old branches that have been merged or stale branches that haven't had activity in a while, with a confirmation step to avoid accidental deletions (dialog pop up showing what its going to clean up, with scaling in mind for across all repos)
-  - some way to clean up old repos/delete them from memory/db safely en/masse would be good as well. like when viewing "hidden repos" have an option to "clean up cache on all hidden repos" that would remove them from the db and memory, with a confirmation step to avoid accidental deletions (though most of what we store in the DB is more a cache from GH anyway so stress that nothing is going to happen to the code there just our "copy" of it which can be resynced).
+  - Acceptance Criteria: stale branches are detected and flagged in the interface with a bulk-action dialog to delete selected branches (confirmation step, scaling across all repos); includes a "clean up hidden repos" action to safely purge DB cache for hidden/removed repos with a confirmation step noting the GH source is untouched.
 
 - [ ] Add maintenance-mode detection.
   - Priority: P3
@@ -111,5 +98,5 @@
 AGENT INSTRUCTIONS:
 1. Keep active items in In Progress and P1-P3 sections.
 2. Keep task bullets short and scannable.
-3. Move finished work into Done.
+3. Move finished work into FEATURES.md, not a Done section here.
 -->

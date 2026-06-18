@@ -45,6 +45,8 @@ Next Review: 2026-07-01
 - [ ] Evaluate enterprise auth, team collaboration, and org-wide governance workflows
 - [ ] Evaluate token-density, comment-to-code ratio, and maintenance-mode metrics as first-class signals
 - [ ] Add mobile-responsive adjustments and lightweight PWA packaging
+- [ ] **Repo "mood" signal** — lightweight sentiment computed from recent PR descriptions, commit messages, and TASKS.md tone; surfaces whether a repo is in grind mode, cleanup mode, or blocked, giving PMO quick directional intuition without reading every PR.
+- [ ] **AI PR pairing suggestions** — when promoting a ROADMAP/TASKS item to a PR, Overseer surfaces related items from other repos that should co-land; reduces cross-repo integration surprises by exposing dependency coupling before merge.
 
 ## Notes
 

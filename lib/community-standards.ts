@@ -29,7 +29,13 @@ export function checkCommunityStandards(
 
     const codeOfConductInRepo = lowerFiles.includes('code_of_conduct.md');
     const codeOfConductInFallback = fallbackSet.has('code_of_conduct.md');
-    const contributingInRepo = lowerFiles.includes('contributing.md');
+    const contributingInRepo = lowerFiles.includes('contributing.md') ||
+                               lowerFiles.includes('.github/contributing.md') ||
+                               lowerFiles.includes('docs/contributing.md');
+    const contributingPath = lowerFiles.includes('contributing.md') ? 'CONTRIBUTING.md'
+                           : lowerFiles.includes('.github/contributing.md') ? '.github/CONTRIBUTING.md'
+                           : lowerFiles.includes('docs/contributing.md') ? 'docs/CONTRIBUTING.md'
+                           : null;
     const contributingInFallback = fallbackSet.has('contributing.md');
     const securityInRepo = lowerFiles.includes('security.md');
     const securityInFallback = fallbackSet.has('security.md');
@@ -52,6 +58,7 @@ export function checkCommunityStandards(
         details: {
             exists: contributingInRepo || contributingInFallback,
             existsInRepo: contributingInRepo,
+            foundAt: contributingPath,
             existsInGithubFallback: contributingInFallback,
             fallbackRepo: options.fallbackRepo || null,
         }
@@ -74,10 +81,13 @@ export function checkCommunityStandards(
         details: { exists: lowerFiles.includes('license.md') || lowerFiles.includes('license') }
     });
 
+    const changelogPath = lowerFiles.includes('changelog.md') ? 'CHANGELOG.md'
+                        : lowerFiles.includes('docs/changelog.md') ? 'docs/CHANGELOG.md'
+                        : null;
     standards.push({
         type: 'changelog',
-        status: lowerFiles.includes('changelog.md') ? 'healthy' : 'missing',
-        details: { exists: lowerFiles.includes('changelog.md') }
+        status: changelogPath ? 'healthy' : 'missing',
+        details: { exists: !!changelogPath, foundAt: changelogPath }
     });
 
     // Templates — check repo first, then org .github fallback

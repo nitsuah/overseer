@@ -303,10 +303,13 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         WHERE id = ${repoId}
     `;
 
-    // ROADMAP.md (try uppercase then lowercase) - root only
+    // ROADMAP.md (try uppercase, lowercase, then docs/ subdirectory)
     let roadmapContent = await github.getFileContent(repo.name, 'ROADMAP.md', owner).catch(() => null);
     if (!roadmapContent) {
         roadmapContent = await github.getFileContent(repo.name, 'roadmap.md', owner).catch(() => null);
+    }
+    if (!roadmapContent) {
+        roadmapContent = await github.getFileContent(repo.name, 'docs/ROADMAP.md', owner).catch(() => null);
     }
     // Core docs should be in root - no template comparison
     const roadmapHealthState = calculateDocHealthState(!!roadmapContent, roadmapContent, null);
@@ -351,8 +354,11 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             last_checked = EXCLUDED.last_checked
     `;
 
-    // TASKS.md - root only
-    const tasksContent = await github.getFileContent(repo.name, 'TASKS.md', owner);
+    // TASKS.md (try root then docs/ subdirectory)
+    let tasksContent = await github.getFileContent(repo.name, 'TASKS.md', owner);
+    if (!tasksContent) {
+        tasksContent = await github.getFileContent(repo.name, 'docs/TASKS.md', owner);
+    }
     // Core docs should be in root - no template comparison
     const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, null);
     if (tasksContent) {
@@ -396,8 +402,11 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             last_checked = EXCLUDED.last_checked
     `;
 
-    // METRICS.md
-    const metricsContent = await github.getFileContent(repo.name, 'METRICS.md', owner);
+    // METRICS.md (try root then docs/ subdirectory)
+    let metricsContent = await github.getFileContent(repo.name, 'METRICS.md', owner);
+    if (!metricsContent) {
+        metricsContent = await github.getFileContent(repo.name, 'docs/METRICS.md', owner);
+    }
     const metricsHealthState = calculateDocHealthState(!!metricsContent, metricsContent, null);
     let coverageScore: number | null = null;
     if (metricsContent) {
@@ -437,8 +446,11 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             last_checked = EXCLUDED.last_checked
     `;
 
-    // FEATURES.md
-    const featuresContent = await github.getFileContent(repo.name, 'FEATURES.md', owner);
+    // FEATURES.md (try root then docs/ subdirectory)
+    let featuresContent = await github.getFileContent(repo.name, 'FEATURES.md', owner);
+    if (!featuresContent) {
+        featuresContent = await github.getFileContent(repo.name, 'docs/FEATURES.md', owner);
+    }
     const featuresHealthState = calculateDocHealthState(!!featuresContent, featuresContent, null);
     if (featuresContent) {
         const featuresData = parseFeatures(featuresContent);
@@ -464,22 +476,53 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             last_checked = EXCLUDED.last_checked
     `;
 
-    // Other docs (README, LICENSE, CHANGELOG, CONTRIBUTING)
-    const docTypes = ['README.md', 'LICENSE.md', 'CHANGELOG.md', 'CONTRIBUTING.md'];
-    for (const docFile of docTypes) {
+    // Other docs (README, LICENSE — root only; CHANGELOG, CONTRIBUTING — also check docs/)
+    for (const docFile of ['README.md', 'LICENSE.md']) {
         const content = await github.getFileContent(repo.name, docFile, owner);
         const docType = docFile.replace('.md', '').toLowerCase();
         const healthState = calculateDocHealthState(!!content, content, null);
         await db`
             INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, last_checked)
             VALUES (${repoId}, ${docType}, ${content !== null}, ${healthState}, ${content ? hashContent(content) : null}, NOW())
-            ON CONFLICT (repo_id, doc_type) DO UPDATE SET 
-                exists = EXCLUDED.exists, 
+            ON CONFLICT (repo_id, doc_type) DO UPDATE SET
+                exists = EXCLUDED.exists,
                 health_state = EXCLUDED.health_state,
                 content_hash = EXCLUDED.content_hash,
                 last_checked = EXCLUDED.last_checked
         `;
     }
+
+    // CHANGELOG.md (try root then docs/ subdirectory)
+    let changelogContent = await github.getFileContent(repo.name, 'CHANGELOG.md', owner);
+    if (!changelogContent) {
+        changelogContent = await github.getFileContent(repo.name, 'docs/CHANGELOG.md', owner);
+    }
+    const changelogHealthState = calculateDocHealthState(!!changelogContent, changelogContent, null);
+    await db`
+        INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, last_checked)
+        VALUES (${repoId}, 'changelog', ${changelogContent !== null}, ${changelogHealthState}, ${changelogContent ? hashContent(changelogContent) : null}, NOW())
+        ON CONFLICT (repo_id, doc_type) DO UPDATE SET
+            exists = EXCLUDED.exists,
+            health_state = EXCLUDED.health_state,
+            content_hash = EXCLUDED.content_hash,
+            last_checked = EXCLUDED.last_checked
+    `;
+
+    // CONTRIBUTING.md (try root then docs/ subdirectory)
+    let contributingContent = await github.getFileContent(repo.name, 'CONTRIBUTING.md', owner);
+    if (!contributingContent) {
+        contributingContent = await github.getFileContent(repo.name, 'docs/CONTRIBUTING.md', owner);
+    }
+    const contributingHealthState = calculateDocHealthState(!!contributingContent, contributingContent, null);
+    await db`
+        INSERT INTO doc_status (repo_id, doc_type, exists, health_state, content_hash, last_checked)
+        VALUES (${repoId}, 'contributing', ${contributingContent !== null}, ${contributingHealthState}, ${contributingContent ? hashContent(contributingContent) : null}, NOW())
+        ON CONFLICT (repo_id, doc_type) DO UPDATE SET
+            exists = EXCLUDED.exists,
+            health_state = EXCLUDED.health_state,
+            content_hash = EXCLUDED.content_hash,
+            last_checked = EXCLUDED.last_checked
+    `;
 
     // Best Practices Detection
     try {

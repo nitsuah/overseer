@@ -199,3 +199,67 @@ test('contributing is missing when absent from repo and fallback', () => {
   expect(contributing?.details.existsInRepo).toBe(false);
   expect(contributing?.details.foundAt).toBe(null);
 });
+
+test('code_of_conduct is healthy when at .github/CODE_OF_CONDUCT.md in repo', () => {
+  const result = checkCommunityStandards(['.github/CODE_OF_CONDUCT.md'], {});
+  const coc = result.standards.find((s) => s.type === 'code_of_conduct');
+  expect(coc?.status).toBe('healthy');
+  expect(coc?.details.existsInRepo).toBe(true);
+  expect(coc?.details.existsInGithubFallback).toBe(false);
+});
+
+test('security is healthy when at .github/SECURITY.md in repo', () => {
+  const result = checkCommunityStandards(['.github/SECURITY.md'], {});
+  const security = result.standards.find((s) => s.type === 'security');
+  expect(security?.status).toBe('healthy');
+  expect(security?.details.existsInRepo).toBe(true);
+  expect(security?.details.existsInGithubFallback).toBe(false);
+});
+
+test('copilot_instructions is healthy when present in org .github fallback', () => {
+  const result = checkCommunityStandards(['README.md'], {
+    fallbackFiles: ['.github/copilot-instructions.md'],
+    fallbackRepo: 'nitsuah/.github',
+  });
+  const copilot = result.standards.find((s) => s.type === 'copilot_instructions');
+  expect(copilot?.status).toBe('healthy');
+  expect(copilot?.details.existsInRepo).toBe(false);
+  expect(copilot?.details.existsInGithubFallback).toBe(true);
+});
+
+test('flow_tasks_prompt is healthy when present in org .github fallback', () => {
+  const result = checkCommunityStandards(['README.md'], {
+    fallbackFiles: ['.github/prompts/flow-tasks.md'],
+    fallbackRepo: 'nitsuah/.github',
+  });
+  const flowTasks = result.standards.find((s) => s.type === 'flow_tasks_prompt');
+  expect(flowTasks?.status).toBe('healthy');
+  expect(flowTasks?.details.existsInRepo).toBe(false);
+  expect(flowTasks?.details.existsInGithubFallback).toBe(true);
+});
+
+test('handoff_prompt is healthy when present in org .github fallback', () => {
+  const result = checkCommunityStandards(['README.md'], {
+    fallbackFiles: ['.github/prompts/handoff.md'],
+    fallbackRepo: 'nitsuah/.github',
+  });
+  const handoff = result.standards.find((s) => s.type === 'handoff_prompt');
+  expect(handoff?.status).toBe('healthy');
+  expect(handoff?.details.existsInRepo).toBe(false);
+  expect(handoff?.details.existsInGithubFallback).toBe(true);
+});
+
+test('flow_tasks_prompt and handoff_prompt are missing when absent from repo and fallback', () => {
+  const result = checkCommunityStandards(['README.md'], {
+    fallbackFiles: [],
+    fallbackRepo: 'nitsuah/.github',
+  });
+  const flowTasks = result.standards.find((s) => s.type === 'flow_tasks_prompt');
+  const handoff = result.standards.find((s) => s.type === 'handoff_prompt');
+  expect(flowTasks?.status).toBe('missing');
+  expect(flowTasks?.details.existsInRepo).toBe(false);
+  expect(flowTasks?.details.existsInGithubFallback).toBe(false);
+  expect(handoff?.status).toBe('missing');
+  expect(handoff?.details.existsInRepo).toBe(false);
+  expect(handoff?.details.existsInGithubFallback).toBe(false);
+});

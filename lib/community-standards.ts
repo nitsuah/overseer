@@ -27,7 +27,9 @@ export function checkCommunityStandards(
     const fallbackSet = new Set(fallbackFiles);
     const standards: CommunityStandard[] = [];
 
-    const codeOfConductInRepo = lowerFiles.includes('code_of_conduct.md');
+    // CODE_OF_CONDUCT — root or .github/ in repo; root in org .github fallback
+    const codeOfConductInRepo = lowerFiles.includes('code_of_conduct.md') ||
+                                 lowerFiles.includes('.github/code_of_conduct.md');
     const codeOfConductInFallback = fallbackSet.has('code_of_conduct.md');
     const contributingInRepo = lowerFiles.includes('contributing.md') ||
                                lowerFiles.includes('.github/contributing.md') ||
@@ -37,7 +39,9 @@ export function checkCommunityStandards(
                            : lowerFiles.includes('docs/contributing.md') ? 'docs/CONTRIBUTING.md'
                            : null;
     const contributingInFallback = fallbackSet.has('contributing.md');
-    const securityInRepo = lowerFiles.includes('security.md');
+    // SECURITY — root or .github/ in repo; root in org .github fallback
+    const securityInRepo = lowerFiles.includes('security.md') ||
+                           lowerFiles.includes('.github/security.md');
     const securityInFallback = fallbackSet.has('security.md');
 
     // Core community files
@@ -117,28 +121,46 @@ export function checkCommunityStandards(
         }
     });
 
-    // Copilot Instructions — always per-repo, no org fallback
-    const hasCopilotInstructions = lowerFiles.includes('.github/copilot-instructions.md');
+    // Copilot Instructions — per-repo, with org .github fallback
+    const hasCopilotInRepoLocal = lowerFiles.includes('.github/copilot-instructions.md');
+    const hasCopilotInFallback = fallbackSet.has('.github/copilot-instructions.md');
     standards.push({
         type: 'copilot_instructions',
-        status: hasCopilotInstructions ? 'healthy' : 'missing',
-        details: { exists: hasCopilotInstructions }
+        status: hasCopilotInRepoLocal || hasCopilotInFallback ? 'healthy' : 'missing',
+        details: {
+            exists: hasCopilotInRepoLocal || hasCopilotInFallback,
+            existsInRepo: hasCopilotInRepoLocal,
+            existsInGithubFallback: hasCopilotInFallback,
+            fallbackRepo: options.fallbackRepo || null,
+        }
     });
 
-    // FLOW-TASKS agent prompt — always per-repo, no org fallback
-    const hasFlowTasksPrompt = lowerFiles.includes('.github/prompts/flow-tasks.md');
+    // FLOW-TASKS agent prompt — per-repo, with org .github fallback
+    const hasFlowTasksInRepoLocal = lowerFiles.includes('.github/prompts/flow-tasks.md');
+    const hasFlowTasksInFallback = fallbackSet.has('.github/prompts/flow-tasks.md');
     standards.push({
         type: 'flow_tasks_prompt',
-        status: hasFlowTasksPrompt ? 'healthy' : 'missing',
-        details: { exists: hasFlowTasksPrompt }
+        status: hasFlowTasksInRepoLocal || hasFlowTasksInFallback ? 'healthy' : 'missing',
+        details: {
+            exists: hasFlowTasksInRepoLocal || hasFlowTasksInFallback,
+            existsInRepo: hasFlowTasksInRepoLocal,
+            existsInGithubFallback: hasFlowTasksInFallback,
+            fallbackRepo: options.fallbackRepo || null,
+        }
     });
 
-    // HANDOFF agent prompt — always per-repo, no org fallback
-    const hasHandoffPrompt = lowerFiles.includes('.github/prompts/handoff.md');
+    // HANDOFF agent prompt — per-repo, with org .github fallback
+    const hasHandoffInRepoLocal = lowerFiles.includes('.github/prompts/handoff.md');
+    const hasHandoffInFallback = fallbackSet.has('.github/prompts/handoff.md');
     standards.push({
         type: 'handoff_prompt',
-        status: hasHandoffPrompt ? 'healthy' : 'missing',
-        details: { exists: hasHandoffPrompt }
+        status: hasHandoffInRepoLocal || hasHandoffInFallback ? 'healthy' : 'missing',
+        details: {
+            exists: hasHandoffInRepoLocal || hasHandoffInFallback,
+            existsInRepo: hasHandoffInRepoLocal,
+            existsInGithubFallback: hasHandoffInFallback,
+            fallbackRepo: options.fallbackRepo || null,
+        }
     });
 
     // CODEOWNERS — check .github/, root, docs/ in repo; then org .github fallback

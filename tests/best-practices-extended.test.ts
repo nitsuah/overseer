@@ -234,7 +234,24 @@ test('detects Dependabot from config', async () => {
 test('detects missing Dependabot', async () => {
   const octokit = mockOctokitWithBranchError();
   const result = await checkBestPractices('owner', 'repo', octokit, ['README.md']);
-  
+
   const dependabot = result.practices.find((p) => p.type === 'dependabot');
   expect(dependabot?.status).toBe('missing');
+});
+
+test('detects pre-commit hooks from config/.pre-commit-config.yaml', async () => {
+  const octokit = mockOctokitWithBranchError();
+  const result = await checkBestPractices('owner', 'repo', octokit, ['config/.pre-commit-config.yaml']);
+
+  const hooks = result.practices.find((p) => p.type === 'pre_commit_hooks');
+  expect(hooks?.status).toBe('healthy');
+  expect(hooks?.details.exists).toBe(true);
+});
+
+test('detects linting from config/.pylintrc', async () => {
+  const octokit = mockOctokitWithBranchError();
+  const result = await checkBestPractices('owner', 'repo', octokit, ['config/.pylintrc']);
+
+  const linting = result.practices.find((p) => p.type === 'linting');
+  expect(linting?.status).toBe('healthy');
 });

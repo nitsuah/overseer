@@ -143,3 +143,59 @@ test('marks flow_tasks_prompt and handoff_prompt healthy when present in repo (n
   expect(handoff?.status).toBe('healthy');
   expect(handoff?.details.exists).toBe(true);
 });
+
+test('changelog is healthy when at root CHANGELOG.md', () => {
+  const result = checkCommunityStandards(['CHANGELOG.md'], {});
+  const changelog = result.standards.find((s) => s.type === 'changelog');
+  expect(changelog?.status).toBe('healthy');
+  expect(changelog?.details.exists).toBe(true);
+  expect(changelog?.details.foundAt).toBe('CHANGELOG.md');
+});
+
+test('changelog is healthy when at docs/CHANGELOG.md', () => {
+  const result = checkCommunityStandards(['docs/CHANGELOG.md', 'README.md'], {});
+  const changelog = result.standards.find((s) => s.type === 'changelog');
+  expect(changelog?.status).toBe('healthy');
+  expect(changelog?.details.exists).toBe(true);
+  expect(changelog?.details.foundAt).toBe('docs/CHANGELOG.md');
+});
+
+test('changelog is missing when absent entirely', () => {
+  const result = checkCommunityStandards(['README.md'], {});
+  const changelog = result.standards.find((s) => s.type === 'changelog');
+  expect(changelog?.status).toBe('missing');
+  expect(changelog?.details.exists).toBe(false);
+  expect(changelog?.details.foundAt).toBe(null);
+});
+
+test('contributing is healthy when at root CONTRIBUTING.md', () => {
+  const result = checkCommunityStandards(['CONTRIBUTING.md'], {});
+  const contributing = result.standards.find((s) => s.type === 'contributing');
+  expect(contributing?.status).toBe('healthy');
+  expect(contributing?.details.existsInRepo).toBe(true);
+  expect(contributing?.details.foundAt).toBe('CONTRIBUTING.md');
+});
+
+test('contributing is healthy when at .github/CONTRIBUTING.md', () => {
+  const result = checkCommunityStandards(['.github/CONTRIBUTING.md'], {});
+  const contributing = result.standards.find((s) => s.type === 'contributing');
+  expect(contributing?.status).toBe('healthy');
+  expect(contributing?.details.existsInRepo).toBe(true);
+  expect(contributing?.details.foundAt).toBe('.github/CONTRIBUTING.md');
+});
+
+test('contributing is healthy when at docs/CONTRIBUTING.md', () => {
+  const result = checkCommunityStandards(['docs/CONTRIBUTING.md'], {});
+  const contributing = result.standards.find((s) => s.type === 'contributing');
+  expect(contributing?.status).toBe('healthy');
+  expect(contributing?.details.existsInRepo).toBe(true);
+  expect(contributing?.details.foundAt).toBe('docs/CONTRIBUTING.md');
+});
+
+test('contributing is missing when absent from repo and fallback', () => {
+  const result = checkCommunityStandards(['README.md'], { fallbackFiles: [] });
+  const contributing = result.standards.find((s) => s.type === 'contributing');
+  expect(contributing?.status).toBe('missing');
+  expect(contributing?.details.existsInRepo).toBe(false);
+  expect(contributing?.details.foundAt).toBe(null);
+});

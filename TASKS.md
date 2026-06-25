@@ -1,4 +1,4 @@
-## updated: 2026-06-17
+## updated: 2026-06-25
 
 # Tasks
 
@@ -29,11 +29,6 @@
   - Priority: P2
   - Context: agent-board, bb-mcp, nitsuah-io, and overseer share overlapping stacks and could benefit from surfaced cross-repo links.
   - Acceptance Criteria: the dashboard shows inferred or declared connections between related repos and surfaces shared-stack signals; visualized as an interactive 3D graph with filter and click-to-detail interactions.
-
-- [ ] Expose overseer repo intelligence as an MCP server.
-  - Priority: P2
-  - Context: MCP is gaining traction as the standard agent-tool protocol; overseer's health and task data would be valuable to agent clients.
-  - Acceptance Criteria: a minimal MCP server endpoint exposes `get_repo_health` and `list_tasks` tools consumable by any MCP-compatible client, with auth, rate limits, data-freshness docs, and load tests.
 
 ### DB & backend scaling
 

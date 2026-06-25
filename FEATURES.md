@@ -26,11 +26,12 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
 - **Community Standards**: 12 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt
 - **Org-Level Fallback Awareness**: Community standards satisfied solely by the owner's `.github` repo (no repo-local copy) are marked with a distinct "Org" badge and a tooltip naming the source repo, instead of an indistinguishable "Present"
+- **Extended File Location Detection**: Standards detection accepts files found under `docs/` or `config/` subdirectories in addition to the repo root and `.github/`, reducing false-negative health scores for repos that organize their governance files in subdirectories
 
-### 🤖 Cross-Repo Orchestration (Planned)
+### 🤖 Cross-Repo Orchestration
 
-- **Cross-Repo Dependency Mapping**: Infer and display connections between related repos sharing a stack (e.g., agent-board ↔ bb-mcp ↔ overseer)
-- **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution
+- **Cross-Repo Dependency Mapping**: Infer and display connections between related repos sharing a stack (e.g., agent-board ↔ bb-mcp ↔ overseer) _(planned)_
+- **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution _(planned)_
 - **MCP Server**: `POST /api/mcp` — JSON-RPC 2.0 endpoint (MCP spec 2024-11-05) exposing `get_repo_health` (health score, CI, vuln counts, activity) and `list_tasks` (per-repo tasks with optional status filter) to any MCP-compatible agent client; Bearer token auth via `MCP_API_KEY` env var; 60 req/min rate limit; `GET /api/mcp` returns public capability doc
 
 ### 🔄 Agent Prompt Toolkit
@@ -56,6 +57,10 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Provider Circuit Breaker**: Per-provider circuit breaker in `ai-failover.ts` auto-opens on quota/rate-limit errors (30 min backoff) or transient errors (5 min backoff); skips open circuits with logged reopen time; resets on first success — no manual `GEMINI_QUOTA_EXCEEDED` env var needed
 - **Structured Model-Switch Logging**: `MODEL_SWITCHED: <old> → <new>` warning logged whenever Gemini model discovery selects a different model than the configured default (e.g. after a deprecation)
 - **Non-Inferential Health Endpoint**: `GET /api/health` now reports circuit breaker state and configured providers without making inference API calls on every poll; supports `?probe=true` for lightweight provider-reachability checks via list APIs
+- **Centralized Gemini Model Discovery**: Model discovery logic consolidated into a single shared utility; all callers (health endpoint, inference, auto-discovery) use the same code path, eliminating drift between health checks and live inference
+- **Auto-Discovery Fallback**: When the configured Gemini model is unavailable, the system automatically fetches the live model list from the API, tests candidates, and selects the best available alternative without any manual intervention
+- **Model Caching (1-hour TTL)**: Discovered working Gemini models are cached in-memory for 1 hour; repeated requests skip the discovery round-trip until the TTL expires or a model error forces re-discovery
+- **Unified `GEMINI_MODEL_NAME` Env Var**: Single `GEMINI_MODEL_NAME` environment variable controls the Gemini model across all code paths; previously scattered per-call overrides removed
 
 ### 📝 Documentation Management
 
@@ -175,7 +180,6 @@ These ensure the dashboard always has content, even for non-authenticated visito
 - **AI-Assisted Roadmap Management**: Auto-suggest roadmap items from repo health signals; auto-update progress from linked PR/issue state (Q3 2026)
 - **Conversational Interface**: Messenger-style chat panel with repo data as context for natural-language repo-hygiene workflows (Q3 2026)
 - **Cross-Repo Dependency Mapping**: Interactive 3D graph visualizing shared-stack connections across the portfolio (Q3 2026)
-- **MCP Server**: Expose `get_repo_health` and `list_tasks` as MCP tools for any agent client (Q3 2026)
 - **Autonomous Plan Execution**: Agents read ROADMAP.md and TASKS.md, open PRs, and close items end to end (Q4 2026)
 - **Portfolio Intelligence Dashboard**: Cross-repo health roll-up, trend lines, and strategic signal view (Q4 2026)
 - **Mobile-Responsive PWA**: Lightweight PWA packaging and mobile adjustments (Q4 2026)
@@ -198,7 +202,7 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 ## 📅 Last Validated
 
-June 2026 - PMO review; Q2 2026 fully reconciled (PRs #128, #131, #132, #133, #134, #136, #137); PMO Mode and DEV-Flow Handoff moved from Planned to shipped
+2026-06-25 - PMO review; MCP Server marked shipped; org fallback + docs/config/ location detection added; Gemini model discovery centralization, auto-discovery fallback, 1h model cache, unified GEMINI_MODEL_NAME env var added; Planned section pruned of shipped items
 
 ### 📋 Tracked Documentation
 
@@ -290,4 +294,4 @@ Health scores are displayed as letter grades (A-F) with detailed component break
 
 ## 📅 Last Updated
 
-June 2026 - Q2 2026 shipped features added; Planned section updated for Q3
+2026-06-25 - MCP server shipped; Gemini model discovery centralization, auto-discovery fallback, model caching, unified env var added; docs/config/ detection and org fallback awareness documented; Planned section updated

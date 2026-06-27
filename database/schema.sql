@@ -190,3 +190,23 @@ CREATE POLICY "Allow all access to doc_status" ON doc_status FOR ALL USING (true
 CREATE POLICY "Allow all access to features" ON features FOR ALL USING (true);
 CREATE POLICY "Allow all access to best_practices" ON best_practices FOR ALL USING (true);
 CREATE POLICY "Allow all access to community_standards" ON community_standards FOR ALL USING (true);
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  github_id TEXT NOT NULL UNIQUE,
+  github_username TEXT NOT NULL UNIQUE,
+  last_sync_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_users_github_id ON users(github_id);
+CREATE INDEX IF NOT EXISTS idx_users_github_username ON users(github_username);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Policies
+CREATE POLICY "Allow all access to users" ON users FOR ALL USING (true);

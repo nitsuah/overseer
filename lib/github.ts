@@ -64,8 +64,8 @@ export class GitHubClient {
     };
   }
 
-  async listRepos(): Promise<RepoMetadata[]> {
-    const cacheKey = 'repos:list';
+  async listRepos(since?: string): Promise<RepoMetadata[]> {
+    const cacheKey = since ? `repos:list:since:${since}` : 'repos:list';
 
     // Check cache first
     const cached = githubCache.get(cacheKey);
@@ -80,6 +80,7 @@ export class GitHubClient {
         sort: 'updated',
         per_page: 100,
         headers,
+        ...(since && { since }),
       });
 
       const repos = data.map((repo) => ({
@@ -212,15 +213,15 @@ export class GitHubClient {
         headers,
       });
 
-      const etag = responseHeaders.etag;
+      const etag = responseHeaders.etag ? String(responseHeaders.etag) : undefined;
       const branches = data.map((branch) => ({
         name: branch.name,
         protected: branch.protected,
       }));
       if (etag) githubCache.set(cacheKey, branches, etag);
       return branches;
-    } catch (error: any) {
-      if (error.status === 304 && cached) return cached.data as BranchInfo[];
+    } catch (error: unknown) {
+      if (error instanceof Error && 'status' in error && (error as { status?: number }).status === 304 && cached) return cached.data as BranchInfo[];
       throw error;
     }
   }
@@ -240,7 +241,7 @@ export class GitHubClient {
         headers,
       });
 
-      const etag = responseHeaders.etag;
+      const etag = responseHeaders.etag ? String(responseHeaders.etag) : undefined;
       const prs = data.map((pr) => ({
         number: pr.number,
         title: pr.title,
@@ -253,8 +254,8 @@ export class GitHubClient {
       }));
       if (etag) githubCache.set(cacheKey, prs, etag);
       return prs;
-    } catch (error: any) {
-      if (error.status === 304 && cached) return cached.data as PullRequestInfo[];
+    } catch (error: unknown) {
+      if (error instanceof Error && 'status' in error && (error as { status?: number }).status === 304 && cached) return cached.data as PullRequestInfo[];
       throw error;
     }
   }

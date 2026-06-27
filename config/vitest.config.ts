@@ -8,6 +8,8 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         exclude: ['**/node_modules/**', '**/*.spec.ts'],
+        include: ['**/*.test.ts'], // Explicitly include test files
+        dir: '../', // Set test root directory to project root
         alias: {
             '@': path.resolve(__dirname, '../'),
         },

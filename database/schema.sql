@@ -158,7 +158,7 @@ CREATE INDEX IF NOT EXISTS idx_repos_coverage_score ON repos(coverage_score);
 CREATE INDEX IF NOT EXISTS idx_repos_last_commit ON repos(last_commit_date);
 CREATE INDEX IF NOT EXISTS idx_repos_contributor_count ON repos(contributor_count);
 CREATE INDEX IF NOT EXISTS idx_repos_security_policy ON repos(has_security_policy);
-CREATE INDEX IF NOT EXISTS idx_repos_security_last_checked ON repos(security_last_checked);
+CREATE INDEX IF NOT EXISTS idx_repos_name ON repos(name);
 CREATE INDEX IF NOT EXISTS idx_tasks_repo_id ON tasks(repo_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_subsection ON tasks(subsection);

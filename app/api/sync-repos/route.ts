@@ -58,6 +58,18 @@ export async function POST() {
 
         // Start background sync without awaiting to avoid timeout
         (async () => {
+            // Check rate limits before starting
+            try {
+                const rateLimit = await github.getRateLimit();
+                logger.info('Sync-repos: Initial rate limit check', rateLimit);
+                if (rateLimit.remaining < 500) {
+                    logger.warn('Sync-repos: Low rate limit, skipping background sync');
+                    return;
+                }
+            } catch (e) {
+                logger.warn('Sync-repos: Failed to check rate limits, proceeding anyway');
+            }
+
             let successCount = 0;
             let errorCount = 0;
 

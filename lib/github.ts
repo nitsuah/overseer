@@ -51,6 +51,10 @@ export class GitHubClient {
     this.token = token;
   }
 
+  public getOctokit(): Octokit {
+    return this.octokit;
+  }
+
   async getRateLimit(): Promise<{ limit: number; remaining: number; reset: number }> {
     const { data } = await this.octokit.rateLimit.get();
     return {

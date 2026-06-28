@@ -87,6 +87,7 @@ export async function POST() {
             ? (typeof lastSyncAt === 'string' ? lastSyncAt : new Date(lastSyncAt).toISOString())
             : undefined;
 
+        const syncStartTime = new Date().toISOString();
         const repos = shouldDoFullSync || !sinceIso
             ? await github.listRepos()
             : await github.listRepos(sinceIso);
@@ -246,7 +247,7 @@ export async function POST() {
             logger.info(`Background sync process completed: ${successCount}/${totalProcessed} repos processed`);
 
             // Update last_sync_at timestamp
-            await db`UPDATE users SET last_sync_at = NOW() WHERE id = ${userId}`;
+            await db`UPDATE users SET last_sync_at = ${syncStartTime} WHERE id = ${userId}`;
         })().catch(error => logger.error('Background sync failed:', error));
 
         // Return immediately to avoid timeout

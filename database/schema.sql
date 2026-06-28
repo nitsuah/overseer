@@ -204,6 +204,6 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- Policies
 -- Restrict access to authenticated user's own record
-CREATE POLICY "Allow access to own user record" ON users
+CREATE POLICY allow_access_to_own_user_record ON users
 FOR ALL
 USING (github_id = current_setting('app.current_github_id', true));

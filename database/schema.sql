@@ -152,13 +152,11 @@ CREATE TABLE IF NOT EXISTS community_standards (
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_repos_type ON repos(repo_type);
-CREATE INDEX IF NOT EXISTS idx_repos_hidden ON repos(is_hidden);
 CREATE INDEX IF NOT EXISTS idx_repos_health_score ON repos(health_score);
 CREATE INDEX IF NOT EXISTS idx_repos_coverage_score ON repos(coverage_score);
 CREATE INDEX IF NOT EXISTS idx_repos_last_commit ON repos(last_commit_date);
 CREATE INDEX IF NOT EXISTS idx_repos_contributor_count ON repos(contributor_count);
 CREATE INDEX IF NOT EXISTS idx_repos_security_policy ON repos(has_security_policy);
-CREATE INDEX IF NOT EXISTS idx_repos_name ON repos(name);
 CREATE INDEX IF NOT EXISTS idx_tasks_repo_id ON tasks(repo_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_subsection ON tasks(subsection);
@@ -201,12 +199,11 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_users_github_id ON users(github_id);
-CREATE INDEX IF NOT EXISTS idx_users_github_username ON users(github_username);
-
 -- Enable Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- Policies
-CREATE POLICY "Allow all access to users" ON users FOR ALL USING (true);
+-- Restrict access to authenticated user's own record
+CREATE POLICY "Allow access to own user record" ON users
+FOR ALL
+USING (github_id = current_setting('app.current_github_id', true));

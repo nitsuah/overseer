@@ -46,7 +46,7 @@ export async function POST() {
             const { data: user } = await Promise.race([userPromise, timeoutPromise]) as Awaited<ReturnType<typeof octokit.rest.users.getAuthenticated>>;
             githubUsername = user.login;
             githubUserId = user.id;
-            logger.info('Sync-repos: Got GitHub user:', { login: githubUsername, id: githubUserId });
+            logger.info('Sync-repos: Got GitHub user');
         } catch (error) {
             logger.error('Sync-repos: Failed to get GitHub user:', error);
             return NextResponse.json({ error: 'Failed to authenticate with GitHub' }, { status: 401 });

@@ -58,7 +58,7 @@ export async function POST() {
         logger.info('Sync-repos: Fetching repos list...');
         // Get user record or create if not exists (use numeric github_id for stable PK)
         const userRecord = await db.unsafe(
-            `SELECT * FROM users WHERE github_id = $1`, [githubUserId]
+            `SELECT * FROM users WHERE github_id = $1`, [String(githubUserId)]
         );
 
         let userId: string;

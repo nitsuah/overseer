@@ -28,7 +28,15 @@ function isPortAvailable(port) {
 }
 
 async function startServer() {
-  const port = process.env.PORT ? parseInt(process.env.PORT) : await findAvailablePort(DEFAULT_PORT);
+  let port;
+  const envPort = process.env.PORT ? parseInt(process.env.PORT, 10) : NaN;
+
+  if (!isNaN(envPort) && envPort > 0 && envPort < 65536) {
+    port = envPort;
+  } else {
+    port = await findAvailablePort(DEFAULT_PORT);
+  }
+
   console.log(`Starting server on port ${port}`);
 
   const server = spawn('next', ['start', '-p', port], {

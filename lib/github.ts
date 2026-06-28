@@ -55,8 +55,17 @@ export class GitHubClient {
     return this.octokit;
   }
 
-  async listRepos(): Promise<RepoMetadata[]> {
-    const cacheKey = 'repos:list';
+  async getRateLimit(): Promise<{ limit: number; remaining: number; reset: number }> {
+    const { data } = await this.octokit.rateLimit.get();
+    return {
+      limit: data.resources.core.limit,
+      remaining: data.resources.core.remaining,
+      reset: data.resources.core.reset,
+    };
+  }
+
+  async listRepos(since?: string): Promise<RepoMetadata[]> {
+    const cacheKey = since ? `repos:list:since:${since}` : 'repos:list';
 
     // Check cache first
     const cached = githubCache.get(cacheKey);
@@ -71,6 +80,7 @@ export class GitHubClient {
         sort: 'updated',
         per_page: 100,
         headers,
+        ...(since && { since }),
       });
 
       const repos = data.map((repo) => ({
@@ -190,36 +200,64 @@ export class GitHubClient {
   }
 
   async getBranches(repo: string, owner?: string): Promise<BranchInfo[]> {
-    const { data } = await this.octokit.repos.listBranches({
-      owner: owner || this.owner,
-      repo,
-      per_page: 100,
-    });
+    const cacheKey = `branches:${owner || this.owner}/${repo}`;
+    const cached = githubCache.get(cacheKey);
+    const headers: Record<string, string> = {};
+    if (cached?.etag) headers['If-None-Match'] = cached.etag;
 
-    return data.map((branch) => ({
-      name: branch.name,
-      protected: branch.protected,
-    }));
+    try {
+      const { data, headers: responseHeaders } = await this.octokit.repos.listBranches({
+        owner: owner || this.owner,
+        repo,
+        per_page: 100,
+        headers,
+      });
+
+      const etag = responseHeaders.etag ? String(responseHeaders.etag) : undefined;
+      const branches = data.map((branch) => ({
+        name: branch.name,
+        protected: branch.protected,
+      }));
+      if (etag) githubCache.set(cacheKey, branches, etag);
+      return branches;
+    } catch (error: unknown) {
+      if (error instanceof Error && 'status' in error && (error as { status?: number }).status === 304 && cached) return cached.data as BranchInfo[];
+      throw error;
+    }
   }
 
   async getPullRequests(repo: string, owner?: string): Promise<PullRequestInfo[]> {
-    const { data } = await this.octokit.pulls.list({
-      owner: owner || this.owner,
-      repo,
-      state: 'open',
-      per_page: 100,
-    });
+    const cacheKey = `prs:${owner || this.owner}/${repo}`;
+    const cached = githubCache.get(cacheKey);
+    const headers: Record<string, string> = {};
+    if (cached?.etag) headers['If-None-Match'] = cached.etag;
 
-    return data.map((pr) => ({
-      number: pr.number,
-      title: pr.title,
-      state: pr.state as 'open' | 'closed',
-      draft: pr.draft || false,
-      createdAt: pr.created_at,
-      updatedAt: pr.updated_at,
-      user: pr.user?.login || 'unknown',
-      labels: pr.labels.map((label) => (typeof label === 'string' ? label : label.name || '')),
-    }));
+    try {
+      const { data, headers: responseHeaders } = await this.octokit.pulls.list({
+        owner: owner || this.owner,
+        repo,
+        state: 'open',
+        per_page: 100,
+        headers,
+      });
+
+      const etag = responseHeaders.etag ? String(responseHeaders.etag) : undefined;
+      const prs = data.map((pr) => ({
+        number: pr.number,
+        title: pr.title,
+        state: pr.state as 'open' | 'closed',
+        draft: pr.draft || false,
+        createdAt: pr.created_at,
+        updatedAt: pr.updated_at,
+        user: pr.user?.login || 'unknown',
+        labels: pr.labels.map((label) => (typeof label === 'string' ? label : label.name || '')),
+      }));
+      if (etag) githubCache.set(cacheKey, prs, etag);
+      return prs;
+    } catch (error: unknown) {
+      if (error instanceof Error && 'status' in error && (error as { status?: number }).status === 304 && cached) return cached.data as PullRequestInfo[];
+      throw error;
+    }
   }
 
   /**

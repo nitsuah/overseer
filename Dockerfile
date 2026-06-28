@@ -12,6 +12,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY scripts ./scripts
 RUN GITHUB_ID=docker-build-placeholder \
     GITHUB_SECRET=docker-build-placeholder \
     NEXTAUTH_SECRET=docker-build-placeholder \
@@ -22,12 +23,13 @@ RUN GITHUB_ID=docker-build-placeholder \
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=3000
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/config ./config
+COPY --from=builder /app/scripts ./scripts
 
-EXPOSE 3000
-CMD ["npm", "run", "start"]
+EXPOSE 3000-3009
+CMD ["npm", "run", "start:dynamic"]

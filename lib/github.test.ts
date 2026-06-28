@@ -250,6 +250,9 @@ describe('GitHubClient', () => {
                 { name: 'main', protected: true },
                 { name: 'dev', protected: false },
             ],
+            headers: { etag: '"abc123"' },
+            status: 200,
+            url: '',
         });
 
         const branches = await client.getBranches('repo-1');
@@ -273,6 +276,9 @@ describe('GitHubClient', () => {
                     labels: ['docs', { name: 'enhancement' }],
                 },
             ],
+            headers: { etag: '"prs123"' },
+            status: 200,
+            url: '',
         });
 
         const prs = await client.getPullRequests('repo-1');
@@ -563,6 +569,9 @@ describe('GitHubClient', () => {
                     updated_at: '2024-01-01T03:00:00Z',
                 },
             ],
+            headers: { etag: '"prs123"' },
+            status: 200,
+            url: '',
         });
         mockPullsList.mockResolvedValueOnce({ data: [] });
         mockPullsList.mockRejectedValueOnce(new Error('broken'));

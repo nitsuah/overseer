@@ -137,6 +137,9 @@ test('GitHubClient.getBranches returns branch list', async () => {
       { name: 'main', protected: true },
       { name: 'develop', protected: false },
     ],
+    headers: { etag: '"abc123"' },
+    status: 200,
+    url: '',
   });
 
   const branches = await client.getBranches('test-repo');
@@ -164,6 +167,9 @@ test('GitHubClient.getPullRequests returns PR list', async () => {
         labels: [{ name: 'bug' }, { name: 'priority' }],
       },
     ],
+    headers: { etag: '"ghi789"' },
+    status: 200,
+    url: '',
   });
 
   const prs = await client.getPullRequests('test-repo');

@@ -152,13 +152,11 @@ CREATE TABLE IF NOT EXISTS community_standards (
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_repos_type ON repos(repo_type);
-CREATE INDEX IF NOT EXISTS idx_repos_hidden ON repos(is_hidden);
 CREATE INDEX IF NOT EXISTS idx_repos_health_score ON repos(health_score);
 CREATE INDEX IF NOT EXISTS idx_repos_coverage_score ON repos(coverage_score);
 CREATE INDEX IF NOT EXISTS idx_repos_last_commit ON repos(last_commit_date);
 CREATE INDEX IF NOT EXISTS idx_repos_contributor_count ON repos(contributor_count);
 CREATE INDEX IF NOT EXISTS idx_repos_security_policy ON repos(has_security_policy);
-CREATE INDEX IF NOT EXISTS idx_repos_security_last_checked ON repos(security_last_checked);
 CREATE INDEX IF NOT EXISTS idx_tasks_repo_id ON tasks(repo_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_subsection ON tasks(subsection);
@@ -190,3 +188,22 @@ CREATE POLICY "Allow all access to doc_status" ON doc_status FOR ALL USING (true
 CREATE POLICY "Allow all access to features" ON features FOR ALL USING (true);
 CREATE POLICY "Allow all access to best_practices" ON best_practices FOR ALL USING (true);
 CREATE POLICY "Allow all access to community_standards" ON community_standards FOR ALL USING (true);
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  github_id TEXT NOT NULL UNIQUE,
+  github_username TEXT NOT NULL UNIQUE,
+  last_sync_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Policies
+-- Restrict access to authenticated user's own record
+CREATE POLICY allow_access_to_own_user_record ON users
+FOR ALL
+USING (github_id = current_setting('app.current_github_id', true));

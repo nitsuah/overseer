@@ -57,27 +57,22 @@ export async function POST() {
 
         logger.info('Sync-repos: Fetching repos list...');
         // Get user record or create if not exists (use numeric github_id for stable PK)
-        const userRecord = await db.unsafe(
-            `SELECT * FROM users WHERE github_id = $1`, [githubUserId]
-        );
+        const userRecord = await db`SELECT * FROM users WHERE github_id = ${githubUserId}`;
 
         let userId: string;
-        if (userRecord.rows.length === 0) {
-            const newUser = await db.unsafe(
-                `INSERT INTO users (github_id, github_username) VALUES ($1, $2) RETURNING id`,
-                [String(githubUserId), githubUsername]
-            );
-            userId = newUser.rows[0].id;
+        if (userRecord.length === 0) {
+            const newUser = await db`INSERT INTO users (github_id, github_username) VALUES (${String(githubUserId)}, ${githubUsername}) RETURNING id`;
+            userId = newUser[0].id;
         } else {
-            userId = userRecord.rows[0].id;
+            userId = userRecord[0].id;
             // Keep username fresh (user may have changed their handle)
-            if (userRecord.rows[0].github_username !== githubUsername) {
-                await db.unsafe(`UPDATE users SET github_username = $1 WHERE id = $2`, [githubUsername, userId]);
+            if (userRecord[0].github_username !== githubUsername) {
+                await db`UPDATE users SET github_username = ${githubUsername} WHERE id = ${userId}`;
             }
         }
 
         // Check if we should do a full sync or delta sync
-        const lastSyncAt = userRecord.rows[0]?.last_sync_at;
+        const lastSyncAt = userRecord[0]?.last_sync_at;
         const shouldDoFullSync = !lastSyncAt || (new Date().getTime() - new Date(lastSyncAt).getTime()) > 24 * 60 * 60 * 1000; // 24 hours
 
         logger.info(`Sync-repos: Starting sync for ${githubUsername}`, {
@@ -254,9 +249,7 @@ export async function POST() {
             logger.info(`Background sync process completed: ${successCount}/${totalProcessed} repos processed`);
 
             // Update last_sync_at timestamp
-            await db.unsafe(
-                `UPDATE users SET last_sync_at = NOW() WHERE id = $1`, [userId]
-            );
+            await db`UPDATE users SET last_sync_at = NOW() WHERE id = ${userId}`;
         })().catch(error => logger.error('Background sync failed:', error));
 
         // Return immediately to avoid timeout

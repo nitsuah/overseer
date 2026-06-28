@@ -93,23 +93,19 @@ export async function POST() {
         const totalRepos = repos.length + DEFAULT_REPOS.length;
         logger.info(`Sync-repos: Found ${totalRepos} repos to sync`);
 
+        // Check rate limits before starting background sync
+        try {
+            const rateLimit = await github.getRateLimit();
+            if (rateLimit.remaining < RATE_LIMIT_THRESHOLD) {
+                logger.warn(`Sync-repos: Rate limit low (${rateLimit.remaining})`);
+                return NextResponse.json({ error: 'Rate limit low' }, { status: 429 });
+            }
+        } catch (e) {
+            logger.warn('Sync-repos: Failed to check rate limits, proceeding anyway');
+        }
+
         // Start background sync without awaiting to avoid timeout
         (async () => {
-            // Check rate limits before starting
-            try {
-                const rateLimit = await github.getRateLimit();
-                logger.info('Sync-repos: Initial rate limit check', rateLimit);
-                if (rateLimit.remaining < RATE_LIMIT_THRESHOLD) {
-                    const resetMs = rateLimit.reset * 1000 - Date.now();
-                    logger.warn(
-                        `Sync-repos: Rate limit low (${rateLimit.remaining}), skipping. Resets in ${Math.round(resetMs / 1000)}s`
-                    );
-                    return;
-                }
-            } catch (_e) {
-                logger.warn('Sync-repos: Failed to check rate limits, proceeding anyway');
-            }
-
             // Check rate limits periodically during sync
             const checkRateLimit = async () => {
                 try {
@@ -119,6 +115,7 @@ export async function POST() {
                     return Infinity; // Proceed if we can't check
                 }
             };
+
 
             let successCount = 0;
             let errorCount = 0;

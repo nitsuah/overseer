@@ -1,8 +1,8 @@
 // scripts/start-server.js
 // Start the Next.js server on a dynamic port if the default is in use
 
-const { spawn } = require('child_process');
-const net = require('net');
+import { spawn } from 'child_process';
+import net from 'net';
 
 const DEFAULT_PORT = 3000;
 const MAX_PORT_ATTEMPTS = 10;
@@ -28,13 +28,24 @@ function isPortAvailable(port) {
 }
 
 async function startServer() {
-  const port = await findAvailablePort(DEFAULT_PORT);
+  const port = process.env.PORT ? parseInt(process.env.PORT) : await findAvailablePort(DEFAULT_PORT);
   console.log(`Starting server on port ${port}`);
 
   const server = spawn('next', ['start', '-p', port], {
     stdio: 'inherit',
     shell: true,
-    env: { ...process.env, PORT: port }
+    env: { ...process.env, PORT: String(port) }
+  });
+
+  server.on('exit', (code, signal) => {
+    if (code !== 0 && code !== null) {
+      console.error(`Server exited with code ${code}`);
+      process.exit(code);
+    }
+    if (signal) {
+      console.error(`Server killed by signal ${signal}`);
+      process.exit(1);
+    }
   });
 
   server.on('error', (err) => {

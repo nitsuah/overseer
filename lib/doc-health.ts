@@ -155,11 +155,8 @@ function getExpectedDocs(repoType: string): string[] {
             expected = [...base, 'ROADMAP.md'];
             break;
     }
-    // Include docs/ variants for docs that support fallback
-    const withFallback = expected.flatMap(doc =>
-        DOCS_WITH_FALLBACK.has(doc) ? [doc, `docs/${doc}`] : [doc]
-    );
-    return withFallback;
+    // Return only canonical names; calculateDocHealth checks fallback locations
+    return expected;
 }
 
 export function getDocHealthColor(score: number): string {

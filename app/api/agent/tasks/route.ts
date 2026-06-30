@@ -150,7 +150,10 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const sanitizeError = (error: unknown): string =>
   error instanceof Error ? error.message : 'Task execution failed';
 
-const executeTask = async (task: TaskQueueItem): Promise<TaskRecord> => {
+const executeTask = async (task: TaskQueueItem, timeoutMs = 10000): Promise<TaskRecord> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(new Error('Request timed out')), timeoutMs);
+
   // Dispatch agent task to motor-pool's local model runtime (agent-board)
   const motorPoolBaseUrl = process.env.MOTOR_POOL_URL || 'http://localhost:3000';
 
@@ -166,7 +169,10 @@ const executeTask = async (task: TaskQueueItem): Promise<TaskRecord> => {
         priority: task.priority,
         meta: task.meta ?? {},
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!sessionRes.ok) {
       console.warn(`Motor-pool session creation failed (${sessionRes.status}), falling back to simulated execution`);
@@ -176,19 +182,31 @@ const executeTask = async (task: TaskQueueItem): Promise<TaskRecord> => {
     const session = await sessionRes.json();
     const sessionId = session?.session?.id || session?.id || 'unknown';
 
-    // Send the task as a message to the session
-    await fetch(`${motorPoolBaseUrl}/api/sessions/${sessionId}/message`, {
+    if (sessionId === 'unknown') {
+      console.warn('Motor-pool returned an invalid session ID, falling back to simulated execution');
+      return executeTaskSimulated(task);
+    }
+
+    // Send the task as a message to the session - this is required for task delivery
+    const messageRes = await fetch(`${motorPoolBaseUrl}/api/sessions/${sessionId}/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: JSON.stringify({ type: task.type, payload: task.payload }),
       }),
-    }).catch(() => {}); // fire-and-forget message
+      signal: controller.signal,
+    });
+
+    if (!messageRes.ok) {
+      console.warn(`Motor-pool message delivery failed (${messageRes.status}), falling back to simulated execution`);
+      return executeTaskSimulated(task);
+    }
+
+    clearTimeout(timeoutId);
 
     return {
       acknowledgement: `Task dispatched to motor-pool`,
       motorPoolSessionId: sessionId,
-      motorPoolUrl: motorPoolBaseUrl,
       type: task.type,
       priority: task.priority,
       payload: task.payload,
@@ -196,6 +214,7 @@ const executeTask = async (task: TaskQueueItem): Promise<TaskRecord> => {
       executedAt: new Date().toISOString(),
     };
   } catch (error) {
+    clearTimeout(timeoutId);
     console.warn('Motor-pool unavailable, using simulated execution:', error);
     return executeTaskSimulated(task);
   }

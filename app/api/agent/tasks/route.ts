@@ -151,7 +151,57 @@ const sanitizeError = (error: unknown): string =>
   error instanceof Error ? error.message : 'Task execution failed';
 
 const executeTask = async (task: TaskQueueItem): Promise<TaskRecord> => {
-  // Simulated execution pipeline. Replace with real dispatch backends as they land.
+  // Dispatch agent task to motor-pool's local model runtime (agent-board)
+  const motorPoolBaseUrl = process.env.MOTOR_POOL_URL || 'http://localhost:3000';
+
+  try {
+    // Create a session in agent-board for this task
+    const sessionRes = await fetch(`${motorPoolBaseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: `overseer-${task.id}`,
+        type: task.type,
+        payload: task.payload,
+        priority: task.priority,
+        meta: task.meta ?? {},
+      }),
+    });
+
+    if (!sessionRes.ok) {
+      console.warn(`Motor-pool session creation failed (${sessionRes.status}), falling back to simulated execution`);
+      return executeTaskSimulated(task);
+    }
+
+    const session = await sessionRes.json();
+    const sessionId = session?.session?.id || session?.id || 'unknown';
+
+    // Send the task as a message to the session
+    await fetch(`${motorPoolBaseUrl}/api/sessions/${sessionId}/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: JSON.stringify({ type: task.type, payload: task.payload }),
+      }),
+    }).catch(() => {}); // fire-and-forget message
+
+    return {
+      acknowledgement: `Task dispatched to motor-pool`,
+      motorPoolSessionId: sessionId,
+      motorPoolUrl: motorPoolBaseUrl,
+      type: task.type,
+      priority: task.priority,
+      payload: task.payload,
+      meta: task.meta ?? null,
+      executedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.warn('Motor-pool unavailable, using simulated execution:', error);
+    return executeTaskSimulated(task);
+  }
+};
+
+const executeTaskSimulated = async (task: TaskQueueItem): Promise<TaskRecord> => {
   await delay(5);
 
   if (task.type === 'fail') {
@@ -159,7 +209,7 @@ const executeTask = async (task: TaskQueueItem): Promise<TaskRecord> => {
   }
 
   return {
-    acknowledgement: 'Task executed',
+    acknowledgement: 'Task executed (simulated)',
     type: task.type,
     priority: task.priority,
     payload: task.payload,

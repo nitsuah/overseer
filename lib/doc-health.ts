@@ -91,17 +91,15 @@ export function calculateDocHealth(
             .map((d) => d.doc_type.toLowerCase().replace('.md', ''))
     );
 
-    // For each expected doc, check if present (with fallback support)
+    // For each expected doc, check if present (sync checks root, lowercase, and docs/ fallback)
     const missing: string[] = [];
     let presentCount = 0;
 
     for (const expected of expectedDocs) {
         const normalized = expected.toLowerCase().replace('.md', '');
-        // Check direct match or docs/ fallback
         const hasDirect = presentDocs.has(normalized);
-        const hasFallback = DOCS_WITH_FALLBACK.has(expected) && presentDocs.has(`docs/${normalized}`);
 
-        if (hasDirect || hasFallback) {
+        if (hasDirect) {
             presentCount++;
         } else {
             missing.push(normalized);

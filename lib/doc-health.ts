@@ -130,7 +130,7 @@ const DOCS_WITH_FALLBACK = new Set([
 ]);
 
 function getExpectedDocs(repoType: string): string[] {
-    const base = ['README.md', 'FEATURES.md', 'METRICS.md'];
+    const base = ['README.md', 'FEATURES.md', 'METRICS.md', 'CONTRIBUTING.md'];
     let expected: string[];
     switch (repoType) {
         case 'web-app':

@@ -83,43 +83,80 @@ export function calculateDocHealth(
     docStatuses: Array<{ doc_type: string; exists: boolean }>,
     repoType: string
 ): DocHealthInfo {
-    const expectedDocs = getExpectedDocs(repoType).map((doc) => doc.toLowerCase().replace('.md', ''));
-    const presentDocs = docStatuses
-        .filter((d) => d.exists)
-        .map((d) => d.doc_type.toLowerCase().replace('.md', ''));
+    const expectedDocs = getExpectedDocs(repoType);
+    // Normalize present docs for matching (strip .md, lowercase)
+    const presentDocs = new Set(
+        docStatuses
+            .filter((d) => d.exists)
+            .map((d) => d.doc_type.toLowerCase().replace('.md', ''))
+    );
 
-    const missing = expectedDocs.filter((doc) => !presentDocs.includes(doc));
+    // For each expected doc, check if present (with fallback support)
+    const missing: string[] = [];
+    let presentCount = 0;
+
+    for (const expected of expectedDocs) {
+        const normalized = expected.toLowerCase().replace('.md', '');
+        // Check direct match or docs/ fallback
+        const hasDirect = presentDocs.has(normalized);
+        const hasFallback = DOCS_WITH_FALLBACK.has(expected) && presentDocs.has(`docs/${normalized}`);
+
+        if (hasDirect || hasFallback) {
+            presentCount++;
+        } else {
+            missing.push(normalized);
+        }
+    }
 
     const score = expectedDocs.length > 0
-        ? Math.round(((expectedDocs.length - missing.length) / expectedDocs.length) * 100)
+        ? Math.round((presentCount / expectedDocs.length) * 100)
         : 0;
 
     return {
         score,
-        present: expectedDocs.length - missing.length,
+        present: presentCount,
         expected: expectedDocs.length,
         missing,
     };
 }
 
+// Docs that support docs/ subdirectory fallback (synced from root or docs/)
+const DOCS_WITH_FALLBACK = new Set([
+    'ROADMAP.md',
+    'TASKS.md',
+    'FEATURES.md',
+    'CHANGELOG.md',
+    'CONTRIBUTING.md',
+]);
+
 function getExpectedDocs(repoType: string): string[] {
-    const base = ['README.md', 'FEATURES.md', 'METRICS.md'];
+    const base = ['README.md', 'FEATURES.md', 'METRICS.md', 'CONTRIBUTING.md'];
+    let expected: string[];
     switch (repoType) {
         case 'web-app':
-            return [...base, 'ROADMAP.md', 'TASKS.md'];
+            expected = [...base, 'ROADMAP.md', 'TASKS.md'];
+            break;
         case 'game':
-            return [...base, 'ROADMAP.md', 'TASKS.md'];
+            expected = [...base, 'ROADMAP.md', 'TASKS.md'];
+            break;
         case 'library':
-            return [...base, 'CHANGELOG.md'];
+            expected = [...base, 'CHANGELOG.md'];
+            break;
         case 'tool':
-            return [...base, 'ROADMAP.md', 'TASKS.md'];
+            expected = [...base, 'ROADMAP.md', 'TASKS.md'];
+            break;
         case 'bot':
-            return [...base, 'ROADMAP.md', 'TASKS.md'];
+            expected = [...base, 'ROADMAP.md', 'TASKS.md'];
+            break;
         case 'research':
-            return base;
+            expected = base;
+            break;
         default:
-            return [...base, 'ROADMAP.md'];
+            expected = [...base, 'ROADMAP.md'];
+            break;
     }
+    // Return only canonical names; calculateDocHealth checks fallback locations
+    return expected;
 }
 
 export function getDocHealthColor(score: number): string {

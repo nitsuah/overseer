@@ -508,14 +508,13 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             last_checked = EXCLUDED.last_checked
     `;
 
-    // CONTRIBUTING.md (try root, then docs/, then .github/ from the org template)
+    // CONTRIBUTING.md (try root, then .github/, then docs/ — matches community-standards.ts order)
     let contributingContent = await github.getFileContent(repo.name, 'CONTRIBUTING.md', owner);
     if (!contributingContent) {
-        contributingContent = await github.getFileContent(repo.name, 'docs/CONTRIBUTING.md', owner);
+        contributingContent = await github.getFileContent(repo.name, '.github/CONTRIBUTING.md', owner);
     }
     if (!contributingContent) {
-        // Some orgs provide CONTRIBUTING.md via the .github template repo
-        contributingContent = await github.getFileContent(repo.name, '.github/CONTRIBUTING.md', owner);
+        contributingContent = await github.getFileContent(repo.name, 'docs/CONTRIBUTING.md', owner);
     }
     const contributingHealthState = calculateDocHealthState(!!contributingContent, contributingContent, null);
     await db`

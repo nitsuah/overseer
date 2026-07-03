@@ -5,7 +5,6 @@ import { parseTasks } from './parsers/tasks';
 import { parseMetrics } from './parsers/metrics';
 import { parseFeatures } from './parsers/features';
 import { calculateDocHealthState, hashContent, calculateDocHealth } from './doc-health';
-import { detectRepoType } from './repo-type';
 import { checkBestPractices } from './best-practices';
 import { checkCommunityStandards } from './community-standards';
 import { calculateHealthScore } from './health-score';
@@ -509,10 +508,14 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             last_checked = EXCLUDED.last_checked
     `;
 
-    // CONTRIBUTING.md (try root then docs/ subdirectory)
+    // CONTRIBUTING.md (try root, then docs/, then .github/ from the org template)
     let contributingContent = await github.getFileContent(repo.name, 'CONTRIBUTING.md', owner);
     if (!contributingContent) {
         contributingContent = await github.getFileContent(repo.name, 'docs/CONTRIBUTING.md', owner);
+    }
+    if (!contributingContent) {
+        // Some orgs provide CONTRIBUTING.md via the .github template repo
+        contributingContent = await github.getFileContent(repo.name, '.github/CONTRIBUTING.md', owner);
     }
     const contributingHealthState = calculateDocHealthState(!!contributingContent, contributingContent, null);
     await db`
@@ -568,8 +571,8 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         const communityStandards = await db`SELECT * FROM community_standards WHERE repo_id = ${repoId}`;
         const metrics = await db`SELECT * FROM metrics WHERE repo_id = ${repoId}`;
 
-        const repoType = detectRepoType(repo.name, repo.description, repo.language, repo.topics).type;
-        const docHealth = calculateDocHealth(docStatuses, repoType);
+        const docHealth = calculateDocHealth(docStatuses, 'tool');
+
         const coverage = metrics.find((m: { metric_name: string }) => m.metric_name?.toLowerCase().includes('coverage'));
         const hasTests = bestPractices.some((bp: { practice_type: string; status: string }) =>
             bp.practice_type === 'testing_framework' && bp.status === 'healthy'

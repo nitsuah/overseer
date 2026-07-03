@@ -127,34 +127,9 @@ const DOCS_WITH_FALLBACK = new Set([
     'CONTRIBUTING.md',
 ]);
 
-function getExpectedDocs(repoType: string): string[] {
-    const base = ['README.md', 'FEATURES.md', 'METRICS.md', 'CONTRIBUTING.md'];
-    let expected: string[];
-    switch (repoType) {
-        case 'web-app':
-            expected = [...base, 'ROADMAP.md', 'TASKS.md'];
-            break;
-        case 'game':
-            expected = [...base, 'ROADMAP.md', 'TASKS.md'];
-            break;
-        case 'library':
-            expected = [...base, 'CHANGELOG.md'];
-            break;
-        case 'tool':
-            expected = [...base, 'ROADMAP.md', 'TASKS.md'];
-            break;
-        case 'bot':
-            expected = [...base, 'ROADMAP.md', 'TASKS.md'];
-            break;
-        case 'research':
-            expected = base;
-            break;
-        default:
-            expected = [...base, 'ROADMAP.md'];
-            break;
-    }
-    // Return only canonical names; calculateDocHealth checks fallback locations
-    return expected;
+function getExpectedDocs(_repoType: string): string[] {
+    // All repos expect the same core docs: README, ROADMAP, TASKS, FEATURES, METRICS
+    return ['README.md', 'ROADMAP.md', 'TASKS.md', 'FEATURES.md', 'METRICS.md'];
 }
 
 export function getDocHealthColor(score: number): string {

@@ -59,7 +59,7 @@ export function detectRepoType(
         lowerTopics.includes('cli') ||
         lowerTopics.includes('tool') ||
         lowerName === 'kryptos' ||
-        lowerName === 'gcp'
+        lowerName === 'overseer'
     ) {
         return { type: 'tool', icon: '🔧', color: 'orange' };
     }

@@ -90,6 +90,7 @@ export function RepoTableRow({
   const repoType = getRepoType();
 
   const docHealth = details ? calculateDocHealth(details.docStatuses, repoType) : null;
+  console.log(`DEBUG: RepoTableRow - repo=${repo.name}, repoType=${repoType}, docStatuses=${JSON.stringify(details?.docStatuses, null, 2)}, docHealth=${JSON.stringify(docHealth, null, 2)}`);
   const health = getHealthGrade(repo.health_score || 0);
 
   return (

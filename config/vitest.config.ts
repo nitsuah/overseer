@@ -7,7 +7,7 @@ export default defineConfig({
     plugins: [react()],
     test: {
         environment: 'jsdom',
-        exclude: ['**/node_modules/**', '**/*.spec.ts'],
+        exclude: ['**/node_modules/**', '**/*.spec.ts', '**/.claude/**'],
         include: ['**/*.test.{ts,tsx}'],
         // Removed dir: '../' as default root is sufficient
         alias: {

@@ -57,7 +57,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "baseline-browser-mapping": "^2.11.6",
     "dotenv": "^17.4.2",
-    "eslint": "^9.39.4",
+    "eslint": "^10.8.0",
     "eslint-config-next": "16.2.12",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",

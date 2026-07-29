@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, gh-actions ]
+    branches: [main, gh-actions]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read

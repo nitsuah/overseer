@@ -12,7 +12,6 @@ function makeContext(
     language: 'TypeScript',
     practiceType,
     template: '# placeholder template',
-    owner: 'my-owner',
     ...overrides,
   };
 }
@@ -96,15 +95,14 @@ describe('buildPracticePrompt snapshots', () => {
     expect(prompt).toMatchSnapshot();
   });
 
-  it('docker prompt includes platform advice for netlify badge', () => {
+  it('docker prompt generates Dockerfile guidance', () => {
     const prompt = buildPracticePrompt(
       makeContext('docker', {
-        badges: [
-          '[![Netlify Status](https://api.netlify.com/api/v1/badges/abc/deploy-status)](https://app.netlify.com)',
-        ],
+        existingFiles: { 'Dockerfile': 'FROM node:alpine\nWORKDIR /app' },
       })
     );
-    expect(prompt).toContain('Netlify');
+    expect(prompt).toContain('Dockerfile');
+    expect(prompt).toContain('TypeScript');
     expect(prompt).toMatchSnapshot();
   });
 });
@@ -141,5 +139,27 @@ describe('buildPracticePrompt content assertions', () => {
       makeContext('ci_cd', { language: 'Python', packageManagers: ['pip'] })
     );
     expect(prompt).toContain('pytest');
+  });
+
+  it('testing_framework TypeScript mentions Vitest', () => {
+    const prompt = buildPracticePrompt(makeContext('testing_framework'));
+    expect(prompt).toContain('Vitest');
+  });
+
+  it('linting TypeScript mentions eslint.config.mjs', () => {
+    const prompt = buildPracticePrompt(makeContext('linting'));
+    expect(prompt).toContain('eslint.config.mjs');
+  });
+
+  it('docker prompt includes Dockerfile guidance', () => {
+    const prompt = buildPracticePrompt(makeContext('docker'));
+    expect(prompt).toContain('Dockerfile');
+  });
+
+  it('throws for unknown practice type at runtime', () => {
+    const ctx = makeContext('deploy_badge');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ctx as any).practiceType = 'invalid_type';
+    expect(() => buildPracticePrompt(ctx)).toThrow('Unknown practice type: invalid_type');
   });
 });

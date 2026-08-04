@@ -1,4 +1,5 @@
 import type { Octokit } from '@octokit/rest';
+import logger from '@/lib/log';
 
 export async function getContributorStats(
   octokit: Octokit,
@@ -35,7 +36,8 @@ export async function getContributorStats(
       commitFrequency: Math.round(commitFrequency * 10) / 10,
       busFactor,
     };
-  } catch {
+  } catch (error) {
+    logger.warn(`[GitHub] Failed to fetch contributor stats for ${owner}/${repo}:`, error);
     return { contributorCount: 0, commitFrequency: 0, busFactor: 0 };
   }
 }

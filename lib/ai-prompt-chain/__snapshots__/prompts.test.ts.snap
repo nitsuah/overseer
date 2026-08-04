@@ -23,7 +23,6 @@ TASK: Generate .github/workflows/ci.yml that:
 - Runs tests with pytest and coverage
 - Optionally uploads coverage to Codecov
 - Triggers on push/PR to main branch
-
 - Has clear job names and steps
 - Follows modern GitHub Actions best practices (v4 actions)
 - Includes appropriate caching for dependencies
@@ -48,7 +47,6 @@ TEMPLATE:
 # placeholder template
 
 TASK: Generate .github/workflows/ci.yml that:
-
 - Uses actions/setup-node@v4 with Node 18+
 - Optionally tests on multiple Node versions
 - Uses npm ci / yarn / pnpm for dependency install
@@ -140,25 +138,34 @@ TASK: Add deployment badge
 - Return ONLY the modified README content, no explanations"
 `;
 
-exports[`buildPracticePrompt snapshots > docker prompt includes platform advice for netlify badge 1`] = `
-"You are updating a README.md to add or improve a deployment status badge.
+exports[`buildPracticePrompt snapshots > docker prompt generates Dockerfile guidance 1`] = `
+"You are creating or improving a Dockerfile for my-repo.
 
-Constraints:
-- Keep existing badges intact and grouped at the top
-- Use concise alt text ("Deploy Status" or platform name)
-- Ensure the badge links to a real deployment dashboard
+REPO CONTEXT:
+- Name: my-repo
+- Language: TypeScript
+- Package managers: Unknown
 
-Context badges:
-[![Netlify Status](https://api.netlify.com/api/v1/badges/abc/deploy-status)](https://app.netlify.com)
+No build instructions found in README.
 
-Recommended snippet:
-Detected Netlify usage. Prefer the official Netlify deploy status badge:
-[![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-SITE-ID/deploy-status)](https://app.netlify.com/sites/YOUR-SITE-NAME/deploys)
-Replace YOUR-SITE-ID and YOUR-SITE-NAME accordingly.
+EXISTING DOCKERFILE:
+FROM node:alpine
+WORKDIR /app
 
-Placement:
-- Place immediately under the project title, near CI badges for visibility
-"
+
+
+TEMPLATE:
+# placeholder template
+
+TASK: Generate a production-ready Dockerfile that:
+- Uses the appropriate base image for TypeScript
+- Implements multi-stage builds to minimize image size
+- Copies dependency files first for better layer caching
+- Installs only production dependencies
+- Runs as a non-root user
+- Exposes the appropriate port
+- Sets production environment variables
+- Return ONLY the Dockerfile content, no markdown code fences"
 `;
 
 exports[`buildPracticePrompt snapshots > env_template with discovered vars 1`] = `
@@ -223,7 +230,6 @@ TEMPLATE:
 # placeholder template
 
 TASK: Generate linting configuration that:
-
 - Uses ESLint with modern flat config (eslint.config.mjs)
 - Includes TypeScript support if applicable
 - Integrates Prettier for formatting
@@ -259,7 +265,6 @@ TASK: Generate .pre-commit-config.yaml that:
 - Includes pre-commit-hooks repo for general checks
 - Uses stable versions (black 24.x, isort 5.x, flake8 7.x)
 - Sets language_version: python3
-
 - Includes trailing whitespace/line ending checks
 - Includes YAML validation and large file checks
 - Includes security checks (detect-private-key, check-merge-conflict)
@@ -282,7 +287,6 @@ TEMPLATE:
 # placeholder template
 
 TASK: Generate testing configuration that:
-
 - Uses modern framework (Vitest for Vite projects, Jest for others)
 - Includes TypeScript support if applicable
 - Configures test environment (node, jsdom, happy-dom)

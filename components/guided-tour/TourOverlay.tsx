@@ -18,7 +18,7 @@ export function TourOverlay({ highlightRect, stepId, onSkip }: TourOverlayProps)
         aria-label="Skip tour"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
             e.preventDefault();
             onSkip();
           }

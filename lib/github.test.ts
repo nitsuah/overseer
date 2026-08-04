@@ -593,7 +593,7 @@ describe('GitHubClient', () => {
 
         mockRequest.mockImplementation(async (route: string) => {
             if (route.includes('/security-advisories')) {
-                return { data: [] };
+                return { data: [{ ghsa_id: 'GHSA-1234' }] };
             }
             if (route.includes('/dependabot/alerts')) {
                 return { data: [{ id: 1 }] };

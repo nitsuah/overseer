@@ -39,6 +39,12 @@ npm start`;
     const steps = extractBuildSteps(readme);
     expect(steps).toContain('clone the repo');
   });
+
+  it('does not capture when heading text appears inline in prose', () => {
+    const readme = `# Project\nSee ## setup for info about installation.\n## Overview\nMore text.`;
+    const steps = extractBuildSteps(readme);
+    expect(steps).toBe('');
+  });
 });
 
 describe('extractEnvVarMentions', () => {
@@ -59,5 +65,22 @@ describe('extractEnvVarMentions', () => {
     const readme = 'API_KEY is needed. Set API_KEY in your environment.';
     const vars = extractEnvVarMentions(readme);
     expect(vars.filter((v) => v === 'API_KEY')).toHaveLength(1);
+  });
+
+  it('extracts $VAR dollar-sign syntax', () => {
+    const readme = 'Run with $DATABASE_URL set in your shell.';
+    const vars = extractEnvVarMentions(readme);
+    expect(vars).toContain('DATABASE_URL');
+  });
+
+  it('excludes common stopwords to avoid false positives', () => {
+    const readme = 'MIT licensed. Uses JSON and HTTP. TODO: add CI.';
+    const vars = extractEnvVarMentions(readme);
+    expect(vars).not.toContain('TODO');
+    expect(vars).not.toContain('MIT');
+    expect(vars).not.toContain('API');
+    expect(vars).not.toContain('HTTP');
+    expect(vars).not.toContain('JSON');
+    expect(vars).not.toContain('CI');
   });
 });

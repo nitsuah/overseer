@@ -72,7 +72,7 @@ export function mapDocType(input: string): string {
     'linting': 'linting',
     'eslint.config.mjs': 'linting',
   };
-  return mapping[t] || t;
+  return Object.hasOwn(mapping, t) ? mapping[t] : t;
 }
 
 function buildRepoInfo(repo: RepoContext): string {
@@ -177,7 +177,7 @@ Your task:
 1. Define 8-12 key metrics for ${repo.full_name}:
    - Test coverage, test count, CI/CD status
    - Code quality (LOC, complexity, vulnerabilities)
-   - Performance metrics relevant to ${repo.language}
+   - Performance metrics relevant to ${repo.language || 'this'}
    - Build/deployment metrics
 2. Create a metrics table with columns: Metric | Current | Target | Status
 3. Add "How to Update" section with specific commands for ${repo.language}
@@ -396,7 +396,7 @@ ${currentContent(templateContent, '')}
 
 Your task:
 1. Create environment variables appropriate for a ${repo.language || 'unknown language'} project
-2. Based on common patterns for ${repo.language}:
+2. Based on common patterns for ${repo.language || 'unknown language'}:
    - Node.js/TypeScript: PORT, NODE_ENV, DATABASE_URL, API keys
    - Python: FLASK_ENV/DJANGO_SETTINGS, DATABASE_URL, SECRET_KEY
    - Go: PORT, DATABASE_URL, environment flags
@@ -487,7 +487,10 @@ Return the template with MINIMAL changes (placeholders only).${NO_HALLUCINATION_
     }
 
     case 'license': {
-      const createdYear = new Date(repo.created_at).getUTCFullYear();
+      const parsedDate = new Date(repo.created_at);
+      const createdYear = isNaN(parsedDate.getTime())
+        ? new Date().getUTCFullYear()
+        : parsedDate.getUTCFullYear();
       return `You are filling in placeholders in an MIT LICENSE template.
 
 ${repoInfo}
@@ -503,7 +506,7 @@ Your task:
 3. Keep ALL other license text exactly as-is - do not modify the MIT License terms
 4. Do NOT add any extra text, explanations, or markdown formatting
 
-Return ONLY the complete LICENSE file with placeholders filled in.`;
+Return ONLY the complete LICENSE file with placeholders filled in.${NO_HALLUCINATION_CONSTRAINT}`;
     }
 
     case 'ci_cd':
@@ -617,6 +620,7 @@ function cleanAIResponse(raw: string, original: string): string {
   let cleaned = raw.replace(/\r\n/g, '\n').trim();
   cleaned = cleaned.replace(/^```[\w]*\s*\n/, '');
   cleaned = cleaned.replace(/\n```\s*$/, '');
+  cleaned = cleaned.replace(/^```[\w]*\s*$/, ''); // strip orphaned fence marker
   return cleaned.trim() || original;
 }
 

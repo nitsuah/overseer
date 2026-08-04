@@ -20,6 +20,10 @@ export function buildPracticePrompt(context: EnrichedContext): string {
       return buildTestingFrameworkPrompt(context);
     case 'linting':
       return buildLintingPrompt(context);
+    default: {
+      const unreachable: never = context.practiceType;
+      throw new Error(`Unknown practice type: ${unreachable}`);
+    }
   }
 }
 
@@ -83,7 +87,7 @@ REPO CONTEXT:
 ${context.badges && context.badges.length > 0 ? `EXISTING BADGES:\n${context.badges.join('\n')}` : 'No existing badges found.'}
 
 CURRENT README:
-${context.readme}
+${context.readme?.slice(0, 500)}${(context.readme?.length ?? 0) > 500 ? '\n...(truncated)' : ''}
 
 GUIDANCE:
 ${
@@ -95,7 +99,7 @@ ${
 }
 
 EXAMPLES:
-${hasCIWorkflow ? `- GitHub Actions: [![CI](https://github.com/${context.owner || 'OWNER'}/${context.repoName}/actions/workflows/${workflows[0]?.split('/').pop() || 'ci.yml'}/badge.svg)](https://github.com/${context.owner || 'OWNER'}/${context.repoName}/actions)` : ''}
+${hasCIWorkflow ? `- GitHub Actions: [![CI](https://github.com/${context.repoOwner || 'OWNER'}/${context.repoName}/actions/workflows/${workflows[0]?.split('/').pop() || 'ci.yml'}/badge.svg)](https://github.com/${context.repoOwner || 'OWNER'}/${context.repoName}/actions)` : ''}
 ${hasNetlify ? `- Netlify: [![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-SITE-ID/deploy-status)](https://app.netlify.com/sites/YOUR-SITE-NAME/deploys)` : ''}
 ${hasVercel ? `- Vercel: [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/YOUR-PROJECT)` : ''}
 
@@ -130,48 +134,36 @@ TASK: Create a comprehensive .env.example that:
 }
 
 function buildDockerPrompt(context: EnrichedContext): string {
-  const badges = context.badges || [];
-  const hasNetlify = badges.some((b) => /api\.netlify\.com\/api\/v1\/badges\//i.test(b));
-  const hasVercel = badges.some(
-    (b) =>
-      /img\.shields\.io\/badge\/Deployed%20on-Vercel/i.test(b) ||
-      /vercel\.com\/(?:button|deploy)/i.test(b)
-  );
-  const hasGHActions = badges.some((b) =>
-    /github\.com\/.+?\/actions\/workflows\/.+?\.yml\/badge\.svg/i.test(b)
-  );
+  const existingDockerfile = context.existingFiles?.['Dockerfile'];
+  const existingCompose = context.existingFiles?.['docker-compose.yml'];
+  const existingDockerignore = context.existingFiles?.['.dockerignore'];
+  const hasBuildSteps = context.buildSteps && context.buildSteps.trim().length > 0;
 
-  const platformAdvice = hasNetlify
-    ? `Detected Netlify usage. Prefer the official Netlify deploy status badge:
-[![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-SITE-ID/deploy-status)](https://app.netlify.com/sites/YOUR-SITE-NAME/deploys)
-Replace YOUR-SITE-ID and YOUR-SITE-NAME accordingly.`
-    : hasVercel
-      ? `Detected Vercel usage. Prefer a clear deployed-on badge:
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/YOUR-PROJECT)
-Link to your Vercel project/dashboard.`
-      : hasGHActions
-        ? `Detected GitHub Actions. If you have a deploy workflow, expose its badge:
-[![Deploy Status](https://github.com/OWNER/REPO/actions/workflows/deploy.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/deploy.yml)
-Replace OWNER/REPO and ensure workflow file is deploy.yml.`
-        : `No platform detected. Use a platform-agnostic badge and link it to your deploy dashboard:
-[![Deploy Status](https://img.shields.io/badge/Deploy-Status-blue?style=for-the-badge)](DEPLOYMENT_URL_HERE)`;
+  return `You are creating or improving a Dockerfile for ${context.repoName}.
 
-  return `You are updating a README.md to add or improve a deployment status badge.
+REPO CONTEXT:
+- Name: ${context.repoName}
+- Language: ${context.language || 'Unknown'}
+- Package managers: ${context.packageManagers?.join(', ') || 'Unknown'}
 
-Constraints:
-- Keep existing badges intact and grouped at the top
-- Use concise alt text ("Deploy Status" or platform name)
-- Ensure the badge links to a real deployment dashboard
+${hasBuildSteps ? `BUILD INSTRUCTIONS FROM README:\n${context.buildSteps}` : 'No build instructions found in README.'}
 
-Context badges:
-${badges.length ? badges.join('\n') : 'No existing badges found.'}
+${existingDockerfile ? `EXISTING DOCKERFILE:\n${existingDockerfile}` : 'No existing Dockerfile.'}
+${existingCompose ? `\nEXISTING DOCKER-COMPOSE:\n${existingCompose}` : ''}
+${existingDockerignore ? `\nEXISTING .DOCKERIGNORE:\n${existingDockerignore}` : ''}
 
-Recommended snippet:
-${platformAdvice}
+TEMPLATE:
+${context.template}
 
-Placement:
-- Place immediately under the project title, near CI badges for visibility
-`;
+TASK: Generate a production-ready Dockerfile that:
+- Uses the appropriate base image for ${context.language || 'the project'}
+- Implements multi-stage builds to minimize image size
+- Copies dependency files first for better layer caching
+- Installs only production dependencies
+- Runs as a non-root user
+- Exposes the appropriate port
+- Sets production environment variables
+- Return ONLY the Dockerfile content, no markdown code fences`;
 }
 
 function buildDependabotPrompt(context: EnrichedContext): string {
@@ -224,18 +216,18 @@ ${
 - Runs tests with pytest and coverage
 - Optionally uploads coverage to Codecov
 - Triggers on push/PR to main branch`
-    : ''
-}
-${
-  isJS
-    ? `- Uses actions/setup-node@v4 with Node 18+
+    : isJS
+      ? `- Uses actions/setup-node@v4 with Node 18+
 - Optionally tests on multiple Node versions
 - Uses npm ci / yarn / pnpm for dependency install
 - Runs type checking if TypeScript
 - Runs linting (ESLint)
 - Runs tests with coverage
 - Triggers on push/PR to main branch`
-    : ''
+      : `- Uses the appropriate setup action for ${context.language || 'the detected language'}
+- Installs dependencies using ${context.packageManagers?.join(' or ') || 'the standard package manager'}
+- Runs linting, testing, and build steps appropriate for ${context.language || 'the project'}
+- Triggers on push/PR to main branch`
 }
 - Has clear job names and steps
 - Follows modern GitHub Actions best practices (v4 actions)
@@ -294,17 +286,15 @@ ${
 - Includes pre-commit-hooks repo for general checks
 - Uses stable versions (black 24.x, isort 5.x, flake8 7.x)
 - Sets language_version: python3`
-    : ''
-}
-${
-  isJS
-    ? `- Uses JavaScript/TypeScript hooks:
+    : isJS
+      ? `- Uses JavaScript/TypeScript hooks:
   * prettier (formatting)
   * eslint (linting)
   * type checking if TypeScript
 - Can use husky + lint-staged as alternative
 - Uses stable versions`
-    : ''
+      : `- Includes hooks appropriate for ${context.language || 'the project language'} using standard ecosystem formatters and linters
+- Uses stable versions`
 }
 - Includes trailing whitespace/line ending checks
 - Includes YAML validation and large file checks
@@ -341,16 +331,14 @@ ${
   * Minimum coverage threshold (80%)
 - Set testpaths = tests
 - Configure coverage report with term-missing`
-    : ''
-}
-${
-  isJS
-    ? `- Uses modern framework (Vitest for Vite projects, Jest for others)
+    : isJS
+      ? `- Uses modern framework (Vitest for Vite projects, Jest for others)
 - Includes TypeScript support if applicable
 - Configures test environment (node, jsdom, happy-dom)
 - Enables globals for cleaner test syntax
 - Sets up coverage reporting`
-    : ''
+      : `- Uses the standard testing framework for ${context.language || 'the project language'}
+- Configures test discovery, coverage reporting, and appropriate thresholds`
 }
 - Includes basic configuration
 - Sets up test directory structure expectations
@@ -387,16 +375,14 @@ ${
     - profile = "black"
 - Alternative: .flake8 config if project uses flake8
 - Exclude: .venv, venv, __pycache__, dist, build`
-    : ''
-}
-${
-  isJS
-    ? `- Uses ESLint with modern flat config (eslint.config.mjs)
+    : isJS
+      ? `- Uses ESLint with modern flat config (eslint.config.mjs)
 - Includes TypeScript support if applicable
 - Integrates Prettier for formatting
 - Enables recommended rules
 - Ignores: node_modules, dist, build, .next`
-    : ''
+      : `- Uses the standard linter for ${context.language || 'the project language'} with sensible defaults
+- Configures ignore patterns and recommended rules`
 }
 - Uses sensible defaults
 - Enables recommended rules for the language

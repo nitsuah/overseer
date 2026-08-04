@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { TourStep } from './tour-steps';
 
@@ -34,11 +34,19 @@ export function TourTooltip({
   onPauseAutoAdvance,
 }: TourTooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const titleId = `tour-step-title-${currentStep}`;
+
+  useEffect(() => {
+    tooltipRef.current?.focus();
+  }, [currentStep]);
 
   return (
     <div
       ref={tooltipRef}
-      className="absolute bg-slate-900 border-2 border-blue-400 rounded-lg shadow-[0_0_40px_rgba(59,130,246,0.4)] p-6 w-[400px] z-[10000]"
+      role="dialog"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+      className="absolute bg-slate-900 border-2 border-blue-400 rounded-lg shadow-[0_0_40px_rgba(59,130,246,0.4)] p-6 w-[400px] z-[10000] focus:outline-none"
       style={{ top: position.top, left: position.left }}
     >
       <button
@@ -74,7 +82,7 @@ export function TourTooltip({
         )}
       </div>
 
-      <h3 className="text-xl font-semibold text-slate-100 mb-3">{step.title}</h3>
+      <h3 id={titleId} className="text-xl font-semibold text-slate-100 mb-3">{step.title}</h3>
       <p className="text-slate-300 mb-6 leading-relaxed">{step.description}</p>
 
       <div className="flex items-center justify-between">

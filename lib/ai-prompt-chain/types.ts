@@ -26,5 +26,4 @@ export interface EnrichedContext extends PromptChainContext {
   buildSteps?: string;
   badges?: string[];
   fileList?: string[];
-  owner?: string;
 }

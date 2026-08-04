@@ -1,5 +1,6 @@
 import type { Octokit } from '@octokit/rest';
 import { githubCache } from '@/lib/github-cache';
+import logger from '@/lib/log';
 import type { PullRequestInfo } from './types';
 
 export async function getPullRequests(
@@ -106,7 +107,8 @@ export async function getPullRequestReadiness(
     }
 
     return { readyCount, blockedCount };
-  } catch {
+  } catch (error) {
+    logger.warn(`[GitHub] Failed to fetch PR readiness for ${owner}/${repo}:`, error);
     return { readyCount: 0, blockedCount: 0 };
   }
 }
@@ -137,7 +139,8 @@ export async function getPullRequestStats(
 
     const avg = mergeTimes.reduce((sum, t) => sum + t, 0) / mergeTimes.length;
     return { avgMergeTimeHours: Math.round(avg * 10) / 10 };
-  } catch {
+  } catch (error) {
+    logger.warn(`[GitHub] Failed to fetch PR stats for ${owner}/${repo}:`, error);
     return { avgMergeTimeHours: 0 };
   }
 }
@@ -193,7 +196,7 @@ export async function createPrForFiles(
   message: string
 ): Promise<string> {
   const { data: repoData } = await octokit.repos.get({ owner, repo });
-  console.log('[createPrForFiles] Repo status:', {
+  logger.debug('[createPrForFiles] Repo status', {
     archived: repoData.archived,
     disabled: repoData.disabled,
     permissions: repoData.permissions,
@@ -212,13 +215,13 @@ export async function createPrForFiles(
   const sha = refData.object.sha;
 
   const refToCreate = `refs/heads/${branchName}`;
-  console.log('[createPrForFiles] Creating branch with ref:', refToCreate);
+  logger.debug('[createPrForFiles] Creating branch', { ref: refToCreate });
   try {
     const createResult = await octokit.git.createRef({ owner, repo, ref: refToCreate, sha });
-    console.log('[createPrForFiles] Branch created successfully:', createResult.data.ref);
+    logger.debug('[createPrForFiles] Branch created', { ref: createResult.data.ref });
   } catch (error: unknown) {
     const err = error as { message?: string; status?: number };
-    console.error('[createPrForFiles] Failed to create initial branch:', {
+    logger.error('[createPrForFiles] Failed to create branch', {
       error: err.message,
       status: err.status,
       branchName,
@@ -230,7 +233,7 @@ export async function createPrForFiles(
 
   await new Promise((resolve) => setTimeout(resolve, 500));
 
-  console.log('[createPrForFiles] Writing files to branch via Contents API');
+  logger.debug('[createPrForFiles] Writing files to branch via Contents API');
   for (const file of files) {
     const normalizedPath = file.path.replace(/^\/+/, '').replace(/\\/g, '/');
     let existingSha: string | undefined = undefined;
@@ -243,14 +246,14 @@ export async function createPrForFiles(
       });
       if (!Array.isArray(existing) && (existing as { sha?: string }).sha) {
         existingSha = (existing as { sha: string }).sha;
-        console.log('[createPrForFiles] Existing file found on branch:', normalizedPath, existingSha);
+        logger.debug('[createPrForFiles] Existing file found on branch', { path: normalizedPath, sha: existingSha });
       }
     } catch (getErr: unknown) {
       const err = getErr as { status?: number };
       if (err.status !== 404) {
-        console.warn('[createPrForFiles] getContent warning:', normalizedPath, getErr);
+        logger.warn('[createPrForFiles] getContent warning', { path: normalizedPath, error: getErr });
       } else {
-        console.log('[createPrForFiles] File does not exist on branch, will create:', normalizedPath);
+        logger.debug('[createPrForFiles] File does not exist on branch, will create', { path: normalizedPath });
       }
     }
 
@@ -265,12 +268,7 @@ export async function createPrForFiles(
       branch: branchName,
       sha: existingSha,
     });
-    console.log(
-      '[createPrForFiles] Wrote file via contents API:',
-      normalizedPath,
-      'commit:',
-      writeResult.commit?.sha
-    );
+    logger.debug('[createPrForFiles] Wrote file', { path: normalizedPath, commit: writeResult.commit?.sha });
   }
 
   const messageParts = message.split('\n\n');

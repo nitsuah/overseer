@@ -28,19 +28,14 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       setCountdown(3);
 
       countdownIntervalRef.current = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
+        setCountdown((prev) => Math.max(0, prev - 1));
       }, 1000);
 
       autoAdvanceTimerRef.current = setTimeout(() => {
+        if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
         setCurrentStep((prev) => prev + 1);
         setIsAutoAdvancing(false);
-        if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
       }, 3000);
     }
   }, [isFirstStep, isLastStep]);
@@ -100,7 +95,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     setTooltipPosition({ top, left });
   }, [step.target, step.id, step.position]);
 
-  const clickAndWait = (selector: string, delay: number, then: () => void) => {
+  const clickAndWait = (selector: string, delay: number, then: () => void): boolean => {
     const el = document.querySelector(selector) as HTMLElement | null;
     if (el) {
       el.click();
@@ -235,7 +230,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
           return;
         }
       }
-      updateHighlight();
+      updateHighlight();  
       startAutoAdvance();
       return;
     }
@@ -252,11 +247,11 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     }
 
     if (step.id === 'profile-close') {
-      updateHighlight();
+      updateHighlight();  
       return;
     }
 
-    updateHighlight();
+    updateHighlight();  
     startAutoAdvance();
 
     window.addEventListener('resize', updateHighlight);
@@ -266,7 +261,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     };
   }, [currentStep, step.id, updateHighlight, startAutoAdvance, clearTimers]);
 
-  const handleNext = () => {
+  const handleNext = (): void => {
     clearTimers();
     setIsAutoAdvancing(false);
     if (isLastStep) {
@@ -281,13 +276,13 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = (): void => {
     clearTimers();
     setIsAutoAdvancing(false);
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
 
-  const handlePauseAutoAdvance = () => {
+  const handlePauseAutoAdvance = (): void => {
     clearTimers();
     setIsAutoAdvancing(false);
   };

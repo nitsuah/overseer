@@ -85,6 +85,21 @@ describe('buildEnrichmentPrompt', () => {
     expect(prompt).toContain('@acme');
   });
 
+  it.each([
+    'code_of_conduct', 'bug_report', 'feature_request', 'dockerfile',
+    'env_example', 'gitignore', 'pre_commit_hooks', 'testing_framework', 'linting',
+  ])('returns non-null prompt for type "%s"', (docType) => {
+    const result = buildEnrichmentPrompt(docType, '# placeholder', repo);
+    expect(result).not.toBeNull();
+  });
+
+  it('handles null language and empty topics without rendering "null"', () => {
+    const nullLangRepo = { ...repo, language: null, topics: [] };
+    const prompt = buildEnrichmentPrompt('metrics', '', nullLangRepo);
+    expect(prompt).not.toContain('relevant to null');
+    expect(prompt).not.toContain('patterns for null');
+  });
+
   it('snapshot: roadmap prompt', () => {
     const prompt = buildEnrichmentPrompt('roadmap', '# Roadmap\n## TODO', repo);
     expect(prompt).toMatchSnapshot();
@@ -141,5 +156,17 @@ describe('enrichTemplateWithAI', () => {
     const result = await enrichTemplateWithAI('readme', '', repo);
     expect(result).not.toContain('\r\n');
     expect(result).toContain('line1\nline2');
+  });
+
+  it('falls back to original when AI returns empty fenced block', async () => {
+    vi.mocked(generateAIContent).mockResolvedValue('```markdown\n```');
+    const result = await enrichTemplateWithAI('readme', '# Original', repo);
+    expect(result).toBe('# Original');
+  });
+
+  it('falls back to original when AI returns empty string', async () => {
+    vi.mocked(generateAIContent).mockResolvedValue('');
+    const result = await enrichTemplateWithAI('readme', '# Original', repo);
+    expect(result).toBe('# Original');
   });
 });

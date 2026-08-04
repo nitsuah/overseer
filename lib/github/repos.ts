@@ -3,6 +3,46 @@ import { githubCache } from '@/lib/github-cache';
 import logger from '@/lib/log';
 import type { RepoMetadata, BranchInfo } from './types';
 
+interface RepoDataInput {
+  name: string;
+  full_name: string;
+  description: string | null | undefined;
+  language: string | null | undefined;
+  stargazers_count: number;
+  forks_count: number;
+  open_issues_count: number;
+  default_branch: string;
+  html_url: string;
+  homepage: string | null | undefined;
+  topics?: string[];
+  created_at: string | null | undefined;
+  updated_at: string | null | undefined;
+  pushed_at: string | null | undefined;
+  fork: boolean;
+  archived: boolean;
+}
+
+function mapRepo(data: RepoDataInput): RepoMetadata {
+  return {
+    name: data.name,
+    fullName: data.full_name,
+    description: data.description ?? null,
+    language: data.language ?? null,
+    stars: data.stargazers_count,
+    forks: data.forks_count,
+    openIssues: data.open_issues_count,
+    defaultBranch: data.default_branch,
+    url: data.html_url,
+    homepage: data.homepage ?? null,
+    topics: data.topics || [],
+    createdAt: data.created_at || new Date().toISOString(),
+    updatedAt: data.updated_at || new Date().toISOString(),
+    pushedAt: data.pushed_at || new Date().toISOString(),
+    isFork: data.fork || false,
+    archived: data.archived || false,
+  };
+}
+
 export async function listRepos(octokit: Octokit, since?: string): Promise<RepoMetadata[]> {
   const cacheKey = since ? `repos:list:since:${since}` : 'repos:list';
   const cached = githubCache.get(cacheKey);
@@ -17,24 +57,7 @@ export async function listRepos(octokit: Octokit, since?: string): Promise<RepoM
       ...(since && { since }),
     });
 
-    const repos = data.map((repo) => ({
-      name: repo.name,
-      fullName: repo.full_name,
-      description: repo.description,
-      language: repo.language,
-      stars: repo.stargazers_count,
-      forks: repo.forks_count,
-      openIssues: repo.open_issues_count,
-      defaultBranch: repo.default_branch,
-      url: repo.html_url,
-      homepage: repo.homepage,
-      topics: repo.topics || [],
-      createdAt: repo.created_at || new Date().toISOString(),
-      updatedAt: repo.updated_at || new Date().toISOString(),
-      pushedAt: repo.pushed_at || new Date().toISOString(),
-      isFork: repo.fork || false,
-      archived: repo.archived || false,
-    }));
+    const repos = data.map(mapRepo);
 
     const etag = responseHeaders.etag;
     if (etag) githubCache.set(cacheKey, repos, etag);
@@ -51,24 +74,7 @@ export async function listRepos(octokit: Octokit, since?: string): Promise<RepoM
 
 export async function getRepo(octokit: Octokit, owner: string, repo: string): Promise<RepoMetadata> {
   const { data } = await octokit.repos.get({ owner, repo });
-  return {
-    name: data.name,
-    fullName: data.full_name,
-    description: data.description,
-    language: data.language,
-    stars: data.stargazers_count,
-    forks: data.forks_count,
-    openIssues: data.open_issues_count,
-    defaultBranch: data.default_branch,
-    url: data.html_url,
-    homepage: data.homepage,
-    topics: data.topics || [],
-    createdAt: data.created_at || new Date().toISOString(),
-    updatedAt: data.updated_at || new Date().toISOString(),
-    pushedAt: data.pushed_at || new Date().toISOString(),
-    isFork: data.fork || false,
-    archived: data.archived || false,
-  };
+  return mapRepo(data);
 }
 
 export async function getFileContent(
@@ -91,6 +97,9 @@ export async function getFileContent(
     });
 
     if ('content' in data && data.type === 'file') {
+      if ('encoding' in data && data.encoding === 'none') {
+        return null; // File too large to fetch via contents API
+      }
       const content = Buffer.from(data.content, 'base64').toString('utf-8');
       const etag = responseHeaders.etag;
       if (etag) githubCache.set(cacheKey, content, etag);
@@ -215,8 +224,15 @@ export async function getWorkflowRuns(
       return { status: 'unknown', lastRun: null, workflowName: null };
     }
     const latestRun = data.workflow_runs[0];
+    const conclusion = latestRun.conclusion;
+    const neutralConclusions = ['cancelled', 'skipped', 'neutral', 'timed_out', 'action_required'];
+    const status = conclusion === 'success'
+      ? 'passing'
+      : neutralConclusions.includes(conclusion || '')
+        ? 'unknown'
+        : 'failing';
     return {
-      status: latestRun.conclusion === 'success' ? 'passing' : 'failing',
+      status,
       lastRun: latestRun.updated_at || latestRun.created_at,
       workflowName: latestRun.name || null,
     };

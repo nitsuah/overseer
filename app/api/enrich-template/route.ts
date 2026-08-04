@@ -12,10 +12,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    let body: { repoName?: unknown; docType?: unknown; templateContent?: unknown };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
     const { repoName, docType, templateContent } = body;
 
-    if (!repoName || !docType || !templateContent) {
+    if (
+      typeof repoName !== 'string' || !repoName ||
+      typeof docType !== 'string' || !docType ||
+      typeof templateContent !== 'string' || !templateContent
+    ) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 

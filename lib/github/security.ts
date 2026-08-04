@@ -1,4 +1,5 @@
 import type { Octokit } from '@octokit/rest';
+import logger from '@/lib/log';
 
 export async function getVulnerabilityAlerts(
   octokit: Octokit,
@@ -66,12 +67,12 @@ export async function getSecurityConfig(
 
     let hasSecurityAdvisories = false;
     try {
-      await octokit.request('GET /repos/{owner}/{repo}/security-advisories', {
+      const { data: advisories } = await octokit.request('GET /repos/{owner}/{repo}/security-advisories', {
         owner,
         repo,
         per_page: 1,
       });
-      hasSecurityAdvisories = true;
+      hasSecurityAdvisories = Array.isArray(advisories) && advisories.length > 0;
     } catch {
       // Not enabled or no permission
     }
@@ -145,7 +146,7 @@ export async function getSecurityConfig(
       secretScanningAlertCount,
     };
   } catch (error) {
-    console.error(`Error fetching security config for ${repo}:`, error);
+    logger.error(`[GitHub] Failed to fetch security config for ${repo}:`, error);
     return defaultResponse;
   }
 }

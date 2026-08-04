@@ -5,32 +5,39 @@ export function extractBadges(readme: string): string[] {
 
 export function extractBuildSteps(readme: string): string {
   const sections = ['installation', 'getting started', 'setup', 'building', 'development'];
-  const lines = readme.toLowerCase().split('\n');
+  const lines = readme.split('\n');
   let capturing = false;
   const steps: string[] = [];
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (sections.some((s) => line.includes(`## ${s}`) || line.includes(`### ${s}`))) {
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    if (sections.some((s) => lower === `## ${s}` || lower === `### ${s}`)) {
       capturing = true;
       continue;
     }
     if (capturing && (line.startsWith('## ') || line.startsWith('### '))) break;
-    if (capturing) steps.push(readme.split('\n')[i]);
+    if (capturing) steps.push(line);
   }
 
   return steps.join('\n');
 }
 
-export function extractEnvVarMentions(readme: string): string[] {
-  const envVarRegex = /\b[A-Z][A-Z0-9_]+\b|process\.env\.([A-Z_]+)|\$([A-Z_]+)/g;
-  const matches = readme.match(envVarRegex) || [];
+const ENV_VAR_STOPWORDS = new Set([
+  'TODO', 'NOTE', 'API', 'HTTP', 'HTTPS', 'JSON', 'MIT', 'CI', 'CD', 'README',
+  'URL', 'URI', 'ID', 'OK', 'EOF', 'NULL', 'TRUE', 'FALSE', 'OR', 'AND',
+]);
 
+export function extractEnvVarMentions(readme: string): string[] {
+  const envVarRegex = /process\.env\.([A-Z_][A-Z0-9_]*)|\$([A-Z_][A-Z0-9_]*)\b|\b([A-Z][A-Z0-9_]{2,})\b/g;
   const vars = new Set<string>();
-  matches.forEach((match) => {
-    const cleaned = match.replaceAll('process.env.', '').replaceAll('$', '');
-    if (cleaned.length > 1 && /^[A-Z]/.test(cleaned)) vars.add(cleaned);
-  });
+
+  let match: RegExpExecArray | null;
+  while ((match = envVarRegex.exec(readme)) !== null) {
+    const name = match[1] || match[2] || match[3];
+    if (name && !ENV_VAR_STOPWORDS.has(name)) {
+      vars.add(name);
+    }
+  }
 
   return Array.from(vars);
 }

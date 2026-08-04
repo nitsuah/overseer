@@ -1,4 +1,5 @@
 import { GitHubClient } from '@/lib/github';
+import logger from '@/lib/log';
 import { extractBadges, extractBuildSteps, extractEnvVarMentions } from './extractors';
 import type { BestPracticeType, PromptChainContext, EnrichedContext } from './types';
 
@@ -34,7 +35,7 @@ export async function detectPackageManagers(
     }
   }
 
-  console.log(`[detectPackageManagers] Detected: ${managers.join(', ') || 'none'}`);
+  logger.debug('[detectPackageManagers] Detected managers', { managers });
   return managers;
 }
 
@@ -45,9 +46,9 @@ export async function fetchRepoContext(
   githubToken?: string
 ): Promise<Partial<EnrichedContext>> {
   const client = new GitHubClient(githubToken || '', owner);
-  const context: Partial<EnrichedContext> = { owner };
+  const context: Partial<EnrichedContext> = {};
 
-  console.log(`[fetchRepoContext] Starting for ${owner}/${repo}, practice: ${practiceType}`);
+  logger.debug('[fetchRepoContext] Starting', { owner, repo, practiceType });
 
   try {
     const fileList = await client.getRepoFileList(repo);

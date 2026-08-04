@@ -1,0 +1,95 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildEnrichmentPrompt > snapshot: ci_cd prompt 1`] = `
+"You are creating a GitHub Actions CI/CD workflow for acme/my-app.
+
+Repository: acme/my-app
+Description: A test application
+Primary Language: TypeScript
+Topics: nextjs, api
+Homepage: https://myapp.example.com
+
+Current template:
+\`\`\`yaml
+name: CI
+\`\`\`
+
+Your task:
+1. Customize the workflow for a TypeScript project
+2. Include appropriate setup actions (e.g., setup-node, setup-python, setup-go)
+3. Add steps for installing dependencies based on the language
+4. Include linting, testing, and build steps
+5. Configure to run on push to main and pull requests
+6. Use appropriate version numbers (Node 18+, Python 3.9+, etc.)
+7. Add caching for faster builds if applicable
+
+Return ONLY the complete workflow YAML file content, no markdown fences.
+Important constraints:
+- Do NOT invent facts, metrics, features, services, credentials, or URLs.
+- If information is unknown, omit the item or use a clearly marked placeholder (e.g., TODO: VALUE_NEEDED).
+- Keep output concise, scannable, and production-ready."
+`;
+
+exports[`buildEnrichmentPrompt > snapshot: roadmap prompt 1`] = `
+"You are enriching a repository ROADMAP.md.
+
+Repository: acme/my-app
+Description: A test application
+Primary Language: TypeScript
+Topics: nextjs, api
+Homepage: https://myapp.example.com
+
+Current template content:
+\`\`\`markdown
+# Roadmap
+## TODO
+\`\`\`
+
+Your task:
+1. Produce a practical, actionable roadmap tailored to acme/my-app.
+2. Organize into Near Term (0-3 months), Mid Term (3-6 months), and Long Term (6-12 months).
+3. For each item provide: goal, rationale, rough scope, success criteria, and risks.
+4. Align with the repository's tech stack and domain (language: TypeScript, topics: nextjs, api).
+5. Keep it concise and scannable; use headings and bullet lists.
+6. Include a final section for "Completed Milestones" with placeholders if none.
+
+Format:
+- Markdown only (no code fences or extra commentary).
+- Use top-level heading "Roadmap" and subsections for each time horizon.
+- Use bullets with bold short titles followed by brief descriptions.
+
+Return ONLY the Markdown content for ROADMAP.md.
+Important constraints:
+- Do NOT invent facts, metrics, features, services, credentials, or URLs.
+- If information is unknown, omit the item or use a clearly marked placeholder (e.g., TODO: VALUE_NEEDED).
+- Keep output concise, scannable, and production-ready."
+`;
+
+exports[`buildEnrichmentPrompt > snapshot: tasks prompt 1`] = `
+"You are enriching a repository TASKS.md (project tasks/backlog).
+
+Repository: acme/my-app
+Description: A test application
+Primary Language: TypeScript
+Topics: nextjs, api
+Homepage: https://myapp.example.com
+
+Current template structure:
+\`\`\`markdown
+## Todo
+- [ ] Task 1
+\`\`\`
+
+CRITICAL: PRESERVE section headers (## Todo, ## In Progress, ## Done) and format (- [ ]). ONLY change task descriptions.
+
+Your task:
+1. Replace placeholders with 8-15 real tasks for acme/my-app
+2. Keep same sections, format: - [ ] Description (P1/P2/P3, S/M/L)
+3. Language: TypeScript, Topics: nextjs, api
+
+Return template with ONLY task text changed.
+Important constraints:
+- Do NOT invent facts, metrics, features, services, credentials, or URLs.
+- If information is unknown, omit the item or use a clearly marked placeholder (e.g., TODO: VALUE_NEEDED).
+- Keep output concise, scannable, and production-ready."
+`;

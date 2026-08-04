@@ -1,0 +1,296 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildPracticePrompt snapshots > ci_cd for Python project 1`] = `
+"You are creating a CI/CD workflow for a Python project.
+
+REPO CONTEXT:
+- Name: my-repo
+- Language: Python
+- Package managers: pip
+
+No build instructions found in README.
+
+No CONTRIBUTING.md found.
+
+TEMPLATE:
+# placeholder template
+
+TASK: Generate .github/workflows/ci.yml that:
+- Uses actions/setup-python@v4 with Python 3.10+
+- Optionally tests on multiple Python versions (matrix strategy)
+- Installs dependencies from requirements.txt or pyproject.toml
+- Runs linting (flake8, ruff, or pylint)
+- Runs tests with pytest and coverage
+- Optionally uploads coverage to Codecov
+- Triggers on push/PR to main branch
+
+- Has clear job names and steps
+- Follows modern GitHub Actions best practices (v4 actions)
+- Includes appropriate caching for dependencies
+- Return ONLY the workflow YAML file content"
+`;
+
+exports[`buildPracticePrompt snapshots > ci_cd for TypeScript project 1`] = `
+"You are creating a CI/CD workflow for a TypeScript project.
+
+REPO CONTEXT:
+- Name: my-repo
+- Language: TypeScript
+- Package managers: npm
+
+BUILD INSTRUCTIONS FROM README:
+npm install
+npm run build
+
+No CONTRIBUTING.md found.
+
+TEMPLATE:
+# placeholder template
+
+TASK: Generate .github/workflows/ci.yml that:
+
+- Uses actions/setup-node@v4 with Node 18+
+- Optionally tests on multiple Node versions
+- Uses npm ci / yarn / pnpm for dependency install
+- Runs type checking if TypeScript
+- Runs linting (ESLint)
+- Runs tests with coverage
+- Triggers on push/PR to main branch
+- Has clear job names and steps
+- Follows modern GitHub Actions best practices (v4 actions)
+- Includes appropriate caching for dependencies
+- Return ONLY the workflow YAML file content"
+`;
+
+exports[`buildPracticePrompt snapshots > dependabot with npm and pip 1`] = `
+"You are creating a Dependabot configuration for dependency updates.
+REPO CONTEXT:
+- Name: my-repo
+- Language: Python
+- Package managers detected: npm, pip
+
+No CONTRIBUTING.md found.
+
+TEMPLATE:
+# placeholder template
+
+TASK: Generate .github/dependabot.yml that:
+- Configures all detected package managers: npm, pip
+- Sets appropriate update intervals (weekly is good default)
+- Each package-ecosystem + directory combination must be UNIQUE (no duplicates)
+- Security updates are automatic - do NOT create separate entries for security
+- Increase open-pull-requests-limit to handle both regular and security updates
+- Uses sensible defaults
+- Return ONLY the dependabot.yml file content"
+`;
+
+exports[`buildPracticePrompt snapshots > deploy_badge with no readme 1`] = `
+"You are creating a README.md with status badges.
+
+REPO CONTEXT:
+- Name: my-repo
+- Language: TypeScript
+- Deployable: No (tool/library)
+- Has CI Workflow: No
+- Deploy Platform: None detected
+
+TEMPLATE SNIPPET:
+# placeholder template
+
+TASK: Create a basic README.md that includes:
+- Project title (# my-repo)
+- Brief description placeholder
+- Appropriate status badge: [![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions)
+- Installation section placeholder
+- Usage section placeholder
+
+
+- Return ONLY the README.md content, no explanations"
+`;
+
+exports[`buildPracticePrompt snapshots > deploy_badge with readme and netlify 1`] = `
+"You are updating a README.md to add or improve status badges.
+
+REPO CONTEXT:
+- Name: my-repo
+- Language: TypeScript
+- Deployable: Yes
+- Workflows detected: ci.yml
+- Deploy Platform: Netlify
+
+EXISTING BADGES:
+[![CI Badge](url)](url)
+
+CURRENT README:
+# My App
+[![CI](https://github.com/badge)](https://github.com)
+
+GUIDANCE:
+This repo appears deployable. Add a deployment status badge for Netlify.
+
+EXAMPLES:
+- GitHub Actions: [![CI](https://github.com/my-owner/my-repo/actions/workflows/ci.yml/badge.svg)](https://github.com/my-owner/my-repo/actions)
+- Netlify: [![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-SITE-ID/deploy-status)](https://app.netlify.com/sites/YOUR-SITE-NAME/deploys)
+
+
+TASK: Add deployment badge
+- Preserve existing formatting and style
+- Place badge(s) near project title at the top
+- Use actual workflow filenames from the repo
+- Return ONLY the modified README content, no explanations"
+`;
+
+exports[`buildPracticePrompt snapshots > docker prompt includes platform advice for netlify badge 1`] = `
+"You are updating a README.md to add or improve a deployment status badge.
+
+Constraints:
+- Keep existing badges intact and grouped at the top
+- Use concise alt text ("Deploy Status" or platform name)
+- Ensure the badge links to a real deployment dashboard
+
+Context badges:
+[![Netlify Status](https://api.netlify.com/api/v1/badges/abc/deploy-status)](https://app.netlify.com)
+
+Recommended snippet:
+Detected Netlify usage. Prefer the official Netlify deploy status badge:
+[![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-SITE-ID/deploy-status)](https://app.netlify.com/sites/YOUR-SITE-NAME/deploys)
+Replace YOUR-SITE-ID and YOUR-SITE-NAME accordingly.
+
+Placement:
+- Place immediately under the project title, near CI badges for visibility
+"
+`;
+
+exports[`buildPracticePrompt snapshots > env_template with discovered vars 1`] = `
+"You are creating a .env.example file for environment variable documentation.
+
+REPO CONTEXT:
+- Name: my-repo
+- Language: TypeScript
+
+ENV VARS MENTIONED IN README:
+DATABASE_URL, API_KEY, SECRET
+
+EXISTING .env FILE:
+DATABASE_URL=postgres://localhost/db
+
+TEMPLATE:
+# placeholder template
+
+TASK: Create a comprehensive .env.example that:
+- Includes all discovered variables with placeholder values
+- Adds helpful comments explaining each variable
+- Groups related vars logically
+- Follows TypeScript conventions
+- Uses placeholder values (never real secrets)
+- Return ONLY the .env.example file content"
+`;
+
+exports[`buildPracticePrompt snapshots > gitignore for TypeScript 1`] = `
+"You are creating a .gitignore file for a TypeScript project.
+
+REPO CONTEXT:
+- Name: my-repo
+- Language: TypeScript
+- Package managers: npm
+
+No README available.
+
+TEMPLATE:
+# placeholder template
+
+TASK: Generate .gitignore that:
+- Includes patterns for TypeScript
+- Covers IDE files (.vscode, .idea, etc.)
+- Ignores dependency directories (node_modules, venv, etc.)
+- Includes OS-specific files (.DS_Store, Thumbs.db)
+- Ignores build artifacts
+- Ignores environment files (.env, .env.local)
+- Well-organized with comments
+- Return ONLY the .gitignore file content"
+`;
+
+exports[`buildPracticePrompt snapshots > linting for TypeScript 1`] = `
+"You are setting up linting for a TypeScript project.
+
+REPO CONTEXT:
+- Name: my-repo
+- Language: TypeScript
+
+No CONTRIBUTING.md found.
+
+TEMPLATE:
+# placeholder template
+
+TASK: Generate linting configuration that:
+
+- Uses ESLint with modern flat config (eslint.config.mjs)
+- Includes TypeScript support if applicable
+- Integrates Prettier for formatting
+- Enables recommended rules
+- Ignores: node_modules, dist, build, .next
+- Uses sensible defaults
+- Enables recommended rules for the language
+- Configures code style and formatting
+- Ignores common directories appropriately
+- Follows modern linting best practices
+- Return ONLY the linting configuration file content (pyproject.toml/.flake8 for Python, eslint.config.mjs for JS/TS)"
+`;
+
+exports[`buildPracticePrompt snapshots > pre_commit_hooks for Python 1`] = `
+"You are creating pre-commit hooks configuration for a Python project.
+
+REPO CONTEXT:
+- Name: my-repo
+- Language: Python
+- Package managers: pip
+
+No CONTRIBUTING.md found.
+
+TEMPLATE:
+# placeholder template
+
+TASK: Generate .pre-commit-config.yaml that:
+- Uses Python-specific hooks:
+  * black (code formatting)
+  * isort (import sorting)
+  * flake8 or ruff (linting)
+  * mypy (type checking, optional)
+- Includes pre-commit-hooks repo for general checks
+- Uses stable versions (black 24.x, isort 5.x, flake8 7.x)
+- Sets language_version: python3
+
+- Includes trailing whitespace/line ending checks
+- Includes YAML validation and large file checks
+- Includes security checks (detect-private-key, check-merge-conflict)
+- Follows pre-commit.com best practices
+- Return ONLY the .pre-commit-config.yaml file content"
+`;
+
+exports[`buildPracticePrompt snapshots > testing_framework for TypeScript 1`] = `
+"You are setting up a testing framework for a TypeScript project.
+
+REPO CONTEXT:
+- Name: my-repo
+- Language: TypeScript
+
+No build information found.
+
+No CONTRIBUTING.md found.
+
+TEMPLATE:
+# placeholder template
+
+TASK: Generate testing configuration that:
+
+- Uses modern framework (Vitest for Vite projects, Jest for others)
+- Includes TypeScript support if applicable
+- Configures test environment (node, jsdom, happy-dom)
+- Enables globals for cleaner test syntax
+- Sets up coverage reporting
+- Includes basic configuration
+- Sets up test directory structure expectations
+- Configures coverage reporting
+- Follows modern testing best practices
+- Return ONLY the test configuration file content (pytest.ini for Python, vitest.config.ts/jest.config.js for JS/TS)"
+`;

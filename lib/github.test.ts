@@ -620,6 +620,22 @@ describe('GitHubClient', () => {
         });
     });
 
+    it('should return hasSecurityAdvisories false for empty advisory list', async () => {
+        mockGetContent.mockResolvedValueOnce({ data: { type: 'file' } });
+        mockGetRepo.mockResolvedValueOnce({ data: { security_and_analysis: {} } });
+
+        mockRequest.mockImplementation(async (route: string) => {
+            if (route.includes('/security-advisories')) return { data: [] };
+            if (route.includes('/dependabot/alerts')) return { data: [] };
+            if (route.includes('/code-scanning/alerts')) return { data: [] };
+            if (route.includes('/secret-scanning/alerts')) return { data: [] };
+            return { data: [] };
+        });
+
+        const result = await client.getSecurityConfig('repo-1');
+        expect(result.hasSecurityAdvisories).toBe(false);
+    });
+
     it('should fallback to default security config when checks fail', async () => {
         const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         mockGetContent.mockRejectedValue(new Error('not found'));

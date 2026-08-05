@@ -473,7 +473,10 @@ export default function Header(props: HeaderProps = {}) {
                                     </div>
                                 </button>
                             ) : (
-                                <div className="h-11 w-11 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                                <div
+                                    className="h-11 w-11 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center text-sm font-bold text-white shadow-lg"
+                                    data-tour="profile-close"
+                                >
                                     {session.user?.name?.charAt(0) ?? 'U'}
                                 </div>
                             )}

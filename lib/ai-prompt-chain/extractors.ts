@@ -10,12 +10,12 @@ export function extractBuildSteps(readme: string): string {
   const steps: string[] = [];
 
   for (const line of lines) {
-    const lower = line.toLowerCase();
+    const lower = line.trimEnd().toLowerCase();
     if (sections.some((s) => lower === `## ${s}` || lower === `### ${s}`)) {
       capturing = true;
       continue;
     }
-    if (capturing && (line.startsWith('## ') || line.startsWith('### '))) break;
+    if (capturing && (lower.startsWith('## ') || lower.startsWith('### '))) break;
     if (capturing) steps.push(line);
   }
 

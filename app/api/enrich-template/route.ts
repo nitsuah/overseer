@@ -12,13 +12,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    let body: { repoName?: unknown; docType?: unknown; templateContent?: unknown };
+    let rawBody: unknown;
     try {
-      body = await request.json();
+      rawBody = await request.json();
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
+    if (rawBody === null || typeof rawBody !== 'object' || Array.isArray(rawBody)) {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const body = rawBody as { repoName?: unknown; docType?: unknown; templateContent?: unknown };
     const { repoName, docType, templateContent } = body;
 
     if (

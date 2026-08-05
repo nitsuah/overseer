@@ -134,9 +134,9 @@ TASK: Create a comprehensive .env.example that:
 }
 
 function buildDockerPrompt(context: EnrichedContext): string {
-  const existingDockerfile = context.existingFiles?.['Dockerfile'];
-  const existingCompose = context.existingFiles?.['docker-compose.yml'];
-  const existingDockerignore = context.existingFiles?.['.dockerignore'];
+  const existingDockerfile = context.existingFiles?.['Dockerfile']?.slice(0, 500);
+  const existingCompose = context.existingFiles?.['docker-compose.yml']?.slice(0, 500);
+  const existingDockerignore = context.existingFiles?.['.dockerignore']?.slice(0, 500);
   const hasBuildSteps = context.buildSteps && context.buildSteps.trim().length > 0;
 
   return `You are creating or improving a Dockerfile for ${context.repoName}.

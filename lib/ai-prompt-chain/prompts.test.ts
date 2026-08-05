@@ -158,8 +158,7 @@ describe('buildPracticePrompt content assertions', () => {
 
   it('throws for unknown practice type at runtime', () => {
     const ctx = makeContext('deploy_badge');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (ctx as any).practiceType = 'invalid_type';
+    (ctx as Record<string, unknown>).practiceType = 'invalid_type';
     expect(() => buildPracticePrompt(ctx)).toThrow('Unknown practice type: invalid_type');
   });
 });

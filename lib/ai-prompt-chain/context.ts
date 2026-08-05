@@ -44,12 +44,8 @@ export async function detectPackageManagers(
 
   const results = await Promise.all(
     checks.map(async ({ file, manager }) => {
-      try {
         const content = await client.getFileContent(repo, file, owner);
         return content !== null ? manager : null;
-      } catch {
-        return null;
-      }
     })
   );
   const managers = [...new Set(results.filter((m): m is string => m !== null))];

@@ -620,11 +620,11 @@ describe('GitHubClient', () => {
         });
     });
 
-    it('should return hasSecurityAdvisories false for empty advisory list', async () => {
+    it('should return hasSecurityAdvisories false for empty advisory list', async (): Promise<void> => {
         mockGetContent.mockResolvedValueOnce({ data: { type: 'file' } });
         mockGetRepo.mockResolvedValueOnce({ data: { security_and_analysis: {} } });
 
-        mockRequest.mockImplementation(async (route: string) => {
+        mockRequest.mockImplementation(async (route: string): Promise<{ data: unknown[] }> => {
             if (route.includes('/security-advisories')) return { data: [] };
             if (route.includes('/dependabot/alerts')) return { data: [] };
             if (route.includes('/code-scanning/alerts')) return { data: [] };

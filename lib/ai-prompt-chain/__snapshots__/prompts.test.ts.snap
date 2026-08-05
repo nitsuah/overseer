@@ -152,8 +152,6 @@ EXISTING DOCKERFILE:
 FROM node:alpine
 WORKDIR /app
 
-
-
 TEMPLATE:
 # placeholder template
 

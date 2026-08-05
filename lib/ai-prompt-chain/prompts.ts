@@ -133,11 +133,34 @@ TASK: Create a comprehensive .env.example that:
 - Return ONLY the .env.example file content`;
 }
 
+const DOCKER_CONTEXT_LIMIT = 2000;
+
 function buildDockerPrompt(context: EnrichedContext): string {
-  const existingDockerfile = context.existingFiles?.['Dockerfile']?.slice(0, 500);
-  const existingCompose = context.existingFiles?.['docker-compose.yml']?.slice(0, 500);
-  const existingDockerignore = context.existingFiles?.['.dockerignore']?.slice(0, 500);
-  const hasBuildSteps = context.buildSteps && context.buildSteps.trim().length > 0;
+  const buildStepsBlock = context.buildSteps?.trim()
+    ? `BUILD INSTRUCTIONS FROM README:\n${context.buildSteps}`
+    : 'No build instructions found in README.';
+
+  const existingFilesBlock = [
+    context.existingFiles?.['Dockerfile']
+      ? `EXISTING DOCKERFILE:\n${context.existingFiles['Dockerfile']}`
+      : 'No existing Dockerfile.',
+    context.existingFiles?.['docker-compose.yml']
+      ? `EXISTING DOCKER-COMPOSE:\n${context.existingFiles['docker-compose.yml']}`
+      : null,
+    context.existingFiles?.['.dockerignore']
+      ? `EXISTING .DOCKERIGNORE:\n${context.existingFiles['.dockerignore']}`
+      : null,
+  ]
+    .filter((s): s is string => s !== null)
+    .join('\n\n');
+
+  const templateBlock = `TEMPLATE:\n${context.template}`;
+
+  const rawContext = [buildStepsBlock, existingFilesBlock, templateBlock].join('\n\n');
+  const dockerContext =
+    rawContext.length > DOCKER_CONTEXT_LIMIT
+      ? rawContext.slice(0, DOCKER_CONTEXT_LIMIT) + '\n...(truncated)'
+      : rawContext;
 
   return `You are creating or improving a Dockerfile for ${context.repoName}.
 
@@ -146,14 +169,7 @@ REPO CONTEXT:
 - Language: ${context.language || 'Unknown'}
 - Package managers: ${context.packageManagers?.join(', ') || 'Unknown'}
 
-${hasBuildSteps ? `BUILD INSTRUCTIONS FROM README:\n${context.buildSteps}` : 'No build instructions found in README.'}
-
-${existingDockerfile ? `EXISTING DOCKERFILE:\n${existingDockerfile}` : 'No existing Dockerfile.'}
-${existingCompose ? `\nEXISTING DOCKER-COMPOSE:\n${existingCompose}` : ''}
-${existingDockerignore ? `\nEXISTING .DOCKERIGNORE:\n${existingDockerignore}` : ''}
-
-TEMPLATE:
-${context.template}
+${dockerContext}
 
 TASK: Generate a production-ready Dockerfile that:
 - Uses the appropriate base image for ${context.language || 'the project'}

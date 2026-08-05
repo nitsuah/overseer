@@ -105,6 +105,16 @@ describe('buildPracticePrompt snapshots', () => {
     expect(prompt).toContain('TypeScript');
     expect(prompt).toMatchSnapshot();
   });
+
+  it('docker prompt truncates oversized context to aggregate limit', () => {
+    const prompt = buildPracticePrompt(
+      makeContext('docker', {
+        existingFiles: { 'Dockerfile': 'x'.repeat(3000) },
+      })
+    );
+    expect(prompt).toContain('...(truncated)');
+    expect(prompt).toContain('TASK:');
+  });
 });
 
 describe('buildPracticePrompt content assertions', () => {

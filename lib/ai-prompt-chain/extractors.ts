@@ -10,7 +10,7 @@ export function extractBuildSteps(readme: string): string {
   const steps: string[] = [];
 
   for (const line of lines) {
-    const lower = line.trim().toLowerCase();
+    const lower = line.replace(/^ {0,3}/, '').trimEnd().toLowerCase();
     if (sections.some((s) => lower === `## ${s}` || lower === `### ${s}`)) {
       capturing = true;
       continue;

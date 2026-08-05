@@ -45,6 +45,15 @@ npm start`;
     const steps = extractBuildSteps(readme);
     expect(steps).toBe('');
   });
+
+  it('does not treat four-space-indented ## line as a heading (code block)', () => {
+    const readme = `# Project\n## Installation\nnpm install\n    ## not a heading\nmore steps\n## Usage\nnpm start`;
+    const steps = extractBuildSteps(readme);
+    expect(steps).toContain('npm install');
+    expect(steps).toContain('    ## not a heading');
+    expect(steps).toContain('more steps');
+    expect(steps).not.toContain('npm start');
+  });
 });
 
 describe('extractEnvVarMentions', () => {

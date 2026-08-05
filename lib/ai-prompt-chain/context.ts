@@ -3,13 +3,29 @@ import logger from '@/lib/log';
 import { extractBadges, extractBuildSteps, extractEnvVarMentions } from './extractors';
 import type { BestPracticeType, PromptChainContext, EnrichedContext } from './types';
 
+async function fetchExistingFiles(
+  client: GitHubClient,
+  repo: string,
+  paths: string[]
+): Promise<Record<string, string>> {
+  const results = await Promise.all(
+    paths.map(async (file) => {
+      try {
+        const content = await client.getFileContent(repo, file);
+        return content ? ([file, content] as const) : null;
+      } catch {
+        return null;
+      }
+    })
+  );
+  return Object.fromEntries(results.filter((r): r is [string, string] => r !== null));
+}
+
 export async function detectPackageManagers(
   client: GitHubClient,
   owner: string,
   repo: string
 ): Promise<string[]> {
-  const managers: string[] = [];
-
   const checks = [
     { file: 'package.json', manager: 'npm' },
     { file: 'yarn.lock', manager: 'yarn' },
@@ -26,14 +42,17 @@ export async function detectPackageManagers(
     { file: 'build.gradle', manager: 'gradle' },
   ];
 
-  for (const { file, manager } of checks) {
-    try {
-      await client.getFileContent(repo, file, owner);
-      if (!managers.includes(manager)) managers.push(manager);
-    } catch {
-      // File doesn't exist
-    }
-  }
+  const results = await Promise.all(
+    checks.map(async ({ file, manager }) => {
+      try {
+        await client.getFileContent(repo, file, owner);
+        return manager;
+      } catch {
+        return null;
+      }
+    })
+  );
+  const managers = [...new Set(results.filter((m): m is string => m !== null))];
 
   logger.debug('[detectPackageManagers] Detected managers', { managers });
   return managers;
@@ -50,56 +69,34 @@ export async function fetchRepoContext(
 
   logger.debug('[fetchRepoContext] Starting', { owner, repo, practiceType });
 
-  try {
-    const fileList = await client.getRepoFileList(repo);
-    context.fileList = fileList;
-  } catch {
-    context.fileList = [];
+  const [fileListResult, readmeResult, contributingResult] = await Promise.allSettled([
+    client.getRepoFileList(repo),
+    client.getFileContent(repo, 'README.md'),
+    client.getFileContent(repo, 'CONTRIBUTING.md'),
+  ]);
+
+  context.fileList = fileListResult.status === 'fulfilled' ? fileListResult.value : [];
+
+  if (readmeResult.status === 'fulfilled' && readmeResult.value) {
+    const readmeContent = readmeResult.value;
+    context.readme = readmeContent;
+    if (practiceType === 'deploy_badge') context.badges = extractBadges(readmeContent);
+    if (practiceType === 'docker') context.buildSteps = extractBuildSteps(readmeContent);
+    if (practiceType === 'env_template') context.envVars = extractEnvVarMentions(readmeContent);
   }
 
-  try {
-    const readmeContent = await client.getFileContent(repo, 'README.md');
-    if (readmeContent) {
-      context.readme = readmeContent;
-      if (practiceType === 'deploy_badge') context.badges = extractBadges(readmeContent);
-      if (practiceType === 'docker') context.buildSteps = extractBuildSteps(readmeContent);
-      if (practiceType === 'env_template') context.envVars = extractEnvVarMentions(readmeContent);
-    }
-  } catch {
-    // No README
-  }
-
-  try {
-    const contributingContent = await client.getFileContent(repo, 'CONTRIBUTING.md');
-    if (contributingContent) context.contributing = contributingContent;
-  } catch {
-    // No CONTRIBUTING.md
+  if (contributingResult.status === 'fulfilled' && contributingResult.value) {
+    context.contributing = contributingResult.value;
   }
 
   switch (practiceType) {
     case 'env_template': {
-      context.existingFiles = {};
-      for (const file of ['.env', '.env.local', '.env.example']) {
-        try {
-          const content = await client.getFileContent(repo, file);
-          if (content) context.existingFiles[file] = content;
-        } catch {
-          // File doesn't exist
-        }
-      }
+      context.existingFiles = await fetchExistingFiles(client, repo, ['.env', '.env.local', '.env.example']);
       break;
     }
 
     case 'docker': {
-      context.existingFiles = {};
-      for (const file of ['Dockerfile', 'docker-compose.yml', '.dockerignore']) {
-        try {
-          const content = await client.getFileContent(repo, file);
-          if (content) context.existingFiles[file] = content;
-        } catch {
-          // File doesn't exist
-        }
-      }
+      context.existingFiles = await fetchExistingFiles(client, repo, ['Dockerfile', 'docker-compose.yml', '.dockerignore']);
       break;
     }
 

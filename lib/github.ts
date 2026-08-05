@@ -4,6 +4,7 @@ import { githubCache } from '@/lib/github-cache';
 
 export { githubCache };
 export type { RepoMetadata, BranchInfo, PullRequestInfo } from './github/types';
+import type { RepoMetadata, BranchInfo, PullRequestInfo } from './github/types';
 
 import * as Repos from './github/repos';
 import * as PRs from './github/prs';
@@ -23,7 +24,7 @@ export class GitHubClient {
     return this.octokit;
   }
 
-  async getRateLimit() {
+  async getRateLimit(): Promise<{ limit: number; remaining: number; reset: number }> {
     const { data } = await this.octokit.rateLimit.get();
     return {
       limit: data.resources.core.limit,
@@ -33,48 +34,48 @@ export class GitHubClient {
   }
 
   // Repo operations
-  listRepos(since?: string) {
+  listRepos(since?: string): Promise<RepoMetadata[]> {
     return Repos.listRepos(this.octokit, since);
   }
 
-  getRepo(owner: string, repo: string) {
+  getRepo(owner: string, repo: string): Promise<RepoMetadata> {
     return Repos.getRepo(this.octokit, owner, repo);
   }
 
-  getFileContent(repo: string, path: string, owner?: string) {
+  getFileContent(repo: string, path: string, owner?: string): Promise<string | null> {
     return Repos.getFileContent(this.octokit, owner || this.owner, repo, path);
   }
 
-  getBranches(repo: string, owner?: string) {
+  getBranches(repo: string, owner?: string): Promise<BranchInfo[]> {
     return Repos.getBranches(this.octokit, owner || this.owner, repo);
   }
 
-  getFileLastModified(repo: string, path: string, owner?: string) {
+  getFileLastModified(repo: string, path: string, owner?: string): Promise<string | null> {
     return Repos.getFileLastModified(this.octokit, owner || this.owner, repo, path);
   }
 
-  getRepoFileList(repo: string, owner?: string, path = '') {
+  getRepoFileList(repo: string, owner?: string, path = ''): Promise<string[]> {
     return Repos.getRepoFileList(this.octokit, owner || this.owner, repo, path);
   }
 
-  getLanguageStats(repo: string, owner?: string) {
+  getLanguageStats(repo: string, owner?: string): Promise<Record<string, number>> {
     return Repos.getLanguageStats(this.octokit, owner || this.owner, repo);
   }
 
-  getWorkflowRuns(repo: string, owner?: string) {
+  getWorkflowRuns(repo: string, owner?: string): Promise<{ status: string; lastRun: string | null; workflowName: string | null }> {
     return Repos.getWorkflowRuns(this.octokit, owner || this.owner, repo);
   }
 
   // PR operations
-  getPullRequests(repo: string, owner?: string) {
+  getPullRequests(repo: string, owner?: string): Promise<PullRequestInfo[]> {
     return PRs.getPullRequests(this.octokit, owner || this.owner, repo);
   }
 
-  getPullRequestReadiness(repo: string, owner?: string) {
+  getPullRequestReadiness(repo: string, owner?: string): Promise<{ readyCount: number; blockedCount: number }> {
     return PRs.getPullRequestReadiness(this.octokit, owner || this.owner, repo);
   }
 
-  getPullRequestStats(repo: string, owner?: string) {
+  getPullRequestStats(repo: string, owner?: string): Promise<{ avgMergeTimeHours: number }> {
     return PRs.getPullRequestStats(this.octokit, owner || this.owner, repo);
   }
 
@@ -85,7 +86,7 @@ export class GitHubClient {
     content: string,
     message: string,
     owner?: string
-  ) {
+  ): Promise<string> {
     return PRs.createPrForFile(
       this.octokit,
       owner || this.owner,
@@ -103,7 +104,7 @@ export class GitHubClient {
     files: Array<{ path: string; content: string }>,
     message: string,
     owner?: string
-  ) {
+  ): Promise<string> {
     return PRs.createPrForFiles(
       this.octokit,
       owner || this.owner,
@@ -115,16 +116,16 @@ export class GitHubClient {
   }
 
   // Security operations
-  getVulnerabilityAlerts(repo: string, owner?: string) {
+  getVulnerabilityAlerts(repo: string, owner?: string): Promise<{ total: number; critical: number; high: number }> {
     return Security.getVulnerabilityAlerts(this.octokit, owner || this.owner, repo);
   }
 
-  getSecurityConfig(repo: string, owner?: string) {
+  getSecurityConfig(repo: string, owner?: string): ReturnType<typeof Security.getSecurityConfig> {
     return Security.getSecurityConfig(this.octokit, owner || this.owner, repo);
   }
 
   // Contributor operations
-  getContributorStats(repo: string, owner?: string) {
+  getContributorStats(repo: string, owner?: string): Promise<{ contributorCount: number; commitFrequency: number; busFactor: number }> {
     return Contributors.getContributorStats(this.octokit, owner || this.owner, repo);
   }
 }

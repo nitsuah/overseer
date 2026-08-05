@@ -164,7 +164,12 @@ export async function createPrForFile(
   });
   const sha = refData.object.sha;
 
-  await octokit.git.createRef({ owner, repo, ref: `refs/heads/${branchName}`, sha });
+  try {
+    await octokit.git.createRef({ owner, repo, ref: `refs/heads/${branchName}`, sha });
+  } catch (error: unknown) {
+    const err = error as { status?: number };
+    if (err.status !== 422) throw error; // 422 = ref already exists, reuse it
+  }
 
   await octokit.repos.createOrUpdateFileContents({
     owner,
@@ -178,7 +183,7 @@ export async function createPrForFile(
   const { data: prData } = await octokit.pulls.create({
     owner,
     repo,
-    title: message,
+    title: message.split('\n')[0],
     head: branchName,
     base: defaultBranch,
     body: `Automated PR to add ${filePath}`,

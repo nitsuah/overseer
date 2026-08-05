@@ -459,6 +459,7 @@ export default function Header(props: HeaderProps = {}) {
                                     onClick={() => setShowStatusPills(!showStatusPills)}
                                     className="relative cursor-pointer focus:outline-none"
                                     title="Toggle status indicators"
+                                    data-tour="profile-close"
                                 >
                                     <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 rounded-full opacity-40 group-hover:opacity-60 blur transition duration-300 motion-safe:animate-[spin_8s_linear_infinite]"></div>
                                     <div className="relative">

@@ -28,7 +28,7 @@ export const tourSteps: TourStep[] = [
     title: 'Health Score',
     description:
       'Visual indicator of overall repository health. Hover to see the breakdown: Testing (25%), Best Practices (25%), Documentation (20%), Community (10%), and Activity (10%).',
-    target: 'tbody tr:first-child td:nth-child(3)',
+    target: '[data-tour="health-score"]',
     position: 'left',
   },
   {
@@ -36,7 +36,7 @@ export const tourSteps: TourStep[] = [
     title: 'Documentation Status',
     description:
       'Track core documentation files. Green = healthy, yellow = dormant, red = missing. Fix missing docs with AI assistance.',
-    target: 'tbody tr:first-child td:nth-child(4)',
+    target: '[data-tour="docs"]',
     position: 'left',
   },
   {
@@ -44,7 +44,7 @@ export const tourSteps: TourStep[] = [
     title: 'Quick Actions',
     description:
       "Sync repository data, check build status, or hide repositories you don't need to track.",
-    target: 'tbody tr:first-child td:nth-child(5)',
+    target: '[data-tour="actions"]',
     position: 'left',
   },
   {
@@ -168,7 +168,7 @@ export const tourSteps: TourStep[] = [
     title: 'Tour Complete!',
     description:
       'Click the profile picture to collapse the status pills and finish the tour. You can always click it again to view your authentication status, AI availability, and version info.',
-    target: 'button[title="Toggle status indicators"]',
+    target: '[data-tour="profile-close"]',
     position: 'bottom',
   },
 ];

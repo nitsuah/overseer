@@ -459,6 +459,7 @@ export default function Header(props: HeaderProps = {}) {
                                     onClick={() => setShowStatusPills(!showStatusPills)}
                                     className="relative cursor-pointer focus:outline-none"
                                     title="Toggle status indicators"
+                                    data-tour="profile-close"
                                 >
                                     <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 rounded-full opacity-40 group-hover:opacity-60 blur transition duration-300 motion-safe:animate-[spin_8s_linear_infinite]"></div>
                                     <div className="relative">
@@ -472,7 +473,10 @@ export default function Header(props: HeaderProps = {}) {
                                     </div>
                                 </button>
                             ) : (
-                                <div className="h-11 w-11 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                                <div
+                                    className="h-11 w-11 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center text-sm font-bold text-white shadow-lg"
+                                    data-tour="profile-close"
+                                >
                                     {session.user?.name?.charAt(0) ?? 'U'}
                                 </div>
                             )}

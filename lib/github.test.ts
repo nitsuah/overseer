@@ -18,6 +18,7 @@ const mockPullsList = vi.fn();
 const mockPullsCreate = vi.fn();
 const mockGitGetRef = vi.fn();
 const mockGitCreateRef = vi.fn();
+const mockGitGetTree = vi.fn();
 const mockActionsListWorkflowRunsForRepo = vi.fn();
 const mockRequest = vi.fn();
 const mockGraphql = vi.fn();
@@ -41,6 +42,7 @@ const mockOctokitInstance = {
     git: {
         getRef: mockGitGetRef,
         createRef: mockGitCreateRef,
+        getTree: mockGitGetTree,
     },
     actions: {
         listWorkflowRunsForRepo: mockActionsListWorkflowRunsForRepo,
@@ -442,35 +444,26 @@ describe('GitHubClient', () => {
         await expect(client.getFileLastModified('repo-1', 'README.md')).resolves.toBeNull();
     });
 
-    it('should recursively list repo files', async () => {
-        mockGetContent.mockImplementation(async ({ path }: { path: string }) => {
-            if (path === '') {
-                return {
-                    data: [
-                        { type: 'file', path: 'README.md' },
-                        { type: 'dir', path: 'src' },
-                    ],
-                };
-            }
-
-            if (path === 'src') {
-                return {
-                    data: [
-                        { type: 'file', path: 'src/index.ts' },
-                    ],
-                };
-            }
-
-            return { data: [] };
+    it('should list repo files using recursive git tree', async () => {
+        mockGitGetTree.mockResolvedValue({
+            data: {
+                tree: [
+                    { type: 'blob', path: 'README.md' },
+                    { type: 'tree', path: 'src' },
+                    { type: 'blob', path: 'src/index.ts' },
+                ],
+                truncated: false,
+            },
         });
 
         const files = await client.getRepoFileList('repo-1');
         expect(files).toEqual(['README.md', 'src/index.ts']);
+        expect(mockGitGetTree).toHaveBeenCalledWith({ owner: 'fake-owner', repo: 'repo-1', tree_sha: 'HEAD', recursive: '1' });
     });
 
-    it('should return empty file list on repo tree errors', async () => {
-        mockGetContent.mockRejectedValue(new Error('api failure'));
-        await expect(client.getRepoFileList('repo-1')).resolves.toEqual([]);
+    it('should propagate errors from repo tree API', async () => {
+        mockGitGetTree.mockRejectedValue(new Error('api failure'));
+        await expect(client.getRepoFileList('repo-1')).rejects.toThrow('api failure');
     });
 
     it('should return language stats and gracefully handle failures', async () => {
@@ -593,7 +586,7 @@ describe('GitHubClient', () => {
 
         mockRequest.mockImplementation(async (route: string) => {
             if (route.includes('/security-advisories')) {
-                return { data: [] };
+                return { data: [{ ghsa_id: 'GHSA-1234' }] };
             }
             if (route.includes('/dependabot/alerts')) {
                 return { data: [{ id: 1 }] };
@@ -618,6 +611,22 @@ describe('GitHubClient', () => {
             secretScanningEnabled: true,
             secretScanningAlertCount: 3,
         });
+    });
+
+    it('should return hasSecurityAdvisories false for empty advisory list', async (): Promise<void> => {
+        mockGetContent.mockResolvedValueOnce({ data: { type: 'file' } });
+        mockGetRepo.mockResolvedValueOnce({ data: { security_and_analysis: {} } });
+
+        mockRequest.mockImplementation(async (route: string): Promise<{ data: unknown[] }> => {
+            if (route.includes('/security-advisories')) return { data: [] };
+            if (route.includes('/dependabot/alerts')) return { data: [] };
+            if (route.includes('/code-scanning/alerts')) return { data: [] };
+            if (route.includes('/secret-scanning/alerts')) return { data: [] };
+            return { data: [] };
+        });
+
+        const result = await client.getSecurityConfig('repo-1');
+        expect(result.hasSecurityAdvisories).toBe(false);
     });
 
     it('should fallback to default security config when checks fail', async () => {

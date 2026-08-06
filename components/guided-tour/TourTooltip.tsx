@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useLayoutEffect } from 'react';
 import { X } from 'lucide-react';
 import type { TourStep } from './tour-steps';
 
@@ -17,6 +17,7 @@ interface TourTooltipProps {
   onPrevious: () => void;
   onSkip: () => void;
   onPauseAutoAdvance: () => void;
+  onMeasure?: (height: number) => void;
 }
 
 export function TourTooltip({
@@ -32,9 +33,14 @@ export function TourTooltip({
   onPrevious,
   onSkip,
   onPauseAutoAdvance,
+  onMeasure,
 }: TourTooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const titleId = `tour-step-title-${currentStep}`;
+
+  useLayoutEffect(() => {
+    onMeasure?.(tooltipRef.current?.offsetHeight ?? 220);
+  }, [currentStep, onMeasure]);
 
   useEffect(() => {
     tooltipRef.current?.focus();

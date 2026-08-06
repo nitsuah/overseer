@@ -18,6 +18,7 @@ const mockPullsList = vi.fn();
 const mockPullsCreate = vi.fn();
 const mockGitGetRef = vi.fn();
 const mockGitCreateRef = vi.fn();
+const mockGitGetTree = vi.fn();
 const mockActionsListWorkflowRunsForRepo = vi.fn();
 const mockRequest = vi.fn();
 const mockGraphql = vi.fn();
@@ -41,6 +42,7 @@ const mockOctokitInstance = {
     git: {
         getRef: mockGitGetRef,
         createRef: mockGitCreateRef,
+        getTree: mockGitGetTree,
     },
     actions: {
         listWorkflowRunsForRepo: mockActionsListWorkflowRunsForRepo,
@@ -442,35 +444,26 @@ describe('GitHubClient', () => {
         await expect(client.getFileLastModified('repo-1', 'README.md')).resolves.toBeNull();
     });
 
-    it('should recursively list repo files', async () => {
-        mockGetContent.mockImplementation(async ({ path }: { path: string }) => {
-            if (path === '') {
-                return {
-                    data: [
-                        { type: 'file', path: 'README.md' },
-                        { type: 'dir', path: 'src' },
-                    ],
-                };
-            }
-
-            if (path === 'src') {
-                return {
-                    data: [
-                        { type: 'file', path: 'src/index.ts' },
-                    ],
-                };
-            }
-
-            return { data: [] };
+    it('should list repo files using recursive git tree', async () => {
+        mockGitGetTree.mockResolvedValue({
+            data: {
+                tree: [
+                    { type: 'blob', path: 'README.md' },
+                    { type: 'tree', path: 'src' },
+                    { type: 'blob', path: 'src/index.ts' },
+                ],
+                truncated: false,
+            },
         });
 
         const files = await client.getRepoFileList('repo-1');
         expect(files).toEqual(['README.md', 'src/index.ts']);
+        expect(mockGitGetTree).toHaveBeenCalledWith({ owner: 'fake-owner', repo: 'repo-1', tree_sha: 'HEAD', recursive: '1' });
     });
 
-    it('should return empty file list on repo tree errors', async () => {
-        mockGetContent.mockRejectedValue(new Error('api failure'));
-        await expect(client.getRepoFileList('repo-1')).resolves.toEqual([]);
+    it('should propagate errors from repo tree API', async () => {
+        mockGitGetTree.mockRejectedValue(new Error('api failure'));
+        await expect(client.getRepoFileList('repo-1')).rejects.toThrow('api failure');
     });
 
     it('should return language stats and gracefully handle failures', async () => {

@@ -17,6 +17,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
   const [countdown, setCountdown] = useState(3);
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const tooltipHeightRef = useRef(220);
 
   const step = tourSteps[currentStep];
   const isFirstStep = currentStep === 0;
@@ -39,6 +40,10 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       }, 3000);
     }
   }, [isFirstStep, isLastStep]);
+
+  const handleTooltipMeasure = useCallback((height: number) => {
+    tooltipHeightRef.current = height;
+  }, []);
 
   const clearTimers = useCallback(() => {
     if (autoAdvanceTimerRef.current) {
@@ -67,13 +72,13 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     setHighlightRect(rect);
 
     const tooltipWidth = 400;
-    const tooltipHeight = 220;
+    const tooltipHeight = tooltipHeightRef.current;
     let top = 0;
     let left = 0;
 
     switch (step.position) {
       case 'top':
-        top = rect.top - 220;
+        top = rect.top - tooltipHeight;
         left = rect.left + rect.width / 2 - 200;
         break;
       case 'bottom':
@@ -307,6 +312,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
         onPrevious={handlePrevious}
         onSkip={onClose}
         onPauseAutoAdvance={handlePauseAutoAdvance}
+        onMeasure={handleTooltipMeasure}
       />
     </div>
   );

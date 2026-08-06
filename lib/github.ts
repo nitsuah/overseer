@@ -54,8 +54,8 @@ export class GitHubClient {
     return Repos.getFileLastModified(this.octokit, owner || this.owner, repo, path);
   }
 
-  getRepoFileList(repo: string, owner?: string, path = ''): Promise<string[]> {
-    return Repos.getRepoFileList(this.octokit, owner || this.owner, repo, path);
+  getRepoFileList(repo: string, owner?: string): Promise<string[]> {
+    return Repos.getRepoFileList(this.octokit, owner || this.owner, repo);
   }
 
   getLanguageStats(repo: string, owner?: string): Promise<Record<string, number>> {

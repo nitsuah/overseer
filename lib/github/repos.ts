@@ -173,26 +173,15 @@ export async function getFileLastModified(
 export async function getRepoFileList(
   octokit: Octokit,
   owner: string,
-  repo: string,
-  path = ''
+  repo: string
 ): Promise<string[]> {
-  try {
-    const { data } = await octokit.repos.getContent({ owner, repo, path });
-    const files: string[] = [];
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item.type === 'file') {
-          files.push(item.path);
-        } else if (item.type === 'dir') {
-          const subFiles = await getRepoFileList(octokit, owner, repo, item.path);
-          files.push(...subFiles);
-        }
-      }
-    }
-    return files;
-  } catch {
-    return [];
+  const { data } = await octokit.git.getTree({ owner, repo, tree_sha: 'HEAD', recursive: '1' });
+  if (data.truncated) {
+    logger.warn(`[getRepoFileList] Tree for ${owner}/${repo} is truncated — file list is incomplete`);
   }
+  return data.tree
+    .filter((item) => item.type === 'blob' && item.path)
+    .map((item) => item.path as string);
 }
 
 export async function getLanguageStats(

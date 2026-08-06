@@ -62,7 +62,9 @@ export async function POST(
         // Sync the repo
         await syncRepo(repo, github, db);
 
-        return NextResponse.json({ success: true, repo: repoName });
+        // Return the updated row so the frontend can patch state without a full list refetch
+        const [updatedRepo] = await db`SELECT * FROM repos WHERE name = ${repoName} LIMIT 1`;
+        return NextResponse.json({ success: true, updatedRepo });
     } catch (error: unknown) {
         logger.warn('Error syncing repo:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -16,7 +16,7 @@ export default function Dashboard() {
   const { data: session } = useSession();
   const [showHidden, setShowHidden] = useState(false);
   const { repos, setRepos, loading, refetch } = useRepos(showHidden);
-  const { repoDetails, fetchRepoDetails, fetchAllRepoDetails } = useRepoDetails();
+  const { repoDetails, fetchRepoDetails } = useRepoDetails();
   const { expandedRepos, toggleRepo } = useRepoExpansion();
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -115,13 +115,7 @@ export default function Dashboard() {
   // detail data. The timer resets if the panel is collapsed before it fires.
   useRepoPolling(expandedRepos, handleSyncAndRefresh);
 
-  // Fetch details for all repos when repos change
-  React.useEffect(() => {
-    if (repos.length > 0 && Object.keys(repoDetails).length === 0) {
-      const repoNames = repos.map(r => r.name);
-      fetchAllRepoDetails(repoNames);
-    }
-  }, [repos, repoDetails, fetchAllRepoDetails]);
+  // Details are fetched on demand when a row is expanded — no bulk pre-fetch
 
   if (loading) {
     return (
@@ -173,8 +167,8 @@ export default function Dashboard() {
             <table className="w-full">
               <thead className="bg-slate-800/50 border-b border-slate-700">
                 <tr>
-                  <th 
-                    className="px-6 py-4 text-left text-sm font-semibold text-slate-300 cursor-pointer hover:text-purple-400 transition-colors"
+                  <th
+                    className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 cursor-pointer hover:text-purple-400 transition-colors"
                     onClick={() => handleSort('name')}
                   >
                     <div className="flex items-center gap-2">
@@ -186,11 +180,11 @@ export default function Dashboard() {
                       )}
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300 hidden xl:table-cell">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 hidden xl:table-cell">
                     Description
                   </th>
-                  <th 
-                    className="px-6 py-4 text-left text-sm font-semibold text-slate-300 cursor-pointer hover:text-purple-400 transition-colors"
+                  <th
+                    className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 cursor-pointer hover:text-purple-400 transition-colors"
                     onClick={() => handleSort('health')}
                   >
                     <div className="flex items-center gap-2">
@@ -202,10 +196,10 @@ export default function Dashboard() {
                       )}
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 hidden sm:table-cell">
                     Docs
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300">
                     Actions
                   </th>
                 </tr>

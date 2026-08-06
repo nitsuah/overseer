@@ -429,7 +429,13 @@ export function useRepoActions(
       setSyncingRepo(repoName);
       const res = await fetch(`/api/repos/${repoName}/sync`, { method: 'POST' });
       if (res.ok) {
-        await refetchRepos();
+        const data = await res.json();
+        // Patch only this repo in the list — avoids a disruptive full refetch
+        if (data.updatedRepo && typeof data.updatedRepo === 'object') {
+          setRepos(prev => prev.map(r => r.name === repoName ? data.updatedRepo as Repo : r));
+        } else {
+          await refetchRepos();
+        }
         onSuccess?.();
         setToastMessage(`Successfully synced ${repoName}!`);
       } else {

@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Shield, Sparkles, LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle, LayoutDashboard } from "lucide-react";
+import { Shield, Sparkles, LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle, LayoutDashboard, Menu } from "lucide-react";
 import Link from "next/link";
 import { GithubIcon } from "@/components/icons/GithubIcon";
 import Image from "next/image";
@@ -74,12 +74,15 @@ export default function Header(props: HeaderProps = {}) {
     } = props;
 
     const [showStatusPills, setShowStatusPills] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const hasActiveFilters = filterType && (filterType !== 'all' || filterLanguage !== 'all' || filterFork !== 'all');
 
     if (status === "loading") return null;
 
     return (
-        <header className="header-dark relative flex items-center justify-between py-4 px-6 text-white shadow-lg border-b border-white/10">
+        <header className="header-dark relative flex flex-col py-4 px-4 md:px-6 text-white shadow-lg border-b border-white/10">
+        {/* Main row */}
+        <div className="flex items-center justify-between w-full">
             {/* Left Cluster */}
             <div className="flex items-center gap-4">
                 {/* Super Zaazzed Icon */}
@@ -110,8 +113,8 @@ export default function Header(props: HeaderProps = {}) {
                 </div>
             </div>
 
-            {/* Right Cluster */}
-            <div className="flex items-center gap-3">
+            {/* Right Cluster — desktop only */}
+            <div className="hidden md:flex items-center gap-3">
                 {/* Rate Limit Indicator */}
                 {session && <RateLimitIndicator />}
                 
@@ -515,6 +518,210 @@ export default function Header(props: HeaderProps = {}) {
                     </button>
                 )}
             </div>
+
+            {/* Mobile-only right cluster */}
+            <div className="flex md:hidden items-center gap-2">
+                {session && (
+                    <>
+                        {onSync && (
+                            <button
+                                onClick={onSync}
+                                disabled={syncing}
+                                className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+                                title="Sync repos"
+                            >
+                                <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setMobileMenuOpen(o => !o)}
+                            className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300"
+                            aria-label="Open menu"
+                        >
+                            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                        </button>
+                    </>
+                )}
+                {!session && (
+                    <button
+                        onClick={() => signIn('github', { redirectTo: '/' })}
+                        className="btn-raised btn-primary-gradient flex items-center gap-2 px-3 py-2 text-sm"
+                    >
+                        <GithubIcon className="h-4 w-4" />
+                        <span className="font-semibold">Sign in</span>
+                    </button>
+                )}
+            </div>
+        </div>
+
+        {/* Mobile dropdown menu */}
+        {mobileMenuOpen && session && (
+            <div className="md:hidden mt-3 border-t border-slate-700/50 pt-3 flex flex-col gap-3">
+                {/* Profile row */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        {session.user?.image && (
+                            <Image
+                                src={session.user.image}
+                                alt={session.user?.name ?? 'User'}
+                                width={32}
+                                height={32}
+                                className="rounded-full ring-1 ring-purple-500/60"
+                            />
+                        )}
+                        <span className="text-sm font-semibold text-slate-200">{session.user?.name}</span>
+                    </div>
+                    <button
+                        onClick={() => signOut()}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-sm"
+                    >
+                        <LogOut className="h-3.5 w-3.5" />
+                        Sign out
+                    </button>
+                </div>
+
+                {/* Action row */}
+                <div className="flex items-center gap-2 flex-wrap">
+                    {onSync && (
+                        <button
+                            onClick={() => { onSync(); setMobileMenuOpen(false); }}
+                            disabled={syncing}
+                            className="flex items-center gap-1.5 px-3 py-2 btn-primary-gradient rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                            {syncing ? 'Syncing…' : 'Sync All'}
+                        </button>
+                    )}
+                    <Link
+                        href="/pmo"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium text-slate-300"
+                    >
+                        <LayoutDashboard className="h-4 w-4" />
+                        PMO
+                    </Link>
+                    {onToggleAddRepo && (
+                        <button
+                            onClick={() => { onToggleAddRepo(); setMobileMenuOpen(false); }}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium text-slate-300"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Add Repo
+                        </button>
+                    )}
+                    {onToggleFilters && (
+                        <button
+                            onClick={() => { onToggleFilters(); setMobileMenuOpen(false); }}
+                            className={`flex items-center gap-1.5 px-3 py-2 bg-slate-800 border rounded-lg text-sm font-medium transition-colors ${hasActiveFilters ? 'border-purple-500/50 text-purple-400' : 'border-slate-700 text-slate-300'}`}
+                        >
+                            <Filter className="h-4 w-4" />
+                            Filters
+                            {repoCount && (
+                                <span className="text-xs text-sky-400 font-bold">{repoCount.filtered}/{repoCount.total}</span>
+                            )}
+                        </button>
+                    )}
+                    {onToggleHidden && (
+                        <button
+                            onClick={onToggleHidden}
+                            className={`flex items-center gap-1.5 px-3 py-2 bg-slate-800 border rounded-lg text-sm font-medium transition-colors ${showHidden ? 'border-indigo-500/50 text-indigo-400' : 'border-slate-700 text-slate-300'}`}
+                        >
+                            {showHidden ? 'Hide hidden' : 'Show hidden'}
+                        </button>
+                    )}
+                    {onStartTour && (
+                        <button
+                            onClick={() => { onStartTour(); setMobileMenuOpen(false); }}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium text-slate-300"
+                        >
+                            <HelpCircle className="h-4 w-4" />
+                            Tour
+                        </button>
+                    )}
+                </div>
+
+                {/* Mobile add-repo form (shown when toggled) */}
+                {showAddRepo && onAddRepoSubmit && (
+                    <form onSubmit={onAddRepoSubmit} className="flex items-center gap-2 flex-wrap">
+                        <input
+                            type="text"
+                            value={addRepoUrl}
+                            onChange={(e) => onAddRepoUrlChange?.(e.target.value)}
+                            placeholder="owner/repo"
+                            className="flex-1 min-w-0 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-emerald-600/50 text-sm"
+                            autoFocus
+                        />
+                        <select
+                            value={addRepoType}
+                            onChange={(e) => onAddRepoTypeChange?.(e.target.value as RepoType)}
+                            className="px-2 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-300 focus:outline-none text-sm"
+                        >
+                            <option value="unknown">Type</option>
+                            <option value="web-app">Web App</option>
+                            <option value="game">Game</option>
+                            <option value="tool">Tool</option>
+                            <option value="library">Library</option>
+                            <option value="bot">Bot</option>
+                            <option value="research">Research</option>
+                        </select>
+                        <button
+                            type="submit"
+                            disabled={addingRepo || !addRepoUrl?.trim()}
+                            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg text-sm font-medium"
+                        >
+                            {addingRepo ? 'Adding…' : 'Add'}
+                        </button>
+                    </form>
+                )}
+
+                {/* Mobile filters (shown when toggled) */}
+                {showFilters && (
+                    <div className="flex flex-col gap-2">
+                        <div className="flex gap-2 flex-wrap">
+                            <select
+                                value={filterType}
+                                onChange={(e) => onFilterTypeChange?.(e.target.value as RepoType | 'all')}
+                                className="flex-1 px-3 py-2 bg-slate-700/60 border border-purple-500/60 rounded-lg text-slate-100 focus:outline-none text-sm"
+                            >
+                                <option value="all">All Types</option>
+                                {repoTypes.map((t) => (
+                                    <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' ')}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={filterLanguage}
+                                onChange={(e) => onFilterLanguageChange?.(e.target.value)}
+                                className="flex-1 px-3 py-2 bg-slate-700/60 border border-blue-500/60 rounded-lg text-slate-100 focus:outline-none text-sm"
+                            >
+                                <option value="all">All Languages</option>
+                                {languages.sort().map((lang) => (
+                                    <option key={lang} value={lang}>{lang}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={filterFork}
+                                onChange={(e) => onFilterForkChange?.(e.target.value as 'all' | 'no-forks' | 'forks-only')}
+                                className="flex-1 px-3 py-2 bg-slate-700/60 border border-fuchsia-500/60 rounded-lg text-slate-100 focus:outline-none text-sm"
+                            >
+                                <option value="all">All</option>
+                                <option value="no-forks">No Forks</option>
+                                <option value="forks-only">Forks Only</option>
+                            </select>
+                        </div>
+                        {hasActiveFilters && (
+                            <button
+                                onClick={onClearFilters}
+                                className="self-start px-3 py-1.5 text-sm text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded-lg transition-colors"
+                            >
+                                Clear filters
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                <RateLimitIndicator />
+            </div>
+        )}
         </header>
     );
 }

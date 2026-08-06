@@ -97,8 +97,8 @@ describe('GitHub webhook endpoint', () => {
         expect(json.event).toBe('ping');
     });
 
-    it('skips non-push events', async () => {
-        const req = makeRequest(pushPayload, 'issues');
+    it('skips unhandled event types (e.g. watch, star)', async () => {
+        const req = makeRequest(pushPayload, 'watch');
         const res = await POST(req);
         expect(res.status).toBe(200);
         const json = await res.json();

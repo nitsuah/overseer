@@ -38,8 +38,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true, event: 'ping' });
     }
 
-    // Only handle push events for now
-    if (event !== 'push') {
+    // Handle events that indicate meaningful repo changes
+    const SYNC_EVENTS = new Set(['push', 'pull_request', 'issues', 'release', 'create', 'delete']);
+    if (!SYNC_EVENTS.has(event ?? '')) {
         return NextResponse.json({ ok: true, event, skipped: true });
     }
 

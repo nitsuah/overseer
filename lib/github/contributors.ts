@@ -5,9 +5,9 @@ export async function getContributorStats(
   octokit: Octokit,
   owner: string,
   repo: string
-): Promise<{ contributorCount: number; commitFrequency: number; busFactor: number }> {
+): Promise<{ contributorCount: number; commitFrequency: number | null; busFactor: number }> {
   try {
-    const { data: contributors } = await octokit.repos.listContributors({
+    const contributors = await octokit.paginate(octokit.repos.listContributors, {
       owner,
       repo,
       per_page: 100,
@@ -25,8 +25,12 @@ export async function getContributorStats(
       if (cumulativeCommits >= totalCommits * 0.8) break;
     }
 
-    const { data: commitActivity } = await octokit.repos.getCommitActivityStats({ owner, repo });
-    const recentWeeks = Array.isArray(commitActivity) ? commitActivity.slice(-12) : [];
+    const activityResponse = await octokit.repos.getCommitActivityStats({ owner, repo });
+    if (activityResponse.status === 202) {
+      logger.warn(`[GitHub] Commit activity stats for ${owner}/${repo} are still being generated — skipping commitFrequency`);
+      return { contributorCount, commitFrequency: null, busFactor };
+    }
+    const recentWeeks = Array.isArray(activityResponse.data) ? activityResponse.data.slice(-12) : [];
     const commitFrequency =
       recentWeeks.length > 0
         ? recentWeeks.reduce((sum, week) => sum + (week.total || 0), 0) / recentWeeks.length

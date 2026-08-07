@@ -15,7 +15,7 @@ interface HealthBreakdownProps {
   onToggle: () => void;
 }
 
-export function HealthBreakdown({ repo, details, health, expanded, onToggle }: HealthBreakdownProps) {
+export function HealthBreakdown({ repo, details, health, expanded: _expanded, onToggle }: HealthBreakdownProps): React.JSX.Element {
   const [showPopup, setShowPopup] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const spanRef = React.useRef<HTMLSpanElement>(null);
@@ -23,10 +23,20 @@ export function HealthBreakdown({ repo, details, health, expanded, onToggle }: H
   const handleMouseEnter = () => {
     if (!spanRef.current) return;
     const rect = spanRef.current.getBoundingClientRect();
-    setPosition({
-      top: rect.bottom + 8,
-      left: rect.left + rect.width / 2,
-    });
+    const popupWidth = Math.min(400, window.innerWidth - 32);
+    const idealLeft = rect.left + rect.width / 2;
+    // Clamp so the popup never overflows the viewport edges horizontally
+    const clampedLeft = Math.max(
+      popupWidth / 2 + 16,
+      Math.min(window.innerWidth - popupWidth / 2 - 16, idealLeft)
+    );
+    // Place above the trigger when there isn't enough room below
+    const popupHeight = 220;
+    const spaceBelow = window.innerHeight - rect.bottom - 8;
+    const top = spaceBelow >= popupHeight
+      ? rect.bottom + 8
+      : Math.max(8, rect.top - popupHeight - 8);
+    setPosition({ top, left: clampedLeft });
     setShowPopup(true);
   };
   
@@ -162,7 +172,7 @@ export function HealthBreakdown({ repo, details, health, expanded, onToggle }: H
       </span>
       {showPopup && position && createPortal(
         <div 
-          className="fixed -translate-x-1/2 w-[400px] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl p-4 pointer-events-none"
+          className="fixed -translate-x-1/2 w-[min(400px,calc(100vw-32px))] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl p-4 pointer-events-none"
           style={{ 
             top: `${position.top}px`,
             left: `${position.left}px`,

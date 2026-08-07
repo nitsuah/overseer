@@ -180,7 +180,7 @@ Your task:
    - Performance metrics relevant to ${repo.language || 'this'}
    - Build/deployment metrics
 2. Create a metrics table with columns: Metric | Current | Target | Status
-3. Add "How to Update" section with specific commands for ${repo.language}
+3. Add "How to Update" section with specific commands for ${repo.language || 'this'}
 4. Use placeholder values like "TBD" or "0%" for current values
 
 Return ONLY complete Markdown for METRICS.md with REAL metrics.${NO_HALLUCINATION_CONSTRAINT}`;

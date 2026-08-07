@@ -38,8 +38,17 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true, event: 'ping' });
     }
 
-    // Only handle push events for now
-    if (event !== 'push') {
+    // Identifiers for GitHub webhook events that indicate meaningful repo changes
+    enum GitHubWebhookEvent {
+        Push = 'push',
+        PullRequest = 'pull_request',
+        Issues = 'issues',
+        Release = 'release',
+        Create = 'create',
+        Delete = 'delete',
+    }
+    const SYNC_EVENTS = new Set<string>(Object.values(GitHubWebhookEvent));
+    if (!SYNC_EVENTS.has(event ?? '')) {
         return NextResponse.json({ ok: true, event, skipped: true });
     }
 
@@ -76,7 +85,7 @@ export async function POST(request: NextRequest) {
     const db = getNeonClient();
     const tracked = await db`SELECT name FROM repos WHERE full_name = ${repoFullName} LIMIT 1`;
     if (tracked.length === 0) {
-        logger.info(`[webhook] push for untracked repo ${repoFullName} — ignoring`);
+        logger.info(`[webhook] ${event} for untracked repo ${repoFullName} — ignoring`);
         return NextResponse.json({ ok: true, skipped: true, reason: 'repo not tracked' });
     }
 
@@ -86,7 +95,7 @@ export async function POST(request: NextRequest) {
             const github = new GitHubClient(systemToken, owner);
             const repo = await github.getRepo(owner, repoName);
             await syncRepo(repo, github, db);
-            logger.info(`[webhook] Synced ${repoFullName} after push event`);
+            logger.info(`[webhook] Synced ${repoFullName} after ${event} event`);
         } catch (err) {
             logger.warn(`[webhook] Background sync failed for ${repoFullName}:`, err);
         }

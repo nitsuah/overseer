@@ -192,7 +192,8 @@ export async function getLanguageStats(
   try {
     const { data } = await octokit.repos.listLanguages({ owner, repo });
     return data;
-  } catch {
+  } catch (error) {
+    logger.warn(`[GitHub] Failed to fetch language stats for ${owner}/${repo}:`, error);
     return {};
   }
 }
@@ -225,7 +226,8 @@ export async function getWorkflowRuns(
       lastRun: latestRun.updated_at || latestRun.created_at,
       workflowName: latestRun.name || null,
     };
-  } catch {
+  } catch (error) {
+    logger.warn(`[GitHub] Failed to fetch workflow runs for ${owner}/${repo}:`, error);
     return { status: 'unknown', lastRun: null, workflowName: null };
   }
 }

@@ -125,7 +125,7 @@ export class GitHubClient {
   }
 
   // Contributor operations
-  getContributorStats(repo: string, owner?: string): Promise<{ contributorCount: number; commitFrequency: number; busFactor: number }> {
+  getContributorStats(repo: string, owner?: string): Promise<{ contributorCount: number; commitFrequency: number | null; busFactor: number }> {
     return Contributors.getContributorStats(this.octokit, owner || this.owner, repo);
   }
 }

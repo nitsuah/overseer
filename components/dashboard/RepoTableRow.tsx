@@ -102,7 +102,7 @@ export function RepoTableRow({
         onClick={onToggleExpanded}
       >
         {/* Repository Name with Type and Language */}
-        <td className="px-6 py-4">
+        <td className="px-3 md:px-6 py-3 md:py-4">
           <div className="flex items-center gap-2">
             {/* Type Icon */}
             <div className={repo.is_hidden ? 'opacity-50 grayscale' : ''}>
@@ -206,7 +206,7 @@ export function RepoTableRow({
           </div>
         </td>
         {/* Description */}
-        <td className="px-6 py-4 text-sm text-slate-400 hidden xl:table-cell">
+        <td className="px-3 md:px-6 py-3 md:py-4 text-sm text-slate-400 hidden xl:table-cell">
           <div className={`flex items-center gap-2 ${repo.is_hidden ? 'opacity-50' : ''}`}>
             <div className="truncate max-w-md" title={repo.description || ''}>
               {repo.description || '—'}
@@ -224,7 +224,7 @@ export function RepoTableRow({
             )}
           </div>
         </td>
-        <td className="px-6 py-4" data-tour="health-score">
+        <td className="px-3 md:px-6 py-3 md:py-4" data-tour="health-score">
           <div className="flex flex-col gap-2">
             <div className={`flex items-center gap-2 ${repo.is_hidden ? 'opacity-50 grayscale' : ''}`}>
               {details && (
@@ -246,7 +246,7 @@ export function RepoTableRow({
           </div>
         </td>
         {/* Docs Column */}
-        <td className={`px-6 py-4 ${repo.is_hidden ? 'opacity-50 grayscale' : ''}`} data-tour="docs">
+        <td className={`px-3 md:px-6 py-3 md:py-4 hidden sm:table-cell ${repo.is_hidden ? 'opacity-50 grayscale' : ''}`} data-tour="docs">
           <DocStatusDisplay
             repo={repo}
             details={details}
@@ -260,8 +260,8 @@ export function RepoTableRow({
             onSyncSingleRepo={onSyncSingleRepo}
           />
         </td>
-        {/* Actions Column - Remove */}
-        <td className="px-6 py-4" data-tour="actions">
+        {/* Actions Column */}
+        <td className="px-3 md:px-6 py-3 md:py-4" data-tour="actions">
           <div className="flex items-center gap-2">
             {/* If repo is hidden, show Restore button, else show standard actions */}
             {repo.is_hidden ? (

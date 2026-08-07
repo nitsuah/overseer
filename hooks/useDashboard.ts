@@ -7,9 +7,9 @@ export function useRepos(showHidden = false) {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchRepos = useCallback(async () => {
+  const fetchRepos = useCallback(async (silent: boolean = false): Promise<void> => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const res = await fetch(`/api/repos?showHidden=${showHidden}`);
       if (!res.ok) {
         console.error(`Failed to fetch repos: ${res.status} ${res.statusText}`);
@@ -27,7 +27,7 @@ export function useRepos(showHidden = false) {
     } catch (error) {
       console.error('Failed to fetch repos:', error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [showHidden]);
 
@@ -35,7 +35,10 @@ export function useRepos(showHidden = false) {
     fetchRepos();
   }, [fetchRepos]);
 
-  return { repos, setRepos, loading, refetch: fetchRepos };
+  // Silent refetch: updates data without flashing a loading spinner
+  const refetch = useCallback((): Promise<void> => fetchRepos(true), [fetchRepos]);
+
+  return { repos, setRepos, loading, refetch };
 }
 
 export function useRepoDetails() {
@@ -84,12 +87,19 @@ export function useRepoDetails() {
     }
   };
 
-  const fetchAllRepoDetails = async (repoNames: string[]) => {
-    // Fetch all repo details in parallel
-    await Promise.all(repoNames.map(name => fetchRepoDetails(name)));
-  };
+  const invalidateRepoDetails = useCallback((repoName: string): void => {
+    setRepoDetails(prev => {
+      const next = { ...prev };
+      delete next[repoName];
+      return next;
+    });
+  }, []);
 
-  return { repoDetails, fetchRepoDetails, fetchAllRepoDetails };
+  const clearAllRepoDetails = useCallback((): void => {
+    setRepoDetails({});
+  }, []);
+
+  return { repoDetails, fetchRepoDetails, invalidateRepoDetails, clearAllRepoDetails };
 }
 
 export function useRepoExpansion() {
@@ -110,20 +120,17 @@ export function useRepoExpansion() {
 
 /**
  * Auto-refresh expanded repo panels every `intervalMs` (default 5 min).
- * Uses a recursive setTimeout so the next tick only fires after the async
- * refresh fully completes. Timers are cancelled when a panel is collapsed
- * or when the component unmounts, preventing wasted API calls.
- * When `intervalMs` changes at runtime, all active timers are restarted
- * with the new interval.
+ * Before each sync, checks the GitHub Events API — if nothing has changed
+ * since the last sync, the expensive full sync is skipped entirely.
+ * Uses recursive setTimeout so the next tick only starts after the current
+ * one finishes. Timers cancel when a panel collapses or the component unmounts.
  */
 export function useRepoPolling(
   expandedRepos: Set<string>,
   onRefresh: (repoName: string) => Promise<void>,
   intervalMs = 5 * 60 * 1000
-) {
+): void {
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  // Refs keep the latest values accessible inside timer callbacks without
-  // requiring the effect to re-subscribe on every render.
   const onRefreshRef = useRef(onRefresh);
   const expandedReposRef = useRef(expandedRepos);
   const intervalMsRef = useRef(intervalMs);
@@ -131,19 +138,30 @@ export function useRepoPolling(
   useEffect(() => { expandedReposRef.current = expandedRepos; }, [expandedRepos]);
   useEffect(() => { intervalMsRef.current = intervalMs; }, [intervalMs]);
 
-  // scheduleOne is stable (no deps) because all mutable values are read via refs.
-  const scheduleOne = useCallback((repoName: string) => {
+  const scheduleOne = useCallback((repoName: string): void => {
     const timers = timersRef.current;
-    if (timers.has(repoName)) return; // already counting down
+    if (timers.has(repoName)) return;
     const timer = setTimeout(async () => {
       timers.delete(repoName);
       try {
-        await onRefreshRef.current(repoName);
+        // Check for new GitHub events before running the expensive full sync
+        let hasNewEvents = true; // default: sync if check fails
+        try {
+          const evRes = await fetch(`/api/repos/${repoName}/events`);
+          if (evRes.ok) {
+            const evData = await evRes.json();
+            hasNewEvents = evData.hasNewEvents ?? true;
+          }
+        } catch {
+          // Network error on events check — proceed with sync to stay fresh
+        }
+
+        if (hasNewEvents) {
+          await onRefreshRef.current(repoName);
+        }
       } catch (err) {
         console.error(`[useRepoPolling] refresh failed for "${repoName}":`, err);
       }
-      // Re-schedule while the panel is still expanded — this is what makes
-      // it truly poll rather than fire once.
       if (expandedReposRef.current.has(repoName)) {
         scheduleOne(repoName);
       }
@@ -151,14 +169,9 @@ export function useRepoPolling(
     timers.set(repoName, timer);
   }, []);
 
-  // Start/cancel timers as the set of expanded repos changes.
   useEffect(() => {
     const timers = timersRef.current;
-
-    // Start a timer for each newly-expanded repo
     expandedRepos.forEach(repoName => scheduleOne(repoName));
-
-    // Cancel timers for repos that have been collapsed
     timers.forEach((timer, repoName) => {
       if (!expandedRepos.has(repoName)) {
         clearTimeout(timer);
@@ -167,8 +180,6 @@ export function useRepoPolling(
     });
   }, [expandedRepos, scheduleOne]);
 
-  // When intervalMs changes, restart all active timers so the new interval
-  // takes effect immediately rather than waiting for the next expansion.
   const prevIntervalMsRef = useRef(intervalMs);
   useEffect(() => {
     if (prevIntervalMsRef.current === intervalMs) return;
@@ -182,7 +193,6 @@ export function useRepoPolling(
     active.forEach(repoName => scheduleOne(repoName));
   }, [intervalMs, scheduleOne]);
 
-  // Cancel all timers when the component unmounts
   useEffect(() => {
     const timers = timersRef.current;
     return () => {

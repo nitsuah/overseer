@@ -38,8 +38,21 @@ export function TourTooltip({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const titleId = `tour-step-title-${currentStep}`;
 
+  const prevHeightRef = useRef<number>(0);
   useLayoutEffect(() => {
-    onMeasure?.(tooltipRef.current?.offsetHeight ?? 220);
+    const el = tooltipRef.current;
+    if (!el) return;
+    const report = () => {
+      const h = el.offsetHeight;
+      if (h !== prevHeightRef.current) {
+        prevHeightRef.current = h;
+        onMeasure?.(h);
+      }
+    };
+    report();
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [currentStep, onMeasure]);
 
   useEffect(() => {
@@ -52,7 +65,7 @@ export function TourTooltip({
       role="dialog"
       aria-labelledby={titleId}
       tabIndex={-1}
-      className="absolute bg-slate-900 border-2 border-blue-400 rounded-lg shadow-[0_0_40px_rgba(59,130,246,0.4)] p-6 w-[400px] z-[10000] focus:outline-none"
+      className="absolute bg-slate-900 border-2 border-blue-400 rounded-lg shadow-[0_0_40px_rgba(59,130,246,0.4)] p-6 w-[min(400px,calc(100vw-32px))] z-[10000] focus:outline-none"
       style={{ top: position.top, left: position.left }}
       onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); onSkip(); } }}
     >

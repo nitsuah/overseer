@@ -17,6 +17,8 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
   const [countdown, setCountdown] = useState(3);
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const clickWaitTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingTimersRef = useRef<NodeJS.Timeout[]>([]);
   const tooltipHeightRef = useRef(220);
 
   const step = tourSteps[currentStep];
@@ -41,10 +43,6 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     }
   }, [isFirstStep, isLastStep]);
 
-  const handleTooltipMeasure = useCallback((height: number) => {
-    tooltipHeightRef.current = height;
-  }, []);
-
   const clearTimers = useCallback(() => {
     if (autoAdvanceTimerRef.current) {
       clearTimeout(autoAdvanceTimerRef.current);
@@ -54,15 +52,30 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       clearInterval(countdownIntervalRef.current);
       countdownIntervalRef.current = null;
     }
+    if (clickWaitTimerRef.current) {
+      clearTimeout(clickWaitTimerRef.current);
+      clickWaitTimerRef.current = null;
+    }
+    pendingTimersRef.current.forEach(clearTimeout);
+    pendingTimersRef.current = [];
+  }, []);
+
+  const scheduleDelayed = useCallback((fn: () => void, ms: number): void => {
+    const id = setTimeout(() => {
+      pendingTimersRef.current = pendingTimersRef.current.filter(t => t !== id);
+      fn();
+    }, ms);
+    pendingTimersRef.current.push(id);
   }, []);
 
   const updateHighlight = useCallback(() => {
     const element = document.querySelector(step.target);
     if (!element) {
       if (step.id === 'welcome') {
+        const w = Math.min(400, window.innerWidth - 32);
         setTooltipPosition({
           top: Math.max(100, window.innerHeight / 3 - 100),
-          left: window.innerWidth / 2 - 200,
+          left: Math.max(16, window.innerWidth / 2 - w / 2),
         });
       }
       return;
@@ -71,7 +84,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     const rect = element.getBoundingClientRect();
     setHighlightRect(rect);
 
-    const tooltipWidth = 400;
+    const tooltipWidth = Math.min(400, window.innerWidth - 32);
     const tooltipHeight = tooltipHeightRef.current;
     let top = 0;
     let left = 0;
@@ -79,15 +92,15 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     switch (step.position) {
       case 'top':
         top = rect.top - tooltipHeight;
-        left = rect.left + rect.width / 2 - 200;
+        left = rect.left + rect.width / 2 - tooltipWidth / 2;
         break;
       case 'bottom':
         top = rect.bottom + 20;
-        left = rect.left + rect.width / 2 - 200;
+        left = rect.left + rect.width / 2 - tooltipWidth / 2;
         break;
       case 'left':
         top = rect.top + rect.height / 2 - 100;
-        left = rect.left - 420;
+        left = rect.left - tooltipWidth - 20;
         break;
       case 'right':
         top = rect.top + rect.height / 2 - 100;
@@ -100,11 +113,22 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     setTooltipPosition({ top, left });
   }, [step.target, step.id, step.position]);
 
+  // Keep a stable ref so handleTooltipMeasure can call the latest updateHighlight
+  // without being in its dependency array (which would break memoization).
+  const updateHighlightRef = useRef(updateHighlight);
+  useEffect(() => { updateHighlightRef.current = updateHighlight; }, [updateHighlight]);
+
+  const handleTooltipMeasure = useCallback((height: number) => {
+    tooltipHeightRef.current = height;
+    updateHighlightRef.current();
+  }, []);
+
   const clickAndWait = (selector: string, delay: number, then: () => void): boolean => {
     const el = document.querySelector(selector) as HTMLElement | null;
     if (el) {
       el.click();
-      setTimeout(then, delay);
+      if (clickWaitTimerRef.current) clearTimeout(clickWaitTimerRef.current);
+      clickWaitTimerRef.current = setTimeout(then, delay);
       return true;
     }
     return false;
@@ -113,16 +137,32 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
   useEffect(() => {
     clearTimers();
 
+    // Register resize handler for all paths; cleanup returned unconditionally.
+    window.addEventListener('resize', updateHighlight);
+    const cleanup = () => {
+      window.removeEventListener('resize', updateHighlight);
+      clearTimers();
+    };
+
     const firstRow = document.querySelector('tbody tr:first-child') as HTMLElement;
 
     if (['repo-name', 'health-score', 'docs-column', 'actions'].includes(step.id)) {
+      // On mobile the Docs column is CSS-hidden; skip the step so the tour
+      // doesn't highlight an invisible element.
+      if (step.id === 'docs-column') {
+        const docsEl = document.querySelector('[data-tour="docs"]');
+        if (docsEl && docsEl.getBoundingClientRect().width === 0) {
+          scheduleDelayed(() => setCurrentStep(prev => prev + 1), 50);
+          return cleanup;
+        }
+      }
       if (firstRow && !document.querySelector('.grid')) {
         firstRow.click();
-        setTimeout(() => {
+        scheduleDelayed(() => {
           updateHighlight();
           startAutoAdvance();
         }, 400);
-        return;
+        return cleanup;
       }
     }
 
@@ -137,17 +177,17 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
             startAutoAdvance();
           }
         );
-        if (clicked) return;
+        if (clicked) return cleanup;
       }
       updateHighlight(); // eslint-disable-line react-hooks/set-state-in-effect
       startAutoAdvance();
-      return;
+      return cleanup;
     }
 
     if (step.id === 'roadmap' || step.id === 'tasks') {
-      updateHighlight();  
+      updateHighlight();
       startAutoAdvance();
-      return;
+      return cleanup;
     }
 
     if (step.id === 'documentation') {
@@ -160,10 +200,10 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
           clickAndWait(
             '[data-tour="documentation"] div[class*="cursor-pointer"]',
             400,
-            () => setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100)
+            () => scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100)
           );
         } else {
-          setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100);
+          scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100);
         }
       };
 
@@ -173,15 +213,15 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
           400,
           expandDoc
         );
-        return;
+        return cleanup;
       }
       expandDoc();
-      return;
+      return cleanup;
     }
 
     if (step.id === 'best-practices' || step.id === 'testing') {
-      setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100);
-      return;
+      scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100);
+      return cleanup;
     }
 
     if (step.id === 'community') {
@@ -194,10 +234,10 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
           clickAndWait(
             '[data-tour="community"] div[class*="cursor-pointer"]',
             400,
-            () => setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100)
+            () => scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100)
           );
         } else {
-          setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100);
+          scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100);
         }
       };
 
@@ -207,20 +247,20 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
           400,
           expandCommunity
         );
-        return;
+        return cleanup;
       }
       expandCommunity();
-      return;
+      return cleanup;
     }
 
     if (step.id === 'metrics' || step.id === 'issues') {
       const sectionEl = document.querySelector(`[data-tour="${step.id}"]`);
       if (!sectionEl) {
-        setTimeout(() => setCurrentStep((prev) => prev + 1), 100);
-        return;
+        scheduleDelayed(() => setCurrentStep((prev) => prev + 1), 100);
+        return cleanup;
       }
-      setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100);
-      return;
+      scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100);
+      return cleanup;
     }
 
     if (['add-repo', 'filters', 'sync-all'].includes(step.id)) {
@@ -232,12 +272,12 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
             400,
             () => { updateHighlight(); startAutoAdvance(); }
           );
-          return;
+          return cleanup;
         }
       }
-      updateHighlight();  
+      updateHighlight();
       startAutoAdvance();
-      return;
+      return cleanup;
     }
 
     if (['auth-status', 'gemini-status', 'version-info'].includes(step.id)) {
@@ -247,24 +287,20 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
           updateHighlight();
           startAutoAdvance();
         });
-        return;
+        return cleanup;
       }
     }
 
     if (step.id === 'profile-close') {
-      updateHighlight();  
-      return;
+      updateHighlight();
+      return cleanup;
     }
 
-    updateHighlight();  
+    updateHighlight();
     startAutoAdvance();
 
-    window.addEventListener('resize', updateHighlight);
-    return () => {
-      window.removeEventListener('resize', updateHighlight);
-      clearTimers();
-    };
-  }, [currentStep, step.id, updateHighlight, startAutoAdvance, clearTimers]);
+    return cleanup;
+  }, [currentStep, step.id, updateHighlight, startAutoAdvance, clearTimers, scheduleDelayed]);
 
   const handleNext = (): void => {
     clearTimers();

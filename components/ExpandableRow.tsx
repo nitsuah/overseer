@@ -116,9 +116,9 @@ export default function ExpandableRow({
   return (
     <div className="p-6 bg-gradient-to-br from-slate-950/80 via-slate-900/60 to-slate-950/80 border-t border-slate-700/50">
       {/* Main Layout: Repository Stats + Issues (left sidebar) + Content Grid (right) */}
-      <div className="flex gap-6">
+      <div className="flex flex-col md:flex-row gap-6">
         {/* Left Sidebar: AI Summary + Repository Stats + Issues + Metrics */}
-        <div className="w-96 shrink-0 space-y-6">
+        <div className="w-full md:w-96 md:shrink-0 space-y-6">
           {/* AI Summary - First in sidebar */}
           <AISummarySection
             aiSummary={aiSummaryDismissed ? undefined : aiSummary}

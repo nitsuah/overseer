@@ -97,8 +97,8 @@ describe('GitHub webhook endpoint', () => {
         expect(json.event).toBe('ping');
     });
 
-    it('skips non-push events', async () => {
-        const req = makeRequest(pushPayload, 'issues');
+    it('skips unhandled event types (e.g. watch, star)', async () => {
+        const req = makeRequest(pushPayload, 'watch');
         const res = await POST(req);
         expect(res.status).toBe(200);
         const json = await res.json();
@@ -134,4 +134,40 @@ describe('GitHub webhook endpoint', () => {
         const json = await res.json();
         expect(json.queued).toBe('owner/my-repo');
     });
+
+    it.each(['pull_request', 'issues', 'release', 'create', 'delete'])(
+        'queues sync for tracked repo on %s event',
+        async (event: string): Promise<void> => {
+            const mockTag = vi.fn().mockResolvedValue([{ name: 'my-repo' }]);
+            (getNeonClient as Mock).mockReturnValue(mockTag);
+
+            const { GitHubClient } = await import('@/lib/github');
+            (GitHubClient as Mock).mockImplementation(() => ({
+                getRepo: vi.fn().mockResolvedValue({ name: 'my-repo', fullName: 'owner/my-repo' }),
+            }));
+
+            const req = makeRequest(pushPayload, event);
+            const res = await POST(req);
+            expect(res.status).toBe(200);
+            const json = await res.json();
+            expect(json.queued).toBe('owner/my-repo');
+        }
+    );
+
+    it.each(['pull_request', 'issues', 'release', 'create', 'delete'])(
+        'skips %s event for untracked repo',
+        async (event: string): Promise<void> => {
+            (getNeonClient as Mock).mockReturnValue(
+                Object.assign(
+                    vi.fn().mockResolvedValue([]),
+                    { transaction: vi.fn() }
+                )
+            );
+            const req = makeRequest(pushPayload, event);
+            const res = await POST(req);
+            expect(res.status).toBe(200);
+            const json = await res.json();
+            expect(json.skipped).toBe(true);
+        }
+    );
 });

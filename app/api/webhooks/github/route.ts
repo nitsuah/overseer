@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Identifiers for GitHub webhook events that indicate meaningful repo changes
-    const enum GitHubWebhookEvent {
+    enum GitHubWebhookEvent {
         Push = 'push',
         PullRequest = 'pull_request',
         Issues = 'issues',

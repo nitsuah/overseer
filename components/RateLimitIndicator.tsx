@@ -36,7 +36,7 @@ export function useRateLimit(enabled: boolean = true): RateLimitState {
     let inflight = false;
     const controller = new AbortController();
 
-    const fetchRateLimit = async () => {
+    const fetchRateLimit = async (): Promise<void> => {
       if (inflight) return;
       inflight = true;
       try {

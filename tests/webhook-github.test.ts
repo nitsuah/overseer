@@ -137,7 +137,7 @@ describe('GitHub webhook endpoint', () => {
 
     it.each(['pull_request', 'issues', 'release', 'create', 'delete'])(
         'queues sync for tracked repo on %s event',
-        async (event: string) => {
+        async (event: string): Promise<void> => {
             const mockTag = vi.fn().mockResolvedValue([{ name: 'my-repo' }]);
             (getNeonClient as Mock).mockReturnValue(mockTag);
 
@@ -156,7 +156,7 @@ describe('GitHub webhook endpoint', () => {
 
     it.each(['pull_request', 'issues', 'release', 'create', 'delete'])(
         'skips %s event for untracked repo',
-        async (event: string) => {
+        async (event: string): Promise<void> => {
             (getNeonClient as Mock).mockReturnValue(
                 Object.assign(
                     vi.fn().mockResolvedValue([]),

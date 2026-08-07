@@ -24,7 +24,7 @@ interface RateLimitState {
   error: string | null;
 }
 
-export function useRateLimit(enabled = true): RateLimitState {
+export function useRateLimit(enabled: boolean = true): RateLimitState {
   const [rateLimit, setRateLimit] = useState<RateLimitData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,25 +32,36 @@ export function useRateLimit(enabled = true): RateLimitState {
   useEffect(() => {
     if (!enabled) return;
 
+    let aborted = false;
+    let inflight = false;
+    const controller = new AbortController();
+
     const fetchRateLimit = async () => {
+      if (inflight) return;
+      inflight = true;
       try {
-        const res = await fetch('/api/github-rate-limit');
+        const res = await fetch('/api/github-rate-limit', { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
-          setRateLimit(data);
+          if (!aborted) { setRateLimit(data); setError(null); }
         } else {
-          setError('Failed to fetch rate limit');
+          if (!aborted) setError('Failed to fetch rate limit');
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        if (!aborted) setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
-        setLoading(false);
+        inflight = false;
+        if (!aborted) setLoading(false);
       }
     };
 
     fetchRateLimit();
     const interval = setInterval(fetchRateLimit, 60000);
-    return () => clearInterval(interval);
+    return () => {
+      aborted = true;
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [enabled]);
 
   return { rateLimit, loading, error };

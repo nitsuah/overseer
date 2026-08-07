@@ -129,7 +129,7 @@ export function useRepoPolling(
   expandedRepos: Set<string>,
   onRefresh: (repoName: string) => Promise<void>,
   intervalMs = 5 * 60 * 1000
-) {
+): void {
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const onRefreshRef = useRef(onRefresh);
   const expandedReposRef = useRef(expandedRepos);
@@ -138,7 +138,7 @@ export function useRepoPolling(
   useEffect(() => { expandedReposRef.current = expandedRepos; }, [expandedRepos]);
   useEffect(() => { intervalMsRef.current = intervalMs; }, [intervalMs]);
 
-  const scheduleOne = useCallback((repoName: string) => {
+  const scheduleOne = useCallback((repoName: string): void => {
     const timers = timersRef.current;
     if (timers.has(repoName)) return;
     const timer = setTimeout(async () => {

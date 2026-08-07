@@ -653,6 +653,7 @@ export default function Header(props: HeaderProps = {}) {
                             autoFocus
                         />
                         <select
+                            aria-label="Repository type"
                             value={addRepoType}
                             onChange={(e) => onAddRepoTypeChange?.(e.target.value as RepoType)}
                             className="px-2 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-300 focus:outline-none text-sm"

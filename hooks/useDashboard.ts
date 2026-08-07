@@ -7,7 +7,7 @@ export function useRepos(showHidden = false) {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchRepos = useCallback(async (silent = false) => {
+  const fetchRepos = useCallback(async (silent: boolean = false): Promise<void> => {
     try {
       if (!silent) setLoading(true);
       const res = await fetch(`/api/repos?showHidden=${showHidden}`);
@@ -36,7 +36,7 @@ export function useRepos(showHidden = false) {
   }, [fetchRepos]);
 
   // Silent refetch: updates data without flashing a loading spinner
-  const refetch = useCallback(() => fetchRepos(true), [fetchRepos]);
+  const refetch = useCallback((): Promise<void> => fetchRepos(true), [fetchRepos]);
 
   return { repos, setRepos, loading, refetch };
 }
@@ -87,7 +87,19 @@ export function useRepoDetails() {
     }
   };
 
-  return { repoDetails, fetchRepoDetails };
+  const invalidateRepoDetails = useCallback((repoName: string) => {
+    setRepoDetails(prev => {
+      const next = { ...prev };
+      delete next[repoName];
+      return next;
+    });
+  }, []);
+
+  const clearAllRepoDetails = useCallback(() => {
+    setRepoDetails({});
+  }, []);
+
+  return { repoDetails, fetchRepoDetails, invalidateRepoDetails, clearAllRepoDetails };
 }
 
 export function useRepoExpansion() {

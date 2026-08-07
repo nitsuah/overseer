@@ -27,7 +27,7 @@ export const tourSteps: TourStep[] = [
     id: 'health-score',
     title: 'Health Score',
     description:
-      'Visual indicator of overall repository health. Hover to see the breakdown: Testing (25%), Best Practices (25%), Documentation (20%), Community (10%), and Activity (10%).',
+      'Visual indicator of overall repository health. Hover to see the breakdown: Testing (25%), Best Practices (25%), Documentation (20%), Community (10%), Activity (10%), and Security (10%).',
     target: '[data-tour="health-score"]',
     position: 'left',
   },
@@ -129,7 +129,7 @@ export const tourSteps: TourStep[] = [
     id: 'filters',
     title: 'Filter & Search',
     description:
-      'Filter repositories by type, language, or fork status. Use search to quickly find specific projects.',
+      'Filter repositories by type, language, or fork status.',
     target: '[data-tour="filters"]',
     position: 'bottom',
   },

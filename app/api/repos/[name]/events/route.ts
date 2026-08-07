@@ -13,8 +13,7 @@ export async function GET(
         if (!session?.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const accessToken = (session as any).accessToken;
+        const accessToken = session.accessToken;
         if (!accessToken) {
             return NextResponse.json({ error: 'No GitHub access token' }, { status: 401 });
         }
@@ -50,7 +49,6 @@ export async function GET(
         return NextResponse.json({ hasNewEvents, latestEventAt });
     } catch (error) {
         logger.warn('[events] Failed to check repo events:', error);
-        // On error, assume no new events to avoid spurious full syncs
-        return NextResponse.json({ hasNewEvents: false });
+        return NextResponse.json({ error: 'Failed to check events' }, { status: 503 });
     }
 }

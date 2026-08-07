@@ -38,8 +38,16 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true, event: 'ping' });
     }
 
-    // Handle events that indicate meaningful repo changes
-    const SYNC_EVENTS = new Set(['push', 'pull_request', 'issues', 'release', 'create', 'delete']);
+    // Identifiers for GitHub webhook events that indicate meaningful repo changes
+    const enum GitHubWebhookEvent {
+        Push = 'push',
+        PullRequest = 'pull_request',
+        Issues = 'issues',
+        Release = 'release',
+        Create = 'create',
+        Delete = 'delete',
+    }
+    const SYNC_EVENTS = new Set<string>(Object.values(GitHubWebhookEvent));
     if (!SYNC_EVENTS.has(event ?? '')) {
         return NextResponse.json({ ok: true, event, skipped: true });
     }

@@ -38,8 +38,13 @@ export function TourTooltip({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const titleId = `tour-step-title-${currentStep}`;
 
+  const prevHeightRef = useRef<number>(0);
   useLayoutEffect(() => {
-    onMeasure?.(tooltipRef.current?.offsetHeight ?? 220);
+    const h = tooltipRef.current?.offsetHeight ?? 220;
+    if (h !== prevHeightRef.current) {
+      prevHeightRef.current = h;
+      onMeasure?.(h);
+    }
   }, [currentStep, onMeasure]);
 
   useEffect(() => {

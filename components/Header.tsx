@@ -215,7 +215,7 @@ export default function Header(props: HeaderProps = {}) {
                                             className="px-3 py-1.5 bg-slate-700/60 border-2 border-blue-500/60 rounded-lg text-slate-100 hover:border-blue-400/80 hover:shadow-sm hover:shadow-blue-500/30 focus:outline-none focus:border-blue-400 transition-all duration-200 text-sm font-medium cursor-pointer"
                                         >
                                             <option value="all" className="bg-slate-900 text-slate-300">Language</option>
-                                            {languages.sort().map((lang) => {
+                                            {[...languages].sort().map((lang) => {
                                                 const colorClass = getLanguageColor(lang);
                                                 return (
                                                     <option key={lang} value={lang} className={`bg-slate-900 ${colorClass} font-semibold`}>
@@ -536,7 +536,8 @@ export default function Header(props: HeaderProps = {}) {
                         <button
                             onClick={() => setMobileMenuOpen(o => !o)}
                             className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300"
-                            aria-label="Open menu"
+                            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                            aria-expanded={mobileMenuOpen}
                         >
                             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                         </button>
@@ -602,7 +603,7 @@ export default function Header(props: HeaderProps = {}) {
                     </Link>
                     {onToggleAddRepo && (
                         <button
-                            onClick={() => { onToggleAddRepo(); setMobileMenuOpen(false); }}
+                            onClick={onToggleAddRepo}
                             className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium text-slate-300"
                         >
                             <Plus className="h-4 w-4" />
@@ -611,7 +612,7 @@ export default function Header(props: HeaderProps = {}) {
                     )}
                     {onToggleFilters && (
                         <button
-                            onClick={() => { onToggleFilters(); setMobileMenuOpen(false); }}
+                            onClick={onToggleFilters}
                             className={`flex items-center gap-1.5 px-3 py-2 bg-slate-800 border rounded-lg text-sm font-medium transition-colors ${hasActiveFilters ? 'border-purple-500/50 text-purple-400' : 'border-slate-700 text-slate-300'}`}
                         >
                             <Filter className="h-4 w-4" />
@@ -679,6 +680,7 @@ export default function Header(props: HeaderProps = {}) {
                     <div className="flex flex-col gap-2">
                         <div className="flex gap-2 flex-wrap">
                             <select
+                                aria-label="Filter by repository type"
                                 value={filterType}
                                 onChange={(e) => onFilterTypeChange?.(e.target.value as RepoType | 'all')}
                                 className="flex-1 px-3 py-2 bg-slate-700/60 border border-purple-500/60 rounded-lg text-slate-100 focus:outline-none text-sm"
@@ -689,16 +691,18 @@ export default function Header(props: HeaderProps = {}) {
                                 ))}
                             </select>
                             <select
+                                aria-label="Filter by language"
                                 value={filterLanguage}
                                 onChange={(e) => onFilterLanguageChange?.(e.target.value)}
                                 className="flex-1 px-3 py-2 bg-slate-700/60 border border-blue-500/60 rounded-lg text-slate-100 focus:outline-none text-sm"
                             >
                                 <option value="all">All Languages</option>
-                                {languages.sort().map((lang) => (
+                                {[...languages].sort().map((lang) => (
                                     <option key={lang} value={lang}>{lang}</option>
                                 ))}
                             </select>
                             <select
+                                aria-label="Filter by fork status"
                                 value={filterFork}
                                 onChange={(e) => onFilterForkChange?.(e.target.value as 'all' | 'no-forks' | 'forks-only')}
                                 className="flex-1 px-3 py-2 bg-slate-700/60 border border-fuchsia-500/60 rounded-lg text-slate-100 focus:outline-none text-sm"

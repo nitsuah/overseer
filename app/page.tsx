@@ -16,7 +16,7 @@ export default function Dashboard() {
   const { data: session } = useSession();
   const [showHidden, setShowHidden] = useState(false);
   const { repos, setRepos, loading, refetch } = useRepos(showHidden);
-  const { repoDetails, fetchRepoDetails } = useRepoDetails();
+  const { repoDetails, fetchRepoDetails, invalidateRepoDetails, clearAllRepoDetails } = useRepoDetails();
   const { expandedRepos, toggleRepo } = useRepoExpansion();
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -73,13 +73,14 @@ export default function Dashboard() {
       const res = await fetch('/api/sync-repos', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
+        clearAllRepoDetails();
         await refetch();
         setToastMessage(data.message || 'Sync started successfully!');
       } else {
         const errorData = await res.json();
         setToastMessage(`Sync failed: ${errorData.error || 'Unknown error'}`);
       }
-    } catch (error) {
+    } catch {
       setToastMessage('Failed to sync repos - network error');
     } finally {
       setSyncing(false);
@@ -105,11 +106,12 @@ export default function Dashboard() {
 
   const handleSyncAndRefresh = useCallback(async (repoName: string) => {
     await handleSyncSingleRepo(repoName, () => {
+      invalidateRepoDetails(repoName);
       if (expandedRepos.has(repoName)) {
-        fetchRepoDetails(repoName, true); // Force refetch after sync
+        fetchRepoDetails(repoName, true);
       }
     });
-  }, [handleSyncSingleRepo, expandedRepos, fetchRepoDetails]);
+  }, [handleSyncSingleRepo, expandedRepos, fetchRepoDetails, invalidateRepoDetails]);
 
   // Poll expanded panels every 5 minutes: re-syncs the repo then re-fetches
   // detail data. The timer resets if the panel is collapsed before it fires.
@@ -168,33 +170,39 @@ export default function Dashboard() {
               <thead className="bg-slate-800/50 border-b border-slate-700">
                 <tr>
                   <th
-                    className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 cursor-pointer hover:text-purple-400 transition-colors"
-                    onClick={() => handleSort('name')}
+                    className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300"
+                    aria-sort={sortField === 'name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleSort('name')}
+                      className="flex items-center gap-2 hover:text-purple-400 transition-colors"
+                    >
                       Repository
                       {sortField === 'name' && (
                         <span className="text-purple-400">
                           {sortDirection === 'asc' ? '↑' : '↓'}
                         </span>
                       )}
-                    </div>
+                    </button>
                   </th>
                   <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 hidden xl:table-cell">
                     Description
                   </th>
                   <th
-                    className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 cursor-pointer hover:text-purple-400 transition-colors"
-                    onClick={() => handleSort('health')}
+                    className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300"
+                    aria-sort={sortField === 'health' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleSort('health')}
+                      className="flex items-center gap-2 hover:text-purple-400 transition-colors"
+                    >
                       Health
                       {sortField === 'health' && (
                         <span className="text-purple-400">
                           {sortDirection === 'asc' ? '↑' : '↓'}
                         </span>
                       )}
-                    </div>
+                    </button>
                   </th>
                   <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 hidden sm:table-cell">
                     Docs

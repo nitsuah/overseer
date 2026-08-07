@@ -153,7 +153,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
 
     // Fetch contributor metrics
     let contributorCount = 0;
-    let commitFrequency = 0;
+    let commitFrequency: number | null = null;
     let busFactor = 0;
     try {
         const contributorStats = await github.getContributorStats(repo.name, owner);
@@ -248,7 +248,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           vuln_high_count = EXCLUDED.vuln_high_count,
           vuln_last_checked = EXCLUDED.vuln_last_checked,
           contributor_count = EXCLUDED.contributor_count,
-          commit_frequency = EXCLUDED.commit_frequency,
+          commit_frequency = COALESCE(EXCLUDED.commit_frequency, repos.commit_frequency),
           bus_factor = EXCLUDED.bus_factor,
           avg_pr_merge_time_hours = EXCLUDED.avg_pr_merge_time_hours,
           contributors_last_checked = EXCLUDED.contributors_last_checked,

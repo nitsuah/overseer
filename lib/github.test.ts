@@ -49,6 +49,10 @@ const mockOctokitInstance = {
     },
     request: mockRequest,
     graphql: mockGraphql,
+    paginate: vi.fn(async (fn: any, opts: any) => {
+        const result = await fn(opts);
+        return result.data;
+    }),
 };
 
 vi.mock('@octokit/rest', () => {

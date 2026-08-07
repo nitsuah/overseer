@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (
       typeof repoName !== 'string' || !repoName ||
       typeof docType !== 'string' || !docType ||
-      typeof templateContent !== 'string' || !templateContent
+      typeof templateContent !== 'string'
     ) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -46,7 +46,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
     }
 
-    const repo = repoRows[0] as RepoContext;
+    const raw = repoRows[0];
+    const repo: RepoContext = {
+      full_name: raw.full_name,
+      description: raw.description ?? null,
+      language: raw.language ?? null,
+      topics: Array.isArray(raw.topics) ? raw.topics as string[] : [],
+      homepage: raw.homepage ?? null,
+      created_at: raw.created_at instanceof Date
+        ? raw.created_at.toISOString()
+        : String(raw.created_at ?? ''),
+    };
     const enrichedContent = await enrichTemplateWithAI(docType, templateContent, repo);
 
     return NextResponse.json({ enrichedContent });

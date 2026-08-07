@@ -15,7 +15,7 @@ interface HealthBreakdownProps {
   onToggle: () => void;
 }
 
-export function HealthBreakdown({ repo, details, health, expanded: _expanded, onToggle }: HealthBreakdownProps) {
+export function HealthBreakdown({ repo, details, health, expanded: _expanded, onToggle }: HealthBreakdownProps): React.JSX.Element {
   const [showPopup, setShowPopup] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const spanRef = React.useRef<HTMLSpanElement>(null);

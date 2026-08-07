@@ -104,7 +104,7 @@ export default function Dashboard() {
     toggleRepo(repoName);
   };
 
-  const handleSyncAndRefresh = useCallback(async (repoName: string) => {
+  const handleSyncAndRefresh = useCallback(async (repoName: string): Promise<void> => {
     await handleSyncSingleRepo(repoName, () => {
       invalidateRepoDetails(repoName);
       if (expandedRepos.has(repoName)) {

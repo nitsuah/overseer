@@ -87,7 +87,7 @@ export function useRepoDetails() {
     }
   };
 
-  const invalidateRepoDetails = useCallback((repoName: string) => {
+  const invalidateRepoDetails = useCallback((repoName: string): void => {
     setRepoDetails(prev => {
       const next = { ...prev };
       delete next[repoName];
@@ -95,7 +95,7 @@ export function useRepoDetails() {
     });
   }, []);
 
-  const clearAllRepoDetails = useCallback(() => {
+  const clearAllRepoDetails = useCallback((): void => {
     setRepoDetails({});
   }, []);
 

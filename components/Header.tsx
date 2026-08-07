@@ -9,7 +9,7 @@ import { useGeminiStatus } from "@/hooks/useGeminiStatus";
 import { getLanguageColor } from "@/lib/language-colors";
 import { useState } from "react";
 import { RepoType } from "@/lib/repo-type";
-import { RateLimitIndicator } from "./RateLimitIndicator";
+import { useRateLimit, RateLimitDisplay } from "./RateLimitIndicator";
 
 interface HeaderProps {
     repoCount?: { filtered: number; total: number };
@@ -44,6 +44,7 @@ const repoTypes: RepoType[] = ['web-app', 'game', 'tool', 'library', 'bot', 'res
 export default function Header(props: HeaderProps = {}) {
     const { data: session, status } = useSession();
     const geminiStatus = useGeminiStatus();
+    const rateLimitState = useRateLimit(!!session);
 
     const {
         repoCount,
@@ -116,7 +117,7 @@ export default function Header(props: HeaderProps = {}) {
             {/* Right Cluster — desktop only */}
             <div className="hidden md:flex items-center gap-3">
                 {/* Rate Limit Indicator */}
-                {session && <RateLimitIndicator />}
+                {session && <RateLimitDisplay {...rateLimitState} />}
                 
                 {/* Repo Controls */}
                 {session && onToggleAddRepo && (
@@ -603,7 +604,10 @@ export default function Header(props: HeaderProps = {}) {
                     </Link>
                     {onToggleAddRepo && (
                         <button
-                            onClick={onToggleAddRepo}
+                            onClick={() => {
+                                if (showFilters) onToggleFilters?.();
+                                onToggleAddRepo();
+                            }}
                             className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium text-slate-300"
                         >
                             <Plus className="h-4 w-4" />
@@ -612,7 +616,10 @@ export default function Header(props: HeaderProps = {}) {
                     )}
                     {onToggleFilters && (
                         <button
-                            onClick={onToggleFilters}
+                            onClick={() => {
+                                if (showAddRepo) onToggleAddRepo?.();
+                                onToggleFilters();
+                            }}
                             className={`flex items-center gap-1.5 px-3 py-2 bg-slate-800 border rounded-lg text-sm font-medium transition-colors ${hasActiveFilters ? 'border-purple-500/50 text-purple-400' : 'border-slate-700 text-slate-300'}`}
                         >
                             <Filter className="h-4 w-4" />
@@ -724,7 +731,7 @@ export default function Header(props: HeaderProps = {}) {
                     </div>
                 )}
 
-                <RateLimitIndicator />
+                <RateLimitDisplay {...rateLimitState} />
             </div>
         )}
         </header>

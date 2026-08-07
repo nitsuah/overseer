@@ -27,7 +27,7 @@ export const tourSteps: TourStep[] = [
     id: 'health-score',
     title: 'Health Score',
     description:
-      'Visual indicator of overall repository health. Hover to see the breakdown: Testing (25%), Best Practices (25%), Documentation (20%), Community (10%), Activity (10%), and Security (10%).',
+      'Visual indicator of overall repository health. Hover or tap to see the breakdown: Testing (25%), Best Practices (25%), Documentation (20%), Community (10%), Activity (10%), and Security (10%).',
     target: '[data-tour="health-score"]',
     position: 'left',
   },

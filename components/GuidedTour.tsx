@@ -18,6 +18,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const clickWaitTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingTimersRef = useRef<NodeJS.Timeout[]>([]);
   const tooltipHeightRef = useRef(220);
 
   const step = tourSteps[currentStep];
@@ -55,15 +56,26 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       clearTimeout(clickWaitTimerRef.current);
       clickWaitTimerRef.current = null;
     }
+    pendingTimersRef.current.forEach(clearTimeout);
+    pendingTimersRef.current = [];
+  }, []);
+
+  const scheduleDelayed = useCallback((fn: () => void, ms: number): void => {
+    const id = setTimeout(() => {
+      pendingTimersRef.current = pendingTimersRef.current.filter(t => t !== id);
+      fn();
+    }, ms);
+    pendingTimersRef.current.push(id);
   }, []);
 
   const updateHighlight = useCallback(() => {
     const element = document.querySelector(step.target);
     if (!element) {
       if (step.id === 'welcome') {
+        const w = Math.min(400, window.innerWidth - 32);
         setTooltipPosition({
           top: Math.max(100, window.innerHeight / 3 - 100),
-          left: window.innerWidth / 2 - 200,
+          left: Math.max(16, window.innerWidth / 2 - w / 2),
         });
       }
       return;
@@ -72,7 +84,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     const rect = element.getBoundingClientRect();
     setHighlightRect(rect);
 
-    const tooltipWidth = 400;
+    const tooltipWidth = Math.min(400, window.innerWidth - 32);
     const tooltipHeight = tooltipHeightRef.current;
     let top = 0;
     let left = 0;
@@ -80,15 +92,15 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     switch (step.position) {
       case 'top':
         top = rect.top - tooltipHeight;
-        left = rect.left + rect.width / 2 - 200;
+        left = rect.left + rect.width / 2 - tooltipWidth / 2;
         break;
       case 'bottom':
         top = rect.bottom + 20;
-        left = rect.left + rect.width / 2 - 200;
+        left = rect.left + rect.width / 2 - tooltipWidth / 2;
         break;
       case 'left':
         top = rect.top + rect.height / 2 - 100;
-        left = rect.left - 420;
+        left = rect.left - tooltipWidth - 20;
         break;
       case 'right':
         top = rect.top + rect.height / 2 - 100;
@@ -140,13 +152,13 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
       if (step.id === 'docs-column') {
         const docsEl = document.querySelector('[data-tour="docs"]');
         if (docsEl && docsEl.getBoundingClientRect().width === 0) {
-          setTimeout(() => setCurrentStep(prev => prev + 1), 50);
+          scheduleDelayed(() => setCurrentStep(prev => prev + 1), 50);
           return cleanup;
         }
       }
       if (firstRow && !document.querySelector('.grid')) {
         firstRow.click();
-        setTimeout(() => {
+        scheduleDelayed(() => {
           updateHighlight();
           startAutoAdvance();
         }, 400);
@@ -188,10 +200,10 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
           clickAndWait(
             '[data-tour="documentation"] div[class*="cursor-pointer"]',
             400,
-            () => setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100)
+            () => scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100)
           );
         } else {
-          setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100);
+          scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100);
         }
       };
 
@@ -208,7 +220,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     }
 
     if (step.id === 'best-practices' || step.id === 'testing') {
-      setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100);
+      scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100);
       return cleanup;
     }
 
@@ -222,10 +234,10 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
           clickAndWait(
             '[data-tour="community"] div[class*="cursor-pointer"]',
             400,
-            () => setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100)
+            () => scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100)
           );
         } else {
-          setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100);
+          scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100);
         }
       };
 
@@ -244,10 +256,10 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     if (step.id === 'metrics' || step.id === 'issues') {
       const sectionEl = document.querySelector(`[data-tour="${step.id}"]`);
       if (!sectionEl) {
-        setTimeout(() => setCurrentStep((prev) => prev + 1), 100);
+        scheduleDelayed(() => setCurrentStep((prev) => prev + 1), 100);
         return cleanup;
       }
-      setTimeout(() => { updateHighlight(); startAutoAdvance(); }, 100);
+      scheduleDelayed(() => { updateHighlight(); startAutoAdvance(); }, 100);
       return cleanup;
     }
 
@@ -288,7 +300,7 @@ export default function GuidedTour({ onClose }: GuidedTourProps) {
     startAutoAdvance();
 
     return cleanup;
-  }, [currentStep, step.id, updateHighlight, startAutoAdvance, clearTimers]);
+  }, [currentStep, step.id, updateHighlight, startAutoAdvance, clearTimers, scheduleDelayed]);
 
   const handleNext = (): void => {
     clearTimers();

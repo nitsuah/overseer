@@ -40,11 +40,19 @@ export function TourTooltip({
 
   const prevHeightRef = useRef<number>(0);
   useLayoutEffect(() => {
-    const h = tooltipRef.current?.offsetHeight ?? 220;
-    if (h !== prevHeightRef.current) {
-      prevHeightRef.current = h;
-      onMeasure?.(h);
-    }
+    const el = tooltipRef.current;
+    if (!el) return;
+    const report = () => {
+      const h = el.offsetHeight;
+      if (h !== prevHeightRef.current) {
+        prevHeightRef.current = h;
+        onMeasure?.(h);
+      }
+    };
+    report();
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [currentStep, onMeasure]);
 
   useEffect(() => {

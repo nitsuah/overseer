@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertCircle, Clock } from 'lucide-react';
 
 interface RateLimitData {
@@ -18,12 +18,20 @@ interface RateLimitData {
   };
 }
 
-export function RateLimitIndicator() {
+interface RateLimitState {
+  rateLimit: RateLimitData | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export function useRateLimit(enabled = true): RateLimitState {
   const [rateLimit, setRateLimit] = useState<RateLimitData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
+
     const fetchRateLimit = async () => {
       try {
         const res = await fetch('/api/github-rate-limit');
@@ -41,27 +49,27 @@ export function RateLimitIndicator() {
     };
 
     fetchRateLimit();
-    const interval = setInterval(fetchRateLimit, 60000); // Refresh every minute
-
+    const interval = setInterval(fetchRateLimit, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [enabled]);
 
-  if (loading || error || !rateLimit) {
-    return null;
-  }
+  return { rateLimit, loading, error };
+}
+
+export function RateLimitDisplay({ rateLimit, loading, error }: RateLimitState): React.JSX.Element | null {
+  if (loading || error || !rateLimit) return null;
 
   const percentage = (rateLimit.core.remaining / rateLimit.core.limit) * 100;
   const resetDate = new Date(rateLimit.core.reset);
   const now = new Date();
   const minutesUntilReset = Math.max(0, Math.round((resetDate.getTime() - now.getTime()) / 60000));
 
-  // Show warning if below 20%
   const showWarning = percentage < 20;
 
   return (
     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
-      showWarning 
-        ? 'bg-amber-900/30 text-amber-300 border border-amber-700/50' 
+      showWarning
+        ? 'bg-amber-900/30 text-amber-300 border border-amber-700/50'
         : 'bg-slate-800/50 text-slate-400'
     }`}>
       {showWarning && <AlertCircle className="w-4 h-4" />}
@@ -76,4 +84,10 @@ export function RateLimitIndicator() {
       )}
     </div>
   );
+}
+
+// Convenience wrapper for standalone use
+export function RateLimitIndicator(): React.JSX.Element | null {
+  const state = useRateLimit();
+  return <RateLimitDisplay {...state} />;
 }

@@ -112,9 +112,9 @@ export default function ExpandableRow({
   return (
     <div className="p-6 bg-gradient-to-br from-slate-950/80 via-slate-900/60 to-slate-950/80 border-t border-slate-700/50">
       {/* Main Layout: Repository Stats + Issues (left sidebar) + Content Grid (right) */}
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
         {/* Left Sidebar: AI Summary + Repository Stats + Issues + Metrics */}
-        <div className="w-full md:w-96 md:shrink-0 space-y-6">
+        <div className="w-full md:w-60 lg:w-72 xl:w-80 md:shrink-0 space-y-4 md:space-y-6">
           {/* AI Summary - First in sidebar */}
           <AISummarySection
             aiSummary={aiSummaryDismissed ? undefined : aiSummary}
@@ -146,8 +146,8 @@ export default function ExpandableRow({
 
         {/* Right Content Grid */}
         <div className="flex-1">
-          {/* Single 3x3 Grid: All sections in order */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Responsive grid: 1 col → 2 col at sm → 3 col at lg */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
             {/* Features */}
             <FeaturesSection
               features={features}

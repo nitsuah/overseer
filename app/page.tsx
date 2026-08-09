@@ -9,6 +9,7 @@ import Header from '@/components/Header';
 import { RepoTableRow } from '@/components/dashboard/RepoTableRow';
 import { useRepos, useRepoDetails, useRepoExpansion, useRepoPolling } from '@/hooks/useDashboard';
 import { useRepoActions } from '@/hooks/useRepoActions';
+import { MobileRepoCard } from '@/components/dashboard/MobileRepoCard';
 import { useRepoFilters } from '@/hooks/useRepoFilters';
 import { RepoType } from '@/lib/repo-type';
 
@@ -166,91 +167,118 @@ export default function Dashboard() {
         showHidden={showHidden}
         onToggleHidden={() => setShowHidden(!showHidden)}
       />
-      <div className="px-6 py-8 space-y-6">
+      <div className="px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 space-y-4 md:space-y-6">
         {filteredRepos.length === 0 ? (
-          <div className="glass rounded-lg p-12 text-center">
+          <div className="glass rounded-lg p-8 sm:p-12 text-center">
             <p className="text-slate-400 text-lg">No repositories found</p>
             <p className="text-slate-500 text-sm mt-2">
               Click &quot;Sync Repos&quot; to fetch your GitHub repositories
             </p>
           </div>
         ) : (
-          <div className="glass rounded-lg overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-800/50 border-b border-slate-700">
-                <tr>
-                  <th
-                    className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300"
-                    aria-sort={sortField === 'name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  >
-                    <button
-                      onClick={() => handleSort('name')}
-                      className="flex items-center gap-2 hover:text-purple-400 transition-colors"
+          <div className="glass rounded-lg overflow-hidden">
+            {/* Mobile card list — shown below md */}
+            <div className="md:hidden divide-y divide-slate-800/60">
+              {filteredRepos.map((repo) => (
+                <MobileRepoCard
+                  key={repo.id}
+                  repo={repo}
+                  details={repoDetails[repo.name]}
+                  isLoadingDetails={loadingDetails.has(repo.name)}
+                  isExpanded={expandedRepos.has(repo.name)}
+                  syncingRepo={syncingRepo}
+                  generatingSummary={generatingSummary}
+                  isAuthenticated={!!session}
+                  onToggleHealth={() => setExpandedHealth(!expandedHealth)}
+                  onToggleExpanded={() => handleToggleExpanded(repo.name)}
+                  onRemove={() => handleRemoveRepo(repo.name)}
+                  onFixAllDocs={() => handleFixAllDocs(repo.full_name)}
+                  onFixDoc={(type) => handleFixDoc(repo.full_name, type)}
+                  onFixStandard={(type) => handleFixStandard(repo.full_name, type)}
+                  onFixAllStandards={() => handleFixAllStandards(repo.full_name)}
+                  onFixPractice={(type) => handleFixPractice(repo.full_name, type)}
+                  onFixAllPractices={() => handleFixAllPractices(repo.full_name)}
+                  onGenerateSummary={() => handleGenerateSummary(repo.name)}
+                  onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
+                  onUnhide={() => handleRestoreRepo(repo.name)}
+                />
+              ))}
+            </div>
+
+            {/* Desktop table — shown at md and above */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-800/50 border-b border-slate-700">
+                  <tr>
+                    <th
+                      className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300"
+                      aria-sort={sortField === 'name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                     >
-                      Repository
-                      {sortField === 'name' && (
-                        <span className="text-purple-400">
-                          {sortDirection === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 hidden xl:table-cell">
-                    Description
-                  </th>
-                  <th
-                    className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300"
-                    aria-sort={sortField === 'health' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  >
-                    <button
-                      onClick={() => handleSort('health')}
-                      className="flex items-center gap-2 hover:text-purple-400 transition-colors"
+                      <button
+                        onClick={() => handleSort('name')}
+                        className="flex items-center gap-2 hover:text-purple-400 transition-colors"
+                      >
+                        Repository
+                        {sortField === 'name' && (
+                          <span className="text-purple-400">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </button>
+                    </th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 hidden xl:table-cell">
+                      Description
+                    </th>
+                    <th
+                      className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300"
+                      aria-sort={sortField === 'health' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                     >
-                      Health
-                      {sortField === 'health' && (
-                        <span className="text-purple-400">
-                          {sortDirection === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 hidden sm:table-cell">
-                    Docs
-                  </th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {filteredRepos.map((repo) => (
-                  <RepoTableRow
-                    key={repo.id}
-                    repo={repo}
-                    details={repoDetails[repo.name]}
-                    isLoadingDetails={loadingDetails.has(repo.name)}
-                    isExpanded={expandedRepos.has(repo.name)}
-                    fixingDoc={fixingDoc}
-                    syncingRepo={syncingRepo}
-                    generatingSummary={generatingSummary}
-                    isAuthenticated={!!session}
-                    expandedHealth={expandedHealth}
-                    onToggleHealth={() => setExpandedHealth(!expandedHealth)}
-                    onToggleExpanded={() => handleToggleExpanded(repo.name)}
-                    onRemove={() => handleRemoveRepo(repo.name)}
-                    onFixAllDocs={() => handleFixAllDocs(repo.full_name)}
-                    onFixDoc={(type) => handleFixDoc(repo.full_name, type)}
-                    onFixStandard={(type) => handleFixStandard(repo.full_name, type)}
-                    onFixAllStandards={() => handleFixAllStandards(repo.full_name)}
-                    onFixPractice={(type) => handleFixPractice(repo.full_name, type)}
-                    onFixAllPractices={() => handleFixAllPractices(repo.full_name)}
-                    onGenerateSummary={() => handleGenerateSummary(repo.name)}
-                    onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
-                    onUnhide={() => handleRestoreRepo(repo.name)}
-                  />
-                ))}
-              </tbody>
-            </table>
+                      <button
+                        onClick={() => handleSort('health')}
+                        className="flex items-center gap-2 hover:text-purple-400 transition-colors"
+                      >
+                        Health
+                        {sortField === 'health' && (
+                          <span className="text-purple-400">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </button>
+                    </th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300 hidden sm:table-cell">
+                      Docs
+                    </th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-sm font-semibold text-slate-300">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {filteredRepos.map((repo) => (
+                    <RepoTableRow
+                      key={repo.id}
+                      repo={repo}
+                      details={repoDetails[repo.name]}
+                      isLoadingDetails={loadingDetails.has(repo.name)}
+                      isExpanded={expandedRepos.has(repo.name)}
+                      fixingDoc={fixingDoc}
+                      syncingRepo={syncingRepo}
+                      generatingSummary={generatingSummary}
+                      isAuthenticated={!!session}
+                      expandedHealth={expandedHealth}
+                      onToggleHealth={() => setExpandedHealth(!expandedHealth)}
+                      onToggleExpanded={() => handleToggleExpanded(repo.name)}
+                      onRemove={() => handleRemoveRepo(repo.name)}
+                      onFixAllDocs={() => handleFixAllDocs(repo.full_name)}
+                      onFixDoc={(type) => handleFixDoc(repo.full_name, type)}
+                      onFixStandard={(type) => handleFixStandard(repo.full_name, type)}
+                      onFixAllStandards={() => handleFixAllStandards(repo.full_name)}
+                      onFixPractice={(type) => handleFixPractice(repo.full_name, type)}
+                      onFixAllPractices={() => handleFixAllPractices(repo.full_name)}
+                      onGenerateSummary={() => handleGenerateSummary(repo.name)}
+                      onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
+                      onUnhide={() => handleRestoreRepo(repo.name)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

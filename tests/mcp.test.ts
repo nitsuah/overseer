@@ -37,6 +37,11 @@ describe('GET /api/mcp', () => {
     expect(body.tools.map((t: { name: string }) => t.name)).toEqual([
       'get_repo_health',
       'list_tasks',
+      'list_repos',
+      'get_repo_details',
+      'get_portfolio_overview',
+      'search_repos',
+      'get_security_summary',
     ]);
   });
 });
@@ -72,12 +77,17 @@ describe('POST /api/mcp methods', () => {
     expect(body.result.protocolVersion).toBe('2024-11-05');
   });
 
-  it('tools/list returns both tools', async () => {
+  it('tools/list returns all tools', async () => {
     const res = await POST(post({ jsonrpc: '2.0', method: 'tools/list', id: 2 }));
     const body = await res.json();
     const names = body.result.tools.map((t: { name: string }) => t.name);
     expect(names).toContain('get_repo_health');
     expect(names).toContain('list_tasks');
+    expect(names).toContain('list_repos');
+    expect(names).toContain('get_repo_details');
+    expect(names).toContain('get_portfolio_overview');
+    expect(names).toContain('search_repos');
+    expect(names).toContain('get_security_summary');
   });
 
   it('unknown tool returns -32601', async () => {

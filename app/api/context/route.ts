@@ -19,36 +19,13 @@ import { getNeonClient } from '@/lib/db';
 import { auth } from '@/auth';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
 import logger from '@/lib/log';
+import { healthGrade, buildGradeDist, buildCiDist } from '@/lib/health-grade';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
-
-function grade(score: number): string {
-  if (score >= 90) return 'A';
-  if (score >= 80) return 'B';
-  if (score >= 70) return 'C';
-  if (score >= 60) return 'D';
-  return 'F';
-}
-
-function gradeDist(repos: Row[]): Record<string, number> {
-  const d: Record<string, number> = { A: 0, B: 0, C: 0, D: 0, F: 0 };
-  repos.forEach(r => { d[grade(r.health_score ?? 0)]++; });
-  return d;
-}
-
-function ciDist(repos: Row[]): { passing: number; failing: number; unknown: number } {
-  const d = { passing: 0, failing: 0, unknown: 0 };
-  repos.forEach(r => {
-    if (r.ci_status === 'passing')                         d.passing++;
-    else if (r.ci_status && r.ci_status !== 'unknown')    d.failing++;
-    else                                                   d.unknown++;
-  });
-  return d;
-}
 
 function describeIssues(r: Row): string {
   const issues: string[] = [];
@@ -137,7 +114,7 @@ export async function GET(req: NextRequest) {
         },
         health: {
           score:  repo.health_score ?? null,
-          grade:  grade(repo.health_score ?? 0),
+          grade:  healthGrade(repo.health_score ?? 0),
           security: {
             vuln_critical:  repo.vuln_critical_count  ?? 0,
             vuln_high:      repo.vuln_high_count      ?? 0,
@@ -203,9 +180,9 @@ export async function GET(req: NextRequest) {
       summary: {
         total_repos:         repos.length,
         average_health_score: avgHealth,
-        average_health_grade: grade(avgHealth),
-        grade_distribution:   gradeDist(repos),
-        ci_distribution:      ciDist(repos),
+        average_health_grade: healthGrade(avgHealth),
+        grade_distribution:   buildGradeDist(repos),
+        ci_distribution:      buildCiDist(repos),
         total_open_prs:       repos.reduce((s, r) => s + (r.open_prs ?? 0), 0),
         total_open_issues:    repos.reduce((s, r) => s + (r.open_issues_count ?? 0), 0),
         total_critical_vulns: repos.reduce((s, r) => s + (r.vuln_critical_count ?? 0), 0),
@@ -218,7 +195,7 @@ export async function GET(req: NextRequest) {
         url:          r.url,
         health: {
           score: r.health_score ?? null,
-          grade: grade(r.health_score ?? 0),
+          grade: healthGrade(r.health_score ?? 0),
         },
         ci_status:    r.ci_status,
         open_prs:     r.open_prs ?? 0,
@@ -236,7 +213,7 @@ export async function GET(req: NextRequest) {
         .map(r => ({
           name:         r.name,
           health_score: r.health_score,
-          health_grade: grade(r.health_score ?? 0),
+          health_grade: healthGrade(r.health_score ?? 0),
           reason:       describeIssues(r),
         })),
       security_alerts: repos

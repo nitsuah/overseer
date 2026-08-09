@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNeonClient } from '@/lib/db';
 import logger from '@/lib/log';
+import { healthGrade, buildGradeDist, buildCiDist } from '@/lib/health-grade';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -59,14 +60,6 @@ function authenticate(req: NextRequest): boolean {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
-
-function healthGrade(score: number): string {
-  if (score >= 90) return 'A';
-  if (score >= 80) return 'B';
-  if (score >= 70) return 'C';
-  if (score >= 60) return 'D';
-  return 'F';
-}
 
 // ---------------------------------------------------------------------------
 // Tool definitions
@@ -393,14 +386,8 @@ async function getPortfolioOverview(): Promise<string> {
     ? Math.round(rows.reduce((s, r) => s + (r.health_score ?? 0), 0) / total)
     : 0;
 
-  const gradeDist: Record<string, number> = { A: 0, B: 0, C: 0, D: 0, F: 0 };
-  const ciDist: Record<string, number> = { passing: 0, failing: 0, unknown: 0 };
-  rows.forEach(r => {
-    gradeDist[healthGrade(r.health_score ?? 0)]++;
-    if (r.ci_status === 'passing') ciDist.passing++;
-    else if (r.ci_status && r.ci_status !== 'unknown') ciDist.failing++;
-    else ciDist.unknown++;
-  });
+  const gradeDist = buildGradeDist(rows);
+  const ciDist    = buildCiDist(rows);
 
   const needsAttention = rows.filter(r => (r.health_score ?? 0) < 60);
   const securityRisks  = rows.filter(r =>

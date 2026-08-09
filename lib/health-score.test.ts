@@ -52,8 +52,7 @@ describe('health-score', () => {
       // Activity: 100 - 40 (staleness) - 20 (issues) - 20 (PRs) = 20
       // Security defaults to 100 with no vuln/secret-scanning inputs.
       // Total weighted: 0*0.15 + 0*0.15 + 0*0.30 + 0*0.05 + 20*0.05 + 100*0.30 = 31
-      expect(result.total).toBeGreaterThanOrEqual(29);
-      expect(result.total).toBeLessThanOrEqual(33);
+      expect(result.total).toBe(31);
       expect(result.documentation).toBe(0);
       expect(result.testing).toBe(0);
       expect(result.bestPractices).toBe(0);

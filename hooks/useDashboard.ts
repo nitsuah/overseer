@@ -47,17 +47,25 @@ export function useRepoDetails() {
   // Ref mirrors the Set for synchronous checks inside the async callback
   const loadingDetailsRef = useRef<Set<string>>(new Set());
   const repoDetailsRef = useRef<Record<string, RepoDetails>>({});
+  // Per-repo request version: only the latest fetch version may commit its result
+  const requestVersionsRef = useRef<Record<string, number>>({});
 
   useEffect(() => { repoDetailsRef.current = repoDetails; }, [repoDetails]);
 
-  const fetchRepoDetails = useCallback(async (repoName: string, force = false): Promise<void> => {
+  const fetchRepoDetails = useCallback(async (repoName: string, force: boolean = false): Promise<void> => {
     if (!force && (repoDetailsRef.current[repoName] || loadingDetailsRef.current.has(repoName))) return;
+
+    const version = (requestVersionsRef.current[repoName] ?? 0) + 1;
+    requestVersionsRef.current[repoName] = version;
 
     loadingDetailsRef.current.add(repoName);
     setLoadingDetails(prev => new Set(prev).add(repoName));
 
     try {
       const res = await fetch(`/api/repo-details/${repoName}`);
+
+      if (requestVersionsRef.current[repoName] !== version) return;
+
       if (!res.ok) {
         console.error(`Failed to fetch details for ${repoName}: ${res.status} ${res.statusText}`);
         return;
@@ -70,28 +78,33 @@ export function useRepoDetails() {
       }
 
       const data = await res.json();
-      setRepoDetails((prev) => ({
-        ...prev,
-        [repoName]: {
-          tasks: data.tasks || [],
-          roadmapItems: data.roadmapItems || [],
-          docStatuses: data.docStatuses || [],
-          metrics: data.metrics || [],
-          features: data.features || [],
-          bestPractices: data.bestPractices || [],
-          communityStandards: data.communityStandards || [],
-          securityConfig: data.securityConfig ?? undefined,
-        },
-      }));
+
+      if (requestVersionsRef.current[repoName] !== version) return;
+
+      const next: RepoDetails = {
+        tasks: data.tasks || [],
+        roadmapItems: data.roadmapItems || [],
+        docStatuses: data.docStatuses || [],
+        metrics: data.metrics || [],
+        features: data.features || [],
+        bestPractices: data.bestPractices || [],
+        communityStandards: data.communityStandards || [],
+        securityConfig: data.securityConfig ?? undefined,
+      };
+      // Update ref synchronously so callers see fresh data before the effect commits
+      repoDetailsRef.current = { ...repoDetailsRef.current, [repoName]: next };
+      setRepoDetails({ ...repoDetailsRef.current });
     } catch (error) {
       console.error('Failed to fetch repo details:', error);
     } finally {
-      loadingDetailsRef.current.delete(repoName);
-      setLoadingDetails(prev => {
-        const next = new Set(prev);
-        next.delete(repoName);
-        return next;
-      });
+      if (requestVersionsRef.current[repoName] === version) {
+        loadingDetailsRef.current.delete(repoName);
+        setLoadingDetails(prev => {
+          const next = new Set(prev);
+          next.delete(repoName);
+          return next;
+        });
+      }
     }
   }, []);
 

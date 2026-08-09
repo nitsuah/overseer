@@ -103,7 +103,17 @@ export function MobileRepoCard({
             ? 'bg-slate-900/40 text-slate-500'
             : 'bg-gradient-to-r from-slate-900/60 via-slate-800/40 to-slate-900/60 active:from-slate-800/70 active:via-slate-700/50 active:to-slate-800/70'
         }`}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
+        aria-controls={`mobile-card-details-${repo.name}`}
         onClick={onToggleExpanded}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggleExpanded();
+          }
+        }}
       >
         <div className="px-3 py-2.5 space-y-1.5">
           {/* Row 1: type + name + live + actions */}
@@ -135,6 +145,7 @@ export function MobileRepoCard({
                   href={repo.homepage}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={`Visit ${repo.name} homepage`}
                   className={`p-0.5 rounded shrink-0 transition-colors ${
                     repo.is_hidden
                       ? 'bg-slate-800 text-slate-600'
@@ -169,6 +180,7 @@ export function MobileRepoCard({
               )}
               {repo.is_hidden ? (
                 <button
+                  type="button"
                   onClick={(e) => { e.stopPropagation(); onUnhide?.(); }}
                   className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded text-xs font-bold flex items-center gap-1 transition-colors"
                 >
@@ -179,6 +191,7 @@ export function MobileRepoCard({
                 <>
                   {isAuthenticated && (
                     <button
+                      type="button"
                       onClick={(e) => { e.stopPropagation(); onSyncSingleRepo(); }}
                       disabled={syncingRepo === repo.name}
                       className="p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50"
@@ -189,6 +202,7 @@ export function MobileRepoCard({
                   )}
                   {isAuthenticated && (
                     <button
+                      type="button"
                       onClick={(e) => { e.stopPropagation(); onRemove(); }}
                       className="p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
                       title="Hide"
@@ -299,6 +313,7 @@ export function MobileRepoCard({
       </div>
 
       {isExpanded && details && (
+        <div id={`mobile-card-details-${repo.name}`}>
         <ExpandableRow
           tasks={details.tasks}
           roadmapItems={details.roadmapItems}
@@ -340,6 +355,7 @@ export function MobileRepoCard({
           generatingSummary={generatingSummary === repo.name}
           securityConfig={details.securityConfig}
         />
+        </div>
       )}
     </Fragment>
   );

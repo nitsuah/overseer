@@ -17,11 +17,11 @@ interface HealthBreakdownProps {
 export function HealthBreakdown({ repo, details, health, onToggle }: HealthBreakdownProps): React.JSX.Element {
   const [showPopup, setShowPopup] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
-  const spanRef = React.useRef<HTMLSpanElement>(null);
-  
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+
   const handleMouseEnter = () => {
-    if (!spanRef.current) return;
-    const rect = spanRef.current.getBoundingClientRect();
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
     const popupWidth = Math.min(400, window.innerWidth - 32);
     const idealLeft = rect.left + rect.width / 2;
     // Clamp so the popup never overflows the viewport edges horizontally
@@ -156,12 +156,13 @@ export function HealthBreakdown({ repo, details, health, onToggle }: HealthBreak
 
   return (
     <>
-      <span
-        ref={spanRef}
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
+        ref={buttonRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onFocus={handleMouseEnter}
+        onBlur={handleMouseLeave}
         onClick={(e) => {
           e.stopPropagation();
           onToggle();
@@ -175,13 +176,16 @@ export function HealthBreakdown({ repo, details, health, onToggle }: HealthBreak
         }}
         className={`text-lg font-bold ${health.color} cursor-pointer hover:opacity-80 transition-opacity`}
         aria-label={`Health grade ${health.grade} — click to toggle shields`}
+        aria-describedby={showPopup ? `health-popup-${repo.name}` : undefined}
       >
         {health.grade}
-      </span>
+      </button>
       {showPopup && position && createPortal(
-        <div 
+        <div
+          id={`health-popup-${repo.name}`}
+          role="tooltip"
           className="fixed -translate-x-1/2 w-[min(400px,calc(100vw-32px))] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl p-4 pointer-events-none"
-          style={{ 
+          style={{
             top: `${position.top}px`,
             left: `${position.left}px`,
             zIndex: 9999,

@@ -124,10 +124,12 @@ export default function Dashboard() {
   useEffect(() => {
     if (loading || repos.length === 0 || prefetchedRef.current) return;
     prefetchedRef.current = true;
+    const timers: ReturnType<typeof setTimeout>[] = [];
     repos.forEach((repo, i) => {
       // Stagger by 80ms per repo to avoid hammering the API
-      setTimeout(() => fetchRepoDetails(repo.name), i * 80);
+      timers.push(setTimeout(() => fetchRepoDetails(repo.name), i * 80));
     });
+    return () => timers.forEach(clearTimeout);
   }, [loading, repos, fetchRepoDetails]);
 
   if (loading) {

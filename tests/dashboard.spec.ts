@@ -123,6 +123,11 @@ test.describe('Dashboard – Mobile (375 × 812)', () => {
     await page.waitForLoadState('load');
     // table is inside `hidden md:block` — not visible at 375px
     await expect(page.locator('table')).not.toBeVisible();
+    // Wait for repo loading, then assert mobile cards or empty state is visible
+    await page.waitForTimeout(3000);
+    const hasMobileCards = await page.locator('.md\\:hidden > div > div').count() > 0;
+    const hasEmptyState = await page.getByText(/no repositories found/i).isVisible();
+    expect(hasMobileCards || hasEmptyState).toBe(true);
   });
 
   test('no horizontal overflow on mobile', async ({ page }) => {
@@ -187,21 +192,25 @@ test.describe('Route protection', () => {
     // The proxy.ts middleware redirects protected routes; don't follow the redirect
     const res = await request.get('/api/health', { maxRedirects: 0 });
     expect([307, 308]).toContain(res.status());
+    expect(res.headers()['location']).toContain('/login');
   });
 
   test('/api/mcp GET redirects to /login when unauthenticated', async ({ request }) => {
     const res = await request.get('/api/mcp', { maxRedirects: 0 });
     expect([307, 308]).toContain(res.status());
+    expect(res.headers()['location']).toContain('/login');
   });
 
   test('/api/context redirects to /login when unauthenticated', async ({ request }) => {
     const res = await request.get('/api/context', { maxRedirects: 0 });
     expect([307, 308]).toContain(res.status());
+    expect(res.headers()['location']).toContain('/login');
   });
 
   test('/pmo redirects to /login when unauthenticated', async ({ request }) => {
     const res = await request.get('/pmo', { maxRedirects: 0 });
     expect([307, 308]).toContain(res.status());
+    expect(res.headers()['location']).toContain('/login');
   });
 });
 
@@ -303,7 +312,8 @@ test.describe('Performance', () => {
 
   test('/api/repos responds within 3 seconds', async ({ request }) => {
     const start = Date.now();
-    await request.get('/api/repos');
+    const res = await request.get('/api/repos');
+    expect(res.status()).toBe(200);
     expect(Date.now() - start).toBeLessThan(3000);
   });
 });

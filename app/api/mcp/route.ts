@@ -124,7 +124,7 @@ const TOOLS = [
         },
         type: {
           type: 'string',
-          enum: ['web-app', 'game', 'tool', 'library', 'bot', 'research', 'unknown'],
+          enum: ['web-app', 'game', 'tool', 'library', 'bot', 'research', 'other'],
           description: 'Filter by repo type',
         },
         has_vulns: {
@@ -326,8 +326,8 @@ async function getRepoDetails(args: Row): Promise<string> {
   const [tasks, roadmapItems, docStatuses, bestPractices, communityStandards] =
     await db.transaction([
       db`SELECT title, status, section FROM tasks WHERE repo_id = ${repo.id} ORDER BY created_at DESC LIMIT 100`,
-      db`SELECT title, quarter, status, linked_pr_number FROM roadmap_items WHERE repo_id = ${repo.id} ORDER BY created_at DESC`,
-      db`SELECT doc_type, exists, health_state FROM doc_status WHERE repo_id = ${repo.id}`,
+      db`SELECT title, quarter, status, linked_pr_number FROM roadmap_items WHERE repo_id = ${repo.id} ORDER BY created_at DESC LIMIT 100`,
+      db`SELECT doc_type, "exists", health_state FROM doc_status WHERE repo_id = ${repo.id}`,
       db`SELECT practice_type, status FROM best_practices WHERE repo_id = ${repo.id}`,
       db`SELECT standard_type, status FROM community_standards WHERE repo_id = ${repo.id}`,
     ]);
@@ -419,7 +419,7 @@ async function getPortfolioOverview(): Promise<string> {
     security: {
       total_critical_vulns:  rows.reduce((s, r) => s + (r.vuln_critical_count ?? 0), 0),
       total_high_vulns:      rows.reduce((s, r) => s + (r.vuln_high_count ?? 0), 0),
-      repos_with_critical:   securityRisks.map(r => ({
+      repos_at_risk:         securityRisks.map(r => ({
         name:           r.name,
         vuln_critical:  r.vuln_critical_count ?? 0,
         secret_alerts:  r.secret_scanning_alert_count ?? 0,
@@ -442,15 +442,16 @@ async function searchRepos(args: Row): Promise<string> {
   if (!query) throw new Error('"query" is required');
 
   const db = getNeonClient();
-  const pattern = `%${query.toLowerCase()}%`;
+  const escaped = query.toLowerCase().replace(/[\\%_]/g, c => `\\${c}`);
+  const pattern = `%${escaped}%`;
   const rows = (await db`
     SELECT name, full_name, description, language, repo_type, health_score, topics, url
     FROM repos
     WHERE is_hidden = false
       AND (
-        LOWER(name) LIKE ${pattern}
-        OR LOWER(COALESCE(description, '')) LIKE ${pattern}
-        OR LOWER(COALESCE(language, '')) LIKE ${pattern}
+        LOWER(name) LIKE ${pattern} ESCAPE '\'
+        OR LOWER(COALESCE(description, '')) LIKE ${pattern} ESCAPE '\'
+        OR LOWER(COALESCE(language, '')) LIKE ${pattern} ESCAPE '\'
       )
     ORDER BY health_score DESC NULLS LAST
     LIMIT 20

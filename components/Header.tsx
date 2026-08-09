@@ -654,6 +654,7 @@ export default function Header(props: HeaderProps = {}) {
                     <form onSubmit={onAddRepoSubmit} className="flex items-center gap-2 flex-wrap">
                         <input
                             type="text"
+                            aria-label="Repository URL (owner/repo)"
                             value={addRepoUrl}
                             onChange={(e) => onAddRepoUrlChange?.(e.target.value)}
                             placeholder="owner/repo"

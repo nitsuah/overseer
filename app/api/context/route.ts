@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getNeonClient } from '@/lib/db';
 import { auth } from '@/auth';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
+import logger from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -33,13 +34,13 @@ function grade(score: number): string {
   return 'F';
 }
 
-function gradeDist(repos: Row[]) {
+function gradeDist(repos: Row[]): Record<string, number> {
   const d: Record<string, number> = { A: 0, B: 0, C: 0, D: 0, F: 0 };
   repos.forEach(r => { d[grade(r.health_score ?? 0)]++; });
   return d;
 }
 
-function ciDist(repos: Row[]) {
+function ciDist(repos: Row[]): { passing: number; failing: number; unknown: number } {
   const d = { passing: 0, failing: 0, unknown: 0 };
   repos.forEach(r => {
     if (r.ci_status === 'passing')                         d.passing++;
@@ -60,8 +61,8 @@ function describeIssues(r: Row): string {
 function isAuthenticated(req: NextRequest): boolean {
   const apiKey = process.env.MCP_API_KEY;
   if (apiKey) {
-    const auth = req.headers.get('authorization');
-    if (auth === `Bearer ${apiKey}`) return true;
+    const authHeader = req.headers.get('authorization');
+    if (authHeader === `Bearer ${apiKey}`) return true;
   }
   return false;
 }
@@ -85,7 +86,8 @@ export async function GET(req: NextRequest) {
     if (repoName) {
       const repoRows = (await db`
         SELECT * FROM repos
-        WHERE name = ${repoName} OR full_name = ${repoName}
+        WHERE (name = ${repoName} OR full_name = ${repoName})
+          AND is_hidden = false
         LIMIT 1
       `) as Row[];
 
@@ -103,7 +105,7 @@ export async function GET(req: NextRequest) {
         await db.transaction([
           db`SELECT title, status, section FROM tasks WHERE repo_id = ${repo.id} ORDER BY created_at DESC LIMIT 50`,
           db`SELECT title, quarter, status FROM roadmap_items WHERE repo_id = ${repo.id} ORDER BY created_at DESC LIMIT 30`,
-          db`SELECT doc_type, exists, health_state FROM doc_status WHERE repo_id = ${repo.id}`,
+          db`SELECT doc_type, "exists", health_state FROM doc_status WHERE repo_id = ${repo.id}`,
           db`SELECT practice_type, status FROM best_practices WHERE repo_id = ${repo.id}`,
           db`SELECT standard_type, status FROM community_standards WHERE repo_id = ${repo.id}`,
         ]);
@@ -249,8 +251,9 @@ export async function GET(req: NextRequest) {
         .map(r => ({ name: r.name, ci_status: r.ci_status })),
     });
   } catch (error) {
+    logger.error('[context] Failed to generate context:', error);
     return NextResponse.json(
-      { error: 'Failed to generate context', detail: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to generate context' },
       { status: 500 }
     );
   }

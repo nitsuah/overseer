@@ -8,7 +8,7 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         exclude: ['**/node_modules/**', '**/*.spec.ts', '**/.claude/**'],
-        include: ['tests/**/*.test.{ts,tsx}'],
+        include: ['**/*.test.{ts,tsx}'],
         // Removed dir: '../' as default root is sufficient
         alias: {
             '@': path.resolve(__dirname, '../'),

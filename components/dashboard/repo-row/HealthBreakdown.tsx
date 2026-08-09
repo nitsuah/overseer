@@ -11,11 +11,10 @@ interface HealthBreakdownProps {
   repo: Repo;
   details: RepoDetails;
   health: { grade: string; color: string };
-  expanded: boolean;
   onToggle: () => void;
 }
 
-export function HealthBreakdown({ repo, details, health, expanded: _expanded, onToggle }: HealthBreakdownProps): React.JSX.Element {
+export function HealthBreakdown({ repo, details, health, onToggle }: HealthBreakdownProps): React.JSX.Element {
   const [showPopup, setShowPopup] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const spanRef = React.useRef<HTMLSpanElement>(null);
@@ -135,12 +134,12 @@ export function HealthBreakdown({ repo, details, health, expanded: _expanded, on
     else if (securityScore < 80) securityColor = 'yellow';
 
     return [
-      { label: 'Community', score: csScore, color: 'green', weight: '10%' },
-      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '25%' },
-      { label: 'Testing', score: testScore, color: 'blue', weight: '25%' },
-      { label: 'Documentation', score: docScore, color: 'slate', weight: '20%' },
-      { label: 'Activity', score: activityScore, color: activityColor, weight: '10%' },
-      { label: 'Security', score: securityScore, color: securityColor, weight: '10%' },
+      { label: 'Community', score: csScore, color: 'green', weight: '5%' },
+      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '30%' },
+      { label: 'Testing', score: testScore, color: 'blue', weight: '15%' },
+      { label: 'Documentation', score: docScore, color: 'slate', weight: '15%' },
+      { label: 'Activity', score: activityScore, color: activityColor, weight: '5%' },
+      { label: 'Security', score: securityScore, color: securityColor, weight: '30%' },
     ];
   }, [repo, details, now]);
 
@@ -157,16 +156,25 @@ export function HealthBreakdown({ repo, details, health, expanded: _expanded, on
 
   return (
     <>
-      <span 
+      <span
         ref={spanRef}
+        role="button"
+        tabIndex={0}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={(e) => {
           e.stopPropagation();
           onToggle();
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggle();
+          }
+        }}
         className={`text-lg font-bold ${health.color} cursor-pointer hover:opacity-80 transition-opacity`}
-        title="Click to toggle health details"
+        aria-label={`Health grade ${health.grade} — click to toggle shields`}
       >
         {health.grade}
       </span>

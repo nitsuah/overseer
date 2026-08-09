@@ -44,10 +44,16 @@ export function useRepos(showHidden = false) {
 export function useRepoDetails() {
   const [repoDetails, setRepoDetails] = useState<Record<string, RepoDetails>>({});
   const [loadingDetails, setLoadingDetails] = useState<Set<string>>(new Set());
+  // Ref mirrors the Set for synchronous checks inside the async callback
+  const loadingDetailsRef = useRef<Set<string>>(new Set());
+  const repoDetailsRef = useRef<Record<string, RepoDetails>>({});
 
-  const fetchRepoDetails = async (repoName: string, force = false) => {
-    if (!force && (repoDetails[repoName] || loadingDetails.has(repoName))) return;
+  useEffect(() => { repoDetailsRef.current = repoDetails; }, [repoDetails]);
 
+  const fetchRepoDetails = useCallback(async (repoName: string, force = false): Promise<void> => {
+    if (!force && (repoDetailsRef.current[repoName] || loadingDetailsRef.current.has(repoName))) return;
+
+    loadingDetailsRef.current.add(repoName);
     setLoadingDetails(prev => new Set(prev).add(repoName));
 
     try {
@@ -74,18 +80,20 @@ export function useRepoDetails() {
           features: data.features || [],
           bestPractices: data.bestPractices || [],
           communityStandards: data.communityStandards || [],
+          securityConfig: data.securityConfig ?? undefined,
         },
       }));
     } catch (error) {
       console.error('Failed to fetch repo details:', error);
     } finally {
+      loadingDetailsRef.current.delete(repoName);
       setLoadingDetails(prev => {
         const next = new Set(prev);
         next.delete(repoName);
         return next;
       });
     }
-  };
+  }, []);
 
   const invalidateRepoDetails = useCallback((repoName: string): void => {
     setRepoDetails(prev => {
@@ -99,7 +107,7 @@ export function useRepoDetails() {
     setRepoDetails({});
   }, []);
 
-  return { repoDetails, fetchRepoDetails, invalidateRepoDetails, clearAllRepoDetails };
+  return { repoDetails, loadingDetails, fetchRepoDetails, invalidateRepoDetails, clearAllRepoDetails };
 }
 
 export function useRepoExpansion() {

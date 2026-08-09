@@ -31,12 +31,12 @@ export interface HealthScoreBreakdown {
  * Calculate overall repository health score (0-100)
  *
  * Weights:
- * - Best Practices: 25%
- * - Testing: 25%
- * - Documentation: 20%
- * - Community Standards: 10%
- * - Activity: 10%
- * - Security: 10%
+ * - Best Practices: 30%
+ * - Security: 30%
+ * - Testing: 15%
+ * - Documentation: 15%
+ * - Community Standards: 5%
+ * - Activity: 5%
  */
 export function calculateHealthScore(inputs: HealthScoreInputs): HealthScoreBreakdown {
     // Documentation Score (0-100)
@@ -102,12 +102,12 @@ export function calculateHealthScore(inputs: HealthScoreInputs): HealthScoreBrea
 
     // Weighted Total
     const total = Math.round(
-        docScore * 0.20 +
-        testScore * 0.25 +
-        bestPracticesScore * 0.25 +
-        communityScore * 0.10 +
-        activityScore * 0.10 +
-        securityScore * 0.10
+        docScore * 0.15 +
+        testScore * 0.15 +
+        bestPracticesScore * 0.30 +
+        communityScore * 0.05 +
+        activityScore * 0.05 +
+        securityScore * 0.30
     );
 
     return {

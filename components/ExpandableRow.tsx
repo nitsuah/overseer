@@ -98,17 +98,13 @@ export default function ExpandableRow({
   generatingSummary = false,
   securityConfig,
 }: ExpandableRowProps) {
-  const [aiSummaryDismissed, setAiSummaryDismissed] = useState(false);
-  const [aiSummaryKey, setAiSummaryKey] = useState(aiSummary);
+  // Track which specific summary content was dismissed; a new aiSummary value
+  // automatically clears the dismissed state without needing an effect.
+  const [dismissedSummary, setDismissedSummary] = useState<string | undefined>(undefined);
+  const aiSummaryDismissed = dismissedSummary !== undefined && dismissedSummary === aiSummary;
   const [projectSectionsExpanded, setProjectSectionsExpanded] = useState(true);
   const [row2Expanded, setRow2Expanded] = useState(false); // Documentation, Best Practices, Testing
   const [row3Expanded, setRow3Expanded] = useState(false); // Standards, Metrics, Issues
-  
-  // Reset dismissed state when a new AI summary is generated
-  if (aiSummary !== aiSummaryKey) {
-    setAiSummaryDismissed(false);
-    setAiSummaryKey(aiSummary);
-  }
   
   const isSyncing = syncingRepo === repoNameForSync;
   const hasNoData = roadmapItems.length === 0 && tasks.length === 0 && features.length === 0;
@@ -126,7 +122,7 @@ export default function ExpandableRow({
             isAuthenticated={isAuthenticated}
             generatingSummary={generatingSummary}
             onGenerateSummary={onGenerateSummary}
-            onDismiss={() => setAiSummaryDismissed(true)}
+            onDismiss={() => setDismissedSummary(aiSummary)}
           />
           
           <RepositoryStatsSectionStatic

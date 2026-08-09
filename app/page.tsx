@@ -3,7 +3,7 @@
 import { Toast } from '@/components/Toast';
 import { PRPreviewModal } from '@/components/PRPreviewModal';
 import GuidedTour from '@/components/GuidedTour';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import Header from '@/components/Header';
 import { RepoTableRow } from '@/components/dashboard/RepoTableRow';
@@ -16,7 +16,7 @@ export default function Dashboard() {
   const { data: session } = useSession();
   const [showHidden, setShowHidden] = useState(false);
   const { repos, setRepos, loading, refetch } = useRepos(showHidden);
-  const { repoDetails, fetchRepoDetails, invalidateRepoDetails, clearAllRepoDetails } = useRepoDetails();
+  const { repoDetails, loadingDetails, fetchRepoDetails } = useRepoDetails();
   const { expandedRepos, toggleRepo } = useRepoExpansion();
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -73,8 +73,10 @@ export default function Dashboard() {
       const res = await fetch('/api/sync-repos', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        clearAllRepoDetails();
         await refetch();
+        // Re-fetch details for expanded repos in the background — don't clear first to avoid flash
+        const expanded = Array.from(expandedRepos);
+        expanded.forEach(name => fetchRepoDetails(name, true));
         setToastMessage(data.message || 'Sync started successfully!');
       } else {
         const errorData = await res.json();
@@ -106,18 +108,26 @@ export default function Dashboard() {
 
   const handleSyncAndRefresh = useCallback(async (repoName: string): Promise<void> => {
     await handleSyncSingleRepo(repoName, () => {
-      invalidateRepoDetails(repoName);
-      if (expandedRepos.has(repoName)) {
-        fetchRepoDetails(repoName, true);
-      }
+      // Force re-fetch without invalidating first — avoids flash of empty expanded panel
+      fetchRepoDetails(repoName, true);
     });
-  }, [handleSyncSingleRepo, expandedRepos, fetchRepoDetails, invalidateRepoDetails]);
+  }, [handleSyncSingleRepo, fetchRepoDetails]);
 
   // Poll expanded panels every 5 minutes: re-syncs the repo then re-fetches
   // detail data. The timer resets if the panel is collapsed before it fires.
   useRepoPolling(expandedRepos, handleSyncAndRefresh);
 
-  // Details are fetched on demand when a row is expanded — no bulk pre-fetch
+  // Pre-fetch details for all repos in the background after initial load so
+  // health breakdown popups and doc icons are immediately available.
+  const prefetchedRef = useRef(false);
+  useEffect(() => {
+    if (loading || repos.length === 0 || prefetchedRef.current) return;
+    prefetchedRef.current = true;
+    repos.forEach((repo, i) => {
+      // Stagger by 80ms per repo to avoid hammering the API
+      setTimeout(() => fetchRepoDetails(repo.name), i * 80);
+    });
+  }, [loading, repos, fetchRepoDetails]);
 
   if (loading) {
     return (
@@ -218,6 +228,7 @@ export default function Dashboard() {
                     key={repo.id}
                     repo={repo}
                     details={repoDetails[repo.name]}
+                    isLoadingDetails={loadingDetails.has(repo.name)}
                     isExpanded={expandedRepos.has(repo.name)}
                     fixingDoc={fixingDoc}
                     syncingRepo={syncingRepo}

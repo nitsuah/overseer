@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Roadmap-to-DEV-flow handoff linkage:** Roadmap items can now be linked to a tracked PR and/or an Agent Task Queue entry via `PATCH /api/repos/[name]/roadmap-items/[id]`. Linked PRs and agent tasks are shown as badges in the per-repo roadmap progress view, with an inline edit/clear control available to authenticated users directly from the dashboard. `lib/sync.ts` now merges (rather than delete+inserts) `roadmap_items` so these DB-only links survive re-syncs
+- **MCP Server expansion (7 tools):** `list_repos`, `get_repo_details`, `get_portfolio_overview`, `search_repos`, `get_security_summary` added alongside existing `get_repo_health` and `list_tasks`; LIKE metacharacter escaping on `search_repos`; `repos_at_risk` label replaces misleading `repos_with_critical`; `doc_type, "exists"` quoting fix for PostgreSQL reserved keyword; `LIMIT 100` on roadmap sub-query (PR #181)
+- **LLM Context Endpoint:** `GET /api/context` provides LLM-optimized JSON for the full portfolio or a single repo; Bearer token or NextAuth session for full access, unauthenticated for default repos only (PR #181)
+- **Shared health-grade module:** `lib/health-grade.ts` extracted (`healthGrade`, `buildGradeDist`, `buildCiDist`); `/api/mcp` and `/api/context` now import from it, removing ~40 lines of duplicated grade logic (PR #181)
+- **Mobile card layout:** `MobileRepoCard` component renders a compact swipeable card list at `md:hidden`; includes keyboard accessibility (`role=button`, `aria-expanded`, `aria-controls`, Enter/Space handlers); homepage link `aria-label`; native `type="button"` on action buttons (PR #180)
+- **Non-disruptive background sync:** Single-repo sync triggers in the background without blocking the UI; `useEffect` timer cleanup prevents memory leaks on unmount (PR #180)
+- **Request-version tracking in `useRepoDetails`:** Per-repo version counter discards stale forced-refresh responses; ref updated synchronously to prevent dedup race; timer array collected and cleared on unmount (PR #181)
+- **PMO Mode dashboard:** Portfolio-wide roadmap progress at `/pmo`; 4-stage pipeline summary, per-repo health/CI cards, DEV-flow handoff to agent task queue (PR #136)
+- **DEV-flow handoff:** One-click handoff button on in-progress roadmap items POSTs to `/api/agent/tasks` and links the returned `agent_task_id` back to the roadmap item (PR #136)
+- **Roadmap-to-DEV-flow handoff linkage:** Roadmap items can now be linked to a tracked PR and/or Agent Task Queue entry via `PATCH /api/repos/[name]/roadmap-items/[id]`. Linked PRs and agent tasks are shown as badges; `lib/sync.ts` merges rather than delete+inserts `roadmap_items` so DB-only links survive re-syncs
 - **Centralized Gemini Model Discovery:** New `gemini-model-discovery.ts` module provides single source of truth for model configuration
 - **Auto-Discovery Fallback:** Automatically searches for working models when configured model fails (tries version 3, 2.5, 2.0, then pro models)
 - **Model Caching:** Discovered working models are cached for 1 hour to reduce API calls
@@ -17,14 +25,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Repo-detail query batching:** `GET /api/repo-details/[name]` now fetches all seven per-repo detail tables (tasks, roadmap_items, metrics, features, doc_status, best_practices, community_standards) in a single `db.transaction([...])` call instead of seven sequential round trips, reducing per-repo load latency by ~7×
-- **Default Model Updated:** Changed from deprecated `models/gemini-2.0-flash-exp` to `models/gemini-2.5-flash` (current working model as of Feb 2026)
+- **Health score weights rebalanced:** Best Practices 30% (was 25%), Security 30% (was 10%), Documentation 15% (was 20%), Testing 15% (was 25%), Community Standards 5% (was 10%), Activity 5% (was 10%) — reflects the primacy of security and engineering hygiene (PR #181)
+- **E2E tests moved to `e2e/`:** `tests/dashboard.spec.ts` → `e2e/dashboard.spec.ts`; `playwright.config.ts` now uses `testDir: './e2e'` (PR #181)
+- **`HealthBreakdown` accessibility:** Native `<button>` replaces `<span role="button">`; `onFocus`/`onBlur` handlers; `aria-describedby` on button and `role="tooltip"` + id on popup; `id` attribute added to popup portal (PR #181)
+- **Header mobile input `aria-label`:** Added `aria-label="Repository URL (owner/repo)"` to the mobile add-repo input (PR #181)
+- **Repo-detail query batching:** `GET /api/repo-details/[name]` fetches all seven per-repo detail tables in a single `db.transaction([...])` call instead of seven sequential round trips
+- **Default Model Updated:** Changed from deprecated `models/gemini-2.0-flash-exp` to `models/gemini-2.5-flash`
 - **Model Configuration:** All files now import from centralized `gemini-model-discovery` instead of hardcoding strings
-- **AI Failover Integration:** Integrated new discovery system with existing failover logic
-- **Test Model Candidates:** Updated `test-model-names.mjs` with future-proof version 3 models for when Google releases them
 
 ### Fixed
 
+- **Test assertion determinism:** `lib/health-score.test.ts` replaced range assertions with exact `toBe(31)` (PR #181)
+- **`exists` reserved keyword:** Both `/api/mcp` and `/api/context` now quote `"exists"` in PostgreSQL SELECT to avoid reserved-word parse error (PR #181)
+- **Auth variable shadowing in `/api/context`:** `auth` → `authHeader` to stop shadowing the NextAuth import (PR #181)
 - **Model String Duplication:** Eliminated hardcoded model strings across multiple files
 - **Environment Variable Inconsistency:** Fixed discrepancy between `GEMINI_MODEL` and `GEMINI_MODEL_NAME` usage
 - **Health Check Accuracy:** Health endpoint now uses same model as actual generation code

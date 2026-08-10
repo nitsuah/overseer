@@ -168,7 +168,7 @@ describe('buildPracticePrompt content assertions', () => {
 
   it('throws for unknown practice type at runtime', () => {
     const ctx = makeContext('deploy_badge');
-    (ctx as Record<string, unknown>).practiceType = 'invalid_type';
+    (ctx as unknown as Record<string, unknown>).practiceType = 'invalid_type';
     expect(() => buildPracticePrompt(ctx)).toThrow('Unknown practice type: invalid_type');
   });
 });

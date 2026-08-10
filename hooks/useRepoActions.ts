@@ -306,9 +306,6 @@ export function useRepoActions(
       setPreviewMode('single');
       setPreviewModalOpen(true);
 
-      // Store practice type for PR creation after modal confirm
-      (window as Window & { __pendingPracticeType?: string }).__pendingPracticeType = practiceType;
-
     } catch (error) {
       console.error('Failed to fix practice:', error);
       setToastMessage('Failed to generate fix');

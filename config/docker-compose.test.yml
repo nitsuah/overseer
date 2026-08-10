@@ -10,7 +10,7 @@ services:
     environment:
       - NODE_ENV=test
       - CI=true
-    command: npx vitest run
+    command: npx vitest run --config config/vitest.config.ts
 
   coverage:
     build:
@@ -23,7 +23,7 @@ services:
     environment:
       - NODE_ENV=test
       - CI=true
-    command: npx vitest run --coverage
+    command: npx vitest run --config config/vitest.config.ts --coverage
 
   test-watch:
     build:

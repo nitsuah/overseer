@@ -2,7 +2,7 @@
 
 ---
 
-## **Last Updated:** 2026-04-13
+## **Last Updated:** 2026-08-09
 
 [![CI](https://github.com/nitsuah/overseer/actions/workflows/ci.yml/badge.svg)](https://github.com/nitsuah/overseer/actions)
 
@@ -25,10 +25,13 @@ Overseer bridges human intent and AI execution through enforced documentation st
 
 - 📊 **Repository Intelligence** - Health scoring, doc tracking, activity monitoring
 - 🤖 **AI Automation** - Gemini-powered summaries, failover, and context-aware doc generation with multi-stage RAG
-- 🔧 **One-Click Fixes** - PR creation for docs, 9 best practices, 12 community standards
+- 🔧 **One-Click Fixes** - PR creation for docs, 10 best practices, 12 community standards
 - 🎯 **Interactive Onboarding** - 16-step guided tour with spotlight highlighting
 - 🔗 **GitHub Integration** - OAuth auth, full metadata sync, rate limit monitoring, custom repo paths
 - 📈 **Composite Metrics** - Testing (60%+ coverage), vulnerabilities, contributor analytics
+- 🤝 **MCP Server** - JSON-RPC 2.0 endpoint exposing 7 tools for agent clients (`get_repo_health`, `list_repos`, `get_repo_details`, `get_portfolio_overview`, `search_repos`, `list_tasks`, `get_security_summary`)
+- 📱 **Mobile Dashboard** - Responsive card layout for all screen sizes
+- 🗂️ **PMO Mode** - Portfolio-wide roadmap progress, plan execution, and DEV-flow handoff at `/pmo`
 
 ## Tech Stack
 
@@ -43,7 +46,7 @@ Overseer bridges human intent and AI execution through enforced documentation st
 
 ### Prerequisites
 
-- Node.js 20.x
+- Node.js 22.x
 - GitHub OAuth App (for authentication)
 - Neon Postgres database (free tier)
 - Google Gemini API key (optional, for AI summaries)
@@ -99,10 +102,10 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 docker build -t overseer-devops-check .
 
 # Run unit tests in the test container
-docker compose -f docker-compose.test.yml run --rm test
+docker compose -f config/docker-compose.test.yml run --rm test
 
 # Run unit coverage in the test container
-docker compose -f docker-compose.test.yml run --rm coverage
+docker compose -f config/docker-compose.test.yml run --rm coverage
 ```
 
 ### Environment Variables
@@ -129,7 +132,7 @@ GEMINI_MODEL_NAME=models/gemini-2.5-flash
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4-turbo-preview
 ANTHROPIC_API_KEY=your_anthropic_api_key
-ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+ANTHROPIC_MODEL=claude-sonnet-5
 
 # Optional BYOK overrides (preferred when set)
 BYOK_GEMINI_API_KEY=your_user_gemini_key
@@ -140,6 +143,12 @@ BYOK_ANTHROPIC_API_KEY=your_user_anthropic_key
 AI_PROVIDER_ORDER=gemini,openai,anthropic
 AI_DEPRIORITIZE_GEMINI_ON_QUOTA=true
 GEMINI_QUOTA_EXCEEDED=false
+
+# MCP server auth (required for POST /api/mcp)
+MCP_API_KEY=your_random_mcp_secret
+
+# GitHub webhook validation (required for POST /api/webhooks/github)
+WEBHOOK_SECRET=your_github_webhook_secret
 
 # Optional Netlify
 NETLIFY_SITE_ID=
@@ -188,14 +197,59 @@ See `/templates` for examples with AI agent instructions.
 # Get all repositories
 GET /api/repos
 
-# Get repository details
+# Get repository details (tasks, roadmap, docs, practices)
 GET /api/repo-details/[name]
 
 # Add a custom repository
 POST /api/repos/add
-{
-  "url": "owner/repo" or "https://github.com/owner/repo"
-}
+{ "url": "owner/repo" | "https://github.com/owner/repo" }
+
+# Sync a single repository
+POST /api/repos/[name]/sync
+
+# Sync all repositories
+POST /api/sync-repos
+
+# Hide / restore a repository
+POST /api/repos/[name]/hide
+POST /api/repos/[name]/unhide
+
+# Fix missing documentation (single file)
+POST /api/repos/[name]/fix-doc
+{ "docType": "readme" | "roadmap" | "tasks" | "metrics" | "features" }
+
+# Fix all missing documentation
+POST /api/repos/[name]/fix-all-docs
+
+# Fix a best practice or community standard
+POST /api/repos/[name]/fix-best-practice
+POST /api/repos/[name]/fix-all-practices
+POST /api/repos/[name]/fix-all-standards
+
+# Generate AI summary
+POST /api/repos/[name]/generate-summary
+
+# Real-time sync event stream
+GET /api/repos/[name]/events  # SSE stream
+
+# GitHub webhook (push events → auto-sync)
+POST /api/webhooks/github
+```
+
+### AI Context & MCP
+
+```bash
+# LLM-optimized context dump for agent consumption (no auth = default repos; Bearer = full)
+GET /api/context
+GET /api/context?repo=owner/repo
+
+# MCP capability discovery (no auth required)
+GET /api/mcp
+
+# MCP JSON-RPC 2.0 handler (Bearer: MCP_API_KEY)
+POST /api/mcp
+# Tools: get_repo_health, list_repos, get_repo_details,
+#        get_portfolio_overview, search_repos, list_tasks, get_security_summary
 ```
 
 ### Agent Task Queue
@@ -205,32 +259,17 @@ See [docs/AGENT_TASK_QUEUE_API.md](docs/AGENT_TASK_QUEUE_API.md) for the full co
 ```bash
 # Submit a new agent task
 POST /api/agent/tasks
-{
-  "type": "string",
-  "payload": { ... },
-  "priority": "normal", // low | normal | high
-  "meta": { ... }
-}
+{ "type": "string", "payload": { ... }, "priority": "normal" }
+
+# Poll task status / retrieve result
+GET /api/agent/tasks/[id]
 ```
 
+### PMO
+
 ```bash
-# Hide a repository
-POST /api/repos/[name]/hide
-
-# Fix missing documentation (single file)
-POST /api/repos/[name]/fix-doc
-{
-  "docType": "readme" | "roadmap" | "tasks" | "metrics"
-}
-
-# Fix all missing documentation
-POST /api/repos/[name]/fix-all-docs
-
-# Generate AI summary
-POST /api/repos/[name]/generate-summary
-
-# Sync all repositories
-POST /api/sync-repos
+# Portfolio-wide roadmap and plan execution overview
+GET /api/pmo/overview
 ```
 
 ## Deployment

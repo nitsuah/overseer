@@ -32,7 +32,7 @@ describe('health-score', () => {
       expect(result.security).toBe(100);
     });
 
-    it('should calculate zero health score for minimal inputs', () => {
+    it('should calculate weighted health score for minimal inputs', () => {
       const inputs: HealthScoreInputs = {
         docHealth: 0,
         hasTests: false,
@@ -49,13 +49,10 @@ describe('health-score', () => {
 
       const result = calculateHealthScore(inputs);
 
-      // Activity starts at 100, loses up to 40 for staleness (500 days > 90),
-      // up to 20 for issues (100 > 10), up to 20 for PRs (50 > 5)
-      // 100 - 40 - 20 - 20 = 20, but capped at 0 would give us activityScore of 20
+      // Activity: 100 - 40 (staleness) - 20 (issues) - 20 (PRs) = 20
       // Security defaults to 100 with no vuln/secret-scanning inputs.
-      // Total weighted: 0*0.2 + 0*0.25 + 0*0.25 + 0*0.1 + 20*0.1 + 100*0.1 = 12
-      expect(result.total).toBeGreaterThanOrEqual(10);
-      expect(result.total).toBeLessThanOrEqual(15);
+      // Total weighted: 0*0.15 + 0*0.15 + 0*0.30 + 0*0.05 + 20*0.05 + 100*0.30 = 31
+      expect(result.total).toBe(31);
       expect(result.documentation).toBe(0);
       expect(result.testing).toBe(0);
       expect(result.bestPractices).toBe(0);

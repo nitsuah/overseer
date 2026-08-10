@@ -35,6 +35,7 @@ import { getTypeIcon } from './repo-row/repo-row-utils';
 interface RepoTableRowProps {
   repo: Repo;
   details: RepoDetails | undefined;
+  isLoadingDetails?: boolean;
   isExpanded: boolean;
   fixingDoc: boolean;
   syncingRepo: string | null;
@@ -58,6 +59,7 @@ interface RepoTableRowProps {
 export function RepoTableRow({
   repo,
   details,
+  isLoadingDetails = false,
   isExpanded,
   fixingDoc,
   syncingRepo,
@@ -227,20 +229,18 @@ export function RepoTableRow({
         <td className="px-3 md:px-6 py-3 md:py-4" data-tour="health-score">
           <div className="flex flex-col gap-2">
             <div className={`flex items-center gap-2 ${repo.is_hidden ? 'opacity-50 grayscale' : ''}`}>
-              {details && (
+              {details ? (
                 <HealthBreakdown
                   repo={repo}
                   details={details}
                   health={health}
-                  expanded={expandedHealth}
                   onToggle={onToggleHealth}
                 />
+              ) : (
+                <span className={`text-lg font-bold ${health.color}`}>{health.grade}</span>
               )}
               {details && expandedHealth && (
-                <>
-                  {/* Health Shields */}
-                  <HealthShields details={details} repo={repo} docHealth={docHealth} />
-                </>
+                <HealthShields details={details} repo={repo} docHealth={docHealth} />
               )}
             </div>
           </div>
@@ -250,6 +250,7 @@ export function RepoTableRow({
           <DocStatusDisplay
             repo={repo}
             details={details}
+            isLoadingDetails={isLoadingDetails}
             docHealth={docHealth}
             repoName={repo.name}
             lastSynced={repo.last_synced}
@@ -397,6 +398,7 @@ export function RepoTableRow({
 function DocStatusDisplay({
   repo,
   details,
+  isLoadingDetails = false,
   docHealth,
   repoName,
   lastSynced,
@@ -408,6 +410,7 @@ function DocStatusDisplay({
 }: {
   repo: Repo;
   details: RepoDetails | undefined;
+  isLoadingDetails?: boolean;
   docHealth: { score: number } | null;
   repoName: string;
   lastSynced: string | null;
@@ -429,6 +432,16 @@ function DocStatusDisplay({
   );
 
   if (!details) {
+    if (isLoadingDetails) {
+      // Details are being fetched in the background — show placeholder icons
+      return (
+        <div className="flex items-center gap-2 animate-pulse" aria-label="Loading doc status">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-4 w-4 rounded-full bg-slate-700/60" />
+          ))}
+        </div>
+      );
+    }
     if (!isAuthenticated) {
       return (
         <span className="text-xs text-slate-400">{formatTimeAgo(lastSynced)}</span>

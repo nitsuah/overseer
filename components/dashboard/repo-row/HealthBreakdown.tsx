@@ -11,18 +11,17 @@ interface HealthBreakdownProps {
   repo: Repo;
   details: RepoDetails;
   health: { grade: string; color: string };
-  expanded: boolean;
   onToggle: () => void;
 }
 
-export function HealthBreakdown({ repo, details, health, expanded: _expanded, onToggle }: HealthBreakdownProps): React.JSX.Element {
+export function HealthBreakdown({ repo, details, health, onToggle }: HealthBreakdownProps): React.JSX.Element {
   const [showPopup, setShowPopup] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
-  const spanRef = React.useRef<HTMLSpanElement>(null);
-  
-  const handleMouseEnter = () => {
-    if (!spanRef.current) return;
-    const rect = spanRef.current.getBoundingClientRect();
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+
+  const handleMouseEnter = (): void => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
     const popupWidth = Math.min(400, window.innerWidth - 32);
     const idealLeft = rect.left + rect.width / 2;
     // Clamp so the popup never overflows the viewport edges horizontally
@@ -40,7 +39,7 @@ export function HealthBreakdown({ repo, details, health, expanded: _expanded, on
     setShowPopup(true);
   };
   
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (): void => {
     setShowPopup(false);
   };
   
@@ -135,12 +134,12 @@ export function HealthBreakdown({ repo, details, health, expanded: _expanded, on
     else if (securityScore < 80) securityColor = 'yellow';
 
     return [
-      { label: 'Community', score: csScore, color: 'green', weight: '10%' },
-      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '25%' },
-      { label: 'Testing', score: testScore, color: 'blue', weight: '25%' },
-      { label: 'Documentation', score: docScore, color: 'slate', weight: '20%' },
-      { label: 'Activity', score: activityScore, color: activityColor, weight: '10%' },
-      { label: 'Security', score: securityScore, color: securityColor, weight: '10%' },
+      { label: 'Community', score: csScore, color: 'green', weight: '5%' },
+      { label: 'Best Practices', score: bpScore, color: 'purple', weight: '30%' },
+      { label: 'Testing', score: testScore, color: 'blue', weight: '15%' },
+      { label: 'Documentation', score: docScore, color: 'slate', weight: '15%' },
+      { label: 'Activity', score: activityScore, color: activityColor, weight: '5%' },
+      { label: 'Security', score: securityScore, color: securityColor, weight: '30%' },
     ];
   }, [repo, details, now]);
 
@@ -157,23 +156,36 @@ export function HealthBreakdown({ repo, details, health, expanded: _expanded, on
 
   return (
     <>
-      <span 
-        ref={spanRef}
+      <button
+        type="button"
+        ref={buttonRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onFocus={handleMouseEnter}
+        onBlur={handleMouseLeave}
         onClick={(e) => {
           e.stopPropagation();
           onToggle();
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggle();
+          }
+        }}
         className={`text-lg font-bold ${health.color} cursor-pointer hover:opacity-80 transition-opacity`}
-        title="Click to toggle health details"
+        aria-label={`Health grade ${health.grade} — click to toggle shields`}
+        aria-describedby={showPopup ? `health-popup-${repo.name}` : undefined}
       >
         {health.grade}
-      </span>
+      </button>
       {showPopup && position && createPortal(
-        <div 
+        <div
+          id={`health-popup-${repo.name}`}
+          role="tooltip"
           className="fixed -translate-x-1/2 w-[min(400px,calc(100vw-32px))] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl p-4 pointer-events-none"
-          style={{ 
+          style={{
             top: `${position.top}px`,
             left: `${position.left}px`,
             zIndex: 9999,

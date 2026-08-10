@@ -32,7 +32,8 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 - **Cross-Repo Dependency Mapping**: Infer and display connections between related repos sharing a stack (e.g., agent-board ↔ bb-mcp ↔ overseer) _(planned)_
 - **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution _(planned)_
-- **MCP Server**: `POST /api/mcp` — JSON-RPC 2.0 endpoint (MCP spec 2024-11-05) exposing `get_repo_health` (health score, CI, vuln counts, activity) and `list_tasks` (per-repo tasks with optional status filter) to any MCP-compatible agent client; Bearer token auth via `MCP_API_KEY` env var; 60 req/min rate limit; `GET /api/mcp` returns public capability doc
+- **MCP Server**: `POST /api/mcp` — JSON-RPC 2.0 endpoint (MCP spec 2024-11-05) exposing 7 tools to any MCP-compatible agent client: `get_repo_health` (health score, CI, vuln counts, activity), `list_tasks` (per-repo tasks with optional status filter), `list_repos` (full portfolio with health/CI/vuln metadata, filterable by min_health/language/type/has_vulns), `get_repo_details` (tasks, roadmap, docs, best practices, community standards), `get_portfolio_overview` (aggregate health distribution, CI pass rate, security posture), `search_repos` (name/description/language search with LIKE-metachar escaping), `get_security_summary` (single-repo or portfolio-wide vuln/secret/code-scanning posture); Bearer token auth via `MCP_API_KEY` env var; 60 req/min rate limit; `GET /api/mcp` returns public capability doc without auth
+- **LLM Context Endpoint**: `GET /api/context` — LLM-optimized JSON dump of the full portfolio or a single repo (`?repo=owner/repo`); no auth returns default repos only, Bearer token or NextAuth session returns full portfolio; designed to be passed directly as context to an LLM or MCP agent
 
 ### 🔄 Agent Prompt Toolkit
 
@@ -182,7 +183,7 @@ These ensure the dashboard always has content, even for non-authenticated visito
 - **Cross-Repo Dependency Mapping**: Interactive 3D graph visualizing shared-stack connections across the portfolio (Q3 2026)
 - **Autonomous Plan Execution**: Agents read ROADMAP.md and TASKS.md, open PRs, and close items end to end (Q4 2026)
 - **Portfolio Intelligence Dashboard**: Cross-repo health roll-up, trend lines, and strategic signal view (Q4 2026)
-- **Mobile-Responsive PWA**: Lightweight PWA packaging and mobile adjustments (Q4 2026)
+- **Mobile-Responsive PWA**: Lightweight PWA packaging (Q4 2026) — responsive mobile card layout already shipped (PR #180)
 
 ## 🤖 AI/ML & Market Trends
 
@@ -202,7 +203,7 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 ## 📅 Last Validated
 
-2026-06-25 - PMO review; MCP Server marked shipped; org fallback + docs/config/ location detection added; Gemini model discovery centralization, auto-discovery fallback, 1h model cache, unified GEMINI_MODEL_NAME env var added; Planned section pruned of shipped items
+2026-08-09 - Health score weights corrected to match code (Best Practices 30%, Security 30%, Doc 15%, Testing 15%, Community 5%, Activity 5%); MCP expanded to 7 tools + LLM context endpoint documented; mobile card layout and PMO mode marked shipped; test suite now 31 files / 447 tests; shared lib/health-grade.ts module extracted from duplicate route logic
 
 ### 📋 Tracked Documentation
 
@@ -255,12 +256,12 @@ Overseer calculates comprehensive health scores (0-100) based on 6 weighted comp
 
 | Component             | Weight | What It Measures                                                                                                                                                                    |
 | --------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Documentation Health  | 20%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md                                                          |
-| Testing & Quality     | 25%    | Test coverage, framework detection, CI/CD status                                                                                                                                    |
-| Best Practices        | 25%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker                                                      |
-| Community Standards   | 10%    | 12 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt |
-| Activity & Engagement | 10%    | Commit frequency, PR/Issue counts, contributor activity                                                                                                                             |
-| Security              | 10%    | Critical/high Dependabot vulnerability alerts and open secret-scanning alerts                                                                                                       |
+| Documentation Health  | 15%    | Presence and health of TASKS.md, ROADMAP.md, FEATURES.md, METRICS.md, README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md                                                          |
+| Testing & Quality     | 15%    | Test coverage, framework detection, CI/CD status                                                                                                                                    |
+| Best Practices        | 30%    | 10 checks: CI/CD, pre-commit, linting, branch protection, testing, .gitignore, Netlify badge, .env.example, Dependabot, Docker                                                      |
+| Community Standards   | 5%     | 12 checks: CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue templates, PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt |
+| Activity & Engagement | 5%     | Commit frequency, PR/Issue counts, contributor activity                                                                                                                             |
+| Security              | 30%    | Critical/high Dependabot vulnerability alerts and open secret-scanning alerts                                                                                                       |
 
 Health scores are displayed as letter grades (A-F) with detailed component breakdowns available in the expandable detail panel.
 

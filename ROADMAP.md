@@ -1,8 +1,8 @@
-## updated: 2026-06-25
-
 # 🗺️ Overseer Roadmap
 
-Next Review: 2026-07-01
+## updated: 2026-08-09
+
+Next Review: 2026-09-01
 
 ## Q4 2025 – Q1 2026 ✅
 
@@ -35,7 +35,7 @@ Next Review: 2026-07-01
 
 - [ ] Add the conversational interface foundation: one or two chat-driven repo-hygiene workflows end to end
 - [ ] Add advanced analytics: velocity scoring, technical-debt trending, and zombie-branch detection
-- [ ] Expand MCP tooling surface: expose overseer repo intelligence as an MCP server for agent clients
+- [x] Expand MCP tooling surface: 7 tools now ship (`get_repo_health`, `list_repos`, `get_repo_details`, `get_portfolio_overview`, `search_repos`, `list_tasks`, `get_security_summary`) + `/api/context` LLM context endpoint (PR #181)
 - [ ] Add cross-repo dependency mapping to surface shared-stack connections (e.g., agent-board ↔ bb-mcp ↔ overseer)
 
 ## Q4 2026: Portfolio Intelligence (Exploratory) 🧪

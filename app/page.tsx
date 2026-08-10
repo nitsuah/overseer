@@ -12,6 +12,7 @@ import { useRepoActions } from '@/hooks/useRepoActions';
 import { MobileRepoCard } from '@/components/dashboard/MobileRepoCard';
 import { useRepoFilters } from '@/hooks/useRepoFilters';
 import { RepoType } from '@/lib/repo-type';
+import type { Repo } from '@/types/repo';
 
 export default function Dashboard() {
   const { data: session } = useSession();
@@ -125,7 +126,7 @@ export default function Dashboard() {
     if (loading || repos.length === 0 || prefetchedRef.current) return;
     prefetchedRef.current = true;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    repos.forEach((repo, i) => {
+    repos.forEach((repo: Repo, i: number): void => {
       // Stagger by 80ms per repo to avoid hammering the API
       timers.push(setTimeout(() => fetchRepoDetails(repo.name), i * 80));
     });

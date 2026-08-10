@@ -32,7 +32,7 @@ describe('health-score', () => {
       expect(result.security).toBe(100);
     });
 
-    it('should calculate zero health score for minimal inputs', () => {
+    it('should calculate weighted health score for minimal inputs', () => {
       const inputs: HealthScoreInputs = {
         docHealth: 0,
         hasTests: false,

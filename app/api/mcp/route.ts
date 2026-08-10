@@ -348,7 +348,8 @@ async function getRepoDetails(args: Row): Promise<string> {
       items: taskRows,
     },
     roadmap: {
-      total: roadmapRows.length,
+      returned_count: roadmapRows.length,
+      truncated:   roadmapRows.length === 100,
       by_status: {
         planned:     roadmapRows.filter(r => r.status === 'planned').length,
         in_progress: roadmapRows.filter(r => r.status === 'in-progress').length,

@@ -68,15 +68,14 @@ export async function GET(req: NextRequest) {
         LIMIT 1
       `) as Row[];
 
-      if (repoRows.length === 0) {
+      if (
+        repoRows.length === 0 ||
+        (!authed && !defaultNames.includes(repoRows[0].name))
+      ) {
         return NextResponse.json({ error: `Repository "${repoName}" not found` }, { status: 404 });
       }
 
       const repo = repoRows[0];
-
-      if (!authed && !defaultNames.includes(repo.name)) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
 
       const [tasks, roadmapItems, docStatuses, bestPractices, communityStandards] =
         await db.transaction([

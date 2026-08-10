@@ -19,7 +19,7 @@ export function HealthBreakdown({ repo, details, health, onToggle }: HealthBreak
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = React.useRef<HTMLButtonElement>(null);
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = (): void => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
     const popupWidth = Math.min(400, window.innerWidth - 32);
@@ -39,7 +39,7 @@ export function HealthBreakdown({ repo, details, health, onToggle }: HealthBreak
     setShowPopup(true);
   };
   
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (): void => {
     setShowPopup(false);
   };
   

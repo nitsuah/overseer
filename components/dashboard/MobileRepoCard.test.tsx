@@ -57,7 +57,10 @@ const baseDetails: RepoDetails = {
   communityStandards: [],
 };
 
-function baseProps(overrides: Partial<Parameters<typeof MobileRepoCard>[0]> = {}) {
+/** Create complete default props for MobileRepoCard tests. */
+function baseProps(
+  overrides: Partial<Parameters<typeof MobileRepoCard>[0]> = {}
+): Parameters<typeof MobileRepoCard>[0] {
   return {
     repo: baseRepo,
     details: undefined,
@@ -102,8 +105,8 @@ describe('MobileRepoCard – collapsed', () => {
   });
 });
 
-// helper: the outer expansion div is the only element with aria-controls
-function getCard(container: HTMLElement) {
+/** Return the outer expansion element (the one with aria-controls) in the rendered card. */
+function getCard(container: HTMLElement): HTMLElement {
   return container.querySelector<HTMLElement>('[aria-controls]')!;
 }
 

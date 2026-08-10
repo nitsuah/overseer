@@ -1,6 +1,6 @@
-## updated: 2026-08-09
-
 # 🗺️ Overseer Roadmap
+
+## updated: 2026-08-09
 
 Next Review: 2026-09-01
 

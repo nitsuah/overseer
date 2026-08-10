@@ -302,6 +302,9 @@ async function getRepoDetails(args: Row): Promise<string> {
   const name = String(args.name ?? '');
   if (!name) throw new Error('"name" is required');
 
+  /** Maximum rows fetched per paginated query; used to detect truncation. */
+  const ROADMAP_ROW_LIMIT = 100;
+
   const db = getNeonClient();
   const repoRows = await db`
     SELECT id, name, full_name, health_score, language, repo_type, description
@@ -319,7 +322,7 @@ async function getRepoDetails(args: Row): Promise<string> {
   const [tasks, roadmapItems, docStatuses, bestPractices, communityStandards] =
     await db.transaction([
       db`SELECT title, status, section FROM tasks WHERE repo_id = ${repo.id} ORDER BY created_at DESC LIMIT 100`,
-      db`SELECT title, quarter, status, linked_pr_number FROM roadmap_items WHERE repo_id = ${repo.id} ORDER BY created_at DESC LIMIT 100`,
+      db`SELECT title, quarter, status, linked_pr_number FROM roadmap_items WHERE repo_id = ${repo.id} ORDER BY created_at DESC LIMIT ${ROADMAP_ROW_LIMIT}`,
       db`SELECT doc_type, "exists", health_state FROM doc_status WHERE repo_id = ${repo.id}`,
       db`SELECT practice_type, status FROM best_practices WHERE repo_id = ${repo.id}`,
       db`SELECT standard_type, status FROM community_standards WHERE repo_id = ${repo.id}`,
@@ -349,7 +352,7 @@ async function getRepoDetails(args: Row): Promise<string> {
     },
     roadmap: {
       returned_count: roadmapRows.length,
-      truncated:   roadmapRows.length === 100,
+      truncated:   roadmapRows.length === ROADMAP_ROW_LIMIT,
       by_status: {
         planned:     roadmapRows.filter(r => r.status === 'planned').length,
         in_progress: roadmapRows.filter(r => r.status === 'in-progress').length,

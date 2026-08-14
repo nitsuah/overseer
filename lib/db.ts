@@ -28,8 +28,11 @@ export async function ensureSchema(db: ReturnType<typeof getNeonClient>): Promis
             await db.query(statement);
         } catch (error) {
             const err = error as Error & { code?: string };
-            if (!err.message?.includes('already exists') && err.code !== '42701') {
-                logger.warn(`Schema migration statement failed: ${statement}`, err.message);
+            // 42701 = duplicate_column, 42P07 = duplicate_table, 42710 = duplicate_object
+            // These are expected on idempotent re-runs; all other errors are real failures.
+            const benign = err.code === '42701' || err.code === '42P07' || err.code === '42710';
+            if (!benign) {
+                throw err;
             }
         }
     }

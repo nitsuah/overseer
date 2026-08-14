@@ -4,7 +4,7 @@ import { Task } from '@/types/repo';
 export interface TaskData {
     frontmatter: {
         repo?: string;
-        updated?: string;
+        updated?: Date;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [key: string]: any;
     };
@@ -52,6 +52,11 @@ export function parseTasks(content: string): TaskData {
                 subsection: currentSubsection || null,
             });
         }
+    }
+
+    if (frontmatter.updated !== undefined && !(frontmatter.updated instanceof Date)) {
+        const d = new Date(frontmatter.updated);
+        frontmatter.updated = isNaN(d.getTime()) ? frontmatter.updated : d;
     }
 
     return {

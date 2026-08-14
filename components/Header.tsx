@@ -1,9 +1,10 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Shield, Sparkles, LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle, LayoutDashboard, Menu } from "lucide-react";
+import { LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle, LayoutDashboard, Menu } from "lucide-react";
 import Link from "next/link";
 import { GithubIcon } from "@/components/icons/GithubIcon";
+import { VigilIcon } from "@/components/icons/VigilIcon";
 import Image from "next/image";
 import { useGeminiStatus } from "@/hooks/useGeminiStatus";
 import { getLanguageColor } from "@/lib/language-colors";
@@ -81,36 +82,31 @@ export default function Header(props: HeaderProps = {}) {
     if (status === "loading") return null;
 
     return (
-        <header className="header-dark relative flex flex-col py-4 px-4 md:px-6 text-white shadow-lg border-b border-white/10">
+        <header className="header-dark relative flex flex-col py-2 px-4 md:px-6 text-white shadow-lg border-b border-white/10">
         {/* Main row */}
         <div className="flex items-center justify-between w-full">
             {/* Left Cluster */}
-            <div className="flex items-center gap-4">
-                {/* Super Zaazzed Icon */}
+            <div className="flex items-center gap-3">
+                {/* Vigil icon — doubles as sync trigger */}
                 <button
                     onClick={onSync}
                     disabled={syncing}
-                    className="relative group/icon cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-opacity"
+                    className="relative group/icon cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                     title="Sync all repositories"
                 >
-                    <div className="absolute -inset-2 bg-gradient-to-tr from-indigo-600 via-purple-600 to-fuchsia-600 rounded-full opacity-50 group-hover/icon:opacity-75 blur-lg motion-safe:animate-pulse"></div>
-                    <div className="relative pulse-icon p-[3px] bg-gradient-to-tr from-indigo-500 via-purple-500 to-fuchsia-500 shadow-2xl shadow-purple-500/50 group-hover/icon:shadow-purple-400/70 transition-shadow duration-300">
-                        <div className="rounded-full bg-gradient-to-br from-slate-900 to-slate-950 p-2.5 group-hover/icon:scale-110 active:scale-95 transition-transform duration-300 relative">
-                            <Shield className={`h-7 w-7 text-indigo-300 drop-shadow-[0_0_8px_rgba(165,180,252,0.8)] group-hover/icon:drop-shadow-[0_0_12px_rgba(165,180,252,1)] transition-transform duration-500 ${syncing ? 'animate-spin' : ''}`} />
-                            <Sparkles className="h-3 w-3 text-fuchsia-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 motion-safe:animate-pulse drop-shadow-[0_0_4px_rgba(232,121,249,0.8)]" />
-                        </div>
+                    <div className="p-1.5 rounded-lg bg-gradient-to-br from-indigo-600/10 to-purple-600/10 border border-indigo-500/20 group-hover/icon:border-indigo-400/50 group-hover/icon:from-indigo-600/20 group-hover/icon:to-purple-600/20 group-hover/icon:shadow-lg group-hover/icon:shadow-indigo-500/20 transition-all duration-200">
+                        <VigilIcon className={`h-6 w-6 text-indigo-300 group-hover/icon:text-indigo-200 transition-colors duration-200 ${syncing ? 'animate-spin' : ''}`} />
                     </div>
                 </button>
-                <div className="flex flex-col leading-tight">
-                    {/* Zaazzed Title */}
-                    <h1 className="text-xl md:text-2xl font-black tracking-wider flex items-center gap-2">
-                        <span className="bg-gradient-to-r from-sky-300 to-blue-400 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(125,211,252,0.6)] hover:drop-shadow-[0_0_18px_rgba(125,211,252,0.9)] transition-all duration-300">
-                            Repo
-                        </span>
-                        <span className="bg-gradient-to-r from-purple-400 to-fuchsia-400 bg-clip-text text-transparent font-semibold drop-shadow-[0_0_12px_rgba(192,132,252,0.6)] hover:drop-shadow-[0_0_18px_rgba(192,132,252,0.9)] transition-all duration-300">
-                            | Seer
+                <div className="flex flex-col leading-none gap-0.5">
+                    <h1 className="text-lg font-bold tracking-wide">
+                        <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-fuchsia-300 bg-clip-text text-transparent">
+                            Vigil
                         </span>
                     </h1>
+                    <span className="text-[9px] text-slate-500 tracking-widest uppercase font-medium hidden md:block">
+                        Repo Intelligence
+                    </span>
                 </div>
             </div>
 

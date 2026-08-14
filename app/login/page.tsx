@@ -8,13 +8,23 @@ export default async function LoginPage() {
                 <div className="flex justify-center">
                     <div className="glass rounded-lg p-12 max-w-md w-full text-center space-y-6">
                         <div className="flex justify-center">
-                            <div className="h-16 w-16 rounded-lg bg-linear-to-br from-blue-500 to-purple-600" />
+                            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className="h-8 w-8 text-indigo-300" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.5"/>
+                                    <line x1="12" y1="3.5" x2="12" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <line x1="12" y1="17" x2="12" y2="20.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <line x1="3.5" y1="12" x2="7" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <line x1="17" y1="12" x2="20.5" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+                                </svg>
+                            </div>
                         </div>
 
                         <div>
-                            <h1 className="text-3xl font-bold mb-2">Welcome to Overseer</h1>
+                            <h1 className="text-3xl font-bold mb-1">Vigil</h1>
+                            <p className="text-sm text-slate-500 uppercase tracking-widest font-medium mb-3">Repo Intelligence</p>
                             <p className="text-slate-400">
-                                Sign in with GitHub to manage your repositories
+                                Sign in with GitHub to monitor your repositories
                             </p>
                         </div>
 

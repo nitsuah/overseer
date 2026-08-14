@@ -77,6 +77,21 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     `ALTER TABLE roadmap_items ADD COLUMN IF NOT EXISTS linked_pr_number INTEGER`,
     `ALTER TABLE roadmap_items ADD COLUMN IF NOT EXISTS agent_task_id TEXT`,
 
+    // users: table + RLS (must precede any query that references this table)
+    `CREATE TABLE IF NOT EXISTS users (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      github_id TEXT NOT NULL UNIQUE,
+      github_username TEXT NOT NULL UNIQUE,
+      last_sync_at TIMESTAMP WITH TIME ZONE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`,
+    `ALTER TABLE users ENABLE ROW LEVEL SECURITY`,
+    `DO $$ BEGIN
+      CREATE POLICY allow_access_to_own_user_record ON users FOR ALL USING (github_id = current_setting('app.current_github_id', true));
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$`,
+
     // indexes
     `CREATE INDEX IF NOT EXISTS idx_repos_health_score ON repos(health_score)`,
     `CREATE INDEX IF NOT EXISTS idx_repos_coverage_score ON repos(coverage_score)`,

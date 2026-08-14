@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import logger from '@/lib/log';
 import { auth } from '@/auth';
 import { GitHubClient, RepoMetadata } from '@/lib/github';
-import { getNeonClient } from '@/lib/db';
+import { getNeonClient, ensureSchema } from '@/lib/db';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { syncRepo, syncRepoMetadata } from '@/lib/sync';
 
@@ -54,6 +54,8 @@ export async function POST() {
 
         const github = new GitHubClient(accessToken, githubUsername);
         const db = getNeonClient();
+
+        await ensureSchema(db);
 
         logger.info('Sync-repos: Fetching repos list...');
         // Get user record or create if not exists (use numeric github_id for stable PK)

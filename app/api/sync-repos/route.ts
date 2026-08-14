@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import logger from '@/lib/log';
 import { auth } from '@/auth';
 import { GitHubClient, RepoMetadata } from '@/lib/github';
-import { getNeonClient } from '@/lib/db';
+import { getNeonClient, ensureSchema } from '@/lib/db';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { syncRepo, syncRepoMetadata } from '@/lib/sync';
 
@@ -55,24 +55,32 @@ export async function POST() {
         const github = new GitHubClient(accessToken, githubUsername);
         const db = getNeonClient();
 
-        logger.info('Sync-repos: Fetching repos list...');
-        // Get user record or create if not exists (use numeric github_id for stable PK)
-        const userRecord = await db`SELECT * FROM users WHERE github_id = ${githubUserId}`;
-
-        let userId: string;
-        if (userRecord.length === 0) {
-            const newUser = await db`INSERT INTO users (github_id, github_username) VALUES (${String(githubUserId)}, ${githubUsername}) RETURNING id`;
-            userId = newUser[0].id;
-        } else {
-            userId = userRecord[0].id;
-            // Keep username fresh (user may have changed their handle)
-            if (userRecord[0].github_username !== githubUsername) {
-                await db`UPDATE users SET github_username = ${githubUsername} WHERE id = ${userId}`;
-            }
+        try {
+            await ensureSchema(db);
+        } catch (schemaError) {
+            logger.error('Sync-repos: Schema initialization failed:', schemaError);
+            return NextResponse.json({ error: 'Database schema initialization failed' }, { status: 503 });
         }
 
+        logger.info('Sync-repos: Fetching repos list...');
+        // Upsert the user record inside a transaction so set_config is transaction-local
+        // and the RLS policy (FORCE ROW LEVEL SECURITY on users) is satisfied.
+        const txResults = await db.transaction([
+            db`SELECT set_config('app.current_github_id', ${String(githubUserId)}, true)`,
+            db`
+                INSERT INTO users (github_id, github_username)
+                VALUES (${String(githubUserId)}, ${githubUsername})
+                ON CONFLICT (github_id) DO UPDATE
+                    SET github_username = EXCLUDED.github_username,
+                        updated_at = NOW()
+                RETURNING id, last_sync_at
+            `,
+        ]);
+        const userRow = txResults[1][0];
+        const userId = userRow.id as string;
+
         // Check if we should do a full sync or delta sync
-        const lastSyncAt = userRecord[0]?.last_sync_at;
+        const lastSyncAt = userRow.last_sync_at;
         const shouldDoFullSync = !lastSyncAt || (new Date().getTime() - new Date(lastSyncAt).getTime()) > 24 * 60 * 60 * 1000; // 24 hours
 
         logger.info(`Sync-repos: Starting sync for ${githubUsername}`, {
@@ -246,8 +254,11 @@ export async function POST() {
             const totalProcessed = successCount + errorCount;
             logger.info(`Background sync process completed: ${successCount}/${totalProcessed} repos processed`);
 
-            // Update last_sync_at timestamp
-            await db`UPDATE users SET last_sync_at = ${syncStartTime} WHERE id = ${userId}`;
+            // Update last_sync_at — needs set_config so FORCE RLS policy is satisfied
+            await db.transaction([
+                db`SELECT set_config('app.current_github_id', ${String(githubUserId)}, true)`,
+                db`UPDATE users SET last_sync_at = ${syncStartTime} WHERE id = ${userId}`,
+            ]);
         })().catch(error => logger.error('Background sync failed:', error));
 
         // Return immediately to avoid timeout

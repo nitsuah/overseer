@@ -87,6 +87,7 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )`,
     `ALTER TABLE users ENABLE ROW LEVEL SECURITY`,
+    `ALTER TABLE users FORCE ROW LEVEL SECURITY`,
     `DO $$ BEGIN
       CREATE POLICY allow_access_to_own_user_record ON users FOR ALL USING (github_id = current_setting('app.current_github_id', true));
     EXCEPTION WHEN duplicate_object THEN NULL;

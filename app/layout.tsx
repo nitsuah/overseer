@@ -7,8 +7,8 @@ import { SessionProvider } from "next-auth/react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Overseer - Meta-Repository Intelligence Layer",
-  description: "A unified dashboard for managing all your GitHub repositories",
+  title: "Vigil — Repo Intelligence",
+  description: "Unified health monitoring and intelligence for all your GitHub repositories",
 };
 
 export default async function RootLayout({

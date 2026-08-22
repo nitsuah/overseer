@@ -44,7 +44,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 ### 🤖 AI-Powered Features
 
-- **AI Summaries**: Google Gemini 2.0-powered repository summaries
+- **AI Summaries**: Google Gemini (default: `gemini-2.5-flash`) powered repository summaries
 - **Multi-Provider AI Failover**: Automatic failover across Gemini, OpenAI (GPT-4), and Anthropic (Claude) for high availability
 - **AI Health Endpoint**: `/api/health` monitors all AI providers, auto-discovers available Gemini models when primary model fails
 - **Runtime Model Auto-Discovery**: When Gemini model fails, automatically discovers, tests, and switches to working model (no manual intervention)
@@ -295,4 +295,4 @@ Health scores are displayed as letter grades (A-F) with detailed component break
 
 ## 📅 Last Updated
 
-2026-06-25 - MCP server shipped; Gemini model discovery centralization, auto-discovery fallback, model caching, unified env var added; docs/config/ detection and org fallback awareness documented; Planned section updated
+2026-08-22 - MCP server shipped; Gemini model discovery centralization, auto-discovery fallback, model caching, unified env var added; docs/config/ detection and org fallback awareness documented; Planned section updated; default Gemini model updated to gemini-2.5-flash

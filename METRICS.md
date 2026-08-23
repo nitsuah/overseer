@@ -8,11 +8,11 @@ Compliance: Overseer/PM core metrics and health scoring validated for Q2 2026
 
 | Metric              | Value  | Notes                                                                                                                                          |
 | ------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Code Coverage       | 92.09% | Overall statement coverage from `docker compose -f docker-compose.test.yml run --rm coverage`. Branch: 83.02%, Function: 92.00%, Line: 92.82%. |
+| Code Coverage       | 80.40% | Overall statement coverage from `docker compose -f docker-compose.test.yml run --rm coverage`. Branch: 66.37%, Function: 72.59%, Line: 82.16%. |
 | Build Time          | ~6s    | Local dev build                                                                                                                                |
 | Bundle Size         | TBD    | Not measured yet                                                                                                                               |
 | Test Files          | 31     | All vitest test files passing in Docker, including expanded GitHub client and Gemini model discovery coverage.                                  |
-| Test Cases          | 447    | Docker coverage run reports 446 passing tests and 1 skipped Gemini health check when no API key is provided.                                   |
+| Test Cases          | 448    | Docker coverage run reports 447 passing tests and 1 skipped Gemini health check when no API key is provided.                                   |
 | E2E Test Files      | 1      | Playwright E2E tests (e2e/dashboard.spec.ts)                                                                                                   |
 | E2E Test Cases      | 5      | Playwright tests passing (unauthenticated state, performance)                                                                                  |
 | Database Tables     | 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                                |

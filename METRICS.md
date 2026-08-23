@@ -14,7 +14,7 @@ Compliance: Overseer/PM core metrics and health scoring validated for Q2 2026
 | Test Files          | 31     | All vitest test files passing in Docker, including expanded GitHub client and Gemini model discovery coverage.                                  |
 | Test Cases          | 448    | Docker coverage run reports 447 passing tests and 1 skipped Gemini health check when no API key is provided.                                   |
 | E2E Test Files      | 1      | Playwright E2E tests (e2e/dashboard.spec.ts)                                                                                                   |
-| E2E Test Cases      | 5      | Playwright tests passing (unauthenticated state, performance)                                                                                  |
+| E2E Test Cases      | 34     | Playwright tests passing in e2e/dashboard.spec.ts                                                                                  |
 | Database Tables     | 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                                |
 | Repo Columns        | 30+    | Including LOC, test counts, CI status, vulnerabilities, contributor analytics, template health tracking, subsection                            |
 | API Routes          | 25+    | Including auth, repos CRUD, fix operations, sync, debug, rate-limit, enrich-template, generate-best-practice, and admin utilities              |

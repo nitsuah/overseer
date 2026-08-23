@@ -187,7 +187,7 @@ Overseer expects repos to have these files for full functionality:
 - **TASKS.md** - Granular task tracking with status
 - **METRICS.md** - Test coverage and performance metrics
 - **FEATURES.md** - Features organized by category with descriptions
-- **LICENSE.md** - Project license
+- **LICENSE** - Project license
 - **CHANGELOG.md** - Version history
 - **CONTRIBUTING.md** - Contribution guidelines
 

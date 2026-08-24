@@ -78,7 +78,7 @@ npm run dev
 
 ## Quick Links
 
-- [Live Dashboard](https://overseer.nitsuah.io)
+- [Live Dashboard](https://ghoverseer.netlify.app)
 - [Docs](./docs/)
 - [GitHub](https://github.com/nitsuah/overseer)
 
@@ -186,8 +186,27 @@ Overseer expects repos to have these files for full functionality:
 - **ROADMAP.md** - High-level objectives and quarterly plans
 - **TASKS.md** - Granular task tracking with status
 - **METRICS.md** - Test coverage and performance metrics
+- **FEATURES.md** - Features organized by category with descriptions
+- **LICENSE.md** - Project license
+- **CHANGELOG.md** - Version history
+- **CONTRIBUTING.md** - Contribution guidelines
 
 See `/templates` for examples with AI agent instructions.
+
+## Health Score
+
+Overseer calculates a composite 0–100 score across 6 weighted components:
+
+| Component             | Weight | What It Measures                                                      |
+| --------------------- | ------ | --------------------------------------------------------------------- |
+| Best Practices        | 30%    | CI/CD, pre-commit, linting, branch protection, Docker, Dependabot, etc. |
+| Security              | 30%    | Dependabot vulnerability alerts and secret-scanning alerts            |
+| Documentation Health  | 15%    | Presence and health of the 8 tracked doc files                       |
+| Testing & Quality     | 15%    | Test coverage percentage, framework detection, CI pass/fail           |
+| Community Standards   | 5%     | 12 community health files (CODE_OF_CONDUCT, CONTRIBUTING, etc.)      |
+| Activity & Engagement | 5%     | Commit frequency, PR/issue counts, contributor activity               |
+
+Scores are displayed as letter grades (A–F) with per-component breakdowns in the detail panel. See [FEATURES.md](FEATURES.md) for full details.
 
 ## API Endpoints
 
@@ -216,7 +235,7 @@ POST /api/repos/[name]/unhide
 
 # Fix missing documentation (single file)
 POST /api/repos/[name]/fix-doc
-{ "docType": "readme" | "roadmap" | "tasks" | "metrics" | "features" }
+{ "docType": "readme" | "roadmap" | "tasks" | "metrics" | "features" | "license" | "changelog" | "contributing" }
 
 # Fix all missing documentation
 POST /api/repos/[name]/fix-all-docs

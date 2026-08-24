@@ -226,7 +226,7 @@ Overseer tracks adherence to development and community standards with 4-state he
 - **CODE_OF_CONDUCT.md** - Community behavior guidelines (template available)
 - **CONTRIBUTING.md** - Contribution guidelines
 - **SECURITY.md** - Security policy and vulnerability reporting (template available)
-- **LICENSE** - Project license
+- **LICENSE.md** - Project license
 - **CHANGELOG.md** - Version history
 - **Issue Templates** - Standardized issue creation (templates available: bug_report, feature_request)
 - **Pull Request Templates** - PR guidelines

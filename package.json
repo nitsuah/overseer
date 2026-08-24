@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
-    "@netlify/functions": "^5.3.0",
+    "@netlify/functions": "^6.0.0",
     "@netlify/plugin-nextjs": "^5.15.13",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",

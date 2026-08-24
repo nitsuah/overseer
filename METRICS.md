@@ -2,7 +2,7 @@
 
 Last Validated: 2026-08-22 (Docker coverage validation)
 Health Score: 95/100
-Compliance: Overseer/PM core metrics and health scoring validated for Q2 2026
+Compliance: Overseer/PM core metrics and health scoring validated for Q3 2026
 
 ## Core Metrics
 

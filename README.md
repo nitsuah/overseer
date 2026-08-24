@@ -132,7 +132,7 @@ GEMINI_MODEL_NAME=models/gemini-2.5-flash
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4-turbo-preview
 ANTHROPIC_API_KEY=your_anthropic_api_key
-ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+ANTHROPIC_MODEL=claude-sonnet-5
 
 # Optional BYOK overrides (preferred when set)
 BYOK_GEMINI_API_KEY=your_user_gemini_key
@@ -187,7 +187,7 @@ Overseer expects repos to have these files for full functionality:
 - **TASKS.md** - Granular task tracking with status
 - **METRICS.md** - Test coverage and performance metrics
 - **FEATURES.md** - Features organized by category with descriptions
-- **LICENSE** - Project license
+- **LICENSE.md** - Project license
 - **CHANGELOG.md** - Version history
 - **CONTRIBUTING.md** - Contribution guidelines
 

@@ -20,6 +20,12 @@ export interface PmoChatAction {
     status?: string;
 }
 
+// Strip action markers from any string that will be interpolated into the prompt
+// to prevent client-supplied repo names or task titles from injecting fake actions.
+function sanitizeForPrompt(s: string): string {
+    return s.replace(/\[ROADMAP_SUGGESTION\]|\[AGENT_PROMPT\]|\[\/AGENT_PROMPT\]/g, '');
+}
+
 function buildPortfolioContext(repos: PmoRepoSummary[], portfolio: PmoPortfolio): string {
     const lines: string[] = [
         `Portfolio: ${portfolio.repo_count} repos tracked`,
@@ -31,15 +37,19 @@ function buildPortfolioContext(repos: PmoRepoSummary[], portfolio: PmoPortfolio)
     ];
 
     for (const repo of repos) {
+        const name = sanitizeForPrompt(repo.full_name ?? '');
         const score = repo.health_score ?? 'unknown';
         const ci = repo.ci_status ?? 'unknown';
         const rm = repo.roadmap;
         const pct = rm.total > 0 ? Math.round((rm.done / rm.total) * 100) : 0;
         lines.push(
-            `  ${repo.full_name}: health=${score}/100 ci=${ci} roadmap=${pct}% done (${rm.planned} planned/${rm.in_progress} in-progress/${rm.done} done) open_prs=${repo.open_prs}`
+            `  ${name}: health=${score}/100 ci=${ci} roadmap=${pct}% done (${rm.planned} planned/${rm.in_progress} in-progress/${rm.done} done) open_prs=${repo.open_prs}`
         );
         if (repo.in_progress_items.length > 0) {
-            lines.push(`    In progress: ${repo.in_progress_items.map(i => i.title).join(', ')}`);
+            const titles = repo.in_progress_items
+                .map(i => sanitizeForPrompt(i.title ?? ''))
+                .join(', ');
+            lines.push(`    In progress: ${titles}`);
         }
     }
 
@@ -101,7 +111,7 @@ function parseActions(text: string): PmoChatAction[] {
     return actions;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
         const session = await auth();
         if (!session?.user) {
@@ -110,15 +120,21 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json();
         const { message, repos, portfolio, history } = body as {
-            message: string;
+            message: unknown;
             repos: PmoRepoSummary[];
             portfolio: PmoPortfolio;
             history?: PmoChatMessage[];
         };
 
-        if (!message?.trim()) {
+        if (typeof message !== 'string' || !message.trim()) {
             return NextResponse.json({ error: 'Message required' }, { status: 400 });
         }
+        const safeMessage = message.slice(0, 2000);
+        const safeHistory = Array.isArray(history)
+            ? history.slice(-6).filter(
+                m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string'
+            )
+            : [];
 
         const portfolioContext = buildPortfolioContext(repos ?? [], portfolio ?? {
             repo_count: 0, roadmap_planned: 0, roadmap_in_progress: 0,
@@ -128,12 +144,10 @@ export async function POST(request: NextRequest) {
 
         // Build conversation string (simple, no SDK function-calling needed)
         const conversationParts: string[] = [systemPrompt, ''];
-        if (history && history.length > 0) {
-            for (const msg of history.slice(-6)) { // keep last 6 turns for context
-                conversationParts.push(`${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`);
-            }
+        for (const msg of safeHistory) {
+            conversationParts.push(`${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`);
         }
-        conversationParts.push(`User: ${message}`);
+        conversationParts.push(`User: ${safeMessage}`);
         conversationParts.push('Assistant:');
 
         const fullPrompt = conversationParts.join('\n');
@@ -141,16 +155,17 @@ export async function POST(request: NextRequest) {
         const reply = await generateWithFailover(fullPrompt, { useShortResponse: false });
         const actions = parseActions(reply);
 
-        // Strip action markers from the displayed reply
+        // Strip action markers from the displayed reply.
+        // Also strip a trailing unterminated [AGENT_PROMPT] if the model was cut off.
         const cleanReply = reply
             .replace(/\[ROADMAP_SUGGESTION\][^\n]*/g, '')
             .replace(/\[AGENT_PROMPT\][\s\S]*?\[\/AGENT_PROMPT\]/g, '')
+            .replace(/\[\/?\s*AGENT_PROMPT\][\s\S]*$/g, '')
             .trim();
 
         return NextResponse.json({ reply: cleanReply, actions });
     } catch (error: unknown) {
-        logger.warn('PMO chat error:', error);
-        const msg = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ error: msg }, { status: 500 });
+        logger.error('PMO chat error:', error);
+        return NextResponse.json({ error: 'Assistant unavailable' }, { status: 500 });
     }
 }

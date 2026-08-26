@@ -579,11 +579,12 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         const hasCI = bestPractices.some((bp: { practice_type: string; status: string }) =>
             bp.practice_type === 'ci_cd' && bp.status === 'healthy'
         );
-        const hasCIConfigured = bestPractices.some((bp: { practice_type: string }) =>
-            bp.practice_type === 'ci_cd'
-        );
-        // ciPassing: true = CI healthy, false = CI configured but failing, undefined = no CI
-        const ciPassing: boolean | undefined = hasCI ? true : (hasCIConfigured ? false : undefined);
+        // ciPassing: true = CI passing, false = CI actively failing, undefined = unknown/no CI
+        // Uses the live GitHub Actions status, not just whether CI files exist.
+        const ciPassing: boolean | undefined =
+            ciStatus === 'passing' ? true :
+            ciStatus === 'failing' ? false :
+            undefined;
 
         const daysSinceCommit = lastCommitDate
             ? Math.floor((Date.now() - new Date(lastCommitDate).getTime()) / (1000 * 60 * 60 * 24))

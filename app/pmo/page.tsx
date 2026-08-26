@@ -1,33 +1,30 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     ArrowLeft, RefreshCw, AlertTriangle, CheckCircle2, Circle,
     GitPullRequest, GitBranch, Zap, ChevronRight, Bot,
-    ChevronDown, ChevronUp, MessageSquare, X, Send, Copy, Check,
-    Sparkles, ClipboardList,
+    ChevronDown, ChevronUp, MessageSquare, ClipboardList,
 } from 'lucide-react';
 import type { PmoRepoSummary, PmoPortfolio, PmoInProgressItem } from '@/app/api/pmo/overview/route';
-import type { PmoChatMessage, PmoChatAction } from '@/app/api/pmo/chat/route';
+import { PmoChat } from '@/components/pmo/PmoChat';
 
 // ─── health visualization ─────────────────────────────────────────────────────
 
 interface HealthViz {
     label: string;
     textColor: string;
-    badgeCls: string; // background + border for badge pill
-    ringCls: string;  // card border override for low-health repos
+    badgeCls: string;
+    ringCls: string;
 }
 
 function getHealthViz(score: number | null): HealthViz {
     if (score === null) {
         return { label: '?', textColor: 'text-slate-400', badgeCls: 'bg-slate-800/60 border-slate-600/40', ringCls: '' };
     }
-    // Progressive scale: each 10-point band has its own ring intensity
-    // Good scores get a subtle positive ring; bad scores escalate in redness + glow
     if (score >= 90) return {
         label: 'A',
         textColor: 'text-emerald-300',
@@ -84,7 +81,7 @@ function getHealthViz(score: number | null): HealthViz {
     };
 }
 
-function ciColor(status: string | null) {
+function ciColor(status: string | null): string {
     if (status === 'passing') return 'text-emerald-400';
     if (status === 'failing') return 'text-red-400';
     return 'text-slate-500';
@@ -97,7 +94,12 @@ function roadmapPct(rm: PmoRepoSummary['roadmap']): number {
 
 // ─── pipeline stage count cell ────────────────────────────────────────────────
 
-function StageCell({ label, count, color, sub }: { label: string; count: number; color: string; sub?: string }) {
+function StageCell({ label, count, color, sub }: {
+    label: string;
+    count: number;
+    color: string;
+    sub?: string;
+}): React.JSX.Element {
     return (
         <div className="flex flex-col items-center gap-1 flex-1 py-4 px-2 sm:px-3 border-r last:border-r-0 border-white/5">
             <span className={`text-2xl sm:text-3xl font-black tabular-nums ${color}`}>{count}</span>
@@ -113,12 +115,12 @@ function HandoffButton({ repoName, item, onHandoff }: {
     repoName: string;
     item: PmoInProgressItem;
     onHandoff: (repoName: string, item: PmoInProgressItem, taskId: string) => void;
-}) {
+}): React.JSX.Element {
     const [loading, setLoading] = useState(false);
     const [done, setDone] = useState(!!item.agent_task_id);
     const [err, setErr] = useState<string | null>(null);
 
-    const handle = async () => {
+    const handle = async (): Promise<void> => {
         setLoading(true);
         setErr(null);
         try {
@@ -132,7 +134,7 @@ function HandoffButton({ repoName, item, onHandoff }: {
                 }),
             });
             if (!taskRes.ok) throw new Error('Agent task queue error');
-            const { task } = await taskRes.json();
+            const { task } = await taskRes.json() as { task: { id: string } };
 
             const patchRes = await fetch(`/api/repos/${repoName}/roadmap-items/${item.id}`, {
                 method: 'PATCH',
@@ -163,7 +165,8 @@ function HandoffButton({ repoName, item, onHandoff }: {
         <div className="flex items-center gap-2 shrink-0">
             {err && <span className="text-xs text-red-400">{err}</span>}
             <button
-                onClick={handle}
+                type="button"
+                onClick={() => void handle()}
                 disabled={loading}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-600/30 hover:text-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -180,7 +183,7 @@ function HandoffButton({ repoName, item, onHandoff }: {
 function RepoCard({ repo, onHandoff }: {
     repo: PmoRepoSummary;
     onHandoff: (repoName: string, item: PmoInProgressItem, taskId: string) => void;
-}) {
+}): React.JSX.Element {
     const [expanded, setExpanded] = useState(false);
     const viz = getHealthViz(repo.health_score);
     const pct = roadmapPct(repo.roadmap);
@@ -194,18 +197,17 @@ function RepoCard({ repo, onHandoff }: {
 
     return (
         <div className={`rounded-xl border bg-slate-900/60 backdrop-blur-sm transition-all duration-200 ${cardBorder}`}>
-            {/* ── Card header (always visible) ── */}
-            <button
-                className="w-full text-left px-3 sm:px-4 py-3 flex items-center gap-3 hover:bg-white/2 transition-colors rounded-t-xl"
-                onClick={() => setExpanded(e => !e)}
-            >
-                {/* Repo name + stale badge */}
+            {/* ── Card header ──
+                Repo name is a plain <a> (not nested inside a button).
+                The right side (stats + chevron) is the expand toggle button.
+            */}
+            <div className="px-3 sm:px-4 py-3 flex items-center gap-3">
+                {/* Left: repo link + stale badge */}
                 <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
                     <a
                         href={repo.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={e => e.stopPropagation()}
                         className="text-sm font-bold text-slate-100 hover:text-sky-300 transition-colors truncate"
                     >
                         {repo.full_name}
@@ -218,9 +220,14 @@ function RepoCard({ repo, onHandoff }: {
                     )}
                 </div>
 
-                {/* Right-side stats */}
-                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                    {/* Health badge */}
+                {/* Right: stats + expand toggle */}
+                <button
+                    type="button"
+                    onClick={() => setExpanded(e => !e)}
+                    aria-expanded={expanded}
+                    aria-label={expanded ? 'Collapse repo details' : 'Expand repo details'}
+                    className="flex items-center gap-2 sm:gap-3 shrink-0 rounded-lg px-1.5 py-1 hover:bg-white/5 transition-colors"
+                >
                     <span
                         className={`flex items-center gap-1 px-1.5 py-0.5 rounded border text-xs font-black ${viz.textColor} ${viz.badgeCls}`}
                         title={`Health: ${repo.health_score ?? 'unknown'}/100`}
@@ -231,7 +238,6 @@ function RepoCard({ repo, onHandoff }: {
                         )}
                     </span>
 
-                    {/* CI status */}
                     <span className={`flex items-center gap-1 text-xs ${ciColor(repo.ci_status)}`}>
                         <Zap className="h-3 w-3" />
                         <span className="hidden sm:inline">{repo.ci_status ?? 'unknown'}</span>
@@ -244,14 +250,13 @@ function RepoCard({ repo, onHandoff }: {
                         </span>
                     )}
 
-                    {/* Expand toggle */}
                     <span className="text-slate-600">
                         {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </span>
-                </div>
-            </button>
+                </button>
+            </div>
 
-            {/* ── Roadmap progress bar (always visible) ── */}
+            {/* ── Roadmap progress bar (always visible when there are items) ── */}
             {repo.roadmap.total > 0 && (
                 <div className="px-3 sm:px-4 pb-2.5 pt-0 space-y-1.5">
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
@@ -286,10 +291,9 @@ function RepoCard({ repo, onHandoff }: {
                 </div>
             )}
 
-            {/* ── Expanded section ── */}
+            {/* ── Expanded detail ── */}
             {expanded && (
                 <div className="border-t border-white/5">
-                    {/* In-progress items */}
                     {hasInProgress && (
                         <div className="px-3 sm:px-4 py-2 space-y-1.5">
                             {repo.in_progress_items.map((item) => (
@@ -307,7 +311,6 @@ function RepoCard({ repo, onHandoff }: {
                         </div>
                     )}
 
-                    {/* Tasks summary footer */}
                     {repo.tasks.total > 0 && (
                         <div className="px-3 sm:px-4 py-2 flex items-center gap-3 text-[11px] text-slate-500 border-t border-white/5 flex-wrap">
                             <ClipboardList className="h-3 w-3 shrink-0" />
@@ -330,238 +333,9 @@ function RepoCard({ repo, onHandoff }: {
     );
 }
 
-// ─── PMO Chat panel ───────────────────────────────────────────────────────────
-
-interface ChatMessage {
-    role: 'user' | 'assistant';
-    content: string;
-    actions?: PmoChatAction[];
-}
-
-function AgentPromptBlock({ prompt }: { prompt: string }) {
-    const [copied, setCopied] = useState(false);
-    const copy = () => {
-        navigator.clipboard.writeText(prompt).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        });
-    };
-    return (
-        <div className="mt-2 rounded-lg border border-indigo-500/30 bg-indigo-500/5">
-            <div className="flex items-center justify-between px-3 py-1.5 border-b border-indigo-500/20">
-                <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider">Agent Prompt</span>
-                <button onClick={copy} className="flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-200 transition-colors">
-                    {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                    {copied ? 'Copied' : 'Copy'}
-                </button>
-            </div>
-            <pre className="px-3 py-2 text-[11px] text-slate-300 whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">{prompt}</pre>
-        </div>
-    );
-}
-
-function RoadmapSuggestionCard({ action, onAdd }: { action: PmoChatAction; onAdd: () => void }) {
-    const [added, setAdded] = useState(false);
-    const handleAdd = () => { setAdded(true); onAdd(); };
-    return (
-        <div className="mt-2 rounded-lg border border-purple-500/30 bg-purple-500/5 p-3 space-y-1">
-            <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                    <p className="text-xs font-semibold text-purple-300">{action.title}</p>
-                    <p className="text-[10px] text-slate-400">{action.repoName} · {action.quarter}</p>
-                    {action.rationale && <p className="text-[11px] text-slate-500 mt-0.5">{action.rationale}</p>}
-                </div>
-                <button
-                    onClick={handleAdd}
-                    disabled={added}
-                    className="shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/30 transition-all disabled:opacity-60"
-                >
-                    {added ? <Check className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}
-                    {added ? 'Added' : 'Add to roadmap'}
-                </button>
-            </div>
-        </div>
-    );
-}
-
-function PmoChat({
-    repos,
-    portfolio,
-    onClose,
-}: {
-    repos: PmoRepoSummary[];
-    portfolio: PmoPortfolio;
-    onClose: () => void;
-}) {
-    const [messages, setMessages] = useState<ChatMessage[]>([
-        {
-            role: 'assistant',
-            content: `Hi! I'm your PMO assistant. I can help you:\n• Identify repos needing attention\n• Suggest roadmap items based on health signals\n• Generate prompts for Claude or Copilot to implement improvements\n\nWhat would you like to work on?`,
-        },
-    ]);
-    const [input, setInput] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const bottomRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLTextAreaElement>(null);
-
-    useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
-
-    const send = useCallback(async (text?: string) => {
-        const msg = (text ?? input).trim();
-        if (!msg || loading) return;
-        setInput('');
-        setError(null);
-
-        const userMsg: ChatMessage = { role: 'user', content: msg };
-        setMessages(prev => [...prev, userMsg]);
-        setLoading(true);
-
-        try {
-            const history = messages.map(m => ({ role: m.role, content: m.content }));
-            const res = await fetch('/api/pmo/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg, repos, portfolio, history }),
-            });
-            if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                throw new Error(data.error ?? `HTTP ${res.status}`);
-            }
-            const data = await res.json();
-            setMessages(prev => [...prev, { role: 'assistant', content: data.reply, actions: data.actions }]);
-        } catch (e) {
-            setError(e instanceof Error ? e.message : 'Request failed');
-            setMessages(prev => prev.slice(0, -1)); // remove optimistic user message
-        } finally {
-            setLoading(false);
-            setTimeout(() => inputRef.current?.focus(), 50);
-        }
-    }, [input, loading, messages, repos, portfolio]);
-
-    const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            send();
-        }
-    };
-
-    const quickPrompts = [
-        'Which repos need the most attention right now?',
-        'Suggest roadmap items based on health signals',
-        'Generate a Claude prompt to improve test coverage',
-    ];
-
-    return (
-        <div className="flex flex-col h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 shrink-0">
-                <div className="flex items-center gap-2">
-                    <Bot className="h-4 w-4 text-indigo-400" />
-                    <span className="text-sm font-semibold text-slate-200">PMO Assistant</span>
-                    <span className="text-[10px] text-slate-500 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded">Gemini</span>
-                </div>
-                <button onClick={onClose} className="text-slate-500 hover:text-slate-300 transition-colors">
-                    <X className="h-4 w-4" />
-                </button>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
-                {messages.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[90%] ${msg.role === 'user'
-                            ? 'bg-indigo-600/25 border border-indigo-500/30 text-slate-200'
-                            : 'bg-slate-800/60 border border-white/8 text-slate-300'
-                            } rounded-xl px-3 py-2.5 text-xs leading-relaxed`}
-                        >
-                            <p className="whitespace-pre-wrap">{msg.content}</p>
-                            {msg.actions?.map((action, ai) => (
-                                action.type === 'generate_agent_prompt' && action.prompt ? (
-                                    <AgentPromptBlock key={ai} prompt={action.prompt} />
-                                ) : action.type === 'suggest_roadmap_item' ? (
-                                    <RoadmapSuggestionCard key={ai} action={action} onAdd={() => {}} />
-                                ) : null
-                            ))}
-                        </div>
-                    </div>
-                ))}
-
-                {loading && (
-                    <div className="flex justify-start">
-                        <div className="bg-slate-800/60 border border-white/8 rounded-xl px-3 py-2.5">
-                            <div className="flex items-center gap-1.5">
-                                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {error && (
-                    <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-                        {error}
-                    </div>
-                )}
-
-                <div ref={bottomRef} />
-            </div>
-
-            {/* Quick prompts (only when no user messages yet) */}
-            {messages.length === 1 && (
-                <div className="px-4 pb-2 flex flex-wrap gap-2 shrink-0">
-                    {quickPrompts.map(p => (
-                        <button
-                            key={p}
-                            onClick={() => send(p)}
-                            disabled={loading}
-                            className="text-[10px] text-slate-400 bg-slate-800/60 border border-white/10 hover:border-indigo-500/40 hover:text-indigo-300 rounded-lg px-2.5 py-1.5 transition-all text-left leading-snug"
-                        >
-                            {p}
-                        </button>
-                    ))}
-                </div>
-            )}
-
-            {/* Input */}
-            <div className="px-4 pb-4 pt-2 shrink-0 border-t border-white/5">
-                <div className="flex items-end gap-2">
-                    <textarea
-                        ref={inputRef}
-                        value={input}
-                        onChange={e => setInput(e.target.value)}
-                        onKeyDown={handleKey}
-                        disabled={loading}
-                        rows={1}
-                        placeholder="Ask about portfolio health, suggest roadmap items…"
-                        className="flex-1 min-w-0 resize-none rounded-lg bg-slate-800/60 border border-white/10 focus:border-indigo-500/50 focus:outline-none text-xs text-slate-200 placeholder-slate-600 px-3 py-2 leading-relaxed disabled:opacity-50 transition-colors"
-                        style={{ maxHeight: '120px' }}
-                        onInput={e => {
-                            const el = e.currentTarget;
-                            el.style.height = 'auto';
-                            el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
-                        }}
-                    />
-                    <button
-                        onClick={() => send()}
-                        disabled={loading || !input.trim()}
-                        className="shrink-0 flex items-center justify-center h-8 w-8 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <Send className="h-3.5 w-3.5 text-white" />
-                    </button>
-                </div>
-                <p className="text-[10px] text-slate-700 mt-1.5">Enter to send · Shift+Enter for newline</p>
-            </div>
-        </div>
-    );
-}
-
 // ─── page ─────────────────────────────────────────────────────────────────────
 
-export default function PmoDashboard() {
+export default function PmoDashboard(): React.JSX.Element | null {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [repos, setRepos] = useState<PmoRepoSummary[]>([]);
@@ -575,14 +349,14 @@ export default function PmoDashboard() {
         if (status === 'unauthenticated') router.replace('/');
     }, [status, router]);
 
-    const fetchOverview = useCallback(async () => {
+    const fetchOverview = useCallback(async (): Promise<void> => {
         setLoading(true);
         setError(null);
         try {
             const res = await fetch('/api/pmo/overview');
             if (res.status === 401) { router.replace('/'); return; }
             if (!res.ok) throw new Error('Failed to load PMO data');
-            const data = await res.json();
+            const data = await res.json() as { repos: PmoRepoSummary[]; portfolio: PmoPortfolio };
             setRepos(data.repos);
             setPortfolio(data.portfolio);
             setLastFetched(new Date());
@@ -594,10 +368,10 @@ export default function PmoDashboard() {
     }, [router]);
 
     useEffect(() => {
-        if (status === 'authenticated') fetchOverview();
+        if (status === 'authenticated') void fetchOverview();
     }, [status, fetchOverview]);
 
-    const handleHandoff = useCallback((repoName: string, item: PmoInProgressItem, taskId: string) => {
+    const handleHandoff = useCallback((repoName: string, item: PmoInProgressItem, taskId: string): void => {
         setRepos(prev => prev.map(r => {
             if (r.name !== repoName) return r;
             return {
@@ -650,6 +424,7 @@ export default function PmoDashboard() {
                         </span>
                     )}
                     <button
+                        type="button"
                         onClick={() => setChatOpen(o => !o)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${chatOpen
                             ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300'
@@ -660,7 +435,8 @@ export default function PmoDashboard() {
                         <span className="hidden sm:inline">Assistant</span>
                     </button>
                     <button
-                        onClick={fetchOverview}
+                        type="button"
+                        onClick={() => void fetchOverview()}
                         disabled={loading}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 border border-slate-700 text-slate-300 hover:border-slate-600 hover:text-slate-200 transition-all disabled:opacity-50"
                     >
@@ -670,10 +446,10 @@ export default function PmoDashboard() {
                 </div>
             </header>
 
-            {/* Two-column layout when chat is open */}
-            <div className={`flex h-[calc(100vh-52px)] ${chatOpen ? 'overflow-hidden' : ''}`}>
+            {/* Main layout: stacks on mobile, side-by-side on sm+ when chat is open */}
+            <div className={`flex flex-col sm:flex-row h-[calc(100vh-52px)] ${chatOpen ? 'overflow-hidden' : ''}`}>
                 {/* Main content */}
-                <main className={`flex-1 min-w-0 overflow-y-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 transition-all ${chatOpen ? 'max-w-none' : ''}`}>
+                <main className="flex-1 min-w-0 overflow-y-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
                     {error && (
                         <div className="flex items-center gap-2 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
                             <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -694,10 +470,10 @@ export default function PmoDashboard() {
                             </div>
 
                             <div className="rounded-xl border border-white/8 bg-slate-900/60 flex overflow-hidden">
-                                <StageCell label="Planned"    count={portfolio.roadmap_planned}     color="text-slate-300"   sub="not started" />
+                                <StageCell label="Planned"     count={portfolio.roadmap_planned}     color="text-slate-300"   sub="not started" />
                                 <StageCell label="In Progress" count={portfolio.roadmap_in_progress} color="text-blue-400"    sub="no PR yet" />
-                                <StageCell label="In Review"  count={portfolio.roadmap_in_review}   color="text-violet-400"  sub="PR open" />
-                                <StageCell label="Done"       count={portfolio.roadmap_done}         color="text-emerald-400" sub="completed" />
+                                <StageCell label="In Review"   count={portfolio.roadmap_in_review}   color="text-violet-400"  sub="PR open" />
+                                <StageCell label="Done"        count={portfolio.roadmap_done}         color="text-emerald-400" sub="completed" />
                             </div>
 
                             <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
@@ -747,7 +523,7 @@ export default function PmoDashboard() {
 
                 {/* Chat side panel */}
                 {chatOpen && portfolio && (
-                    <aside className="w-full max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg shrink-0 border-l border-white/8 bg-slate-950/95 flex flex-col">
+                    <aside className="w-full sm:w-80 lg:w-96 xl:w-[420px] shrink-0 border-t sm:border-t-0 sm:border-l border-white/8 bg-slate-950/95 flex flex-col h-[60vh] sm:h-auto">
                         <PmoChat repos={repos} portfolio={portfolio} onClose={() => setChatOpen(false)} />
                     </aside>
                 )}

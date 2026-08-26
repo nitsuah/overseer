@@ -323,6 +323,82 @@ describe('health-score', () => {
       expect(result.total).toBeLessThan(100);
     });
 
+    it('should not penalize testing score when ciPassing is true', () => {
+      const base: HealthScoreInputs = {
+        docHealth: 0,
+        hasTests: true,
+        codeCoverage: 100,
+        bestPracticesCount: 0,
+        bestPracticesHealthy: 0,
+        communityStandardsCount: 0,
+        communityStandardsHealthy: 0,
+        hasCI: true,
+        ciPassing: true,
+        lastCommitDays: 1,
+        openIssuesCount: 0,
+        openPRsCount: 0,
+      };
+      const result = calculateHealthScore(base);
+      expect(result.testing).toBe(100); // 40 base + 60 coverage, no penalty
+    });
+
+    it('should subtract 25 from testing score when ciPassing is false', () => {
+      const base: HealthScoreInputs = {
+        docHealth: 0,
+        hasTests: true,
+        codeCoverage: 100,
+        bestPracticesCount: 0,
+        bestPracticesHealthy: 0,
+        communityStandardsCount: 0,
+        communityStandardsHealthy: 0,
+        hasCI: true,
+        ciPassing: false,
+        lastCommitDays: 1,
+        openIssuesCount: 0,
+        openPRsCount: 0,
+      };
+      const result = calculateHealthScore(base);
+      expect(result.testing).toBe(75); // 100 - 25 CI penalty
+    });
+
+    it('should floor testing score at 0 when ciPassing is false and no coverage', () => {
+      const base: HealthScoreInputs = {
+        docHealth: 0,
+        hasTests: true,
+        codeCoverage: undefined,
+        bestPracticesCount: 0,
+        bestPracticesHealthy: 0,
+        communityStandardsCount: 0,
+        communityStandardsHealthy: 0,
+        hasCI: true,
+        ciPassing: false,
+        lastCommitDays: 1,
+        openIssuesCount: 0,
+        openPRsCount: 0,
+      };
+      const result = calculateHealthScore(base);
+      expect(result.testing).toBe(15); // 40 base - 25 CI penalty
+    });
+
+    it('should not apply CI penalty when ciPassing is undefined (no CI)', () => {
+      const base: HealthScoreInputs = {
+        docHealth: 0,
+        hasTests: true,
+        codeCoverage: undefined,
+        bestPracticesCount: 0,
+        bestPracticesHealthy: 0,
+        communityStandardsCount: 0,
+        communityStandardsHealthy: 0,
+        hasCI: false,
+        ciPassing: undefined,
+        lastCommitDays: 1,
+        openIssuesCount: 0,
+        openPRsCount: 0,
+      };
+      const result = calculateHealthScore(base);
+      expect(result.testing).toBe(40); // base only, no penalty
+    });
+
     it('should cap the security score at 0 for severe findings', () => {
       const base: HealthScoreInputs = {
         docHealth: 100,

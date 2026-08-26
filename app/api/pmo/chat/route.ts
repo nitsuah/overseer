@@ -37,17 +37,19 @@ function buildPortfolioContext(repos: PmoRepoSummary[], portfolio: PmoPortfolio)
     ];
 
     for (const repo of repos) {
+        if (!repo || typeof repo !== 'object') continue;
         const name = sanitizeForPrompt(repo.full_name ?? '');
         const score = repo.health_score ?? 'unknown';
         const ci = repo.ci_status ?? 'unknown';
-        const rm = repo.roadmap;
+        const rm = repo.roadmap ?? { total: 0, planned: 0, in_progress: 0, in_review: 0, done: 0 };
         const pct = rm.total > 0 ? Math.round((rm.done / rm.total) * 100) : 0;
         lines.push(
-            `  ${name}: health=${score}/100 ci=${ci} roadmap=${pct}% done (${rm.planned} planned/${rm.in_progress} in-progress/${rm.done} done) open_prs=${repo.open_prs}`
+            `  ${name}: health=${score}/100 ci=${ci} roadmap=${pct}% done (${rm.planned} planned/${rm.in_progress} in-progress/${rm.done} done) open_prs=${repo.open_prs ?? 0}`
         );
-        if (repo.in_progress_items.length > 0) {
-            const titles = repo.in_progress_items
-                .map(i => sanitizeForPrompt(i.title ?? ''))
+        const inProgress = Array.isArray(repo.in_progress_items) ? repo.in_progress_items : [];
+        if (inProgress.length > 0) {
+            const titles = inProgress
+                .map(i => sanitizeForPrompt(i?.title ?? ''))
                 .join(', ');
             lines.push(`    In progress: ${titles}`);
         }

@@ -355,9 +355,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     `;
 
     // TASKS.md (try root then docs/ subdirectory)
-    let tasksContent = await github.getFileContent(repo.name, 'TASKS.md', owner);
+    let tasksContent = await github.getFileContent(repo.name, 'TASKS.md', owner).catch(() => null);
     if (!tasksContent) {
-        tasksContent = await github.getFileContent(repo.name, 'docs/TASKS.md', owner);
+        tasksContent = await github.getFileContent(repo.name, 'docs/TASKS.md', owner).catch(() => null);
     }
     // Core docs should be in root - no template comparison
     const tasksHealthState = calculateDocHealthState(!!tasksContent, tasksContent, null);
@@ -403,9 +403,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     `;
 
     // METRICS.md (try root then docs/ subdirectory)
-    let metricsContent = await github.getFileContent(repo.name, 'METRICS.md', owner);
+    let metricsContent = await github.getFileContent(repo.name, 'METRICS.md', owner).catch(() => null);
     if (!metricsContent) {
-        metricsContent = await github.getFileContent(repo.name, 'docs/METRICS.md', owner);
+        metricsContent = await github.getFileContent(repo.name, 'docs/METRICS.md', owner).catch(() => null);
     }
     const metricsHealthState = calculateDocHealthState(!!metricsContent, metricsContent, null);
     let coverageScore: number | null = null;
@@ -447,9 +447,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     `;
 
     // FEATURES.md (try root then docs/ subdirectory)
-    let featuresContent = await github.getFileContent(repo.name, 'FEATURES.md', owner);
+    let featuresContent = await github.getFileContent(repo.name, 'FEATURES.md', owner).catch(() => null);
     if (!featuresContent) {
-        featuresContent = await github.getFileContent(repo.name, 'docs/FEATURES.md', owner);
+        featuresContent = await github.getFileContent(repo.name, 'docs/FEATURES.md', owner).catch(() => null);
     }
     const featuresHealthState = calculateDocHealthState(!!featuresContent, featuresContent, null);
     if (featuresContent) {
@@ -478,7 +478,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
 
     // Other docs (README, LICENSE — root only; CHANGELOG, CONTRIBUTING — also check docs/)
     for (const docFile of ['README.md', 'LICENSE.md']) {
-        const content = await github.getFileContent(repo.name, docFile, owner);
+        const content = await github.getFileContent(repo.name, docFile, owner).catch(() => null);
         const docType = docFile.replace('.md', '').toLowerCase();
         const healthState = calculateDocHealthState(!!content, content, null);
         await db`
@@ -493,9 +493,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     }
 
     // CHANGELOG.md (try root then docs/ subdirectory)
-    let changelogContent = await github.getFileContent(repo.name, 'CHANGELOG.md', owner);
+    let changelogContent = await github.getFileContent(repo.name, 'CHANGELOG.md', owner).catch(() => null);
     if (!changelogContent) {
-        changelogContent = await github.getFileContent(repo.name, 'docs/CHANGELOG.md', owner);
+        changelogContent = await github.getFileContent(repo.name, 'docs/CHANGELOG.md', owner).catch(() => null);
     }
     const changelogHealthState = calculateDocHealthState(!!changelogContent, changelogContent, null);
     await db`
@@ -509,12 +509,12 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     `;
 
     // CONTRIBUTING.md (try root, then .github/, then docs/ — matches community-standards.ts order)
-    let contributingContent = await github.getFileContent(repo.name, 'CONTRIBUTING.md', owner);
+    let contributingContent = await github.getFileContent(repo.name, 'CONTRIBUTING.md', owner).catch(() => null);
     if (!contributingContent) {
-        contributingContent = await github.getFileContent(repo.name, '.github/CONTRIBUTING.md', owner);
+        contributingContent = await github.getFileContent(repo.name, '.github/CONTRIBUTING.md', owner).catch(() => null);
     }
     if (!contributingContent) {
-        contributingContent = await github.getFileContent(repo.name, 'docs/CONTRIBUTING.md', owner);
+        contributingContent = await github.getFileContent(repo.name, 'docs/CONTRIBUTING.md', owner).catch(() => null);
     }
     const contributingHealthState = calculateDocHealthState(!!contributingContent, contributingContent, null);
     await db`

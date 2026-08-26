@@ -579,6 +579,12 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         const hasCI = bestPractices.some((bp: { practice_type: string; status: string }) =>
             bp.practice_type === 'ci_cd' && bp.status === 'healthy'
         );
+        // ciPassing: true = CI passing, false = CI actively failing, undefined = unknown/no CI
+        // Uses the live GitHub Actions status, not just whether CI files exist.
+        const ciPassing: boolean | undefined =
+            ciStatus === 'passing' ? true :
+            ciStatus === 'failing' ? false :
+            undefined;
 
         const daysSinceCommit = lastCommitDate
             ? Math.floor((Date.now() - new Date(lastCommitDate).getTime()) / (1000 * 60 * 60 * 24))
@@ -593,6 +599,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             communityStandardsCount: communityStandards.length,
             communityStandardsHealthy: communityStandards.filter((cs: { status: string }) => cs.status === 'healthy').length,
             hasCI,
+            ciPassing,
             lastCommitDays: daysSinceCommit,
             openIssuesCount: repo.openIssues,
             openPRsCount: openPrs,

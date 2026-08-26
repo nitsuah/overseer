@@ -59,12 +59,12 @@ export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
     `;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // PostgreSQL NUMERIC columns reject Infinity/-Infinity; return null for any non-finite value.
 function finiteOrNull(n: number | null | undefined): number | null {
     return n != null && Number.isFinite(n) ? n : null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any) {
     await ensureSchema(db);
 

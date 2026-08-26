@@ -278,7 +278,7 @@ describe('health-score', () => {
 
       const result = calculateHealthScore({ ...base, vulnCriticalCount: 2 });
 
-      expect(result.security).toBe(70); // 100 - 2*15
+      expect(result.security).toBe(60); // 100 - 2*20
       expect(result.total).toBeLessThan(100);
     });
 
@@ -299,7 +299,7 @@ describe('health-score', () => {
 
       const result = calculateHealthScore({ ...base, vulnHighCount: 3 });
 
-      expect(result.security).toBe(76); // 100 - 3*8
+      expect(result.security).toBe(70); // 100 - 3*10
     });
 
     it('should penalize heavily for open secret-scanning alerts', () => {

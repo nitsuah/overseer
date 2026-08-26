@@ -18,6 +18,7 @@ function AgentPromptBlock({ prompt }: { prompt: string }): React.JSX.Element {
     const [copyFailed, setCopyFailed] = useState(false);
 
     const copy = (): void => {
+        setCopyFailed(false);
         navigator.clipboard.writeText(prompt).then(
             () => { setCopied(true); setTimeout(() => setCopied(false), 2000); },
             () => setCopyFailed(true),
@@ -50,6 +51,7 @@ function RoadmapSuggestionCard({ action }: { action: PmoChatAction }): React.JSX
     const markdown = `- [ ] ${action.title ?? ''}  <!-- ${action.repoName} · ${action.quarter} -->`;
 
     const copy = (): void => {
+        setCopyFailed(false);
         navigator.clipboard.writeText(markdown).then(
             () => { setCopied(true); setTimeout(() => setCopied(false), 2000); },
             () => setCopyFailed(true),
@@ -158,7 +160,7 @@ export function PmoChat({
                 <div className="flex items-center gap-2">
                     <Bot className="h-4 w-4 text-indigo-400" />
                     <span className="text-sm font-semibold text-slate-200">PMO Assistant</span>
-                    <span className="text-[10px] text-slate-500 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded">Gemini</span>
+                    <span className="text-[10px] text-slate-500 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded">AI</span>
                 </div>
                 <button
                     type="button"
@@ -241,6 +243,7 @@ export function PmoChat({
                         rows={1}
                         placeholder="Ask about portfolio health, suggest roadmap items…"
                         className="flex-1 min-w-0 resize-y rounded-lg bg-slate-800/60 border border-white/10 focus:border-indigo-500/50 focus:outline-none text-base sm:text-xs text-slate-200 placeholder-slate-600 px-3 py-2 leading-relaxed disabled:opacity-50 transition-colors"
+                        maxLength={2000}
                         style={{ maxHeight: '200px' }}
                         onInput={e => {
                             const el = e.currentTarget;

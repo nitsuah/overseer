@@ -129,7 +129,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         if (typeof message !== 'string' || !message.trim()) {
             return NextResponse.json({ error: 'Message required' }, { status: 400 });
         }
-        const safeMessage = message.slice(0, 2000);
+        if (message.length > 2000) {
+            return NextResponse.json({ error: 'Message too long (max 2000 characters)' }, { status: 400 });
+        }
+        const safeMessage = message.trim();
         const safeHistory = Array.isArray(history)
             ? history.slice(-6).filter(
                 m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string'

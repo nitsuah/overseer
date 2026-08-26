@@ -426,6 +426,8 @@ export default function PmoDashboard(): React.JSX.Element | null {
                     <button
                         type="button"
                         onClick={() => setChatOpen(o => !o)}
+                        aria-label={chatOpen ? 'Close PMO assistant' : 'Open PMO assistant'}
+                        aria-expanded={chatOpen}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${chatOpen
                             ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300'
                             : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600 hover:text-slate-200'
@@ -438,6 +440,7 @@ export default function PmoDashboard(): React.JSX.Element | null {
                         type="button"
                         onClick={() => void fetchOverview()}
                         disabled={loading}
+                        aria-label="Refresh PMO data"
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 border border-slate-700 text-slate-300 hover:border-slate-600 hover:text-slate-200 transition-all disabled:opacity-50"
                     >
                         <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />

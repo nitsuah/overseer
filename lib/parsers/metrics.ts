@@ -24,11 +24,10 @@ export function parseMetrics(content: string): MetricsData {
     if (frontmatter.metrics && Array.isArray(frontmatter.metrics)) {
         for (const metric of frontmatter.metrics) {
             if (metric.name && metric.value !== undefined) {
-                metrics.push({
-                    name: metric.name,
-                    value: parseFloat(metric.value),
-                    unit: metric.unit || null,
-                });
+                const v = parseFloat(metric.value);
+                if (Number.isFinite(v)) {
+                    metrics.push({ name: metric.name, value: v, unit: metric.unit || null });
+                }
             }
         }
     }
@@ -74,17 +73,17 @@ export function parseMetrics(content: string): MetricsData {
                     const numStr = rawValue.replace(/[^0-9.-]/g, '');
                     value = parseFloat(numStr);
                     unit = '%';
-                    
+
                     // Normalize: if value is between 0 and 1, convert to percentage
                     // e.g., 0.8666 -> 86.66, but 86.66 stays as 86.66
-                    if (!isNaN(value) && value > 0 && value < 1) {
+                    if (Number.isFinite(value) && value > 0 && value < 1) {
                         value = value * 100;
                     }
                 } else {
                     // Try to extract just the number
                     const numStr = rawValue.replace(/[^0-9.-]/g, '');
                     value = parseFloat(numStr);
-                    
+
                     // Extract unit from the original value (e.g., "6s" -> "s", "245KB" -> "KB")
                     const unitMatch = rawValue.match(/[a-zA-Z]+/);
                     if (unitMatch) {
@@ -95,7 +94,7 @@ export function parseMetrics(content: string): MetricsData {
                     }
                 }
 
-                if (!isNaN(value)) {
+                if (Number.isFinite(value)) {
                     metrics.push({ name, value, unit });
                 }
             }

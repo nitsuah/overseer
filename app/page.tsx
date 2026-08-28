@@ -307,7 +307,13 @@ export default function Dashboard() {
         repoType={chatRepoType}
         healthScore={chatRepo?.health_score ?? null}
         messages={chatRepoName ? getThread(chatRepoName) : []}
-        sending={chatRepoName !== null && sendingRepo === chatRepoName}
+        // sendMessage only supports one in-flight request at a time (a single
+        // `sendingRepo` in the hook), so the composer must disable whenever
+        // ANY repo has a pending request — not just the one currently shown.
+        // Otherwise switching the panel to a different repo mid-request lets
+        // the user submit there too; sendMessage silently no-ops (its own
+        // `sendingRepo` guard), but the panel had already cleared the draft.
+        sending={sendingRepo !== null}
         error={chatError}
         onClose={() => setChatRepoName(null)}
         onSend={(text) => { if (chatRepoName) void sendMessage(chatRepoName, text); }}

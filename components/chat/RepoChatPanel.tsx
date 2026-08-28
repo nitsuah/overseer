@@ -36,7 +36,7 @@ export function RepoChatPanel({
     onClose,
     onSend,
     onClear,
-}: RepoChatPanelProps) {
+}: RepoChatPanelProps): React.JSX.Element | null {
     const [draft, setDraft] = useState('');
     const [draftRepo, setDraftRepo] = useState(repoName);
     const scrollRef = useRef<HTMLDivElement>(null);

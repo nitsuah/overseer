@@ -105,11 +105,11 @@ function toSnapshot(
 }
 
 function getClientIp(request: NextRequest): string {
-    return (
-        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-        request.headers.get('x-real-ip') ||
-        'unknown'
-    );
+    // x-forwarded-for / x-real-ip are caller-supplied and can be rotated by an
+    // anonymous client to defeat the per-IP rate limit below.
+    // x-nf-client-connection-ip is populated by Netlify's own edge and cannot
+    // be spoofed by the request itself.
+    return request.headers.get('x-nf-client-connection-ip') || 'unknown';
 }
 
 /**

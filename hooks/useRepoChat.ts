@@ -18,6 +18,15 @@ export interface ChatThreadMessage extends ChatMessage {
 
 export type ChatThreads = Record<string, ChatThreadMessage[]>;
 
+export interface UseRepoChatResult {
+    threads: ChatThreads;
+    getThread: (repoName: string) => ChatThreadMessage[];
+    sendMessage: (repoName: string, text: string) => Promise<void>;
+    clearThread: (repoName: string) => void;
+    sendingRepo: string | null;
+    error: string | null;
+}
+
 function newId(): string {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();
@@ -92,18 +101,31 @@ function persistThreads(namespace: string, threads: ChatThreads): void {
  *   (or pass undefined while a session is still loading) to use a fixed
  *   anonymous namespace.
  */
-export function useRepoChat(identity?: string | null) {
+export function useRepoChat(identity?: string | null): UseRepoChatResult {
     const namespace = identity && identity.trim().length > 0 ? identity : ANON_NAMESPACE;
     const [threads, setThreads] = useState<ChatThreads>({});
     const [sendingRepo, setSendingRepo] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const hydratedNamespace = useRef<string | null>(null);
 
+    // Mirrors `namespace` synchronously on every render (unlike a ref written
+    // from an effect, which would only catch up after paint) so an in-flight
+    // sendMessage can tell, at completion time, whether the identity it was
+    // issued under is still current.
+    const namespaceRef = useRef(namespace);
+    namespaceRef.current = namespace;
+
     // (Re)hydrate whenever the namespace changes — including the very first
     // render and any later sign-in/sign-out — so the in-memory threads always
-    // match the identity they are being displayed for.
+    // match the identity they are being displayed for. A request in flight
+    // under the previous identity belongs to that identity, not this one, so
+    // its pending state is cleared here rather than left to resolve into the
+    // new namespace (CWE-200: it would otherwise leak that identity's reply
+    // into the new identity's persisted thread).
     useEffect(() => {
         setThreads(loadThreads(namespace));
+        setSendingRepo(null);
+        setError(null);
         hydratedNamespace.current = namespace;
     }, [namespace]);
 
@@ -129,6 +151,12 @@ export function useRepoChat(identity?: string | null) {
         async (repoName: string, text: string): Promise<void> => {
             const trimmed = text.trim();
             if (!trimmed || sendingRepo) return;
+
+            // Captured at request time: if the identity changes before this
+            // request resolves, its result belongs to a namespace that is no
+            // longer current and must not be applied.
+            const requestNamespace = namespaceRef.current;
+            const isStale = () => namespaceRef.current !== requestNamespace;
 
             setError(null);
             setSendingRepo(repoName);
@@ -166,6 +194,12 @@ export function useRepoChat(identity?: string | null) {
 
                 const data = await res.json().catch(() => ({}));
 
+                // The identity changed while this request was in flight (e.g.
+                // sign-in/sign-out); the rehydrate effect already reset this
+                // hook's state for the new identity, so applying a result
+                // computed for the old one would misattribute it.
+                if (isStale()) return;
+
                 if (!res.ok) {
                     const message = data?.error || `Chat request failed (${res.status})`;
                     setError(message);
@@ -198,6 +232,7 @@ export function useRepoChat(identity?: string | null) {
                     ],
                 }));
             } catch {
+                if (isStale()) return;
                 const message = 'Network error - could not reach the chat endpoint';
                 setError(message);
                 setThreads((prev) => ({
@@ -214,7 +249,7 @@ export function useRepoChat(identity?: string | null) {
                     ],
                 }));
             } finally {
-                setSendingRepo(null);
+                if (!isStale()) setSendingRepo(null);
             }
         },
         [threads, sendingRepo]

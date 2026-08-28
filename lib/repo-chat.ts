@@ -28,8 +28,21 @@ export const DOC_DRIFT_DAYS = 90;
 // metadata lookup.
 export const ANON_CHAT_RATE_LIMIT = 10;
 export const ANON_CHAT_RATE_WINDOW_MS = 60_000;
+/**
+ * Ceiling on distinct tracked clients. Without one, an attacker rotating
+ * spoofed/distinct identifiers could grow this map without bound (CWE-400) —
+ * expired entries otherwise sit in memory until that same client returns.
+ */
+export const ANON_CHAT_RATE_LIMIT_MAX_ENTRIES = 5000;
 
 const anonRateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+/** Drop every entry whose window has already elapsed. */
+function evictExpiredAnonRateLimitEntries(now: number): void {
+    for (const [clientId, entry] of anonRateLimitMap) {
+        if (now >= entry.resetAt) anonRateLimitMap.delete(clientId);
+    }
+}
 
 /**
  * Returns true if `clientId` (typically an IP) is still within its budget for
@@ -38,6 +51,15 @@ const anonRateLimitMap = new Map<string, { count: number; resetAt: number }>();
 export function checkAnonChatRateLimit(clientId: string, now: number = Date.now()): boolean {
     const entry = anonRateLimitMap.get(clientId);
     if (!entry || now >= entry.resetAt) {
+        if (!anonRateLimitMap.has(clientId) && anonRateLimitMap.size >= ANON_CHAT_RATE_LIMIT_MAX_ENTRIES) {
+            evictExpiredAnonRateLimitEntries(now);
+        }
+        // Still full after eviction: every tracked slot is a live client within
+        // its window, so a genuinely new client is refused rather than growing
+        // the map further.
+        if (!anonRateLimitMap.has(clientId) && anonRateLimitMap.size >= ANON_CHAT_RATE_LIMIT_MAX_ENTRIES) {
+            return false;
+        }
         anonRateLimitMap.set(clientId, { count: 1, resetAt: now + ANON_CHAT_RATE_WINDOW_MS });
         return true;
     }

@@ -13,6 +13,7 @@ import {
     MAX_CHAT_MESSAGES,
     ANON_CHAT_RATE_LIMIT,
     ANON_CHAT_RATE_WINDOW_MS,
+    ANON_CHAT_RATE_LIMIT_MAX_ENTRIES,
     checkAnonChatRateLimit,
     _resetAnonChatRateLimitForTests,
     type RepoChatSnapshot,
@@ -278,5 +279,23 @@ describe('checkAnonChatRateLimit', () => {
         }
         expect(checkAnonChatRateLimit('1.2.3.4', NOW)).toBe(false);
         expect(checkAnonChatRateLimit('1.2.3.4', NOW + ANON_CHAT_RATE_WINDOW_MS + 1)).toBe(true);
+    });
+
+    it('bounds tracked clients instead of growing without limit (CWE-400)', () => {
+        for (let i = 0; i < ANON_CHAT_RATE_LIMIT_MAX_ENTRIES; i++) {
+            expect(checkAnonChatRateLimit(`client-${i}`, NOW)).toBe(true);
+        }
+        // Every slot is a live client within its window — a genuinely new
+        // client is refused rather than the map growing past the cap.
+        expect(checkAnonChatRateLimit('one-too-many', NOW)).toBe(false);
+    });
+
+    it('evicts expired entries to make room once the map is full', () => {
+        for (let i = 0; i < ANON_CHAT_RATE_LIMIT_MAX_ENTRIES; i++) {
+            checkAnonChatRateLimit(`client-${i}`, NOW);
+        }
+        // Past every tracked client's window: their entries are now stale.
+        const later = NOW + ANON_CHAT_RATE_WINDOW_MS + 1;
+        expect(checkAnonChatRateLimit('fresh-client', later)).toBe(true);
     });
 });

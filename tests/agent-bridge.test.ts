@@ -47,7 +47,13 @@ describe('motorPoolBridge.dispatch', () => {
 
     afterEach(() => {
         vi.unstubAllGlobals();
-        process.env.MOTOR_POOL_URL = originalEnv;
+        // Assigning `undefined` to process.env would coerce it to the string
+        // "undefined" instead of removing the key.
+        if (originalEnv === undefined) {
+            delete process.env.MOTOR_POOL_URL;
+        } else {
+            process.env.MOTOR_POOL_URL = originalEnv;
+        }
     });
 
     it('reads the runtime base URL from MOTOR_POOL_URL, defaulting to localhost:3000', () => {

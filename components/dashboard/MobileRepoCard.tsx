@@ -15,6 +15,7 @@ import {
   ListTodo,
   Activity,
   Sparkles,
+  MessageSquare,
 } from 'lucide-react';
 import ExpandableRow from '@/components/ExpandableRow';
 import { Repo, RepoDetails } from '@/types/repo';
@@ -45,6 +46,7 @@ interface MobileRepoCardProps {
   onGenerateSummary: () => void;
   onSyncSingleRepo: () => void;
   onUnhide?: () => void;
+  onOpenChat?: () => void;
 }
 
 const DOC_ICONS = [
@@ -75,6 +77,7 @@ export function MobileRepoCard({
   onGenerateSummary,
   onSyncSingleRepo,
   onUnhide,
+  onOpenChat,
 }: MobileRepoCardProps) {
   const repoType = repo.repo_type
     ? (repo.repo_type as RepoType)
@@ -189,6 +192,17 @@ export function MobileRepoCard({
                 </button>
               ) : (
                 <>
+                  {onOpenChat && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onOpenChat(); }}
+                      className="p-1 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded transition-colors"
+                      title={`Chat about ${repo.name}`}
+                      aria-label={`Chat about ${repo.name}`}
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                   {isAuthenticated && (
                     <button
                       type="button"

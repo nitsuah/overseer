@@ -11,7 +11,9 @@ import { useRepos, useRepoDetails, useRepoExpansion, useRepoPolling } from '@/ho
 import { useRepoActions } from '@/hooks/useRepoActions';
 import { MobileRepoCard } from '@/components/dashboard/MobileRepoCard';
 import { useRepoFilters } from '@/hooks/useRepoFilters';
-import { RepoType } from '@/lib/repo-type';
+import { useRepoChat } from '@/hooks/useRepoChat';
+import { RepoChatPanel } from '@/components/chat/RepoChatPanel';
+import { detectRepoType, RepoType } from '@/lib/repo-type';
 import type { Repo } from '@/types/repo';
 
 export default function Dashboard() {
@@ -29,6 +31,10 @@ export default function Dashboard() {
   const [addRepoType, setAddRepoType] = useState<RepoType>('unknown');
   const [expandedHealth, setExpandedHealth] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [chatRepoName, setChatRepoName] = useState<string | null>(null);
+
+  // One chat thread ("friend") per repo, persisted across sessions.
+  const { getThread, sendMessage, clearThread, sendingRepo, error: chatError } = useRepoChat(session?.user?.email);
 
   const {
     addingRepo,
@@ -107,6 +113,14 @@ export default function Dashboard() {
     }
     toggleRepo(repoName);
   };
+
+  // The chat panel's context is rebuilt server-side from the same tables the
+  // dashboard reads, so opening it only needs the repo name.
+  const chatRepo = chatRepoName ? repos.find((r: Repo) => r.name === chatRepoName) : undefined;
+  const chatRepoType: RepoType | undefined = chatRepo
+    ? ((chatRepo.repo_type as RepoType | undefined)
+      ?? detectRepoType(chatRepo.name, chatRepo.description, chatRepo.language, chatRepo.topics).type)
+    : undefined;
 
   const handleSyncAndRefresh = useCallback(async (repoName: string): Promise<void> => {
     await handleSyncSingleRepo(repoName, () => {
@@ -204,6 +218,7 @@ export default function Dashboard() {
                   onGenerateSummary={() => handleGenerateSummary(repo.name)}
                   onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
                   onUnhide={() => handleRestoreRepo(repo.name)}
+                  onOpenChat={() => setChatRepoName(repo.name)}
                 />
               ))}
             </div>
@@ -277,6 +292,7 @@ export default function Dashboard() {
                       onGenerateSummary={() => handleGenerateSummary(repo.name)}
                       onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
                       onUnhide={() => handleRestoreRepo(repo.name)}
+                      onOpenChat={() => setChatRepoName(repo.name)}
                     />
                   ))}
                 </tbody>
@@ -285,6 +301,24 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      <RepoChatPanel
+        isOpen={chatRepoName !== null}
+        repoName={chatRepoName}
+        repoType={chatRepoType}
+        healthScore={chatRepo?.health_score ?? null}
+        messages={chatRepoName ? getThread(chatRepoName) : []}
+        // sendMessage only supports one in-flight request at a time (a single
+        // `sendingRepo` in the hook), so the composer must disable whenever
+        // ANY repo has a pending request — not just the one currently shown.
+        // Otherwise switching the panel to a different repo mid-request lets
+        // the user submit there too; sendMessage silently no-ops (its own
+        // `sendingRepo` guard), but the panel had already cleared the draft.
+        sending={sendingRepo !== null}
+        error={chatError}
+        onClose={() => setChatRepoName(null)}
+        onSend={(text) => { if (chatRepoName) void sendMessage(chatRepoName, text); }}
+        onClear={() => { if (chatRepoName) clearThread(chatRepoName); }}
+      />
       {showTour && <GuidedTour onClose={() => setShowTour(false)} />}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
       <PRPreviewModal

@@ -18,12 +18,27 @@ export interface ChatThreadMessage extends ChatMessage {
 
 export type ChatThreads = Record<string, ChatThreadMessage[]>;
 
+/**
+ * Public contract returned by {@link useRepoChat}.
+ *
+ * Every field is scoped to the identity/namespace the hook was called with —
+ * `threads`, `sendingRepo`, and `error` are all reset the moment that identity
+ * changes, and `sendMessage` refuses a second call while one is already
+ * in flight (there is exactly one outstanding request across all repos).
+ */
 export interface UseRepoChatResult {
+    /** All persisted threads for the current identity, keyed by repo name. */
     threads: ChatThreads;
+    /** The thread for one repo, or `[]` if it has no messages yet. */
     getThread: (repoName: string) => ChatThreadMessage[];
+    /** Sends `text` as a new user turn in `repoName`'s thread. No-ops if a
+     *  request is already in flight or `text` is empty/whitespace. */
     sendMessage: (repoName: string, text: string) => Promise<void>;
+    /** Deletes `repoName`'s thread entirely (and clears any active error). */
     clearThread: (repoName: string) => void;
+    /** The repo with an in-flight `sendMessage` call, or `null`. */
     sendingRepo: string | null;
+    /** The most recent request-level error, or `null`. */
     error: string | null;
 }
 
@@ -93,44 +108,59 @@ function persistThreads(namespace: string, threads: ChatThreads): void {
 
 /**
  * Per-repo chat threads. Every repo gets its own persistent conversation
- * ("one friend per repo"), restored across page loads from localStorage.
+ * ("one friend per repo"), restored across page loads from localStorage and
+ * automatically re-persisted (bounded to {@link MAX_PERSISTED_MESSAGES} per
+ * repo) on every change. Only one {@link UseRepoChatResult.sendMessage} call
+ * may be in flight at a time across all repos; a second call while one is
+ * pending is a no-op.
  *
  * @param identity A stable per-account key (e.g. the signed-in user's email).
  *   Threads are namespaced by this value so switching accounts on a shared
  *   browser profile never surfaces another account's conversation; omit it
  *   (or pass undefined while a session is still loading) to use a fixed
- *   anonymous namespace.
+ *   anonymous namespace. Changing `identity` immediately (synchronously,
+ *   before this render commits) swaps in the new namespace's threads and
+ *   clears any pending request/error state left over from the old one.
  */
 export function useRepoChat(identity?: string | null): UseRepoChatResult {
     const namespace = identity && identity.trim().length > 0 ? identity : ANON_NAMESPACE;
-    const [threads, setThreads] = useState<ChatThreads>({});
+
+    // React's "adjusting state during render" pattern (not an effect): when
+    // `namespace` no longer matches the value threads/sendingRepo/error were
+    // last reset for, reset them in the same render that observes the change.
+    // An effect would commit and paint one frame of the *previous* identity's
+    // threads under the *new* identity's label first (CWE-200), and — because
+    // effects run in declaration order within one flush — a naive rehydrate
+    // effect can mark itself "done" before the sibling persistence effect
+    // sees the update, causing that effect to write the stale threads under
+    // the new identity's storage key. Resetting synchronously during render
+    // means neither effect ever observes a mismatched (namespace, threads)
+    // pair.
+    const [hydratedNamespace, setHydratedNamespace] = useState(namespace);
+    const [threads, setThreads] = useState<ChatThreads>(() => loadThreads(namespace));
     const [sendingRepo, setSendingRepo] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const hydratedNamespace = useRef<string | null>(null);
-
-    // Mirrors `namespace` synchronously on every render (unlike a ref written
-    // from an effect, which would only catch up after paint) so an in-flight
-    // sendMessage can tell, at completion time, whether the identity it was
-    // issued under is still current.
-    const namespaceRef = useRef(namespace);
-    namespaceRef.current = namespace;
-
-    // (Re)hydrate whenever the namespace changes — including the very first
-    // render and any later sign-in/sign-out — so the in-memory threads always
-    // match the identity they are being displayed for. A request in flight
-    // under the previous identity belongs to that identity, not this one, so
-    // its pending state is cleared here rather than left to resolve into the
-    // new namespace (CWE-200: it would otherwise leak that identity's reply
-    // into the new identity's persisted thread).
-    useEffect(() => {
+    if (namespace !== hydratedNamespace) {
+        setHydratedNamespace(namespace);
         setThreads(loadThreads(namespace));
         setSendingRepo(null);
         setError(null);
-        hydratedNamespace.current = namespace;
+    }
+
+    // Mirrors `namespace` for `sendMessage` to read at request-completion
+    // time. Updated from an effect (commit phase), never during render:
+    // React may discard or replay a render, and a ref write during render
+    // would leak into `sendMessage` calls issued by UI that never actually
+    // committed.
+    const namespaceRef = useRef(namespace);
+    useEffect(() => {
+        namespaceRef.current = namespace;
     }, [namespace]);
 
+    // Safe unconditionally: the synchronous reset above guarantees `threads`
+    // is never observed alongside a `namespace` it wasn't loaded for.
     useEffect(() => {
-        if (hydratedNamespace.current === namespace) persistThreads(namespace, threads);
+        persistThreads(namespace, threads);
     }, [threads, namespace]);
 
     const getThread = useCallback(
@@ -156,7 +186,7 @@ export function useRepoChat(identity?: string | null): UseRepoChatResult {
             // request resolves, its result belongs to a namespace that is no
             // longer current and must not be applied.
             const requestNamespace = namespaceRef.current;
-            const isStale = () => namespaceRef.current !== requestNamespace;
+            const isStale = (): boolean => namespaceRef.current !== requestNamespace;
 
             setError(null);
             setSendingRepo(repoName);
@@ -195,9 +225,9 @@ export function useRepoChat(identity?: string | null): UseRepoChatResult {
                 const data = await res.json().catch(() => ({}));
 
                 // The identity changed while this request was in flight (e.g.
-                // sign-in/sign-out); the rehydrate effect already reset this
-                // hook's state for the new identity, so applying a result
-                // computed for the old one would misattribute it.
+                // sign-in/sign-out); this hook's state was already reset for
+                // the new identity, so applying a result computed for the old
+                // one would misattribute it.
                 if (isStale()) return;
 
                 if (!res.ok) {

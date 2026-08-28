@@ -130,13 +130,13 @@ describe('POST /api/repos/[name]/chat', () => {
     it('allows unauthenticated chat about a default repo', async () => {
         mockAuth.mockResolvedValue(null);
 
-        const res = await POST(makeRequest(validBody, 'overseer', { 'x-forwarded-for': '9.9.9.1' }), params());
+        const res = await POST(makeRequest(validBody, 'overseer', { 'x-nf-client-connection-ip': '9.9.9.1' }), params());
         expect(res.status).toBe(200);
     });
 
     it('rate-limits an anonymous caller once its budget is exhausted (CWE-770)', async () => {
         mockAuth.mockResolvedValue(null);
-        const headers = { 'x-forwarded-for': '9.9.9.2' };
+        const headers = { 'x-nf-client-connection-ip': '9.9.9.2' };
 
         for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
             const ok = await POST(makeRequest(validBody, 'overseer', headers), params());
@@ -157,7 +157,7 @@ describe('POST /api/repos/[name]/chat', () => {
 
         for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
             const res = await POST(
-                makeRequest(validBody, 'overseer', { 'x-forwarded-for': '9.9.9.3' }),
+                makeRequest(validBody, 'overseer', { 'x-nf-client-connection-ip': '9.9.9.3' }),
                 params()
             );
             expect(res.status).toBe(200);
@@ -165,14 +165,14 @@ describe('POST /api/repos/[name]/chat', () => {
 
         // A different client IP still has its own budget.
         const res = await POST(
-            makeRequest(validBody, 'overseer', { 'x-forwarded-for': '9.9.9.4' }),
+            makeRequest(validBody, 'overseer', { 'x-nf-client-connection-ip': '9.9.9.4' }),
             params()
         );
         expect(res.status).toBe(200);
     });
 
     it('does not rate-limit authenticated callers', async () => {
-        // Authenticated session is the beforeEach default; no x-forwarded-for
+        // Authenticated session is the beforeEach default; no client-IP header
         // needed since the limiter only runs in the unauthenticated branch.
         for (let i = 0; i < ANON_CHAT_RATE_LIMIT + 3; i++) {
             const res = await POST(makeRequest(validBody), params());

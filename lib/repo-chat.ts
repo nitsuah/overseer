@@ -19,6 +19,38 @@ export const MAX_MESSAGE_LENGTH = 4000;
 /** How stale a doc may be, relative to the last commit, before it is flagged. */
 export const DOC_DRIFT_DAYS = 90;
 
+// --- Anonymous rate limiting ---
+//
+// Every chat turn reaches the database and calls the AI provider chain, so an
+// unauthenticated caller hitting a public default repo can otherwise generate
+// unlimited inference load (CWE-770). Mirrors the in-memory per-IP limiter in
+// app/api/mcp/route.ts, sized down because this endpoint is inference, not a
+// metadata lookup.
+export const ANON_CHAT_RATE_LIMIT = 10;
+export const ANON_CHAT_RATE_WINDOW_MS = 60_000;
+
+const anonRateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+/**
+ * Returns true if `clientId` (typically an IP) is still within its budget for
+ * the current window, incrementing its counter as a side effect.
+ */
+export function checkAnonChatRateLimit(clientId: string, now: number = Date.now()): boolean {
+    const entry = anonRateLimitMap.get(clientId);
+    if (!entry || now >= entry.resetAt) {
+        anonRateLimitMap.set(clientId, { count: 1, resetAt: now + ANON_CHAT_RATE_WINDOW_MS });
+        return true;
+    }
+    if (entry.count >= ANON_CHAT_RATE_LIMIT) return false;
+    entry.count++;
+    return true;
+}
+
+/** Test-only: reset all tracked rate-limit state between test cases. */
+export function _resetAnonChatRateLimitForTests(): void {
+    anonRateLimitMap.clear();
+}
+
 export interface DocStatusLike {
     doc_type: string;
     exists?: boolean | null;

@@ -5,6 +5,7 @@ import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { generateAIContent } from '@/lib/ai';
 import {
     buildChatPrompt,
+    checkAnonChatRateLimit,
     findStaleDocs,
     parseChatMessages,
     type RepoChatSnapshot,
@@ -13,10 +14,58 @@ import logger from '@/lib/log';
 
 export const runtime = 'nodejs';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Row = any;
+// Narrow row shapes for exactly the columns this route reads. The Neon
+// tagged-template client returns loosely-typed rows (see the `m: any` cast in
+// app/api/repo-details/[name]/route.ts for the existing pattern); these
+// interfaces exist so toSnapshot's own field access is checked by the
+// compiler even though the query results themselves are not.
+interface RepoRow {
+    id: string;
+    name: string;
+    full_name?: string | null;
+    description?: string | null;
+    language?: string | null;
+    repo_type?: string | null;
+    health_score?: number | null;
+    ai_summary?: string | null;
+    last_commit_date?: string | Date | null;
+    readme_last_updated?: string | Date | null;
+    last_synced?: string | Date | null;
+    open_prs?: number | null;
+    open_issues_count?: number | null;
+    vuln_alert_count?: number | null;
+    ci_status?: string | null;
+    testing_status?: string | null;
+    coverage_score?: number | null;
+}
 
-function toSnapshot(repo: Row, tasks: Row[], roadmapItems: Row[], docStatuses: Row[]): RepoChatSnapshot {
+interface TaskRow {
+    title: string;
+    status?: string | null;
+    section?: string | null;
+    subsection?: string | null;
+    description?: string | null;
+}
+
+interface RoadmapItemRow {
+    title: string;
+    quarter?: string | null;
+    status?: string | null;
+}
+
+interface DocStatusRow {
+    doc_type: string;
+    exists?: boolean | null;
+    health_state?: string | null;
+    updated_at?: string | Date | null;
+}
+
+function toSnapshot(
+    repo: RepoRow,
+    tasks: TaskRow[],
+    roadmapItems: RoadmapItemRow[],
+    docStatuses: DocStatusRow[]
+): RepoChatSnapshot {
     return {
         name: repo.name,
         fullName: repo.full_name ?? null,
@@ -34,25 +83,33 @@ function toSnapshot(repo: Row, tasks: Row[], roadmapItems: Row[], docStatuses: R
         ciStatus: repo.ci_status ?? null,
         testingStatus: repo.testing_status ?? null,
         coverageScore: repo.coverage_score ?? null,
-        docStatuses: (docStatuses ?? []).map((d: Row) => ({
+        docStatuses: (docStatuses ?? []).map((d) => ({
             doc_type: d.doc_type,
             exists: d.exists,
             health_state: d.health_state,
             updated_at: d.updated_at ? String(d.updated_at) : null,
         })),
-        tasks: (tasks ?? []).map((t: Row) => ({
+        tasks: (tasks ?? []).map((t) => ({
             title: t.title,
             status: t.status,
             section: t.section,
             subsection: t.subsection,
             description: t.description,
         })),
-        roadmapItems: (roadmapItems ?? []).map((r: Row) => ({
+        roadmapItems: (roadmapItems ?? []).map((r) => ({
             title: r.title,
             quarter: r.quarter,
             status: r.status,
         })),
     };
+}
+
+function getClientIp(request: NextRequest): string {
+    return (
+        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        request.headers.get('x-real-ip') ||
+        'unknown'
+    );
 }
 
 /**
@@ -65,7 +122,7 @@ function toSnapshot(repo: Row, tasks: Row[], roadmapItems: Row[], docStatuses: R
 export async function POST(
     request: NextRequest,
     props: { params: Promise<{ name: string }> }
-) {
+): Promise<NextResponse> {
     const params = await props.params;
     const repoName = params.name;
 
@@ -87,13 +144,29 @@ export async function POST(
 
     try {
         const session = await auth();
+
+        // Every turn reaches the database and calls the AI provider chain, so
+        // an anonymous caller must be budgeted before either happens (CWE-770:
+        // unauthenticated requests are otherwise free to generate unlimited
+        // inference load against a public default repo). Authenticated
+        // requests are unaffected.
+        if (!session) {
+            const clientIp = getClientIp(request);
+            if (!checkAnonChatRateLimit(clientIp)) {
+                return NextResponse.json(
+                    { error: 'Rate limit exceeded. Please try again in a minute, or sign in for unlimited access.' },
+                    { status: 429 }
+                );
+            }
+        }
+
         const db = getNeonClient();
 
         const repoRows = await db`SELECT * FROM repos WHERE name = ${repoName} LIMIT 1`;
         if (repoRows.length === 0) {
             return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
         }
-        const repo = repoRows[0];
+        const repo = repoRows[0] as RepoRow;
 
         // Unauthenticated visitors may only chat about the public default repos,
         // matching the read access granted by /api/repo-details/[name].
@@ -108,7 +181,7 @@ export async function POST(
             db`SELECT * FROM tasks WHERE repo_id = ${repo.id} ORDER BY created_at DESC`,
             db`SELECT * FROM roadmap_items WHERE repo_id = ${repo.id} ORDER BY created_at DESC`,
             db`SELECT * FROM doc_status WHERE repo_id = ${repo.id}`,
-        ]);
+        ]) as [TaskRow[], RoadmapItemRow[], DocStatusRow[]];
 
         const snapshot = toSnapshot(repo, tasks, roadmapItems, docStatuses);
         const prompt = buildChatPrompt(snapshot, parsed.messages!);
@@ -131,11 +204,14 @@ export async function POST(
         const message = error instanceof Error ? error.message : 'Unknown error';
 
         // AI provider outages are a service condition, not a client mistake.
+        // "AI model not found" is thrown by generateAIContent for the same
+        // class of unavailable-provider failure as the other cases here.
         if (
             message.includes('No AI Provider Configured') ||
             message.includes('quota') ||
             message.includes('providers failed') ||
-            message.includes('temporarily unavailable')
+            message.includes('temporarily unavailable') ||
+            message.includes('model not found')
         ) {
             return NextResponse.json({ error: message }, { status: 503 });
         }

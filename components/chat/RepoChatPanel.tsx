@@ -113,8 +113,9 @@ export function RepoChatPanel({
                     {messages.length > 0 && (
                         <button
                             onClick={onClear}
-                            className="p-1.5 rounded text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
-                            title="Clear this conversation"
+                            disabled={sending}
+                            className="p-1.5 rounded text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-slate-400 disabled:hover:bg-transparent"
+                            title={sending ? 'Wait for the reply before clearing' : 'Clear this conversation'}
                             aria-label="Clear conversation"
                         >
                             <Trash2 className="h-4 w-4" />

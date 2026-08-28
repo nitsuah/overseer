@@ -180,7 +180,6 @@ These ensure the dashboard always has content, even for non-authenticated visito
 ## 🆕 Planned & Upcoming Features
 
 - **AI-Assisted Roadmap Management**: Auto-suggest roadmap items from repo health signals; auto-update progress from linked PR/issue state (Q3 2026)
-- **Conversational Interface**: Messenger-style chat panel with repo data as context for natural-language repo-hygiene workflows (Q3 2026)
 - **Cross-Repo Dependency Mapping**: Interactive 3D graph visualizing shared-stack connections across the portfolio (Q3 2026)
 - **Autonomous Plan Execution**: Agents read ROADMAP.md and TASKS.md, open PRs, and close items end to end (Q4 2026)
 - **Portfolio Intelligence Dashboard**: Cross-repo health roll-up, trend lines, and strategic signal view (Q4 2026)

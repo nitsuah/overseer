@@ -3,7 +3,7 @@
  * Covers stale-doc detection, context serialization, and message validation.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
     buildChatPrompt,
     buildRepoContextBlock,
@@ -11,6 +11,10 @@ import {
     parseChatMessages,
     SUGGESTED_WORKFLOWS,
     MAX_CHAT_MESSAGES,
+    ANON_CHAT_RATE_LIMIT,
+    ANON_CHAT_RATE_WINDOW_MS,
+    checkAnonChatRateLimit,
+    _resetAnonChatRateLimitForTests,
     type RepoChatSnapshot,
 } from '@/lib/repo-chat';
 
@@ -239,5 +243,40 @@ describe('SUGGESTED_WORKFLOWS', () => {
             expect(workflow.label.length).toBeGreaterThan(0);
             expect(workflow.prompt.length).toBeGreaterThan(0);
         }
+    });
+});
+
+describe('checkAnonChatRateLimit', () => {
+    beforeEach(() => {
+        _resetAnonChatRateLimitForTests();
+    });
+
+    it('allows requests up to the configured budget', () => {
+        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
+            expect(checkAnonChatRateLimit('1.2.3.4', NOW)).toBe(true);
+        }
+    });
+
+    it('rejects the request once the budget is exhausted', () => {
+        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
+            checkAnonChatRateLimit('1.2.3.4', NOW);
+        }
+        expect(checkAnonChatRateLimit('1.2.3.4', NOW)).toBe(false);
+    });
+
+    it('tracks each client independently', () => {
+        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
+            checkAnonChatRateLimit('client-a', NOW);
+        }
+        expect(checkAnonChatRateLimit('client-a', NOW)).toBe(false);
+        expect(checkAnonChatRateLimit('client-b', NOW)).toBe(true);
+    });
+
+    it('resets once the window has elapsed', () => {
+        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
+            checkAnonChatRateLimit('1.2.3.4', NOW);
+        }
+        expect(checkAnonChatRateLimit('1.2.3.4', NOW)).toBe(false);
+        expect(checkAnonChatRateLimit('1.2.3.4', NOW + ANON_CHAT_RATE_WINDOW_MS + 1)).toBe(true);
     });
 });

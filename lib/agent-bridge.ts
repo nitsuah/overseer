@@ -68,6 +68,26 @@ export const motorPoolBridge: AgentRuntimeBridge = {
         const timeoutId = setTimeout(() => controller.abort(new Error('Request timed out')), timeoutMs);
         const baseUrl = getMotorPoolBaseUrl();
 
+        // Tracked outside the try block so the catch handler can still report
+        // it: once a session exists in the runtime, every subsequent failure
+        // (a non-ok response, a network error, or the shared deadline firing
+        // mid-delivery) must surface that id rather than silently discarding
+        // it. Without this, the queue marks the task "completed" via the
+        // simulated fallback while a live, untraceable session — one that may
+        // have already received the message — is orphaned in agent-board,
+        // risking the same work executing twice under two different records.
+        let createdSessionId: string | null = null;
+
+        // Degrade to simulated execution but keep the runtime name and any
+        // session id so the caller can still trace/reconcile an orphaned
+        // session instead of losing all evidence it was ever created.
+        const degrade = async (): Promise<AgentTaskRecord> => ({
+            ...(await executeTaskSimulated(task)),
+            runtime: motorPoolBridge.name,
+            motorPoolSessionId: createdSessionId,
+            dispatchDegraded: true,
+        });
+
         try {
             const sessionRes = await fetch(`${baseUrl}/api/sessions`, {
                 method: 'POST',
@@ -89,17 +109,22 @@ export const motorPoolBridge: AgentRuntimeBridge = {
                 return executeTaskSimulated(task);
             }
 
-            const session = await sessionRes.json();
-            const sessionId = session?.session?.id || session?.id || 'unknown';
+            const session: { id?: unknown; session?: { id?: unknown } } = await sessionRes.json();
+            const rawSessionId = session?.session?.id ?? session?.id;
+            const sessionId = typeof rawSessionId === 'string' ? rawSessionId.trim() : '';
 
-            if (sessionId === 'unknown') {
+            if (!sessionId) {
                 logger.warn('[Agent Bridge] runtime returned an invalid session id; falling back to simulated execution');
                 return executeTaskSimulated(task);
             }
 
+            // From here on a real session exists in the runtime, so every exit
+            // path — including the catch block below — must report it.
+            createdSessionId = sessionId;
+
             // Session creation alone does not deliver work — the runtime picks
             // the task up from the session's first message.
-            const messageRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/message`, {
+            const messageRes = await fetch(`${baseUrl}/api/sessions/${encodeURIComponent(sessionId)}/message`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -112,7 +137,7 @@ export const motorPoolBridge: AgentRuntimeBridge = {
                 logger.warn(
                     `[Agent Bridge] message delivery failed (${messageRes.status}); falling back to simulated execution`
                 );
-                return executeTaskSimulated(task);
+                return degrade();
             }
 
             return {
@@ -127,7 +152,7 @@ export const motorPoolBridge: AgentRuntimeBridge = {
             };
         } catch (error) {
             logger.warn('[Agent Bridge] runtime unavailable, using simulated execution:', error);
-            return executeTaskSimulated(task);
+            return createdSessionId ? degrade() : executeTaskSimulated(task);
         } finally {
             clearTimeout(timeoutId);
         }

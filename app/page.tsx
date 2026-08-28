@@ -34,7 +34,7 @@ export default function Dashboard() {
   const [chatRepoName, setChatRepoName] = useState<string | null>(null);
 
   // One chat thread ("friend") per repo, persisted across sessions.
-  const { getThread, sendMessage, clearThread, sendingRepo, error: chatError } = useRepoChat();
+  const { getThread, sendMessage, clearThread, sendingRepo, error: chatError } = useRepoChat(session?.user?.email);
 
   const {
     addingRepo,

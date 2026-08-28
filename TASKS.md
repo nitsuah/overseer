@@ -20,11 +20,6 @@
   - Context: overseer exposes an Agent Task Queue API and agent-board runs a local model runtime, but no bridge routes tasks between them.
   - Acceptance Criteria: a v0 bridge dispatches at least one queued overseer task to agent-board's runtime and reports completion status back to the queue.
 
-- [ ] Add a conversational interface foundation.
-  - Priority: P2
-  - Context: natural-language routing for repo hygiene and doc work is still only a concept; the Q3 PMO mode and AI-assisted roadmap management both benefit from a chat entry point.
-  - Acceptance Criteria: a messenger-style chat panel (one "friend" per chat) consumes visible dashboard data as context; one or two repo-hygiene workflows (e.g., "summarize my stale docs", "what should I work on next?") work end to end.
-
 - [ ] Add cross-repo dependency mapping.
   - Priority: P2
   - Context: agent-board, bb-mcp, nitsuah-io, and overseer share overlapping stacks and could benefit from surfaced cross-repo links.

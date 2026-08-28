@@ -16,6 +16,7 @@ import {
   XCircle,
   HelpCircle,
   BookOpen,
+  MessageSquare,
 } from 'lucide-react';
 import ExpandableRow from '@/components/ExpandableRow';
 import { Repo, RepoDetails } from '@/types/repo';
@@ -54,6 +55,7 @@ interface RepoTableRowProps {
   onGenerateSummary: () => void;
   onSyncSingleRepo: () => void;
   onUnhide?: () => void;
+  onOpenChat?: () => void;
 }
 
 export function RepoTableRow({
@@ -78,6 +80,7 @@ export function RepoTableRow({
   onGenerateSummary,
   onSyncSingleRepo,
   onUnhide,
+  onOpenChat,
 }: RepoTableRowProps) {
 
   // Centralized repo type resolution - use stored type or detect from metadata
@@ -279,6 +282,20 @@ export function RepoTableRow({
               </button>
             ) : (
               <>
+                {onOpenChat && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenChat();
+                    }}
+                    className="p-1 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded transition-colors"
+                    title={`Chat about ${repo.name}`}
+                    aria-label={`Chat about ${repo.name}`}
+                    data-tour="repo-chat"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </button>
+                )}
                 {isAuthenticated && (
                   <button
                     onClick={(e) => {

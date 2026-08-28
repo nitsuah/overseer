@@ -136,3 +136,17 @@ body {
   background-color: rgb(30 41 59 / 0.5);
   border-color: rgb(51 65 85);
 }
+/* Repo chat bubbles: tighten MarkdownPreview spacing inside a message. */
+.chat-markdown :first-child { margin-top: 0; }
+.chat-markdown :last-child { margin-bottom: 0; }
+.chat-markdown h1,
+.chat-markdown h2,
+.chat-markdown h3,
+.chat-markdown h4 {
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+.chat-markdown ul,
+.chat-markdown ol { margin-left: 1.15rem; }
+.chat-markdown pre { margin: 0.5rem 0; }

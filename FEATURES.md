@@ -62,6 +62,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Auto-Discovery Fallback**: When the configured Gemini model is unavailable, the system automatically fetches the live model list from the API, tests candidates, and selects the best available alternative without any manual intervention
 - **Model Caching (1-hour TTL)**: Discovered working Gemini models are cached in-memory for 1 hour; repeated requests skip the discovery round-trip until the TTL expires or a model error forces re-discovery
 - **Unified `GEMINI_MODEL_NAME` Env Var**: Single `GEMINI_MODEL_NAME` environment variable controls the Gemini model across all code paths; previously scattered per-call overrides removed
+- **Per-Repo Conversational Interface**: Messenger-style slide-in chat panel opened from a chat icon on every repo row/card; each repo is its own persistent thread ("one friend per repo") stored in localStorage. The server rebuilds context per turn from the same tables the dashboard renders — health signals, doc status, TASKS.md and ROADMAP.md — and pre-computes documentation staleness so answers are grounded in real state rather than inferred. Ships one-tap repo-hygiene workflows ("summarize my stale docs", "what should I work on next?") and routes through the existing multi-provider AI failover chain
 
 ### 📝 Documentation Management
 

@@ -1,6 +1,6 @@
 # Tasks
 
-## updated: 2026-08-09
+## updated: 2026-08-28
 
 ## In Progress
 
@@ -19,6 +19,16 @@
   - Priority: P2
   - Context: overseer exposes an Agent Task Queue API and agent-board runs a local model runtime, but no bridge routes tasks between them.
   - Acceptance Criteria: a v0 bridge dispatches at least one queued overseer task to agent-board's runtime and reports completion status back to the queue.
+
+- [ ] Chat-driven doc editing (TASKS/ROADMAP/FEATURES).
+  - Priority: P2
+  - Context: the per-repo chat panel (PR #196) only answers questions today — it rebuilds context and replies, but cannot act. ROADMAP.md still lists "manage TASKS/ROADMAP/FEATURES via chat" as open.
+  - Acceptance Criteria: broken into stages — (1) chat can propose a specific, diffable edit to one doc file and show it inline before applying; (2) accepting the proposal opens a PR via the existing fix-doc PR flow rather than writing directly; (3) the chat can check an item off in TASKS.md or move it to FEATURES.md when the user confirms it's shipped, referencing the same parser the dashboard already uses so state never diverges from what's rendered elsewhere; (4) before calling `createPrForFile`, the caller-supplied target path must be validated against the approved doc list (TASKS.md/ROADMAP.md/FEATURES.md, matching the existing `TARGET_PATHS` mapping) — never pass a chat-supplied path straight through unchecked.
+
+- [ ] Stale-review detector for PR readiness.
+  - Priority: P2
+  - Context: new idea (2026-08-28) — CodeRabbit (and likely other bot reviewers) sometimes leave a PR's formal review decision at `CHANGES_REQUESTED` even after every inline finding is resolved and CI is green, silently blocking branch-protection-gated auto-merge until a human notices.
+  - Acceptance Criteria: for repos with a linked PR, surface a count/badge when `reviewDecision === CHANGES_REQUESTED` but all review threads are resolved and required checks pass; link directly to the PR so the discrepancy can be verified and merged or re-reviewed.
 
 - [ ] Add cross-repo dependency mapping.
   - Priority: P2
@@ -63,6 +73,11 @@
   - Priority: P3
   - Context: commit frequency and PR merge time are captured but not yet trended over time.
   - Acceptance Criteria: a trend chart shows velocity and technical-debt signals over rolling quarters.
+
+- [ ] Agent session receipts.
+  - Priority: P3
+  - Context: new idea (2026-08-28) — AI Summaries describe a repo's state; nothing describes what an agent *did* to it recently. Picking up mid-portfolio work today means reconstructing activity from commit messages and PR history by hand across every repo.
+  - Acceptance Criteria: a lightweight per-repo activity log surfaced in both the chat panel and the PMO view, built on the existing dispatch/queue seams rather than a new schema — persist a `sessionId` (correlating with the `motorPoolSessionId` already returned by `motorPoolBridge.dispatch()` in `lib/agent-bridge.ts`), a `filesTouched` list, and a `skipReason` string (distinct from the `TaskQueueItem.error` field in `app/api/agent/tasks/route.ts`, which represents failures, not deliberate skips) alongside each task's existing `result`/`status` fields; commits and PRs opened/merged are sourced from GitHub data already synced via `lib/github/prs.ts`, no new write path required.
 
 <!--
 AGENT INSTRUCTIONS:

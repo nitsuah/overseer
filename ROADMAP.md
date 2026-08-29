@@ -1,6 +1,6 @@
 # 🗺️ Overseer Roadmap
 
-## updated: 2026-08-09
+## updated: 2026-08-28
 
 Next Review: 2026-09-01
 
@@ -33,7 +33,7 @@ Next Review: 2026-09-01
 
 ## Q3 2026: Analytics & MCP 🤖
 
-- [ ] Add the conversational interface foundation: one or two chat-driven repo-hygiene workflows end to end
+- [x] Add the conversational interface foundation: one or two chat-driven repo-hygiene workflows end-to-end (PR #196 — per-repo chat panel, "summarize my stale docs" / "what should I work on next?")
 - [ ] Add advanced analytics: velocity scoring, technical-debt trending, and zombie-branch detection
 - [x] Expand MCP tooling surface: 7 tools now ship (`get_repo_health`, `list_repos`, `get_repo_details`, `get_portfolio_overview`, `search_repos`, `list_tasks`, `get_security_summary`) + `/api/context` LLM context endpoint (PR #181)
 - [ ] Add cross-repo dependency mapping to surface shared-stack connections (e.g., agent-board ↔ bb-mcp ↔ overseer)
@@ -47,6 +47,8 @@ Next Review: 2026-09-01
 - [ ] Add mobile-responsive adjustments and lightweight PWA packaging
 - [ ] **Repo "mood" signal** — lightweight sentiment computed from recent PR descriptions, commit messages, and TASKS.md tone; surfaces whether a repo is in grind mode, cleanup mode, or blocked, giving PMO quick directional intuition without reading every PR.
 - [ ] **AI PR pairing suggestions** — when promoting a ROADMAP/TASKS item to a PR, Overseer surfaces related items from other repos that should co-land; reduces cross-repo integration surprises by exposing dependency coupling before merge.
+- [ ] **Stale-review detector** — surface PRs whose formal review decision (`CHANGES_REQUESTED`) is out of sync with their actual thread-resolution state (all threads resolved, CI green, but the bot never re-approved). Observed repeatedly across the portfolio this session: CodeRabbit correctly resolves every finding but its top-level review verdict never flips, silently blocking branch-protection-gated merges until a human notices and merges manually or overrides. A portfolio-wide "N PRs blocked on a stale review" count would have saved real back-and-forth this session.
+- [ ] **Agent session receipts** — a lightweight per-repo log (surfaced in the chat panel and PMO view) of what an AI coding session actually did: commits made, PRs opened/merged, files touched, findings fixed vs. skipped-with-reason. Distinct from AI Summaries (which describe the *repo*); this describes *recent agent activity on it*, so a human picking up mid-portfolio work can see what changed without reconstructing it from commit messages.
 
 ## Notes
 

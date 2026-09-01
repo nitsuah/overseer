@@ -102,9 +102,14 @@ export async function POST(request: Request) {
 
         // Load DB state (is_hidden, is_archived, repo_type) so filtering matches
         // what the dashboard displays. repos table has an "allow all" RLS policy.
-        const dbRepoRows = await db`SELECT name, is_hidden, is_archived, repo_type FROM repos`;
+        const dbRepoRows = await db`SELECT name, is_hidden, is_archived, repo_type FROM repos` as unknown as Array<{
+            name: string;
+            is_hidden?: boolean;
+            is_archived?: boolean;
+            repo_type?: string | null;
+        }>;
         const dbRepoMap = new Map<string, { name: string; is_hidden?: boolean; is_archived?: boolean; repo_type?: string | null }>(
-            dbRepoRows.map((r: { name: string; is_hidden?: boolean; is_archived?: boolean; repo_type?: string | null }) => [r.name, r])
+            dbRepoRows.map((r) => [r.name, r])
         );
 
         const reposToSync = filterReposForSync(repos, filters, dbRepoMap);

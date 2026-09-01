@@ -78,7 +78,11 @@ export default function Dashboard() {
   const handleSync = async () => {
     try {
       setSyncing(true);
-      const res = await fetch('/api/sync-repos', { method: 'POST' });
+      const res = await fetch('/api/sync-repos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filterType, filterLanguage, filterFork }),
+      });
       if (res.ok) {
         const data = await res.json();
         await refetch();

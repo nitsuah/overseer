@@ -1,0 +1,41 @@
+import { RepoType, detectRepoType } from '@/lib/repo-type';
+import type { RepoMetadata } from '@/lib/github';
+
+export interface SyncFilters {
+  filterType?: RepoType | 'all';
+  filterLanguage?: string;
+  filterFork?: 'all' | 'no-forks' | 'forks-only';
+}
+
+export interface DbRepoState {
+  name: string;
+  is_hidden?: boolean;
+  is_archived?: boolean;
+  repo_type?: string | null;
+}
+
+/**
+ * Reduce the full GitHub repo list to the set currently displayed on the
+ * dashboard: applies the same type/language/fork filters as useRepoFilters,
+ * and always drops hidden and archived repos.
+ */
+export function filterReposForSync(
+  repos: RepoMetadata[],
+  filters: SyncFilters,
+  dbRepoMap: Map<string, DbRepoState>
+): RepoMetadata[] {
+  return repos.filter((repo) => {
+    const dbRepo = dbRepoMap.get(repo.name);
+    if (dbRepo?.is_hidden) return false;
+    if (repo.archived || dbRepo?.is_archived) return false;
+
+    const type =
+      (dbRepo?.repo_type as RepoType | null) ||
+      detectRepoType(repo.name, repo.description, repo.language, repo.topics).type;
+    if (filters.filterType && filters.filterType !== 'all' && type !== filters.filterType) return false;
+    if (filters.filterLanguage && filters.filterLanguage !== 'all' && repo.language !== filters.filterLanguage) return false;
+    if (filters.filterFork === 'no-forks' && repo.isFork) return false;
+    if (filters.filterFork === 'forks-only' && !repo.isFork) return false;
+    return true;
+  });
+}

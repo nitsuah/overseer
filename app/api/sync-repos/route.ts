@@ -5,6 +5,7 @@ import { GitHubClient, RepoMetadata } from '@/lib/github';
 import { getNeonClient, ensureSchema } from '@/lib/db';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { syncRepo, syncRepoMetadata } from '@/lib/sync';
+import { filterReposForSync, SyncFilters } from '@/lib/sync-filters';
 
 const GITHUB_API_TIMEOUT_MS = 10000;
 const SYNC_DELAY_MS = 1000; // Reduced delay — rate limit check handles throttling
@@ -13,8 +14,22 @@ const RETRY_BASE_DELAY_MS = 1000;
 const CONCURRENCY_LIMIT = 3; // Max parallel repo syncs
 const RATE_LIMIT_THRESHOLD = 200; // Pause syncs below this remaining
 
-export async function POST() {
+export async function POST(request: Request) {
     try {
+        // Filters come from the dashboard's current filter state so the sync
+        // refreshes exactly the repos currently displayed.
+        let filters: SyncFilters = {};
+        try {
+            const body = await request.json();
+            filters = {
+                filterType: body?.filterType,
+                filterLanguage: body?.filterLanguage,
+                filterFork: body?.filterFork,
+            };
+        } catch {
+            // No body — sync all displayed repos (no filters applied)
+        }
+
         const session = await auth();
         logger.info('Sync-repos: Auth check', { hasSession: !!session, hasUser: !!session?.user });
 
@@ -79,28 +94,22 @@ export async function POST() {
         const userRow = txResults[1][0];
         const userId = userRow.id as string;
 
-        // Check if we should do a full sync or delta sync
-        const lastSyncAt = userRow.last_sync_at;
-        const shouldDoFullSync = !lastSyncAt || (new Date().getTime() - new Date(lastSyncAt).getTime()) > 24 * 60 * 60 * 1000; // 24 hours
-
-        logger.info(`Sync-repos: Starting sync for ${githubUsername}`, {
-            lastSyncAt,
-            shouldDoFullSync,
-            userId
-        });
-
-        // Get repos with since parameter for delta sync
-        // GitHub's 'since' is an ISO 8601 timestamp; our last_sync_at is stored as timestamptz
-        const sinceIso = lastSyncAt
-            ? (typeof lastSyncAt === 'string' ? lastSyncAt : new Date(lastSyncAt).toISOString())
-            : undefined;
-
+        // Always do a full refresh — the Sync button must refresh every
+        // displayed repo, not just ones GitHub reports as recently updated.
         const syncStartTime = new Date().toISOString();
-        const repos = shouldDoFullSync || !sinceIso
-            ? await github.listRepos()
-            : await github.listRepos(sinceIso);
-        const totalRepos = repos.length + DEFAULT_REPOS.length;
-        logger.info(`Sync-repos: Found ${totalRepos} repos to sync`);
+        const repos = await github.listRepos();
+        logger.info(`Sync-repos: Found ${repos.length} repos from GitHub`);
+
+        // Load DB state (is_hidden, is_archived, repo_type) so filtering matches
+        // what the dashboard displays. repos table has an "allow all" RLS policy.
+        const dbRepoRows = await db`SELECT name, is_hidden, is_archived, repo_type FROM repos`;
+        const dbRepoMap = new Map<string, { name: string; is_hidden?: boolean; is_archived?: boolean; repo_type?: string | null }>(
+            dbRepoRows.map((r: { name: string; is_hidden?: boolean; is_archived?: boolean; repo_type?: string | null }) => [r.name, r])
+        );
+
+        const reposToSync = filterReposForSync(repos, filters, dbRepoMap);
+        const totalRepos = reposToSync.length + DEFAULT_REPOS.length;
+        logger.info(`Sync-repos: ${reposToSync.length}/${repos.length} repos match current filters`);
 
         // Check rate limits before starting background sync
         try {
@@ -128,11 +137,12 @@ export async function POST() {
 
             let successCount = 0;
             let errorCount = 0;
+            const failedRepos: RepoMetadata[] = [];
 
             // 1. FAST METADATA SYNC (First Pass)
             // This ensures all repos appear in the dashboard immediately
             logger.info('Starting Phase 1: Fast Metadata Sync');
-            for (const repo of repos) {
+            for (const repo of reposToSync) {
                 try {
                     await syncRepoMetadata(repo, db);
                     successCount++;
@@ -140,6 +150,7 @@ export async function POST() {
                     const message = repoError instanceof Error ? repoError.message : 'Unknown error';
                     logger.warn(`Error syncing metadata for ${repo.name}:`, message);
                     errorCount++;
+                    failedRepos.push(repo);
                 }
             }
 
@@ -187,7 +198,7 @@ export async function POST() {
             };
 
             // Sync user repos details with concurrency control
-            const queue = [...repos];
+            const queue = [...reposToSync];
             const workers: Promise<void>[] = [];
             for (let w = 0; w < Math.min(CONCURRENCY_LIMIT, queue.length); w++) {
                 workers.push((async () => {
@@ -203,12 +214,36 @@ export async function POST() {
                             logger.info(`Waiting ${Math.round(waitMs / 1000)}s for rate limit reset`);
                             await new Promise(r => setTimeout(r, waitMs));
                         }
-                        const idx = repos.indexOf(repoMeta);
+                        const idx = reposToSync.indexOf(repoMeta);
                         await syncDetailsWithDelay(repoMeta, github, idx === 0);
                     }
                 })());
             }
             await Promise.all(workers);
+
+            // Re-queue repos that failed in Phase 1 for a second pass — they may
+            // have failed due to a transient rate limit or network blip.
+            if (failedRepos.length > 0) {
+                logger.info(`Re-queueing ${failedRepos.length} repos that failed metadata sync`);
+                const retryQueue = [...failedRepos];
+                const retryWorkers: Promise<void>[] = [];
+                for (let w = 0; w < Math.min(CONCURRENCY_LIMIT, retryQueue.length); w++) {
+                    retryWorkers.push((async () => {
+                        while (retryQueue.length > 0) {
+                            const repoMeta = retryQueue.shift()!;
+                            try {
+                                await syncRepoMetadata(repoMeta, db);
+                                successCount++;
+                                errorCount--;
+                            } catch (repoError: unknown) {
+                                const message = repoError instanceof Error ? repoError.message : 'Unknown error';
+                                logger.warn(`Retry failed for ${repoMeta.name}:`, message);
+                            }
+                        }
+                    })());
+                }
+                await Promise.all(retryWorkers);
+            }
 
             // Always sync default repos (using system token from environment)
             const systemToken = process.env.GITHUB_TOKEN;
@@ -223,7 +258,7 @@ export async function POST() {
                         // Metadata first
                         await syncRepoMetadata(repoMeta, db);
                         // Then details
-                        await syncDetailsWithDelay(repoMeta, systemGithub, i === 0 && repos.length === 0);
+                        await syncDetailsWithDelay(repoMeta, systemGithub, i === 0 && reposToSync.length === 0);
                         successCount++;
                     } catch (error) {
                         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -241,7 +276,7 @@ export async function POST() {
                         // Metadata first
                         await syncRepoMetadata(repoMeta, db);
                         // Then details
-                        await syncDetailsWithDelay(repoMeta, github, i === 0 && repos.length === 0);
+                        await syncDetailsWithDelay(repoMeta, github, i === 0 && reposToSync.length === 0);
                         successCount++;
                     } catch (error) {
                         const errorMessage = error instanceof Error ? error.message : 'Unknown error';

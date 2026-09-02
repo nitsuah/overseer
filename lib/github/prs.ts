@@ -46,16 +46,27 @@ export async function getPullRequests(
   }
 }
 
+export interface PullRequestReadinessRecord {
+  number: number;
+  reviewDecision: string | null;
+  mergeable: string;
+  ciState: string | null;
+  threadsResolved: boolean;
+  /** CHANGES_REQUESTED but every review thread resolved and CI green. */
+  staleReview: boolean;
+}
+
 export async function getPullRequestReadiness(
   octokit: Octokit,
   owner: string,
   repo: string
-): Promise<{ readyCount: number; blockedCount: number }> {
+): Promise<{ readyCount: number; blockedCount: number; staleReviewCount: number; records: PullRequestReadinessRecord[] }> {
   try {
     const result = await octokit.graphql<{
       repository: {
         pullRequests: {
           nodes: Array<{
+            number: number;
             isDraft: boolean;
             reviewDecision: string | null;
             mergeable: string;
@@ -63,6 +74,9 @@ export async function getPullRequestReadiness(
               nodes: Array<{
                 commit: { statusCheckRollup: { state: string } | null };
               }>;
+            };
+            reviewThreads: {
+              nodes: Array<{ isResolved: boolean }>;
             };
           }>;
         } | null;
@@ -72,6 +86,7 @@ export async function getPullRequestReadiness(
         repository(owner: $owner, name: $repo) {
           pullRequests(states: OPEN, first: 50) {
             nodes {
+              number
               isDraft
               reviewDecision
               mergeable
@@ -80,6 +95,11 @@ export async function getPullRequestReadiness(
                   commit {
                     statusCheckRollup { state }
                   }
+                }
+              }
+              reviewThreads(first: 50) {
+                nodes {
+                  isResolved
                 }
               }
             }
@@ -92,24 +112,41 @@ export async function getPullRequestReadiness(
     const nodes = result.repository?.pullRequests?.nodes || [];
     let readyCount = 0;
     let blockedCount = 0;
+    let staleReviewCount = 0;
+    const records: PullRequestReadinessRecord[] = [];
 
     for (const pr of nodes) {
-      const ciState = pr.commits?.nodes?.[0]?.commit?.statusCheckRollup?.state;
+      const ciState = pr.commits?.nodes?.[0]?.commit?.statusCheckRollup?.state ?? null;
       const ciFailing = ciState === 'FAILURE' || ciState === 'ERROR';
       const changesRequested = pr.reviewDecision === 'CHANGES_REQUESTED';
       const hasConflicts = pr.mergeable === 'CONFLICTING';
 
-      if (pr.isDraft || changesRequested || ciFailing || hasConflicts) {
+      const threads = pr.reviewThreads?.nodes || [];
+      const threadsResolved = threads.length > 0 && threads.every((t) => t.isResolved);
+      const staleReview = changesRequested && threadsResolved && !ciFailing && !hasConflicts;
+
+      records.push({
+        number: pr.number,
+        reviewDecision: pr.reviewDecision,
+        mergeable: pr.mergeable,
+        ciState,
+        threadsResolved,
+        staleReview,
+      });
+
+      if (staleReview) {
+        staleReviewCount++;
+      } else if (pr.isDraft || changesRequested || ciFailing || hasConflicts) {
         blockedCount++;
       } else {
         readyCount++;
       }
     }
 
-    return { readyCount, blockedCount };
+    return { readyCount, blockedCount, staleReviewCount, records };
   } catch (error) {
     logger.warn(`[GitHub] Failed to fetch PR readiness for ${owner}/${repo}:`, error);
-    return { readyCount: 0, blockedCount: 0 };
+    return { readyCount: 0, blockedCount: 0, staleReviewCount: 0, records: [] };
   }
 }
 

@@ -5,6 +5,8 @@ import { githubCache } from '@/lib/github-cache';
 export { githubCache };
 export type { RepoMetadata, BranchInfo, PullRequestInfo } from './github/types';
 import type { RepoMetadata, BranchInfo, PullRequestInfo } from './github/types';
+import type { PullRequestReadinessRecord } from './github/prs';
+import type { ZombieBranch } from './github/repos';
 
 import * as Repos from './github/repos';
 import * as PRs from './github/prs';
@@ -50,6 +52,10 @@ export class GitHubClient {
     return Repos.getBranches(this.octokit, owner || this.owner, repo);
   }
 
+  getZombieBranches(repo: string, owner?: string, staleAfterDays?: number): Promise<ZombieBranch[]> {
+    return Repos.getZombieBranches(this.octokit, owner || this.owner, repo, staleAfterDays);
+  }
+
   getFileLastModified(repo: string, path: string, owner?: string): Promise<string | null> {
     return Repos.getFileLastModified(this.octokit, owner || this.owner, repo, path);
   }
@@ -71,7 +77,7 @@ export class GitHubClient {
     return PRs.getPullRequests(this.octokit, owner || this.owner, repo);
   }
 
-  getPullRequestReadiness(repo: string, owner?: string): Promise<{ readyCount: number; blockedCount: number }> {
+  getPullRequestReadiness(repo: string, owner?: string): Promise<{ readyCount: number; blockedCount: number; staleReviewCount: number; records: PullRequestReadinessRecord[] }> {
     return PRs.getPullRequestReadiness(this.octokit, owner || this.owner, repo);
   }
 

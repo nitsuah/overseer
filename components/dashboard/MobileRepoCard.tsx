@@ -16,6 +16,7 @@ import {
   Activity,
   Sparkles,
   MessageSquare,
+  GitBranch,
 } from 'lucide-react';
 import ExpandableRow from '@/components/ExpandableRow';
 import { Repo, RepoDetails } from '@/types/repo';
@@ -274,6 +275,36 @@ export function MobileRepoCard({
                     {blocked}
                   </span>
                 )}
+              </a>
+            )}
+            {!repo.is_hidden && (repo.stale_review_count ?? 0) > 0 && (
+              <a
+                href={`${repo.url}/pulls`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
+                title={`${repo.stale_review_count} PR(s) blocked by a stale review — all threads resolved and CI green, but review still says changes requested`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GitPullRequest className="h-3.5 w-3.5" />
+                <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 px-0.5 flex items-center justify-center">
+                  {repo.stale_review_count}
+                </span>
+              </a>
+            )}
+            {!repo.is_hidden && (repo.zombie_branch_count ?? 0) > 0 && (
+              <a
+                href={`${repo.url}/branches`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative p-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 rounded transition-colors"
+                title={`${repo.zombie_branch_count} stale branch(es) with no commits in 30+ days`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GitBranch className="h-3.5 w-3.5" />
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 px-0.5 flex items-center justify-center">
+                  {repo.zombie_branch_count}
+                </span>
               </a>
             )}
             {!repo.is_hidden && (repo.open_issues_count ?? 0) > 0 && (

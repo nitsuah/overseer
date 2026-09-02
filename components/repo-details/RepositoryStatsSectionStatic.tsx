@@ -4,7 +4,7 @@ import { formatLocNumber } from '@/lib/expandable-row-utils';
 import { Metric } from '@/types/repo';
 import { RefreshCw } from 'lucide-react';
 import { GithubIcon } from '@/components/icons/GithubIcon';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface RepositoryStatsSectionStaticProps {
   stars?: number;
@@ -22,6 +22,14 @@ interface RepositoryStatsSectionStaticProps {
   isAuthenticated?: boolean;
   hasNoData?: boolean;
   repoUrl?: string;
+  repoName?: string;
+}
+
+interface TrendPoint {
+  health_score: number | null;
+  commit_frequency: number | null;
+  avg_pr_merge_time_hours: number | null;
+  captured_at: string;
 }
 
 export function RepositoryStatsSectionStatic({
@@ -39,8 +47,24 @@ export function RepositoryStatsSectionStatic({
   isAuthenticated = false,
   hasNoData = false,
   repoUrl,
+  repoName,
 }: RepositoryStatsSectionStaticProps) {
   const [isExpanded, setIsExpanded] = useState(true); // Expanded by default
+  const [trend, setTrend] = useState<TrendPoint[]>([]);
+
+  useEffect(() => {
+    if (!repoName) return;
+    let cancelled = false;
+    fetch(`/api/repo-details/${encodeURIComponent(repoName)}/trend`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.snapshots) setTrend(data.snapshots);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [repoName]);
   
   return (
     <div className="bg-gradient-to-br from-cyan-900/30 via-slate-800/50 to-cyan-800/20 rounded-lg overflow-hidden border border-cyan-500/40 shadow-lg shadow-cyan-500/10 hover:border-cyan-400/50 transition-colors">
@@ -170,9 +194,60 @@ export function RepositoryStatsSectionStatic({
               <span className="text-slate-200 font-medium">{typeof avgPrMergeTimeHours === 'number' ? avgPrMergeTimeHours.toFixed(1) : avgPrMergeTimeHours}h</span>
             </div>
           )}
+
+          {/* Health Score Trend */}
+          {trend.length >= 2 && (
+            <div className="pt-2 border-t border-slate-700/50">
+              <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2 flex items-center gap-1">
+                <span>📈</span>Health Trend
+              </div>
+              <HealthSparkline points={trend} />
+            </div>
+          )}
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function HealthSparkline({ points }: { points: TrendPoint[] }) {
+  const values = points
+    .map((p) => p.health_score)
+    .filter((v): v is number => typeof v === 'number');
+  if (values.length < 2) return null;
+
+  const width = 200;
+  const height = 40;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const step = width / (values.length - 1);
+  const coords = values.map((v, i) => {
+    const x = i * step;
+    const y = height - ((v - min) / range) * (height - 4) - 2;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const last = values[values.length - 1];
+  const first = values[0];
+  const delta = last - first;
+  const direction = delta > 0 ? '▲' : delta < 0 ? '▼' : '•';
+  const color = delta > 0 ? 'text-emerald-400' : delta < 0 ? 'text-rose-400' : 'text-slate-400';
+
+  return (
+    <div className="flex items-center gap-2">
+      <svg width={width} height={height} className="shrink-0">
+        <polyline
+          points={coords.join(' ')}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="text-cyan-400"
+        />
+      </svg>
+      <span className={`text-xs font-medium ${color}`}>
+        {direction} {last}/100
+      </span>
     </div>
   );
 }

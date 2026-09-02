@@ -141,6 +141,7 @@ export default function ExpandableRow({
             isAuthenticated={isAuthenticated}
             hasNoData={hasNoData}
             repoUrl={repoUrl}
+            repoName={repoName}
           />
         </div>
 

@@ -75,6 +75,8 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     let openPrs = 0;
     let prsReadyCount = 0;
     let prsBlockedCount = 0;
+    let staleReviewCount = 0;
+    let zombieBranchCount = 0;
 
     try {
         // Use pushedAt from repo metadata as last commit approximation
@@ -96,6 +98,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             const readiness = await github.getPullRequestReadiness(repo.name, owner);
             prsReadyCount = readiness.readyCount;
             prsBlockedCount = readiness.blockedCount;
+            staleReviewCount = readiness.staleReviewCount;
         } catch (e) {
             console.warn(`Failed to fetch PR readiness for ${repo.fullName}`, e);
         }
@@ -108,6 +111,15 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         branchesCount = branches.length;
     } catch (e) {
         console.warn(`Could not get branches for ${repo.name}:`, (e as Error).message);
+    }
+
+    // Fetch zombie (stale long-lived) branches — excludes the default branch
+    // since it's the active trunk.
+    try {
+        const zombieBranches = await github.getZombieBranches(repo.name, owner);
+        zombieBranchCount = zombieBranches.filter((b) => b.name !== repo.defaultBranch).length;
+    } catch (e) {
+        console.warn(`Could not get zombie branches for ${repo.name}:`, (e as Error).message);
     }
 
     // Fetch README last updated
@@ -207,7 +219,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     const repoRows = await db`
         INSERT INTO repos (
             name, full_name, description, language, stars, forks, open_issues, url, homepage, topics, 
-            last_synced, updated_at, last_commit_date, open_prs, prs_ready_count, prs_blocked_count, branches_count, readme_last_updated,
+            last_synced, updated_at, last_commit_date, open_prs, prs_ready_count, prs_blocked_count, stale_review_count, branches_count, zombie_branch_count, readme_last_updated,
             total_loc, loc_language_breakdown, ci_status, ci_last_run, ci_workflow_name,
             vuln_alert_count, vuln_critical_count, vuln_high_count, vuln_last_checked,
             contributor_count, commit_frequency, bus_factor, avg_pr_merge_time_hours, contributors_last_checked,
@@ -218,7 +230,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars},
             ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics},
-            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${prsReadyCount}, ${prsBlockedCount}, ${branchesCount}, ${readmeLastUpdated},
+            NOW(), NOW(), ${lastCommitDate}, ${openPrs}, ${prsReadyCount}, ${prsBlockedCount}, ${staleReviewCount}, ${branchesCount}, ${zombieBranchCount}, ${readmeLastUpdated},
             ${totalLoc}, ${JSON.stringify(locLanguageBreakdown)}, ${ciStatus}, ${ciLastRun}, ${ciWorkflowName},
             ${vulnAlertCount}, ${vulnCriticalCount}, ${vulnHighCount}, NOW(),
             ${contributorCount}, ${finiteOrNull(commitFrequency)}, ${busFactor}, ${finiteOrNull(avgPrMergeTimeHours)}, NOW(),
@@ -241,7 +253,9 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           open_prs = EXCLUDED.open_prs,
           prs_ready_count = EXCLUDED.prs_ready_count,
           prs_blocked_count = EXCLUDED.prs_blocked_count,
+          stale_review_count = EXCLUDED.stale_review_count,
           branches_count = EXCLUDED.branches_count,
+          zombie_branch_count = EXCLUDED.zombie_branch_count,
           readme_last_updated = EXCLUDED.readme_last_updated,
           total_loc = EXCLUDED.total_loc,
           loc_language_breakdown = EXCLUDED.loc_language_breakdown,
@@ -618,6 +632,23 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             SET health_score = ${healthScore.total}
             WHERE id = ${repoId}
         `;
+
+        // Record a time-series snapshot so velocity and tech-debt can be
+        // trended over rolling quarters.
+        try {
+            await db`
+                INSERT INTO repo_snapshots (
+                    repo_id, commit_frequency, avg_pr_merge_time_hours,
+                    health_score, open_prs, total_loc
+                )
+                VALUES (
+                    ${repoId}, ${finiteOrNull(commitFrequency)}, ${finiteOrNull(avgPrMergeTimeHours)},
+                    ${healthScore.total}, ${openPrs}, ${totalLoc}
+                )
+            `;
+        } catch (snapshotError) {
+            console.warn(`Failed to record snapshot for ${repo.fullName}`, snapshotError);
+        }
 
         logger.info(`✓ Health score for ${repo.name}: ${healthScore.total}/100`);
     } catch (e) {

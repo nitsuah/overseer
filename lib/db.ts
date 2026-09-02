@@ -66,6 +66,8 @@ export interface Repo {
     open_prs: number;
     prs_ready_count: number;
     prs_blocked_count: number;
+    stale_review_count: number;
+    zombie_branch_count: number;
     open_issues_count: number;
     readme_last_updated: string | null;
 }

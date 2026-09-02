@@ -1,6 +1,6 @@
 # Tasks
 
-## updated: 2026-08-28
+## updated: 2026-09-01
 
 ## In Progress
 
@@ -8,17 +8,12 @@
 
 ### P1 - High
 
-- [ ] Deprioritize stash repo: mark private, block new PRs, and add a one-time sanitization task to remove any sensitive history.
-  - Priority: P1
-  - Context: stash repo has been lingering without formal decommission; blocks clean portfolio hygiene.
-  - Acceptance Criteria: repo is private, branch protection blocks new PRs, and a sanitization checklist item is documented.
-
-### P2 - Medium
-
 - [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
-  - Priority: P2
+  - Priority: P1
   - Context: overseer exposes an Agent Task Queue API and agent-board runs a local model runtime, but no bridge routes tasks between them.
   - Acceptance Criteria: a v0 bridge dispatches at least one queued overseer task to agent-board's runtime and reports completion status back to the queue.
+
+### P2 - Medium
 
 - [ ] Chat-driven doc editing (TASKS/ROADMAP/FEATURES).
   - Priority: P2
@@ -53,6 +48,7 @@
   - Priority: P3
   - Context: dormant repositories are not yet automatically classified.
   - Acceptance Criteria: inactive repos are flagged past a defined threshold.
+  - Status: ✅ SHIPPED (PR #200) — `detectActivityState` in `lib/repo-signals.ts`, 90+ days no commits → "maintenance" badge on desktop + mobile cards.
 
 - [ ] Add token-density metrics.
   - Priority: P3
@@ -73,10 +69,11 @@
   - Priority: P3
   - Context: commit frequency and PR merge time are captured but not yet trended over time.
   - Acceptance Criteria: a trend chart shows velocity and technical-debt signals over rolling quarters.
+  - Status: velocity score ✅ SHIPPED (PR #200) — `calculateVelocityScore` in `lib/repo-signals.ts`, surfaced in expanded stats. Trending over time still open.
 
 - [ ] Agent session receipts.
   - Priority: P3
-  - Context: new idea (2026-08-28) — AI Summaries describe a repo's state; nothing describes what an agent *did* to it recently. Picking up mid-portfolio work today means reconstructing activity from commit messages and PR history by hand across every repo.
+  - Context: new idea (2026-08-28) — AI Summaries describe a repo's state; nothing describes what an agent _did_ to it recently. Picking up mid-portfolio work today means reconstructing activity from commit messages and PR history by hand across every repo.
   - Acceptance Criteria: a lightweight per-repo activity log surfaced in both the chat panel and the PMO view, built on the existing dispatch/queue seams rather than a new schema — persist a `sessionId` (correlating with the `motorPoolSessionId` already returned by `motorPoolBridge.dispatch()` in `lib/agent-bridge.ts`), a `filesTouched` list, and a `skipReason` string (distinct from the `TaskQueueItem.error` field in `app/api/agent/tasks/route.ts`, which represents failures, not deliberate skips) alongside each task's existing `result`/`status` fields; commits and PRs opened/merged are sourced from GitHub data already synced via `lib/github/prs.ts`, no new write path required.
 
 <!--

@@ -11,7 +11,7 @@ export interface SyncFilters {
 }
 
 export interface DbRepoState {
-  name: string;
+  full_name: string;
   is_hidden?: boolean;
   is_archived?: boolean;
   repo_type?: string | null;
@@ -28,7 +28,7 @@ export function filterReposForSync(
   dbRepoMap: Map<string, DbRepoState>
 ): RepoMetadata[] {
   return repos.filter((repo) => {
-    const dbRepo = dbRepoMap.get(repo.name);
+    const dbRepo = dbRepoMap.get(repo.fullName);
     if (dbRepo?.is_hidden) return false;
     if (repo.archived || dbRepo?.is_archived) return false;
 

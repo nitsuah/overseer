@@ -8,14 +8,18 @@ export const MAINTENANCE_MODE_DAYS = 90; // No commits for 90+ days => maintenan
  * - 'stale': 30-90 days since last commit
  * - 'maintenance': 90+ days since last commit (dormant)
  */
-export type ActivityState = 'active' | 'stale' | 'maintenance';
+export enum ActivityState {
+  Active = 'active',
+  Stale = 'stale',
+  Maintenance = 'maintenance',
+}
 
 export function detectActivityState(lastCommitDate: string | null | undefined): ActivityState {
-  if (!lastCommitDate) return 'maintenance'; // unknown => treat conservatively
+  if (!lastCommitDate) return ActivityState.Maintenance; // unknown => treat conservatively
   const days = Math.floor((Date.now() - new Date(lastCommitDate).getTime()) / 86400000);
-  if (days <= 30) return 'active';
-  if (days <= MAINTENANCE_MODE_DAYS) return 'stale';
-  return 'maintenance';
+  if (days <= 30) return ActivityState.Active;
+  if (days < MAINTENANCE_MODE_DAYS) return ActivityState.Stale;
+  return ActivityState.Maintenance; // exactly MAINTENANCE_MODE_DAYS or more => maintenance
 }
 
 export interface VelocityInputs {
@@ -29,7 +33,9 @@ export interface VelocityInputs {
  * Higher is faster/more active. Returns null when no signal is available.
  */
 export function calculateVelocityScore(inputs: VelocityInputs): number | null {
-  const { commitFrequency, avgPrMergeTimeHours } = inputs;
+  // Normalize non-finite values (NaN/Infinity) to null so they're treated as missing.
+  const commitFrequency = Number.isFinite(inputs.commitFrequency) ? inputs.commitFrequency : null;
+  const avgPrMergeTimeHours = Number.isFinite(inputs.avgPrMergeTimeHours) ? inputs.avgPrMergeTimeHours : null;
   if (commitFrequency == null && avgPrMergeTimeHours == null) return null;
 
   let score = 50; // neutral baseline

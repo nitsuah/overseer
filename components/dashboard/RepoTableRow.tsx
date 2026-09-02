@@ -28,7 +28,7 @@ import {
   getLanguageColor,
 } from '@/lib/dashboard-utils';
 import { getLanguageIcon } from '@/lib/language-colors';
-import { detectActivityState, MAINTENANCE_MODE_DAYS } from '@/lib/repo-signals';
+import { detectActivityState, ActivityState, MAINTENANCE_MODE_DAYS } from '@/lib/repo-signals';
 import { HealthBreakdown } from './repo-row/HealthBreakdown';
 import { HealthShields } from './repo-row/HealthShields';
 import { TypeEditor } from './repo-row/TypeEditor';
@@ -149,7 +149,7 @@ export function RepoTableRow({
                 <Play className="h-4 w-4 fill-current" />
               </a>
             )}
-            {!repo.is_hidden && detectActivityState(repo.last_commit_date) === 'maintenance' && (
+            {!repo.is_hidden && detectActivityState(repo.last_commit_date) === ActivityState.Maintenance && (
               <span
                 className="px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 text-[10px] font-semibold uppercase tracking-wide"
                 title={`No commits in ${MAINTENANCE_MODE_DAYS}+ days — maintenance mode`}

@@ -27,7 +27,21 @@ export async function POST(request: Request): Promise<NextResponse> {
                 filterFork: body?.filterFork,
             };
         } catch {
-            // No body — sync all displayed repos (no filters applied)
+            return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+        }
+
+        // Validate filter values against the supported finite set so a bad
+        // payload can't broaden the sync scope.
+        const VALID_TYPES = ['all', 'web-app', 'game', 'tool', 'library', 'bot', 'research', 'unknown'];
+        const VALID_FORKS = ['all', 'no-forks', 'forks-only'];
+        if (filters.filterType !== undefined && !VALID_TYPES.includes(filters.filterType)) {
+            return NextResponse.json({ error: `Invalid filterType: ${filters.filterType}` }, { status: 400 });
+        }
+        if (filters.filterFork !== undefined && !VALID_FORKS.includes(filters.filterFork)) {
+            return NextResponse.json({ error: `Invalid filterFork: ${filters.filterFork}` }, { status: 400 });
+        }
+        if (filters.filterLanguage !== undefined && typeof filters.filterLanguage !== 'string') {
+            return NextResponse.json({ error: 'Invalid filterLanguage' }, { status: 400 });
         }
 
         const session = await auth();
@@ -102,14 +116,16 @@ export async function POST(request: Request): Promise<NextResponse> {
 
         // Load DB state (is_hidden, is_archived, repo_type) so filtering matches
         // what the dashboard displays. repos table has an "allow all" RLS policy.
-        const dbRepoRows = await db`SELECT name, is_hidden, is_archived, repo_type FROM repos` as unknown as Array<{
-            name: string;
+        // Keyed by full_name so repos with the same short name across owners
+        // don't share state.
+        const dbRepoRows = await db`SELECT full_name, is_hidden, is_archived, repo_type FROM repos` as unknown as Array<{
+            full_name: string;
             is_hidden?: boolean;
             is_archived?: boolean;
             repo_type?: string | null;
         }>;
-        const dbRepoMap = new Map<string, { name: string; is_hidden?: boolean; is_archived?: boolean; repo_type?: string | null }>(
-            dbRepoRows.map((r) => [r.name, r])
+        const dbRepoMap = new Map<string, { full_name: string; is_hidden?: boolean; is_archived?: boolean; repo_type?: string | null }>(
+            dbRepoRows.map((r) => [r.full_name, r])
         );
 
         const reposToSync = filterReposForSync(repos, filters, dbRepoMap);

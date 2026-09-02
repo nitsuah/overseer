@@ -35,10 +35,16 @@ describe('detectActivityState', () => {
     expect(detectActivityState('2026-08-02T00:00:00Z')).toBe('active');
   });
 
-  it('boundary: exactly 90 days is stale (not maintenance)', () => {
+  it('boundary: exactly 90 days is maintenance (not stale)', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-09-01T00:00:00Z'));
-    expect(detectActivityState('2026-06-03T00:00:00Z')).toBe('stale');
+    expect(detectActivityState('2026-06-03T00:00:00Z')).toBe('maintenance');
+  });
+
+  it('boundary: 89 days is stale', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-01T00:00:00Z'));
+    expect(detectActivityState('2026-06-04T00:00:00Z')).toBe('stale');
   });
 });
 
@@ -65,5 +71,17 @@ describe('calculateVelocityScore', () => {
 
   it('uses commit frequency alone', () => {
     expect(calculateVelocityScore({ commitFrequency: 5 })).toBe(70);
+  });
+
+  it('treats non-finite commitFrequency as missing', () => {
+    expect(calculateVelocityScore({ commitFrequency: NaN })).toBeNull();
+    expect(calculateVelocityScore({ commitFrequency: Infinity })).toBeNull();
+    expect(calculateVelocityScore({ commitFrequency: NaN, avgPrMergeTimeHours: 12 })).toBe(60);
+  });
+
+  it('treats non-finite avgPrMergeTimeHours as missing', () => {
+    expect(calculateVelocityScore({ avgPrMergeTimeHours: NaN })).toBeNull();
+    expect(calculateVelocityScore({ avgPrMergeTimeHours: Infinity })).toBeNull();
+    expect(calculateVelocityScore({ commitFrequency: 5, avgPrMergeTimeHours: NaN })).toBe(70);
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { formatLocNumber } from '@/lib/expandable-row-utils';
+import { calculateVelocityScore } from '@/lib/repo-signals';
 import { Metric } from '@/types/repo';
 import { RefreshCw } from 'lucide-react';
 import { GithubIcon } from '@/components/icons/GithubIcon';
@@ -233,6 +234,23 @@ export function RepositoryStatsSection({
             </span>
           </div>
         )}
+        {(() => {
+          const velocity = calculateVelocityScore({
+            commitFrequency,
+            avgPrMergeTimeHours,
+          });
+          if (velocity === null) return null;
+          const color = velocity >= 70 ? 'text-green-400' : velocity >= 40 ? 'text-yellow-400' : 'text-red-400';
+          return (
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-violet-500">⚡</span>
+                <span className="text-slate-400">Velocity</span>
+              </div>
+              <span className={`font-medium ${color}`}>{velocity}/100</span>
+            </div>
+          );
+        })()}
 
         {/* Additional Repo Stats Metrics from METRICS.md */}
         {repoStatsMetrics.map((metric, index) => (

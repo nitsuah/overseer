@@ -43,7 +43,7 @@ export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
             ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics}, 
             NOW(), NOW(), ${lastCommitDate}, ${repo.archived}
         )
-        ON CONFLICT (name) DO UPDATE SET
+        ON CONFLICT (full_name) DO UPDATE SET
           description = EXCLUDED.description,
           language = EXCLUDED.language,
           stars = EXCLUDED.stars,
@@ -226,7 +226,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             ${dependabotAlertsEnabled}, ${dependabotAlertCount}, ${codeScanningEnabled}, ${codeScanningAlertCount},
             ${secretScanningEnabled}, ${secretScanningAlertCount}, NOW()
         )
-        ON CONFLICT (name) DO UPDATE SET
+        ON CONFLICT (full_name) DO UPDATE SET
           description = EXCLUDED.description,
           language = EXCLUDED.language,
           stars = EXCLUDED.stars,

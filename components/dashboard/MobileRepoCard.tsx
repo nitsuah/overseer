@@ -22,6 +22,7 @@ import { Repo, RepoDetails } from '@/types/repo';
 import { detectRepoType, RepoType } from '@/lib/repo-type';
 import { calculateDocHealth } from '@/lib/doc-health';
 import { getHealthGrade } from '@/lib/dashboard-utils';
+import { detectActivityState, ActivityState, MAINTENANCE_MODE_DAYS } from '@/lib/repo-signals';
 import { HealthBreakdown } from './repo-row/HealthBreakdown';
 import { TypeEditor } from './repo-row/TypeEditor';
 import { getTypeIcon } from './repo-row/repo-row-utils';
@@ -158,6 +159,14 @@ export function MobileRepoCard({
                 >
                   <Play className="h-3 w-3 fill-current" />
                 </a>
+              )}
+              {!repo.is_hidden && detectActivityState(repo.last_commit_date) === ActivityState.Maintenance && (
+                <span
+                  className="px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 text-[10px] font-semibold uppercase tracking-wide shrink-0"
+                  title={`No commits in ${MAINTENANCE_MODE_DAYS}+ days — maintenance mode`}
+                >
+                  maintenance
+                </span>
               )}
             </div>
 

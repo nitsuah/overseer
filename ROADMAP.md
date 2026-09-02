@@ -1,8 +1,8 @@
 # 🗺️ Overseer Roadmap
 
-## updated: 2026-08-28
+## updated: 2026-09-01
 
-Next Review: 2026-09-01
+Next Review: 2026-09-15
 
 ## Q4 2025 – Q1 2026 ✅
 
@@ -22,7 +22,6 @@ Next Review: 2026-09-01
 - [x] Batch per-repo detail queries into a single db.transaction() call to reduce Neon round trips (PR #128)
 - [x] Keep Gemini failover and model evolution resilient (PR #137)
 - [x] Add DEV-flow handoff support so PMO roadmap items can be promoted into implementation queues cleanly (PR #136)
-- [ ] Deprioritize stash: mark private, block PRs, and add a sanitization task to TASKS.md
 
 ## Q3 2026: PMO Mode 🏗️
 
@@ -48,7 +47,15 @@ Next Review: 2026-09-01
 - [ ] **Repo "mood" signal** — lightweight sentiment computed from recent PR descriptions, commit messages, and TASKS.md tone; surfaces whether a repo is in grind mode, cleanup mode, or blocked, giving PMO quick directional intuition without reading every PR.
 - [ ] **AI PR pairing suggestions** — when promoting a ROADMAP/TASKS item to a PR, Overseer surfaces related items from other repos that should co-land; reduces cross-repo integration surprises by exposing dependency coupling before merge.
 - [ ] **Stale-review detector** — surface PRs whose formal review decision (`CHANGES_REQUESTED`) is out of sync with their actual thread-resolution state (all threads resolved, CI green, but the bot never re-approved). Observed repeatedly across the portfolio this session: CodeRabbit correctly resolves every finding but its top-level review verdict never flips, silently blocking branch-protection-gated merges until a human notices and merges manually or overrides. A portfolio-wide "N PRs blocked on a stale review" count would have saved real back-and-forth this session.
-- [ ] **Agent session receipts** — a lightweight per-repo log (surfaced in the chat panel and PMO view) of what an AI coding session actually did: commits made, PRs opened/merged, files touched, findings fixed vs. skipped-with-reason. Distinct from AI Summaries (which describe the *repo*); this describes *recent agent activity on it*, so a human picking up mid-portfolio work can see what changed without reconstructing it from commit messages.
+- [ ] **Agent session receipts** — a lightweight per-repo log (surfaced in the chat panel and PMO view) of what an AI coding session actually did: commits made, PRs opened/merged, files touched, findings fixed vs. skipped-with-reason. Distinct from AI Summaries (which describe the _repo_); this describes _recent agent activity on it_, so a human picking up mid-portfolio work can see what changed without reconstructing it from commit messages.
+
+## v2 Launch (2026-09-01) ✅
+
+> Shipped on PR #200. Sync button now force-refreshes all displayed (filtered) repos with full data; repo activity signals added.
+
+- [x] Sync button refreshes all displayed (filtered) repos with full data, not just new repos (PR #200)
+- [x] Maintenance-mode detection: repos with 90+ days no commits flagged with a badge (desktop + mobile)
+- [x] Velocity score: 0-100 from commit frequency + PR merge time, surfaced in expanded stats
 
 ## Notes
 

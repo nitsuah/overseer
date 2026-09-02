@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Repo } from '@/types/repo';
 import { RepoType, detectRepoType } from '@/lib/repo-type';
+import { ForkFilter } from '@/lib/sync-filters';
 
 export type SortField = 'name' | 'health' | 'stars' | 'updated' | 'language';
 export type SortDirection = 'asc' | 'desc';
@@ -10,7 +11,7 @@ export type SortDirection = 'asc' | 'desc';
 export function useRepoFilters(repos: Repo[]) {
   const [filterType, setFilterType] = useState<RepoType | 'all'>('all');
   const [filterLanguage, setFilterLanguage] = useState<string>('all');
-  const [filterFork, setFilterFork] = useState<'all' | 'no-forks' | 'forks-only'>('all');
+  const [filterFork, setFilterFork] = useState<ForkFilter>('all');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 

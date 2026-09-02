@@ -65,6 +65,13 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS prs_ready_count INTEGER DEFAULT 0`,
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS prs_blocked_count INTEGER DEFAULT 0`,
 
+    // repos: identity keyed by full_name (owner/name) so repos with the same
+    // short name across different owners don't share state. Drop the UNIQUE on
+    // `name` (it would block inserting a second repo with a colliding short
+    // name) and make `full_name` the conflict target for upserts.
+    `ALTER TABLE repos DROP CONSTRAINT IF EXISTS repos_name_key`,
+    `ALTER TABLE repos ADD CONSTRAINT repos_full_name_key UNIQUE (full_name)`,
+
     // doc_status
     `ALTER TABLE doc_status ADD COLUMN IF NOT EXISTS template_version TEXT`,
     `ALTER TABLE doc_status DROP CONSTRAINT IF EXISTS doc_status_doc_type_check`,

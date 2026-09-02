@@ -9,6 +9,7 @@ import { checkBestPractices } from './best-practices';
 import { checkCommunityStandards } from './community-standards';
 import { calculateHealthScore } from './health-score';
 import { isTestFile, parseTestFile } from './parsers/test-cases';
+import { aggregateCodeDensity } from './parsers/code-density';
 import { ensureSchema } from './db';
 import logger from './log';
 
@@ -319,6 +320,36 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
     await db`
         UPDATE repos 
         SET test_case_count = ${testCaseCount}, test_describe_count = ${testDescribeCount}
+        WHERE id = ${repoId}
+    `;
+
+    // Compute token density + comment-to-code ratio from source files.
+    // Sample up to 40 source files to bound GitHub API calls.
+    const sourceFiles = fileList.filter((f) => /\.(ts|tsx|js|jsx|py|go|rs|java|rb|php|c|h|cpp|hpp|cs|swift|kt|scala|sh|sql)$/i.test(f));
+    const sampledFiles = sourceFiles.slice(0, 40);
+    let tokenDensity: number | null = null;
+    let commentToCodeRatio: number | null = null;
+    try {
+        const analyzed: { path: string; content: string }[] = [];
+        for (const file of sampledFiles) {
+            try {
+                const content = await github.getFileContent(repo.name, file, owner);
+                if (content) analyzed.push({ path: file, content });
+            } catch {
+                // Skip files that can't be fetched
+            }
+        }
+        const density = aggregateCodeDensity(analyzed);
+        tokenDensity = density.tokenDensity;
+        commentToCodeRatio = density.commentToCodeRatio;
+    } catch (e) {
+        console.warn(`Failed to compute code density for ${repo.fullName}`, e);
+    }
+
+    await db`
+        UPDATE repos 
+        SET token_density = ${finiteOrNull(tokenDensity)},
+            comment_to_code_ratio = ${finiteOrNull(commentToCodeRatio)}
         WHERE id = ${repoId}
     `;
 

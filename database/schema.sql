@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS repos (
   avg_loc_per_file INTEGER,
   max_file_size INTEGER,
   loc_language_breakdown JSONB,
+  token_density NUMERIC,
+  comment_to_code_ratio NUMERIC,
   test_case_count INTEGER DEFAULT 0,
   test_describe_count INTEGER DEFAULT 0,
   ci_status TEXT,

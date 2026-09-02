@@ -25,6 +25,8 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS avg_loc_per_file INTEGER`,
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS max_file_size INTEGER`,
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS loc_language_breakdown JSONB`,
+    `ALTER TABLE repos ADD COLUMN IF NOT EXISTS token_density NUMERIC`,
+    `ALTER TABLE repos ADD COLUMN IF NOT EXISTS comment_to_code_ratio NUMERIC`,
 
     // repos: test coverage
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS test_case_count INTEGER DEFAULT 0`,

@@ -49,6 +49,8 @@ interface ExpandableRowProps {
   commitFrequency?: number;
   busFactor?: number;
   avgPrMergeTimeHours?: number;
+  tokenDensity?: number | null;
+  commentToCodeRatio?: number | null;
   onSyncSingleRepo?: () => void;
   syncingRepo?: string | null;
   repoNameForSync?: string;
@@ -91,6 +93,8 @@ export default function ExpandableRow({
   commitFrequency,
   busFactor,
   avgPrMergeTimeHours,
+  tokenDensity,
+  commentToCodeRatio,
   onSyncSingleRepo,
   syncingRepo,
   repoNameForSync,
@@ -142,6 +146,8 @@ export default function ExpandableRow({
             hasNoData={hasNoData}
             repoUrl={repoUrl}
             repoName={repoName}
+            tokenDensity={tokenDensity}
+            commentToCodeRatio={commentToCodeRatio}
           />
         </div>
 

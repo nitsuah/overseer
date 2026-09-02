@@ -23,6 +23,8 @@ interface RepositoryStatsSectionStaticProps {
   hasNoData?: boolean;
   repoUrl?: string;
   repoName?: string;
+  tokenDensity?: number | null;
+  commentToCodeRatio?: number | null;
 }
 
 interface TrendPoint {
@@ -48,6 +50,8 @@ export function RepositoryStatsSectionStatic({
   hasNoData = false,
   repoUrl,
   repoName,
+  tokenDensity,
+  commentToCodeRatio,
 }: RepositoryStatsSectionStaticProps) {
   const [isExpanded, setIsExpanded] = useState(true); // Expanded by default
   const [trend, setTrend] = useState<TrendPoint[]>([]);
@@ -192,6 +196,22 @@ export function RepositoryStatsSectionStatic({
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 flex items-center gap-1"><span>⏱️</span>Avg PR Merge Time</span>
               <span className="text-slate-200 font-medium">{typeof avgPrMergeTimeHours === 'number' ? avgPrMergeTimeHours.toFixed(1) : avgPrMergeTimeHours}h</span>
+            </div>
+          )}
+
+          {/* Token Density */}
+          {tokenDensity !== undefined && tokenDensity !== null && (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 flex items-center gap-1"><span>🧩</span>Token Density</span>
+              <span className="text-slate-200 font-medium">{tokenDensity.toFixed(1)} tok/line</span>
+            </div>
+          )}
+
+          {/* Comment-to-Code Ratio */}
+          {commentToCodeRatio !== undefined && commentToCodeRatio !== null && (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 flex items-center gap-1"><span>💬</span>Comment/Code</span>
+              <span className="text-slate-200 font-medium">{(commentToCodeRatio * 100).toFixed(0)}%</span>
             </div>
           )}
 

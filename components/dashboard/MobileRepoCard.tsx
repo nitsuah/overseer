@@ -402,6 +402,8 @@ export function MobileRepoCard({
           commitFrequency={repo.commit_frequency}
           busFactor={repo.bus_factor}
           avgPrMergeTimeHours={repo.avg_pr_merge_time_hours}
+          tokenDensity={repo.token_density}
+          commentToCodeRatio={repo.comment_to_code_ratio}
           onSyncSingleRepo={onSyncSingleRepo}
           syncingRepo={syncingRepo}
           repoNameForSync={repo.name}

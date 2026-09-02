@@ -14,7 +14,7 @@ const RETRY_BASE_DELAY_MS = 1000;
 const CONCURRENCY_LIMIT = 3; // Max parallel repo syncs
 const RATE_LIMIT_THRESHOLD = 200; // Pause syncs below this remaining
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
     try {
         // Filters come from the dashboard's current filter state so the sync
         // refreshes exactly the repos currently displayed.

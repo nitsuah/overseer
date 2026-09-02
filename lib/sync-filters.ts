@@ -1,10 +1,13 @@
 import { RepoType, detectRepoType } from '@/lib/repo-type';
 import type { RepoMetadata } from '@/lib/github';
 
+/** Shared fork-filter contract used by the dashboard hook and the sync route. */
+export type ForkFilter = 'all' | 'no-forks' | 'forks-only';
+
 export interface SyncFilters {
   filterType?: RepoType | 'all';
   filterLanguage?: string;
-  filterFork?: 'all' | 'no-forks' | 'forks-only';
+  filterFork?: ForkFilter;
 }
 
 export interface DbRepoState {

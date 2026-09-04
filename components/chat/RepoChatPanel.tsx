@@ -1,12 +1,18 @@
 "use client";
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { X, Send, Trash2, MessageSquare, Loader2 } from 'lucide-react';
+import { X, Send, Trash2, MessageSquare, Loader2, FileText, Check, X as XIcon } from 'lucide-react';
 import { MarkdownPreview } from '@/components/MarkdownPreview';
 import { SUGGESTED_WORKFLOWS } from '@/lib/repo-chat';
 import type { ChatThreadMessage } from '@/hooks/useRepoChat';
 import { getTypeIcon } from '@/components/dashboard/repo-row/repo-row-utils';
 import type { RepoType } from '@/lib/repo-type';
+
+interface DocEditProposal {
+  docType: string;
+  content: string;
+  summary: string;
+}
 
 interface RepoChatPanelProps {
     isOpen: boolean;
@@ -19,6 +25,8 @@ interface RepoChatPanelProps {
     onClose: () => void;
     onSend: (text: string) => void;
     onClear: () => void;
+    onApplyProposal?: (proposal: DocEditProposal) => void;
+    onDismissProposal?: (messageId: string) => void;
 }
 
 /**
@@ -36,6 +44,8 @@ export function RepoChatPanel({
     onClose,
     onSend,
     onClear,
+    onApplyProposal,
+    onDismissProposal,
 }: RepoChatPanelProps): React.JSX.Element | null {
     const [draft, setDraft] = useState('');
     const [draftRepo, setDraftRepo] = useState(repoName);
@@ -157,28 +167,58 @@ export function RepoChatPanel({
                     )}
 
                     {messages.map((message) => (
-                        <div
-                            key={message.id}
-                            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
+                        <React.Fragment key={message.id}>
                             <div
-                                className={`max-w-[85%] rounded-2xl px-3.5 py-2 ${
-                                    message.role === 'user'
-                                        ? 'bg-indigo-600 text-white rounded-br-sm'
-                                        : message.failed
-                                            ? 'bg-red-500/10 border border-red-500/40 text-red-300 rounded-bl-sm'
-                                            : 'bg-slate-800 border border-slate-700 text-slate-200 rounded-bl-sm'
-                                }`}
+                                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
-                                {message.role === 'user' ? (
-                                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                                ) : (
-                                    <div className="chat-markdown break-words">
-                                        <MarkdownPreview content={message.content} />
-                                    </div>
-                                )}
+                                <div
+                                    className={`max-w-[85%] rounded-2xl px-3.5 py-2 ${
+                                        message.role === 'user'
+                                            ? 'bg-indigo-600 text-white rounded-br-sm'
+                                            : message.failed
+                                                ? 'bg-red-500/10 border border-red-500/40 text-red-300 rounded-bl-sm'
+                                                : 'bg-slate-800 border border-slate-700 text-slate-200 rounded-bl-sm'
+                                    }`}
+                                >
+                                    {message.role === 'user' ? (
+                                        <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                                    ) : (
+                                        <div className="chat-markdown break-words">
+                                            <MarkdownPreview content={message.content} />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                            {message.role === 'assistant' && message.proposal && onApplyProposal && (
+                              <div className="flex justify-start">
+                                <div className="max-w-[85%] bg-emerald-500/10 border border-emerald-500/40 rounded-2xl rounded-bl-sm px-3.5 py-2">
+                                  <div className="flex items-center gap-2 text-emerald-300 text-sm mb-2">
+                                    <FileText className="h-4 w-4" />
+                                    <span className="font-medium">Proposed edit: {message.proposal.docType.toUpperCase()}</span>
+                                  </div>
+                                  <p className="text-slate-300 text-xs mb-2">{message.proposal.summary}</p>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => onApplyProposal(message.proposal!)}
+                                      disabled={sending}
+                                      className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-500 rounded transition-colors disabled:opacity-50 flex items-center gap-1"
+                                    >
+                                      <Check className="h-3 w-3" />
+                                      Apply
+                                    </button>
+                                    <button
+                                      onClick={() => onDismissProposal?.(message.id)}
+                                      disabled={sending}
+                                      className="px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded transition-colors disabled:opacity-50 flex items-center gap-1"
+                                    >
+                                      <XIcon className="h-3 w-3" />
+                                      Dismiss
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                        </React.Fragment>
                     ))}
 
                     {sending && (

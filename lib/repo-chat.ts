@@ -349,6 +349,36 @@ ${transcript}
 Overseer:`;
 }
 
+/**
+ * Parse a structured doc-edit proposal from the model's reply.
+ * Expected format (fenced code block):
+ * ```proposal
+ * {
+ *   "docType": "readme|roadmap|tasks|metrics|features|contributing|security|changelog|license|codeowners|copilot|funding|issue_template|issue_templates|pr_template|flow_tasks_prompt|handoff_prompt",
+ *   "content": "full file content to write",
+ *   "summary": "one-line description of the change"
+ * }
+ * ```
+ * Returns null if no valid proposal found.
+ */
+export function parseDocEditProposal(reply: string): {
+  docType: string;
+  content: string;
+  summary: string;
+} | null {
+  const match = reply.match(/```proposal\s*(\{[\s\S]*?\})\s*```/);
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(match[1]);
+    if (parsed.docType && parsed.content && parsed.summary) {
+      return parsed;
+    }
+  } catch {
+    // Invalid JSON
+  }
+  return null;
+}
+
 export interface ParsedMessages {
     ok: boolean;
     messages?: ChatMessage[];

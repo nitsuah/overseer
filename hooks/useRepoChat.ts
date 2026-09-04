@@ -14,6 +14,12 @@ export interface ChatThreadMessage extends ChatMessage {
     createdAt: string;
     /** Set when the request for this turn failed; lets the UI mark it. */
     failed?: boolean;
+    /** Structured doc-edit proposal returned by the server. */
+    proposal?: {
+      docType: string;
+      content: string;
+      summary: string;
+    };
 }
 
 export type ChatThreads = Record<string, ChatThreadMessage[]>;
@@ -36,6 +42,10 @@ export interface UseRepoChatResult {
     sendMessage: (repoName: string, text: string) => Promise<void>;
     /** Deletes `repoName`'s thread entirely (and clears any active error). */
     clearThread: (repoName: string) => void;
+    /** Clears the proposal attached to one assistant message, without
+     *  touching the rest of the thread — used when the user dismisses a
+     *  proposed doc edit instead of applying it. */
+    dismissProposal: (repoName: string, messageId: string) => void;
     /** The repo with an in-flight `sendMessage` call, or `null`. */
     sendingRepo: string | null;
     /** The most recent request-level error, or `null`. */
@@ -177,6 +187,19 @@ export function useRepoChat(identity?: string | null): UseRepoChatResult {
         });
     }, []);
 
+    const dismissProposal = useCallback((repoName: string, messageId: string) => {
+        setThreads((prev) => {
+            const existing = prev[repoName];
+            if (!existing) return prev;
+            return {
+                ...prev,
+                [repoName]: existing.map((m) =>
+                    m.id === messageId ? { ...m, proposal: undefined } : m
+                ),
+            };
+        });
+    }, []);
+
     const sendMessage = useCallback(
         async (repoName: string, text: string): Promise<void> => {
             const trimmed = text.trim();
@@ -258,6 +281,7 @@ export function useRepoChat(identity?: string | null): UseRepoChatResult {
                             role: 'assistant',
                             content: data.reply ?? '(empty response)',
                             createdAt: new Date().toISOString(),
+                            proposal: data.proposal ?? undefined,
                         },
                     ],
                 }));
@@ -285,5 +309,5 @@ export function useRepoChat(identity?: string | null): UseRepoChatResult {
         [threads, sendingRepo]
     );
 
-    return { threads, getThread, sendMessage, clearThread, sendingRepo, error };
+    return { threads, getThread, sendMessage, clearThread, dismissProposal, sendingRepo, error };
 }

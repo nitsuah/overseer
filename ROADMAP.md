@@ -1,6 +1,6 @@
 # 🗺️ Overseer Roadmap
 
-## updated: 2026-09-01
+## updated: 2026-09-03
 
 Next Review: 2026-09-15
 
@@ -28,21 +28,21 @@ Next Review: 2026-09-15
 - [x] Add PMO mode to the dashboard: portfolio-wide roadmap progress, plan execution status, and handoff management view (PR #136)
 - [ ] Add AI-assisted roadmap management: auto-suggest items from repo health signals and auto-update progress from linked PR/issue state
 - [x] Add DEV-flow handoff UI: promote in-progress roadmap items into the agent task queue with pre-filled context (PR #136)
-- [ ] Allow easy management of TASKS, ROADMAP, FEATURES via a chat-driven interface in the dashboard
+- [x] Allow easy management of TASKS, ROADMAP, FEATURES via a chat-driven interface in the dashboard — proposal/apply/dismiss flow shipped; direct check-off/move-to-FEATURES from chat still open (see TASKS.md)
 
 ## Q3 2026: Analytics & MCP 🤖
 
 - [x] Add the conversational interface foundation: one or two chat-driven repo-hygiene workflows end-to-end (PR #196 — per-repo chat panel, "summarize my stale docs" / "what should I work on next?")
-- [ ] Add advanced analytics: velocity scoring, technical-debt trending, and zombie-branch detection
+- [x] Add advanced analytics: velocity scoring and technical-debt trending — `repo_snapshots` time-series + trend endpoint + sparkline; zombie-branch detection still open (see TASKS.md)
 - [x] Expand MCP tooling surface: 7 tools now ship (`get_repo_health`, `list_repos`, `get_repo_details`, `get_portfolio_overview`, `search_repos`, `list_tasks`, `get_security_summary`) + `/api/context` LLM context endpoint (PR #181)
-- [ ] Add cross-repo dependency mapping to surface shared-stack connections (e.g., agent-board ↔ bb-mcp ↔ overseer)
+- [x] Add cross-repo dependency mapping to surface shared-stack connections (e.g., agent-board ↔ bb-mcp ↔ overseer) — `GET /api/dependencies` + `DependencyGraph.tsx`; 2D SVG rather than the originally-scoped 3D graph
 
 ## Q4 2026: Portfolio Intelligence (Exploratory) 🧪
 
 - [ ] Autonomous plan execution: agents read ROADMAP.md and TASKS.md, open PRs, and close items end to end
 - [ ] Portfolio intelligence dashboard: cross-repo health roll-up, trend lines, and strategic signal view
 - [ ] Evaluate enterprise auth, team collaboration, and org-wide governance workflows
-- [ ] Evaluate token-density, comment-to-code ratio, and maintenance-mode metrics as first-class signals
+- [x] Evaluate token-density, comment-to-code ratio, and maintenance-mode metrics as first-class signals — all three now computed and surfaced in expanded repo stats (maintenance-mode PR #200; token-density/comment-to-code this branch)
 - [ ] Add mobile-responsive adjustments and lightweight PWA packaging
 - [ ] **Repo "mood" signal** — lightweight sentiment computed from recent PR descriptions, commit messages, and TASKS.md tone; surfaces whether a repo is in grind mode, cleanup mode, or blocked, giving PMO quick directional intuition without reading every PR.
 - [ ] **AI PR pairing suggestions** — when promoting a ROADMAP/TASKS item to a PR, Overseer surfaces related items from other repos that should co-land; reduces cross-repo integration surprises by exposing dependency coupling before merge.
@@ -56,6 +56,16 @@ Next Review: 2026-09-15
 - [x] Sync button refreshes all displayed (filtered) repos with full data, not just new repos (PR #200)
 - [x] Maintenance-mode detection: repos with 90+ days no commits flagged with a badge (desktop + mobile)
 - [x] Velocity score: 0-100 from commit frequency + PR merge time, surfaced in expanded stats
+
+## Portfolio Intelligence Batch (2026-09-03)
+
+> Shipped on the `feat/v2-portfolio-intelligence` branch (PR #204). Chat-driven doc editing (proposal/apply/dismiss), cross-repo dependency mapping, token-density + comment-to-code ratio metrics, a DB scaling assessment, and velocity/tech-debt trending all landed together.
+
+- [x] Chat-driven doc-edit proposals: propose → inline diff card → apply via the existing PR flow (stages 1, 2, 4 of the TASKS.md item)
+- [x] Cross-repo dependency graph (`/api/dependencies`)
+- [x] Token-density + comment-to-code ratio metrics (`lib/parsers/code-density.ts`)
+- [x] DB scaling assessment (`docs/db-scaling-assessment.md`)
+- [x] Velocity/tech-debt trending via `repo_snapshots` + trend endpoint + sparkline
 
 ## Notes
 

@@ -27,21 +27,59 @@ export async function POST(
         }
 
         const repoName = params.name;
-        
-        logger.debug('[fix-doc] Request details:', {
-            docType,
-            repoName,
-            paramsName: params.name,
-            hasProvidedContent: !!providedContent,
-            providedPath
-        });
 
-        // If content is provided from modal (edited), use it directly
+        // Map logical doc types to target paths (where they should go in the repo).
+        // Hoisted so caller-supplied paths can be validated against it — never
+        // pass a chat/modal-supplied path straight through to createPrForFile.
+        const TARGET_PATHS: Record<string, string> = {
+            // Core docs go in root
+            readme: 'README.md',
+            roadmap: 'ROADMAP.md',
+            tasks: 'TASKS.md',
+            metrics: 'METRICS.md',
+            features: 'FEATURES.md',
+            // Community standards go in root
+            code_of_conduct: 'CODE_OF_CONDUCT.md',
+            contributing: 'CONTRIBUTING.md',
+            security: 'SECURITY.md',
+            changelog: 'CHANGELOG.md',
+            license: 'LICENSE',
+            codeowners: path.join('.github', 'CODEOWNERS'),
+            copilot: path.join('.github', 'copilot-instructions.md'),
+            copilot_instructions: path.join('.github', 'copilot-instructions.md'),
+            funding: path.join('.github', 'FUNDING.yml'),
+            issue_template: path.join('.github', 'ISSUE_TEMPLATE', 'bug_report.md'),
+            issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
+            pr_template: path.join('.github', 'pull_request_template.md'),
+            pull_request_template: path.join('.github', 'pull_request_template.md'),
+            flow_tasks_prompt: path.join('.github', 'prompts', 'FLOW-TASKS.md'),
+            handoff_prompt: path.join('.github', 'prompts', 'HANDOFF.md'),
+        };
+
+        const normalized = String(docType).toLowerCase();
+        const approvedTarget = TARGET_PATHS[normalized];
+        if (!approvedTarget) {
+            return NextResponse.json({
+                error: `Unknown doc type: ${docType}. No target path mapping found.`,
+                supported: Object.keys(TARGET_PATHS)
+            }, { status: 400 });
+        }
+
+        // If content is provided from modal (edited), use it directly, but only
+        // if the caller-supplied path matches the approved mapping for this doc
+        // type. Reject anything else (CWE-22: path traversal / arbitrary write).
         let content = providedContent;
         let targetPath = providedPath;
         let templateFilename: string | undefined;
 
-        if (!content) {
+        if (content) {
+            if (providedPath && providedPath !== approvedTarget) {
+                return NextResponse.json({
+                    error: `Path ${providedPath} is not the approved target for doc type ${docType}. Expected: ${approvedTarget}`
+                }, { status: 400 });
+            }
+            targetPath = approvedTarget;
+        } else {
             // Fallback: read from template file
             // Map logical doc types to template source paths (where templates are stored)
             const TEMPLATE_SOURCE_PATHS: Record<string, string> = {
@@ -69,33 +107,6 @@ export async function POST(
                 handoff_prompt: path.join('.github', 'prompts', 'HANDOFF.md'),
             };
 
-            // Map logical doc types to target paths (where they should go in the repo)
-            const TARGET_PATHS: Record<string, string> = {
-                // Core docs go in root
-                readme: 'README.md',
-                roadmap: 'ROADMAP.md',
-                tasks: 'TASKS.md',
-                metrics: 'METRICS.md',
-                features: 'FEATURES.md',
-                // Community standards go in root
-                code_of_conduct: 'CODE_OF_CONDUCT.md',
-                contributing: 'CONTRIBUTING.md',
-                security: 'SECURITY.md',
-                changelog: 'CHANGELOG.md',
-                license: 'LICENSE',
-                codeowners: path.join('.github', 'CODEOWNERS'),
-                copilot: path.join('.github', 'copilot-instructions.md'),
-                copilot_instructions: path.join('.github', 'copilot-instructions.md'),
-                funding: path.join('.github', 'FUNDING.yml'),
-                issue_template: path.join('.github', 'ISSUE_TEMPLATE', 'bug_report.md'),
-                issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
-                pr_template: path.join('.github', 'pull_request_template.md'),
-                pull_request_template: path.join('.github', 'pull_request_template.md'),
-                flow_tasks_prompt: path.join('.github', 'prompts', 'FLOW-TASKS.md'),
-                handoff_prompt: path.join('.github', 'prompts', 'HANDOFF.md'),
-            };
-
-            const normalized = String(docType).toLowerCase();
             const templateSourcePath = TEMPLATE_SOURCE_PATHS[normalized];
             if (!templateSourcePath) {
                 return NextResponse.json({ 
@@ -109,7 +120,7 @@ export async function POST(
 
             try {
                 content = await fs.readFile(templatePath, 'utf-8');
-                targetPath = TARGET_PATHS[normalized];
+                targetPath = approvedTarget;
             } catch (error) {
                 logger.warn(`[fix-doc] Template not found:`, {
                     docType,
@@ -139,7 +150,6 @@ export async function POST(
         const github = new GitHubClient(githubToken, owner);
 
         // Create a new branch
-        const normalized = String(docType).toLowerCase();
         const branchName = `docs-add-${normalized}-${Date.now()}`;
 
         // Use the target path (either from modal or from template mapping)

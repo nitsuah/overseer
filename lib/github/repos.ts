@@ -153,6 +153,71 @@ export async function getBranches(
   }
 }
 
+export interface ZombieBranch {
+  name: string;
+  lastCommitDate: string | null;
+  /** Days since the branch's last commit. */
+  daysInactive: number | null;
+}
+
+/**
+ * Fetch branches with their latest commit dates via GraphQL so stale
+ * long-lived branches can be surfaced. Returns branches sorted by most
+ * recently committed first.
+ */
+export async function getZombieBranches(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  staleAfterDays = 30
+): Promise<ZombieBranch[]> {
+  try {
+    const result = await octokit.graphql<{
+      repository: {
+        refs: {
+          nodes: Array<{
+            name: string;
+            target: { committedDate: string | null };
+          }>;
+        } | null;
+      } | null;
+    }>(
+      `query($owner: String!, $repo: String!, $staleAfterDays: Int!) {
+        repository(owner: $owner, name: $repo) {
+          refs(refPrefix: "refs/heads/", first: 100, orderBy: { field: COMMIT_DATE, direction: DESC }) {
+            nodes {
+              name
+              target {
+                ... on Commit {
+                  committedDate
+                }
+              }
+            }
+          }
+        }
+      }`,
+      { owner, repo, staleAfterDays }
+    );
+
+    const nodes = result.repository?.refs?.nodes || [];
+    const now = Date.now();
+    const branches: ZombieBranch[] = nodes.map((node) => {
+      const lastCommitDate = node.target?.committedDate ?? null;
+      const daysInactive = lastCommitDate
+        ? Math.floor((now - new Date(lastCommitDate).getTime()) / 86400000)
+        : null;
+      return { name: node.name, lastCommitDate, daysInactive };
+    });
+
+    // Only branches that have gone stale (excluding the default branch —
+    // callers filter that out since it's the active trunk).
+    return branches.filter((b) => b.daysInactive !== null && b.daysInactive >= staleAfterDays);
+  } catch (error) {
+    logger.warn(`[GitHub] Failed to fetch zombie branches for ${owner}/${repo}:`, error);
+    return [];
+  }
+}
+
 export async function getFileLastModified(
   octokit: Octokit,
   owner: string,

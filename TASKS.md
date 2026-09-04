@@ -1,6 +1,6 @@
 # Tasks
 
-## updated: 2026-09-01
+## updated: 2026-09-03
 
 ## In Progress
 
@@ -15,10 +15,11 @@
 
 ### P2 - Medium
 
-- [ ] Chat-driven doc editing (TASKS/ROADMAP/FEATURES).
+- [ ] Chat-driven doc editing (TASKS/ROADMAP/FEATURES) — stage 3 remaining.
   - Priority: P2
-  - Context: the per-repo chat panel (PR #196) only answers questions today — it rebuilds context and replies, but cannot act. ROADMAP.md still lists "manage TASKS/ROADMAP/FEATURES via chat" as open.
+  - Context: the per-repo chat panel (PR #196) only answered questions before this branch — it rebuilt context and replied, but couldn't act.
   - Acceptance Criteria: broken into stages — (1) chat can propose a specific, diffable edit to one doc file and show it inline before applying; (2) accepting the proposal opens a PR via the existing fix-doc PR flow rather than writing directly; (3) the chat can check an item off in TASKS.md or move it to FEATURES.md when the user confirms it's shipped, referencing the same parser the dashboard already uses so state never diverges from what's rendered elsewhere; (4) before calling `createPrForFile`, the caller-supplied target path must be validated against the approved doc list (TASKS.md/ROADMAP.md/FEATURES.md, matching the existing `TARGET_PATHS` mapping) — never pass a chat-supplied path straight through unchecked.
+  - Status: stages (1), (2), and (4) ✅ SHIPPED — `parseDocEditProposal` in `lib/repo-chat.ts` extracts a fenced ` ```proposal``` ` JSON block from the assistant's reply; `RepoChatPanel` renders it as an inline card with Apply/Dismiss; Apply routes the proposed content into the existing preview-and-PR modal (`onApplyProposal` in `app/page.tsx`) rather than writing directly; `fix-doc`'s `TARGET_PATHS` validation (already hardened in this branch) covers the PR path. Stage (3) — checking off/moving items directly from chat — still open.
 
 - [ ] Stale-review detector for PR readiness.
   - Priority: P2
@@ -29,6 +30,7 @@
   - Priority: P2
   - Context: agent-board, bb-mcp, nitsuah-io, and overseer share overlapping stacks and could benefit from surfaced cross-repo links.
   - Acceptance Criteria: the dashboard shows inferred or declared connections between related repos and surfaces shared-stack signals; visualized as an interactive 3D graph with filter and click-to-detail interactions.
+  - Status: ✅ SHIPPED (this branch) — `GET /api/dependencies` infers connections from shared topics + primary language; rendered as a collapsible SVG graph + connection list (`DependencyGraph.tsx`) on the dashboard. The 3D/click-to-detail visualization from the original acceptance criteria is not implemented — current graph is 2D SVG.
 
 ### DB & backend scaling
 
@@ -36,6 +38,7 @@
   - Priority: P2
   - Context: the current schema works at small scale; no formal review has been done for indexing strategy, query patterns at 100+ repos, or connection pooling limits.
   - Acceptance Criteria: a brief written assessment covers index coverage, slow-query candidates, and a recommendation on whether schema changes are needed before Q3 feature work.
+  - Status: ✅ SHIPPED (this branch) — `docs/db-scaling-assessment.md` covers index coverage, slow-query candidates, and connection pooling.
 
 ### P3 - Exploratory
 
@@ -54,11 +57,13 @@
   - Priority: P3
   - Context: token density is still only an exploratory repo-health metric.
   - Acceptance Criteria: logical-unit density is stored and surfaced usefully.
+  - Status: ✅ SHIPPED (this branch) — `lib/parsers/code-density.ts` computes `token_density` from sampled source files during sync; surfaced in expanded repo stats (desktop + mobile).
 
 - [ ] Add comment-to-code ratio metrics.
   - Priority: P3
   - Context: documentation density remains an idea rather than a measured signal.
   - Acceptance Criteria: file-level and aggregate ratios are calculated and displayed.
+  - Status: ✅ SHIPPED (this branch) — `comment_to_code_ratio` computed alongside token density in `lib/parsers/code-density.ts`, surfaced in expanded repo stats (desktop + mobile).
 
 - [ ] Add a dark and light mode toggle.
   - Priority: P3
@@ -69,7 +74,7 @@
   - Priority: P3
   - Context: commit frequency and PR merge time are captured but not yet trended over time.
   - Acceptance Criteria: a trend chart shows velocity and technical-debt signals over rolling quarters.
-  - Status: velocity score ✅ SHIPPED (PR #200) — `calculateVelocityScore` in `lib/repo-signals.ts`, surfaced in expanded stats. Trending over time still open.
+  - Status: ✅ SHIPPED — velocity score (PR #200) via `calculateVelocityScore` in `lib/repo-signals.ts`; trending (this branch) via a new `repo_snapshots` table recorded per sync (commit frequency, PR merge time, health score, open PRs, LOC), `GET /api/repo-details/[name]/trend`, and a health-score sparkline in `RepositoryStatsSectionStatic`.
 
 - [ ] Agent session receipts.
   - Priority: P3

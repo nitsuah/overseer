@@ -8,6 +8,7 @@ import {
     checkAnonChatRateLimit,
     findStaleDocs,
     parseChatMessages,
+    parseDocEditProposal,
     type RepoChatSnapshot,
 } from '@/lib/repo-chat';
 import logger from '@/lib/log';
@@ -188,9 +189,12 @@ export async function POST(
 
         const reply = await generateAIContent(prompt);
 
+        const proposal = parseDocEditProposal(reply);
+
         return NextResponse.json({
             success: true,
             reply,
+            proposal,
             context: {
                 repo: snapshot.name,
                 healthScore: snapshot.healthScore,

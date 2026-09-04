@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS repos (
   avg_loc_per_file INTEGER,
   max_file_size INTEGER,
   loc_language_breakdown JSONB,
+  token_density NUMERIC,
+  comment_to_code_ratio NUMERIC,
   test_case_count INTEGER DEFAULT 0,
   test_describe_count INTEGER DEFAULT 0,
   ci_status TEXT,
@@ -198,6 +200,42 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Agent task receipts: durable log of agent task queue runs (session receipts)
+CREATE TABLE IF NOT EXISTS agent_task_receipts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  task_id TEXT NOT NULL,
+  type TEXT NOT NULL,
+  priority TEXT NOT NULL,
+  status TEXT NOT NULL,
+  payload JSONB,
+  meta JSONB,
+  result JSONB,
+  error TEXT,
+  motor_pool_session_id TEXT,
+  submitted_by_email TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  queued_at TIMESTAMP WITH TIME ZONE,
+  started_at TIMESTAMP WITH TIME ZONE,
+  completed_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_task_receipts_created ON agent_task_receipts(created_at);
+CREATE INDEX IF NOT EXISTS idx_agent_task_receipts_type ON agent_task_receipts(type);
+
+-- Repo snapshots: time-series of per-repo signals for velocity/tech-debt trending
+CREATE TABLE IF NOT EXISTS repo_snapshots (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  repo_id UUID REFERENCES repos(id) ON DELETE CASCADE,
+  commit_frequency NUMERIC,
+  avg_pr_merge_time_hours NUMERIC,
+  health_score INTEGER,
+  open_prs INTEGER,
+  total_loc INTEGER,
+  captured_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_repo_snapshots_repo_captured ON repo_snapshots(repo_id, captured_at);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;

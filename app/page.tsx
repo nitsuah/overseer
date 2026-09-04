@@ -10,6 +10,7 @@ import { RepoTableRow } from '@/components/dashboard/RepoTableRow';
 import { useRepos, useRepoDetails, useRepoExpansion, useRepoPolling } from '@/hooks/useDashboard';
 import { useRepoActions } from '@/hooks/useRepoActions';
 import { MobileRepoCard } from '@/components/dashboard/MobileRepoCard';
+import { DependencyGraph } from '@/components/dashboard/DependencyGraph';
 import { useRepoFilters } from '@/hooks/useRepoFilters';
 import { useRepoChat } from '@/hooks/useRepoChat';
 import { RepoChatPanel } from '@/components/chat/RepoChatPanel';
@@ -34,7 +35,7 @@ export default function Dashboard() {
   const [chatRepoName, setChatRepoName] = useState<string | null>(null);
 
   // One chat thread ("friend") per repo, persisted across sessions.
-  const { getThread, sendMessage, clearThread, sendingRepo, error: chatError } = useRepoChat(session?.user?.email);
+  const { getThread, sendMessage, clearThread, dismissProposal, sendingRepo, error: chatError } = useRepoChat(session?.user?.email);
 
   const {
     addingRepo,
@@ -46,6 +47,9 @@ export default function Dashboard() {
     previewRepoName,
     previewMode,
     setPreviewModalOpen,
+    setPreviewFiles,
+    setPreviewRepoName,
+    setPreviewMode,
     handleAddRepo,
     handleRemoveRepo,
     handleRestoreRepo,
@@ -304,6 +308,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+        <DependencyGraph />
       </div>
       <RepoChatPanel
         isOpen={chatRepoName !== null}
@@ -322,6 +327,24 @@ export default function Dashboard() {
         onClose={() => setChatRepoName(null)}
         onSend={(text) => { if (chatRepoName) void sendMessage(chatRepoName, text); }}
         onClear={() => { if (chatRepoName) clearThread(chatRepoName); }}
+        onApplyProposal={(proposal) => {
+          if (!chatRepoName) return;
+          // Open the preview modal with the proposed content
+          const proposalFiles = [{
+            type: 'doc' as const,
+            docType: proposal.docType,
+            path: proposal.docType.toUpperCase() === 'README' ? 'README.md' : `${proposal.docType.toUpperCase()}.md`,
+            content: proposal.content,
+            practiceType: undefined,
+          }];
+          setPreviewFiles(proposalFiles);
+          setPreviewRepoName(chatRepoName);
+          setPreviewMode('single');
+          setPreviewModalOpen(true);
+        }}
+        onDismissProposal={(messageId) => {
+          if (chatRepoName) dismissProposal(chatRepoName, messageId);
+        }}
       />
       {showTour && <GuidedTour onClose={() => setShowTour(false)} />}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}

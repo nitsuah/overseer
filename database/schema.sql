@@ -237,6 +237,17 @@ CREATE TABLE IF NOT EXISTS repo_snapshots (
 
 CREATE INDEX IF NOT EXISTS idx_repo_snapshots_repo_captured ON repo_snapshots(repo_id, captured_at);
 
+-- BYOK: one row per signed-in user who has set their own AI provider key.
+-- api_key_encrypted is AES-256-GCM ciphertext (lib/byok-crypto.ts) — the
+-- plaintext key is never persisted.
+CREATE TABLE IF NOT EXISTS user_ai_keys (
+  user_email TEXT PRIMARY KEY,
+  provider TEXT NOT NULL,
+  api_key_encrypted TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 

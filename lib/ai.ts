@@ -218,10 +218,17 @@ ${context.currentContent.slice(0, 8000)}
 
 /**
  * Generate AI content with automatic failover across providers.
+ *
+ * @param userOverride BYOK: a signed-in user's own provider + API key,
+ *   tried first before the app's shared providers (see
+ *   generateWithFailover's userOverride option).
  */
-export async function generateAIContent(prompt: string): Promise<string> {
+export async function generateAIContent(
+    prompt: string,
+    userOverride?: { provider: 'gemini' | 'openai' | 'anthropic'; apiKey: string }
+): Promise<string> {
     try {
-        return await generateWithFailover(prompt);
+        return await generateWithFailover(prompt, { userOverride });
     } catch (error) {
         logger.warn('All AI providers failed for AI content:', error);
 

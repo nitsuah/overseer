@@ -20,6 +20,9 @@ export interface ChatThreadMessage extends ChatMessage {
       content: string;
       summary: string;
     };
+    /** BYOK: set when this turn rode the app's shared AI key and is
+     * approaching its per-user rate limit. */
+    rateLimitWarning?: string;
 }
 
 export type ChatThreads = Record<string, ChatThreadMessage[]>;
@@ -282,6 +285,7 @@ export function useRepoChat(identity?: string | null): UseRepoChatResult {
                             content: data.reply ?? '(empty response)',
                             createdAt: new Date().toISOString(),
                             proposal: data.proposal ?? undefined,
+                            rateLimitWarning: data.rateLimitWarning ?? undefined,
                         },
                     ],
                 }));

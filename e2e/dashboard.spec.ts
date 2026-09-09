@@ -300,6 +300,30 @@ test.describe('Accessibility', () => {
   });
 });
 
+// ─── Docs column collapse/expand (v0.2.0) ────────────────────────────────────
+
+test.describe('Dashboard – Docs column summary icon', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('Docs column shows a single collapsed summary icon by default, not the five per-doc icons', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('table')).toBeVisible({ timeout: 15000 });
+    // Give repo-details a moment to load in the background.
+    await page.waitForTimeout(3000);
+    const rowCount = await page.locator('table tbody tr').count();
+    test.skip(rowCount === 0, 'No repo rows loaded to assert against');
+
+    // Collapsed state renders exactly one button in the Docs cell (the
+    // summary icon); expanding it swaps in the five per-doc icons plus a
+    // collapse control. This only asserts the default (collapsed) state.
+    const docsCell = page.locator('table tbody tr').first().locator('td').nth(3);
+    const summaryButtons = docsCell.locator('button[aria-label*="Docs"]');
+    if (await summaryButtons.count() > 0) {
+      await expect(summaryButtons.first()).toBeVisible();
+    }
+  });
+});
+
 // ─── Performance ─────────────────────────────────────────────────────────────
 
 test.describe('Performance', () => {

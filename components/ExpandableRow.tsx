@@ -57,6 +57,17 @@ interface ExpandableRowProps {
   onGenerateSummary?: () => void;
   generatingSummary?: boolean;
   securityConfig?: SecurityConfig;
+  /** Rendered from MobileRepoCard (below the md breakpoint). Forces a single
+   * vertically-scrollable column instead of the desktop sidebar + 3-col grid
+   * layout — the grid's own sm:/lg: breakpoints are viewport-width based, so
+   * without this flag a half-width/tablet-width screen that still renders
+   * the mobile card list would get a 2-col grid mid-scroll, which is the
+   * layout this prop exists to avoid. Also collapses Repository Stats by
+   * default and adds a "Back to list" affordance. */
+  isMobile?: boolean;
+  /** Only used when isMobile — collapses this card's expanded detail back
+   * to the repo list. */
+  onBack?: () => void;
 }
 
 export default function ExpandableRow({
@@ -101,6 +112,8 @@ export default function ExpandableRow({
   onGenerateSummary,
   generatingSummary = false,
   securityConfig,
+  isMobile = false,
+  onBack,
 }: ExpandableRowProps) {
   // Track which specific summary content was dismissed; a new aiSummary value
   // automatically clears the dismissed state without needing an effect.
@@ -113,12 +126,31 @@ export default function ExpandableRow({
   const isSyncing = syncingRepo === repoNameForSync;
   const hasNoData = roadmapItems.length === 0 && tasks.length === 0 && features.length === 0;
 
+  // Mobile renders every section as one vertically-scrollable column — no
+  // sidebar/grid split, since the grid's own sm:/lg: breakpoints are keyed
+  // to viewport width and would still kick in a 2-col layout on a
+  // half-width/tablet-width screen that is otherwise showing the mobile
+  // card list.
+  const sectionGridClass = isMobile
+    ? 'flex flex-col gap-4'
+    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6';
+
   return (
-    <div className="p-6 bg-gradient-to-br from-slate-950/80 via-slate-900/60 to-slate-950/80 border-t border-slate-700/50">
-      {/* Main Layout: Repository Stats + Issues (left sidebar) + Content Grid (right) */}
-      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+    <div className="p-4 md:p-6 bg-gradient-to-br from-slate-950/80 via-slate-900/60 to-slate-950/80 border-t border-slate-700/50">
+      {isMobile && onBack && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onBack(); }}
+          className="mb-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 text-sm font-medium hover:bg-slate-800 hover:text-slate-100 transition-colors"
+        >
+          ← Back to repo list
+        </button>
+      )}
+      {/* Main Layout: Repository Stats + Issues (left sidebar) + Content Grid (right) —
+          on mobile this collapses into a single stacked column (see isMobile above). */}
+      <div className={isMobile ? 'flex flex-col gap-4' : 'flex flex-col md:flex-row gap-4 md:gap-6'}>
         {/* Left Sidebar: AI Summary + Repository Stats + Issues + Metrics */}
-        <div className="w-full md:w-60 lg:w-72 xl:w-80 md:shrink-0 space-y-4 md:space-y-6">
+        <div className={isMobile ? 'w-full space-y-4' : 'w-full md:w-60 lg:w-72 xl:w-80 md:shrink-0 space-y-4 md:space-y-6'}>
           {/* AI Summary - First in sidebar */}
           <AISummarySection
             aiSummary={aiSummaryDismissed ? undefined : aiSummary}
@@ -128,7 +160,7 @@ export default function ExpandableRow({
             onGenerateSummary={onGenerateSummary}
             onDismiss={() => setDismissedSummary(aiSummary)}
           />
-          
+
           <RepositoryStatsSectionStatic
             stars={stars}
             forks={forks}
@@ -148,13 +180,13 @@ export default function ExpandableRow({
             repoName={repoName}
             tokenDensity={tokenDensity}
             commentToCodeRatio={commentToCodeRatio}
+            defaultExpanded={!isMobile}
           />
         </div>
 
-        {/* Right Content Grid */}
+        {/* Right Content Grid (single column on mobile) */}
         <div className="flex-1">
-          {/* Responsive grid: 1 col → 2 col at sm → 3 col at lg */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
+          <div className={sectionGridClass}>
             {/* Features */}
             <FeaturesSection
               features={features}

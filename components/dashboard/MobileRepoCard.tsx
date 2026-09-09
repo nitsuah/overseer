@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment, useMemo } from 'react';
+import React, { Fragment, useMemo, useRef } from 'react';
 import {
   GitPullRequest,
   AlertCircle,
@@ -99,6 +99,27 @@ export function MobileRepoCard({
   }, [details]);
 
   const blocked = repo.prs_blocked_count ?? 0;
+
+  // Mobile/half-width sync is a long-press on the refresh icon rather than a
+  // plain tap — the actions row is dense enough here that a stray tap
+  // shouldn't kick off a background sync. Pointer events cover touch + mouse.
+  const LONG_PRESS_MS = 550;
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFiredRef = useRef(false);
+  const clearPressTimer = () => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  };
+  const startLongPress = () => {
+    longPressFiredRef.current = false;
+    clearPressTimer();
+    pressTimerRef.current = setTimeout(() => {
+      longPressFiredRef.current = true;
+      onSyncSingleRepo();
+    }, LONG_PRESS_MS);
+  };
 
   return (
     <Fragment>
@@ -216,10 +237,20 @@ export function MobileRepoCard({
                   {isAuthenticated && (
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); onSyncSingleRepo(); }}
+                      aria-label={syncingRepo === repo.name ? 'Syncing…' : 'Hold to sync this repository'}
+                      title={syncingRepo === repo.name ? 'Syncing…' : 'Hold to sync'}
+                      onClick={(e) => {
+                        // A plain tap is intentionally a no-op — sync only
+                        // fires from the long press below.
+                        e.stopPropagation();
+                      }}
+                      onPointerDown={(e) => { e.stopPropagation(); startLongPress(); }}
+                      onPointerUp={(e) => { e.stopPropagation(); clearPressTimer(); }}
+                      onPointerLeave={clearPressTimer}
+                      onContextMenu={(e) => e.preventDefault()}
                       disabled={syncingRepo === repo.name}
-                      className="p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50"
-                      title={syncingRepo === repo.name ? 'Syncing…' : 'Sync'}
+                      className="p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 touch-none select-none"
+                      style={{ WebkitTouchCallout: 'none' }}
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${syncingRepo === repo.name ? 'animate-spin' : ''}`} />
                     </button>
@@ -410,6 +441,8 @@ export function MobileRepoCard({
           onGenerateSummary={onGenerateSummary}
           generatingSummary={generatingSummary === repo.name}
           securityConfig={details.securityConfig}
+          isMobile
+          onBack={onToggleExpanded}
         />
         </div>
       )}

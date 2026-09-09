@@ -25,6 +25,10 @@ interface RepositoryStatsSectionStaticProps {
   repoName?: string;
   tokenDensity?: number | null;
   commentToCodeRatio?: number | null;
+  /** Initial open/closed state. Defaults to expanded (desktop behavior);
+   * the mobile expanded-row layout passes false so Repository Stats starts
+   * collapsed there. */
+  defaultExpanded?: boolean;
 }
 
 interface TrendPoint {
@@ -52,8 +56,9 @@ export function RepositoryStatsSectionStatic({
   repoName,
   tokenDensity,
   commentToCodeRatio,
+  defaultExpanded = true,
 }: RepositoryStatsSectionStaticProps) {
-  const [isExpanded, setIsExpanded] = useState(true); // Expanded by default
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [trend, setTrend] = useState<TrendPoint[]>([]);
 
   useEffect(() => {

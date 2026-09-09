@@ -149,4 +149,19 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
       captured_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )`,
     `CREATE INDEX IF NOT EXISTS idx_repo_snapshots_repo_captured ON repo_snapshots(repo_id, captured_at)`,
+
+    // user_ai_keys: BYOK — one row per signed-in user who has opted to use
+    // their own AI provider key instead of the app's shared/default one.
+    // api_key_encrypted is AES-256-GCM ciphertext (lib/byok-crypto.ts); the
+    // plaintext key is never persisted. Keyed by email (the same identity
+    // NextAuth session.user.email already namespaces client-side chat
+    // threads by) rather than the `users` table's github_id, since a
+    // session can reach this table before any users-table sync has run.
+    `CREATE TABLE IF NOT EXISTS user_ai_keys (
+      user_email TEXT PRIMARY KEY,
+      provider TEXT NOT NULL,
+      api_key_encrypted TEXT NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`,
 ];

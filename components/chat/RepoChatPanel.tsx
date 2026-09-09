@@ -189,6 +189,13 @@ export function RepoChatPanel({
                                     )}
                                 </div>
                             </div>
+                            {message.role === 'assistant' && message.rateLimitWarning && (
+                              <div className="flex justify-start">
+                                <p className="max-w-[85%] text-xs text-amber-300 bg-amber-900/20 border border-amber-700/40 rounded-lg px-3 py-1.5">
+                                  {message.rateLimitWarning}
+                                </p>
+                              </div>
+                            )}
                             {message.role === 'assistant' && message.proposal && onApplyProposal && (
                               <div className="flex justify-start">
                                 <div className="max-w-[85%] bg-emerald-500/10 border border-emerald-500/40 rounded-2xl rounded-bl-sm px-3.5 py-2">

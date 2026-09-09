@@ -68,6 +68,8 @@ export function useRateLimit(enabled: boolean = true): RateLimitState {
 }
 
 export function RateLimitDisplay({ rateLimit, loading, error }: RateLimitState): React.JSX.Element | null {
+  const [expanded, setExpanded] = useState(false);
+
   if (loading || error || !rateLimit) return null;
 
   const percentage = (rateLimit.core.remaining / rateLimit.core.limit) * 100;
@@ -75,25 +77,39 @@ export function RateLimitDisplay({ rateLimit, loading, error }: RateLimitState):
   const now = new Date();
   const minutesUntilReset = Math.max(0, Math.round((resetDate.getTime() - now.getTime()) / 60000));
 
-  const showWarning = percentage < 20;
+  // Color tiers: plenty left (slate/neutral) -> getting low (amber) -> critical (red).
+  const isCritical = percentage < 20;
+  const isCaution = !isCritical && percentage < 50;
+  const colorClasses = isCritical
+    ? 'bg-red-900/30 text-red-300 border border-red-700/50'
+    : isCaution
+      ? 'bg-amber-900/30 text-amber-300 border border-amber-700/50'
+      : 'bg-slate-800/50 text-slate-400 border border-transparent';
 
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
-      showWarning
-        ? 'bg-amber-900/30 text-amber-300 border border-amber-700/50'
-        : 'bg-slate-800/50 text-slate-400'
-    }`}>
-      {showWarning && <AlertCircle className="w-4 h-4" />}
+    <button
+      type="button"
+      onClick={() => setExpanded((v) => !v)}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${colorClasses}`}
+      title={expanded ? 'Hide GitHub API rate limit detail' : 'Show GitHub API rate limit detail'}
+      aria-label="GitHub API rate limit"
+      aria-expanded={expanded}
+    >
+      {isCritical && <AlertCircle className="w-4 h-4" />}
       <Clock className="w-4 h-4" />
-      <span className="font-mono">
-        {rateLimit.core.remaining}/{rateLimit.core.limit}
-      </span>
-      {showWarning && (
-        <span className="text-xs">
-          (resets in {minutesUntilReset}m)
-        </span>
+      {expanded ? (
+        <>
+          <span className="font-mono">
+            {rateLimit.core.used}/{rateLimit.core.limit} used
+          </span>
+          <span className="text-xs">
+            (resets in {minutesUntilReset}m)
+          </span>
+        </>
+      ) : (
+        <span className="font-mono">{rateLimit.core.remaining}</span>
       )}
-    </div>
+    </button>
   );
 }
 

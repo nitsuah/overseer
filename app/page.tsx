@@ -14,6 +14,7 @@ import { DependencyGraph } from '@/components/dashboard/DependencyGraph';
 import { useRepoFilters } from '@/hooks/useRepoFilters';
 import { useRepoChat } from '@/hooks/useRepoChat';
 import { RepoChatPanel } from '@/components/chat/RepoChatPanel';
+import { SettingsModal } from '@/components/SettingsModal';
 import { detectRepoType, RepoType } from '@/lib/repo-type';
 import type { Repo } from '@/types/repo';
 
@@ -31,8 +32,10 @@ export default function Dashboard() {
   const [addRepoUrl, setAddRepoUrl] = useState('');
   const [addRepoType, setAddRepoType] = useState<RepoType>('unknown');
   const [expandedHealth, setExpandedHealth] = useState(false);
+  const [expandedDocs, setExpandedDocs] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [chatRepoName, setChatRepoName] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // One chat thread ("friend") per repo, persisted across sessions.
   const { getThread, sendMessage, clearThread, dismissProposal, sendingRepo, error: chatError } = useRepoChat(session?.user?.email);
@@ -191,6 +194,7 @@ export default function Dashboard() {
         onStartTour={() => setShowTour(true)}
         showHidden={showHidden}
         onToggleHidden={() => setShowHidden(!showHidden)}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
       <div className="px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 space-y-4 md:space-y-6">
         {filteredRepos.length === 0 ? (
@@ -289,6 +293,8 @@ export default function Dashboard() {
                       isAuthenticated={!!session}
                       expandedHealth={expandedHealth}
                       onToggleHealth={() => setExpandedHealth(!expandedHealth)}
+                      expandedDocs={expandedDocs}
+                      onToggleDocs={() => setExpandedDocs(!expandedDocs)}
                       onToggleExpanded={() => handleToggleExpanded(repo.name)}
                       onRemove={() => handleRemoveRepo(repo.name)}
                       onFixAllDocs={() => handleFixAllDocs(repo.full_name)}
@@ -325,7 +331,23 @@ export default function Dashboard() {
         sending={sendingRepo !== null}
         error={chatError}
         onClose={() => setChatRepoName(null)}
-        onSend={(text) => { if (chatRepoName) void sendMessage(chatRepoName, text); }}
+        onSend={(text) => {
+          if (!chatRepoName) return;
+          // First-ever AI use in this browser for this identity: nudge
+          // toward Settings once, non-blockingly, rather than gating the
+          // send on it. BYOK's actual fallback-to-shared-key behavior
+          // doesn't depend on this notice; it's a courtesy heads-up.
+          try {
+            const promptKey = `overseer.byok.prompted.${session?.user?.email ?? 'anon'}`;
+            if (session?.user?.email && !window.localStorage.getItem(promptKey)) {
+              window.localStorage.setItem(promptKey, '1');
+              setToastMessage("Using Overseer's shared AI key. Add your own in Settings (gear icon) if you want higher limits.");
+            }
+          } catch {
+            // localStorage unavailable — skip the nudge, not fatal.
+          }
+          void sendMessage(chatRepoName, text);
+        }}
         onClear={() => { if (chatRepoName) clearThread(chatRepoName); }}
         onApplyProposal={(proposal) => {
           if (!chatRepoName) return;
@@ -357,6 +379,7 @@ export default function Dashboard() {
         loading={fixingDoc}
         mode={previewMode}
       />
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
   );
 }

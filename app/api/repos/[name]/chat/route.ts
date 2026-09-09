@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { getNeonClient } from '@/lib/db';
+import { getNeonClient, ensureSchema } from '@/lib/db';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { generateAIContent } from '@/lib/ai';
+import { decryptApiKey } from '@/lib/byok-crypto';
+import { isKnownProvider, AIProvider } from '@/lib/ai-providers';
 import {
     buildChatPrompt,
     checkAnonChatRateLimit,
+    checkAuthedSharedKeyRateLimit,
     findStaleDocs,
     parseChatMessages,
     parseDocEditProposal,
@@ -162,6 +165,45 @@ export async function POST(
         }
 
         const db = getNeonClient();
+        await ensureSchema(db);
+
+        // BYOK: a signed-in user with their own AI key uses it (and is not
+        // subject to the shared-key budget below); everyone else rides the
+        // app's shared/default provider chain, which is metered per-user so
+        // one heavy user can't starve everyone else on it.
+        let userOverride: { provider: AIProvider; apiKey: string } | undefined;
+        let rateLimitWarning: string | undefined;
+        if (session?.user?.email) {
+            const keyRows = (await db`
+                SELECT provider, api_key_encrypted FROM user_ai_keys WHERE user_email = ${session.user.email} LIMIT 1
+            `) as Array<{ provider: string; api_key_encrypted: string }>;
+
+            if (keyRows.length > 0 && isKnownProvider(keyRows[0].provider)) {
+                try {
+                    userOverride = {
+                        provider: keyRows[0].provider,
+                        apiKey: decryptApiKey(keyRows[0].api_key_encrypted),
+                    };
+                } catch (decryptError) {
+                    logger.warn('Failed to decrypt stored BYOK key, falling back to shared provider:', decryptError);
+                }
+            }
+
+            if (!userOverride) {
+                const limitResult = checkAuthedSharedKeyRateLimit(session.user.email);
+                if (!limitResult.allowed) {
+                    return NextResponse.json(
+                        {
+                            error: `You've hit the shared AI key's rate limit (${limitResult.limit} requests / 5 min). Add your own API key in Settings for unlimited use, or try again shortly.`,
+                        },
+                        { status: 429 }
+                    );
+                }
+                if (limitResult.nearLimit) {
+                    rateLimitWarning = `You're using the app's shared AI key and are close to its rate limit (${limitResult.remaining}/${limitResult.limit} requests left this window). Add your own API key in Settings to avoid being throttled.`;
+                }
+            }
+        }
 
         const repoRows = await db`SELECT * FROM repos WHERE name = ${repoName} LIMIT 1`;
         if (repoRows.length === 0) {
@@ -187,7 +229,7 @@ export async function POST(
         const snapshot = toSnapshot(repo, tasks, roadmapItems, docStatuses);
         const prompt = buildChatPrompt(snapshot, parsed.messages!);
 
-        const reply = await generateAIContent(prompt);
+        const reply = await generateAIContent(prompt, userOverride);
 
         const proposal = parseDocEditProposal(reply);
 
@@ -195,6 +237,8 @@ export async function POST(
             success: true,
             reply,
             proposal,
+            usingOwnKey: !!userOverride,
+            rateLimitWarning,
             context: {
                 repo: snapshot.name,
                 healthScore: snapshot.healthScore,

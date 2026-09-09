@@ -18,6 +18,7 @@ import {
   BookOpen,
   MessageSquare,
   GitBranch,
+  ChevronsLeft,
 } from 'lucide-react';
 import ExpandableRow from '@/components/ExpandableRow';
 import { Repo, RepoDetails } from '@/types/repo';
@@ -46,6 +47,8 @@ interface RepoTableRowProps {
   isAuthenticated?: boolean;
   expandedHealth: boolean;
   onToggleHealth: () => void;
+  expandedDocs: boolean;
+  onToggleDocs: () => void;
   onToggleExpanded: () => void;
   onRemove: () => void;
   onFixAllDocs: () => void;
@@ -71,6 +74,8 @@ export function RepoTableRow({
   isAuthenticated = true,
   expandedHealth,
   onToggleHealth,
+  expandedDocs,
+  onToggleDocs,
   onToggleExpanded,
   onRemove,
   onFixAllDocs,
@@ -300,6 +305,8 @@ export function RepoTableRow({
             fixingDoc={fixingDoc}
             syncingRepo={syncingRepo}
             isAuthenticated={isAuthenticated}
+            expanded={expandedDocs}
+            onToggleExpanded={onToggleDocs}
             onFixAllDocs={onFixAllDocs}
             onSyncSingleRepo={onSyncSingleRepo}
           />
@@ -464,6 +471,8 @@ function DocStatusDisplay({
   fixingDoc,
   syncingRepo,
   isAuthenticated = true,
+  expanded,
+  onToggleExpanded,
   onFixAllDocs,
   onSyncSingleRepo,
 }: {
@@ -476,6 +485,8 @@ function DocStatusDisplay({
   fixingDoc: boolean;
   syncingRepo: string | null;
   isAuthenticated?: boolean;
+  expanded: boolean;
+  onToggleExpanded: () => void;
   onFixAllDocs: () => void;
   onSyncSingleRepo: () => void;
 }) {
@@ -588,8 +599,47 @@ function DocStatusDisplay({
     })
   ].join('\n');
 
+  // Collapsed (default) state: one icon giving a relative doc-health scale —
+  // not the A-F grade and not the raw percentage, just a coarse signal.
+  // Click expands to the full per-doc icon breakdown (the previous default).
+  if (!expanded) {
+    const score = docHealth?.score ?? 0;
+    const tier =
+      score >= 80
+        ? { Icon: CheckCircle2, color: 'text-green-400', label: 'Docs healthy' }
+        : score >= 40
+          ? { Icon: AlertCircle, color: 'text-yellow-400', label: 'Docs need attention' }
+          : { Icon: XCircle, color: 'text-red-400', label: 'Docs missing or unhealthy' };
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleExpanded();
+        }}
+        className={`p-1 rounded transition-colors hover:bg-slate-700/50 ${tier.color}`}
+        title={`${tier.label} — click to see each document\n\n${docHealthTooltip}`}
+        aria-label={`${tier.label}. Click to expand doc status`}
+        aria-expanded={false}
+      >
+        <tier.Icon className="h-5 w-5" />
+      </button>
+    );
+  }
+
   return (
     <div className="flex items-center gap-2" title={docHealthTooltip}>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleExpanded();
+        }}
+        className="p-0.5 rounded text-slate-500 hover:text-slate-300 hover:bg-slate-700/50 transition-colors"
+        title="Collapse doc status"
+        aria-label="Collapse doc status"
+        aria-expanded={true}
+      >
+        <ChevronsLeft className="h-3.5 w-3.5" />
+      </button>
       <span title={readme.title}>
         <BookOpen className={`h-4 w-4 ${readme.exists ? readme.iconColor : 'opacity-20'}`} />
       </span>
@@ -607,7 +657,10 @@ function DocStatusDisplay({
       </span>
       {isAuthenticated && !allDocsPresent && docHealth && docHealth.score < 100 && (
         <button
-          onClick={onFixAllDocs}
+          onClick={(e) => {
+            e.stopPropagation();
+            onFixAllDocs();
+          }}
           className="ml-2 p-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded transition-colors"
           title="Fix all missing docs"
           disabled={fixingDoc}

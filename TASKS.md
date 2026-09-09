@@ -34,6 +34,11 @@
 
 ### DB & backend scaling
 
+- [ ] Move the authenticated shared-key rate limiter to a shared store.
+  - Priority: P2
+  - Context: `checkAuthedSharedKeyRateLimit` (`lib/repo-chat.ts`) tracks usage in a process-local `Map`. Netlify's Next.js serverless runtime can run separate instances per invocation, so each cold-started instance starts with an empty map — a user can receive up to `AUTHED_SHARED_KEY_RATE_LIMIT` (30) shared-key requests per instance within the same 5-minute window instead of 30 total, undermining the budget the limit exists to enforce. Flagged by CodeRabbit on PR #204 (2026-09-09); deliberately deferred rather than building a Neon-backed shared counter blind — needs a real design pass (TTL semantics, write contention under concurrent requests, and whether to reuse the existing Neon connection or add Redis) rather than a rushed fix.
+  - Acceptance Criteria: the limiter's state is shared across all serverless instances (e.g. a Neon table with atomic increment + expiry, or a dedicated store), and a burst of requests for one user across multiple cold-started instances is still capped at the configured budget.
+
 - [ ] Assess current DB design for scalability as repo and user count grows.
   - Priority: P2
   - Context: the current schema works at small scale; no formal review has been done for indexing strategy, query patterns at 100+ repos, or connection pooling limits.

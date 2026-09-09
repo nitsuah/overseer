@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment, useMemo, useRef } from 'react';
+import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 import {
   GitPullRequest,
   AlertCircle,
@@ -106,13 +106,13 @@ export function MobileRepoCard({
   const LONG_PRESS_MS = 550;
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFiredRef = useRef(false);
-  const clearPressTimer = () => {
+  const clearPressTimer = (): void => {
     if (pressTimerRef.current) {
       clearTimeout(pressTimerRef.current);
       pressTimerRef.current = null;
     }
   };
-  const startLongPress = () => {
+  const startLongPress = (): void => {
     longPressFiredRef.current = false;
     clearPressTimer();
     pressTimerRef.current = setTimeout(() => {
@@ -120,6 +120,11 @@ export function MobileRepoCard({
       onSyncSingleRepo();
     }, LONG_PRESS_MS);
   };
+  // onPointerUp/onPointerLeave don't fire for every way a press can end
+  // (pointercancel — e.g. a scroll takeover — or the component unmounting
+  // mid-press), which would otherwise let the pending timeout fire
+  // onSyncSingleRepo() after the interaction is over.
+  useEffect(() => clearPressTimer, []);
 
   return (
     <Fragment>
@@ -247,6 +252,7 @@ export function MobileRepoCard({
                       onPointerDown={(e) => { e.stopPropagation(); startLongPress(); }}
                       onPointerUp={(e) => { e.stopPropagation(); clearPressTimer(); }}
                       onPointerLeave={clearPressTimer}
+                      onPointerCancel={clearPressTimer}
                       onContextMenu={(e) => e.preventDefault()}
                       disabled={syncingRepo === repo.name}
                       className="p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 touch-none select-none"

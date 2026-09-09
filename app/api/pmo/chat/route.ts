@@ -157,7 +157,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
         const fullPrompt = conversationParts.join('\n');
 
-        const reply = await generateWithFailover(fullPrompt, { useShortResponse: false });
+        const { text: reply } = await generateWithFailover(fullPrompt, { useShortResponse: false });
         const actions = parseActions(reply);
 
         // Strip action markers from the displayed reply.

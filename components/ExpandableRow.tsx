@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 import { Task, RoadmapItem, DocStatus, Metric, Feature, BestPractice, CommunityStandard, SecurityConfig } from '@/types/repo';
 import { RepositoryStatsSectionStatic } from './repo-details/RepositoryStatsSectionStatic';
 import { TestingSection } from './repo-details/TestingSection';
@@ -114,7 +114,7 @@ export default function ExpandableRow({
   securityConfig,
   isMobile = false,
   onBack,
-}: ExpandableRowProps) {
+}: ExpandableRowProps): JSX.Element {
   // Track which specific summary content was dismissed; a new aiSummary value
   // automatically clears the dismissed state without needing an effect.
   const [dismissedSummary, setDismissedSummary] = useState<string | undefined>(undefined);

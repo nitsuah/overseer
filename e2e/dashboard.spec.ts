@@ -318,9 +318,8 @@ test.describe('Dashboard – Docs column summary icon', () => {
     // collapse control. This only asserts the default (collapsed) state.
     const docsCell = page.locator('table tbody tr').first().locator('td').nth(3);
     const summaryButtons = docsCell.locator('button[aria-label*="Docs"]');
-    if (await summaryButtons.count() > 0) {
-      await expect(summaryButtons.first()).toBeVisible();
-    }
+    await expect(summaryButtons).toHaveCount(1);
+    await expect(summaryButtons.first()).toBeVisible();
   });
 });
 

@@ -489,7 +489,7 @@ function DocStatusDisplay({
   onToggleExpanded: () => void;
   onFixAllDocs: () => void;
   onSyncSingleRepo: () => void;
-}) {
+}): React.JSX.Element {
   // Calculate repo type within this component
   const repoType = repo.repo_type
     ? (repo.repo_type as RepoType)

@@ -16,6 +16,7 @@ import { useRepoChat } from '@/hooks/useRepoChat';
 import { RepoChatPanel } from '@/components/chat/RepoChatPanel';
 import { SettingsModal } from '@/components/SettingsModal';
 import { detectRepoType, RepoType } from '@/lib/repo-type';
+import { byokPromptKey } from '@/lib/byok-prompt-key';
 import type { Repo } from '@/types/repo';
 
 export default function Dashboard() {
@@ -31,8 +32,25 @@ export default function Dashboard() {
   const [showAddRepo, setShowAddRepo] = useState(false);
   const [addRepoUrl, setAddRepoUrl] = useState('');
   const [addRepoType, setAddRepoType] = useState<RepoType>('unknown');
-  const [expandedHealth, setExpandedHealth] = useState(false);
-  const [expandedDocs, setExpandedDocs] = useState(false);
+  // Per-repo, not a single shared flag — otherwise expanding the health
+  // breakdown or docs panel on one row would expand it on every row in the
+  // list at once, since they all render from the same map() call.
+  const [expandedHealthRepos, setExpandedHealthRepos] = useState<Set<string>>(new Set());
+  const [expandedDocsRepos, setExpandedDocsRepos] = useState<Set<string>>(new Set());
+  const toggleHealthExpanded = (repoName: string) => {
+    setExpandedHealthRepos((prev) => {
+      const next = new Set(prev);
+      if (next.has(repoName)) next.delete(repoName); else next.add(repoName);
+      return next;
+    });
+  };
+  const toggleDocsExpanded = (repoName: string) => {
+    setExpandedDocsRepos((prev) => {
+      const next = new Set(prev);
+      if (next.has(repoName)) next.delete(repoName); else next.add(repoName);
+      return next;
+    });
+  };
   const [showTour, setShowTour] = useState(false);
   const [chatRepoName, setChatRepoName] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -218,7 +236,7 @@ export default function Dashboard() {
                   syncingRepo={syncingRepo}
                   generatingSummary={generatingSummary}
                   isAuthenticated={!!session}
-                  onToggleHealth={() => setExpandedHealth(!expandedHealth)}
+                  onToggleHealth={() => toggleHealthExpanded(repo.name)}
                   onToggleExpanded={() => handleToggleExpanded(repo.name)}
                   onRemove={() => handleRemoveRepo(repo.name)}
                   onFixAllDocs={() => handleFixAllDocs(repo.full_name)}
@@ -291,10 +309,10 @@ export default function Dashboard() {
                       syncingRepo={syncingRepo}
                       generatingSummary={generatingSummary}
                       isAuthenticated={!!session}
-                      expandedHealth={expandedHealth}
-                      onToggleHealth={() => setExpandedHealth(!expandedHealth)}
-                      expandedDocs={expandedDocs}
-                      onToggleDocs={() => setExpandedDocs(!expandedDocs)}
+                      expandedHealth={expandedHealthRepos.has(repo.name)}
+                      onToggleHealth={() => toggleHealthExpanded(repo.name)}
+                      expandedDocs={expandedDocsRepos.has(repo.name)}
+                      onToggleDocs={() => toggleDocsExpanded(repo.name)}
                       onToggleExpanded={() => handleToggleExpanded(repo.name)}
                       onRemove={() => handleRemoveRepo(repo.name)}
                       onFixAllDocs={() => handleFixAllDocs(repo.full_name)}
@@ -331,14 +349,14 @@ export default function Dashboard() {
         sending={sendingRepo !== null}
         error={chatError}
         onClose={() => setChatRepoName(null)}
-        onSend={(text) => {
+        onSend={(text: string): void => {
           if (!chatRepoName) return;
           // First-ever AI use in this browser for this identity: nudge
           // toward Settings once, non-blockingly, rather than gating the
           // send on it. BYOK's actual fallback-to-shared-key behavior
           // doesn't depend on this notice; it's a courtesy heads-up.
           try {
-            const promptKey = `overseer.byok.prompted.${session?.user?.email ?? 'anon'}`;
+            const promptKey = byokPromptKey(session?.user?.email);
             if (session?.user?.email && !window.localStorage.getItem(promptKey)) {
               window.localStorage.setItem(promptKey, '1');
               setToastMessage("Using Overseer's shared AI key. Add your own in Settings (gear icon) if you want higher limits.");
@@ -379,7 +397,11 @@ export default function Dashboard() {
         loading={fixingDoc}
         mode={previewMode}
       />
-      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        userIdentity={session?.user?.email}
+      />
     </>
   );
 }

@@ -342,6 +342,17 @@ describe('checkAuthedSharedKeyRateLimit', () => {
         ).toBe(true);
     });
 
+    it('resets at the exact reset instant, not only after it', () => {
+        // The implementation checks `now >= entry.resetAt`; a regression to a
+        // strict `>` would keep this call rejected at the exact boundary.
+        for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT; i++) {
+            checkAuthedSharedKeyRateLimit('user@example.com', NOW);
+        }
+        expect(
+            checkAuthedSharedKeyRateLimit('user@example.com', NOW + AUTHED_SHARED_KEY_RATE_WINDOW_MS).allowed
+        ).toBe(true);
+    });
+
     it('flags nearLimit once remaining budget drops to the warn threshold', () => {
         let lastResult;
         for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT; i++) {
@@ -350,6 +361,23 @@ describe('checkAuthedSharedKeyRateLimit', () => {
         // Last successful call should be right at the limit and flagged.
         expect(lastResult!.remaining).toBe(0);
         expect(lastResult!.nearLimit).toBe(true);
+    });
+
+    it('does not flag nearLimit just above the warn threshold, but does exactly at it', () => {
+        // Warn threshold is ceil(AUTHED_SHARED_KEY_RATE_LIMIT * 0.2) = 6 remaining.
+        const warnAt = Math.ceil(AUTHED_SHARED_KEY_RATE_LIMIT * 0.2);
+        let result;
+        for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT - warnAt - 1; i++) {
+            result = checkAuthedSharedKeyRateLimit('user@example.com', NOW);
+        }
+        // One call short of the threshold: remaining is still one above warnAt.
+        expect(result!.remaining).toBe(warnAt + 1);
+        expect(result!.nearLimit).toBe(false);
+
+        // The next call lands exactly on the threshold.
+        result = checkAuthedSharedKeyRateLimit('user@example.com', NOW);
+        expect(result.remaining).toBe(warnAt);
+        expect(result.nearLimit).toBe(true);
     });
 
     it('does not flag nearLimit when far from the budget', () => {

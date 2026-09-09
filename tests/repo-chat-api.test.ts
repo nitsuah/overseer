@@ -84,7 +84,10 @@ describe('POST /api/repos/[name]/chat', () => {
             expires: new Date(Date.now() + 86400000).toISOString(),
         } as Session);
         mockGetNeonClient.mockReturnValue(makeDb() as never);
-        mockGenerate.mockResolvedValue('You should finish the conversational interface first.');
+        mockGenerate.mockResolvedValue({
+            text: 'You should finish the conversational interface first.',
+            usingOwnKey: false,
+        });
     });
 
     it('returns 400 for a malformed JSON body', async () => {

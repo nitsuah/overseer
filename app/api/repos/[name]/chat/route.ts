@@ -229,7 +229,21 @@ export async function POST(
         const snapshot = toSnapshot(repo, tasks, roadmapItems, docStatuses);
         const prompt = buildChatPrompt(snapshot, parsed.messages!);
 
-        const reply = await generateAIContent(prompt, userOverride);
+        const { text: reply, usingOwnKey } = await generateAIContent(prompt, userOverride);
+
+        // A configured personal key can still fail (revoked/expired/out of
+        // quota) and silently fall through to the shared key inside
+        // generateAIContent. The pre-check above only ran when no key was
+        // configured at all, so that fallback would otherwise never be
+        // metered. Charge it after the fact -- we can't undo the API spend
+        // that already happened, but this stops it from staying permanently
+        // invisible to the budget and surfaces a warning for next time.
+        if (userOverride && !usingOwnKey && session?.user?.email) {
+            const limitResult = checkAuthedSharedKeyRateLimit(session.user.email);
+            if (!limitResult.allowed || limitResult.nearLimit) {
+                rateLimitWarning = `Your saved API key failed, so this request used the app's shared AI key instead (${limitResult.remaining}/${limitResult.limit} requests left this window). Check your key in Settings.`;
+            }
+        }
 
         const proposal = parseDocEditProposal(reply);
 
@@ -237,7 +251,7 @@ export async function POST(
             success: true,
             reply,
             proposal,
-            usingOwnKey: !!userOverride,
+            usingOwnKey,
             rateLimitWarning,
             context: {
                 repo: snapshot.name,

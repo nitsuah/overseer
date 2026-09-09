@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { AlertTriangle, Check, Loader2, Trash2 } from 'lucide-react';
+import { byokPromptKey } from '@/lib/byok-prompt-key';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  userIdentity?: string | null;
 }
 
 type Provider = 'gemini' | 'openai' | 'anthropic';
@@ -29,7 +31,7 @@ const PROVIDER_LABELS: Record<Provider, string> = {
  * how the key is encrypted at rest, and app/api/settings/ai-key/route.ts for
  * the backing API — the raw key is never sent back to the client once saved.
  */
-export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, userIdentity }: SettingsModalProps) {
   const [status, setStatus] = useState<KeyStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [provider, setProvider] = useState<Provider>('gemini');
@@ -45,23 +47,35 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setSaved(false);
     setApiKey('');
     setLoadingStatus(true);
-    fetch('/api/settings/ai-key')
+
+    // SettingsModal stays mounted (Modal just returns null when closed), so a
+    // rapid close-reopen can leave two fetches in flight; without this guard
+    // a late response from the first can overwrite state set by the second.
+    const controller = new AbortController();
+    fetch('/api/settings/ai-key', { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Failed to load settings'))))
       .then((data: KeyStatus) => {
         setStatus(data);
         if (data.provider) setProvider(data.provider);
       })
-      .catch(() => setError('Could not load your current AI key settings.'))
+      .catch((err) => {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        setError('Could not load your current AI key settings.');
+      })
       .finally(() => setLoadingStatus(false));
 
     // Opening Settings at all counts as having seen the BYOK option — don't
-    // nudge again after this regardless of what the user does inside.
+    // nudge again after this regardless of what the user does inside. Uses
+    // the same identity-scoped key as the chat panel's nudge (app/page.tsx)
+    // so the two stay in sync.
     try {
-      window.localStorage.setItem('overseer.byok.prompted', '1');
+      window.localStorage.setItem(byokPromptKey(userIdentity), '1');
     } catch {
       // localStorage may be unavailable (private mode); non-fatal.
     }
-  }, [isOpen]);
+
+    return () => controller.abort();
+  }, [isOpen, userIdentity]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,7 +179,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               id="byok-provider"
               value={provider}
               onChange={(e) => setProvider(e.target.value as Provider)}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-indigo-500 text-sm"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-indigo-500 text-base sm:text-sm"
             >
               <option value="gemini">Google Gemini</option>
               <option value="openai">OpenAI</option>
@@ -183,7 +197,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Paste your API key"
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 text-base sm:text-sm"
             />
           </div>
 

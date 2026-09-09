@@ -4,7 +4,7 @@ import { formatLocNumber } from '@/lib/expandable-row-utils';
 import { Metric } from '@/types/repo';
 import { RefreshCw } from 'lucide-react';
 import { GithubIcon } from '@/components/icons/GithubIcon';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 
 interface RepositoryStatsSectionStaticProps {
   stars?: number;
@@ -57,7 +57,7 @@ export function RepositoryStatsSectionStatic({
   tokenDensity,
   commentToCodeRatio,
   defaultExpanded = true,
-}: RepositoryStatsSectionStaticProps) {
+}: RepositoryStatsSectionStaticProps): JSX.Element {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [trend, setTrend] = useState<TrendPoint[]>([]);
 

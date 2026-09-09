@@ -9,7 +9,14 @@ describe('byok-crypto', () => {
     });
 
     afterEach(() => {
-        process.env.BYOK_ENCRYPTION_KEY = ORIGINAL_ENV;
+        // Node stringifies `undefined` to the literal "undefined" on assignment
+        // rather than removing the var, so an originally-unset key must be
+        // deleted instead of reassigned back to `undefined`.
+        if (ORIGINAL_ENV === undefined) {
+            delete process.env.BYOK_ENCRYPTION_KEY;
+        } else {
+            process.env.BYOK_ENCRYPTION_KEY = ORIGINAL_ENV;
+        }
     });
 
     it('round-trips a plaintext API key', () => {

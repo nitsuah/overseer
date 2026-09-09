@@ -106,10 +106,19 @@ interface GenerationOptions {
   userOverride?: { provider: AIProvider; apiKey: string };
 }
 
+export interface FailoverResult {
+  text: string;
+  /** Which key actually produced the reply -- not just which was attempted.
+   * A failed personal key falls through to 'shared', so callers must gate
+   * any per-user shared-key budget on this, not on whether an override was
+   * configured. */
+  servedBy: 'user-override' | 'shared';
+}
+
 export async function generateWithFailover(
   prompt: string,
   options: GenerationOptions = {}
-): Promise<string> {
+): Promise<FailoverResult> {
   const sharedProviders = getAvailableProviders();
 
   // The user-override entry is a one-shot best-effort attempt, tracked
@@ -143,7 +152,7 @@ export async function generateWithFailover(
       logger.info(`[AI Failover] Trying user-provided key for provider: ${overrideEntry.name}`);
       const result = await generateWithProvider(overrideEntry, prompt, { temperature, maxTokens });
       logger.info(`[AI Failover] Success with user-provided key (${overrideEntry.name})`);
-      return result;
+      return { text: result, servedBy: 'user-override' };
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.warn(`[AI Failover] User-provided key failed (${overrideEntry.name}), falling back to shared providers: ${err.message}`);
@@ -168,7 +177,7 @@ export async function generateWithFailover(
       const result = await generateWithProvider(provider, prompt, { temperature, maxTokens });
       markHealthy(provider.name);
       logger.info(`[AI Failover] Success with provider: ${provider.name}`);
-      return result;
+      return { text: result, servedBy: 'shared' };
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.warn(`[AI Failover] Provider ${provider.name} failed: ${err.message}`);

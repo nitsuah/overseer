@@ -637,7 +637,7 @@ export async function enrichTemplateWithAI(
   }
 
   try {
-    const enriched = await generateAIContent(prompt);
+    const { text: enriched } = await generateAIContent(prompt);
     return cleanAIResponse(enriched, templateContent);
   } catch (error) {
     logger.warn(`AI enrichment failed for ${docType}:`, error);

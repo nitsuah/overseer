@@ -53,6 +53,17 @@ test('parseCodeDensity does not count a code line when only a trailing comment r
   expect(stats.tokens).toBe(0);
 });
 
+test('parseCodeDensity does not treat // inside a quoted URL as a trailing comment', () => {
+  const content = `const url = /* note */ "https://example.test";
+`;
+  const stats = parseCodeDensity(content);
+  expect(stats.commentLines).toBe(1);
+  expect(stats.codeLines).toBe(1);
+  // Remainder: const(1) url(2) =(3) "https://example.test";(4) — the URL's
+  // // must survive intact, not get truncated as a trailing comment.
+  expect(stats.tokens).toBe(4);
+});
+
 test('aggregateCodeDensity computes ratio and density across files', () => {
   const result = aggregateCodeDensity([
     { path: 'src/a.ts', content: '// c\nconst a = 1;\nconst b = 2;\n' },

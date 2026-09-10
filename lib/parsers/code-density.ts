@@ -16,6 +16,37 @@ interface CodeDensityStats {
 const CODE_EXTENSIONS = /\.(ts|tsx|js|jsx|py|go|rs|java|rb|php|c|h|cpp|hpp|cs|swift|kt|scala|sh|sql)$/;
 
 /**
+ * Find the index of a `//` that starts a line comment, ignoring any `//`
+ * that appears inside a '...'/"..."/`...` string literal (e.g. a URL like
+ * "https://example.test"). Returns -1 if no such unquoted `//` exists.
+ * Deliberately narrow (single-line, no regex-literal awareness) — this is
+ * a density heuristic, not a real tokenizer, so it only needs to be good
+ * enough to stop a quoted URL from being misread as a trailing comment.
+ */
+function findUnquotedLineCommentStart(text: string): number {
+  let quote: string | null = null;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quote) {
+      if (ch === '\\') {
+        i++; // skip the escaped character
+      } else if (ch === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '/' && text[i + 1] === '/') {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
  * Parse a single source file and return token + comment counts.
  */
 export function parseCodeDensity(content: string): {
@@ -55,8 +86,10 @@ export function parseCodeDensity(content: string): {
         let remainder = (line.slice(0, blockStart) + ' ' + line.slice(blockEnd + 2)).trim();
         // The remainder can itself carry a trailing line comment (e.g.
         // `const x = /* note */ 1; // trailing`) — strip that too, or it
-        // gets miscounted as code tokens.
-        const remainderLineComment = remainder.indexOf('//');
+        // gets miscounted as code tokens. Use the quote-aware finder so a
+        // `//` inside a string literal (e.g. `"https://example.test"`)
+        // isn't mistaken for one.
+        const remainderLineComment = findUnquotedLineCommentStart(remainder);
         if (remainderLineComment !== -1) {
           remainder = remainder.slice(0, remainderLineComment).trim();
         }

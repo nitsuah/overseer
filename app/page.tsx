@@ -15,6 +15,7 @@ import { useRepoFilters } from '@/hooks/useRepoFilters';
 import { useRepoChat } from '@/hooks/useRepoChat';
 import { RepoChatPanel } from '@/components/chat/RepoChatPanel';
 import { SettingsModal } from '@/components/SettingsModal';
+import { resolveDocTargetPath } from '@/lib/doc-target-paths';
 import { detectRepoType, RepoType } from '@/lib/repo-type';
 import { byokPromptKey } from '@/lib/byok-prompt-key';
 import type { Repo } from '@/types/repo';
@@ -370,10 +371,16 @@ export default function Dashboard() {
         onApplyProposal={(proposal) => {
           if (!chatRepoName) return;
           // Open the preview modal with the proposed content
+          // Use the same docType -> path mapping fix-doc/route.ts validates
+          // against, rather than guessing `${docType.toUpperCase()}.md` — that
+          // guess was wrong for outliers like `license` (no extension) and
+          // `codeowners`/`funding` (live under .github/), which made the
+          // Apply action 400 for those doc types.
+          const resolvedPath = resolveDocTargetPath(proposal.docType) ?? `${proposal.docType.toUpperCase()}.md`;
           const proposalFiles = [{
             type: 'doc' as const,
             docType: proposal.docType,
-            path: proposal.docType.toUpperCase() === 'README' ? 'README.md' : `${proposal.docType.toUpperCase()}.md`,
+            path: resolvedPath,
             content: proposal.content,
             practiceType: undefined,
           }];

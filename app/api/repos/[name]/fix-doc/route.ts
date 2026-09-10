@@ -7,6 +7,7 @@ import { parseGitHubError, getOrgAuthInstructions } from '@/lib/github-errors';
 import fs from 'fs/promises';
 import path from 'path';
 import logger from '@/lib/log';
+import { resolveDocTargetPath, DOC_TARGET_PATHS } from '@/lib/doc-target-paths';
 
 export async function POST(
     request: NextRequest,
@@ -29,41 +30,16 @@ export async function POST(
         const repoName = params.name;
 
         // Map logical doc types to target paths (where they should go in the repo).
-        // Hoisted so caller-supplied paths can be validated against it — never
-        // pass a chat/modal-supplied path straight through to createPrForFile.
-        const TARGET_PATHS: Record<string, string> = {
-            // Core docs go in root
-            readme: 'README.md',
-            roadmap: 'ROADMAP.md',
-            tasks: 'TASKS.md',
-            metrics: 'METRICS.md',
-            features: 'FEATURES.md',
-            // Community standards go in root
-            code_of_conduct: 'CODE_OF_CONDUCT.md',
-            contributing: 'CONTRIBUTING.md',
-            security: 'SECURITY.md',
-            changelog: 'CHANGELOG.md',
-            license: 'LICENSE',
-            codeowners: path.join('.github', 'CODEOWNERS'),
-            copilot: path.join('.github', 'copilot-instructions.md'),
-            copilot_instructions: path.join('.github', 'copilot-instructions.md'),
-            funding: path.join('.github', 'FUNDING.yml'),
-            issue_template: path.join('.github', 'ISSUE_TEMPLATE', 'bug_report.md'),
-            issue_templates: path.join('.github', 'ISSUE_TEMPLATE', 'config.yml'),
-            pr_template: path.join('.github', 'pull_request_template.md'),
-            pull_request_template: path.join('.github', 'pull_request_template.md'),
-            flow_tasks_prompt: path.join('.github', 'prompts', 'FLOW-TASKS.md'),
-            handoff_prompt: path.join('.github', 'prompts', 'HANDOFF.md'),
-        };
-
+        // Shared with app/page.tsx's chat-proposal adapter (lib/doc-target-paths.ts)
+        // so caller-supplied paths can be validated against the same source of
+        // truth — never pass a chat/modal-supplied path straight through to
+        // createPrForFile.
         const normalized = String(docType).toLowerCase();
-        const approvedTarget = Object.prototype.hasOwnProperty.call(TARGET_PATHS, normalized)
-            ? TARGET_PATHS[normalized]
-            : undefined;
+        const approvedTarget = resolveDocTargetPath(normalized);
         if (!approvedTarget) {
             return NextResponse.json({
                 error: `Unknown doc type: ${docType}. No target path mapping found.`,
-                supported: Object.keys(TARGET_PATHS)
+                supported: Object.keys(DOC_TARGET_PATHS)
             }, { status: 400 });
         }
 

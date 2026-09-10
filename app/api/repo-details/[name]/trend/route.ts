@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ name: string }> }
-) {
+): Promise<NextResponse> {
   const { name } = await params;
   if (!name) {
     return NextResponse.json({ error: 'Repo name required' }, { status: 400 });

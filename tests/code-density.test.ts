@@ -21,6 +21,19 @@ function add(a, b) {
   expect(stats.tokens).toBe(13);
 });
 
+test('parseCodeDensity preserves code around an inline closed block comment', () => {
+  const content = `const value = /* explanation */ 1;
+`;
+  const stats = parseCodeDensity(content);
+  // The block comment opens and closes on the same line, so the line counts
+  // as both a comment line and a code line — the code around it must not be
+  // discarded.
+  expect(stats.commentLines).toBe(1);
+  expect(stats.codeLines).toBe(1);
+  // Remainder tokens: "const value =" + "1;" => const(1) value(2) =(3) 1;(4)
+  expect(stats.tokens).toBe(4);
+});
+
 test('aggregateCodeDensity computes ratio and density across files', () => {
   const result = aggregateCodeDensity([
     { path: 'src/a.ts', content: '// c\nconst a = 1;\nconst b = 2;\n' },

@@ -47,9 +47,21 @@ export function parseCodeDensity(content: string): {
     const hashComment = line.startsWith('#') || line.startsWith('<!--');
 
     if (blockStart !== -1 && (lineComment === -1 || blockStart < lineComment)) {
-      // Line starts a block comment
+      const blockEnd = line.indexOf('*/', blockStart + 2);
+      if (blockEnd !== -1) {
+        // Comment opens and closes on the same line (e.g. `const x = /* note */ 1;`).
+        // Strip it and tokenize whatever code remains instead of discarding the line.
+        commentLines++;
+        const remainder = (line.slice(0, blockStart) + ' ' + line.slice(blockEnd + 2)).trim();
+        if (remainder) {
+          codeLines++;
+          tokens += remainder.split(/\s+/).filter(Boolean).length;
+        }
+        continue;
+      }
+      // Line starts a block comment that continues past this line
       commentLines++;
-      if (!line.includes('*/')) inBlockComment = true;
+      inBlockComment = true;
       continue;
     }
 

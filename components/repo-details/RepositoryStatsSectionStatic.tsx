@@ -236,7 +236,7 @@ export function RepositoryStatsSectionStatic({
   );
 }
 
-function HealthSparkline({ points }: { points: TrendPoint[] }) {
+function HealthSparkline({ points }: { points: TrendPoint[] }): JSX.Element | null {
   const values = points
     .map((p) => p.health_score)
     .filter((v): v is number => typeof v === 'number');

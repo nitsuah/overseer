@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import { Network } from 'lucide-react';
 
 interface DependencyNode {
@@ -30,7 +30,7 @@ interface DependencyGraphData {
  * primary language, rendered as a simple force-ish layout using SVG.
  * No chart library: positions are computed from edge strength.
  */
-export function DependencyGraph() {
+export function DependencyGraph(): JSX.Element | null {
   const [data, setData] = useState<DependencyGraphData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,7 +143,7 @@ export function DependencyGraph() {
             })}
           </svg>
           <div className="mt-3 space-y-1">
-            {edges
+            {[...edges]
               .sort((a, b) => b.strength - a.strength)
               .slice(0, 8)
               .map((e, i) => {

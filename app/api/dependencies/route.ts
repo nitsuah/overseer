@@ -27,7 +27,7 @@ interface Connection {
  * Infers cross-repo connections from shared topics and primary language.
  * Returns a graph of { nodes, edges } for the dashboard.
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const session = await auth();
     const db = getNeonClient();

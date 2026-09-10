@@ -435,9 +435,15 @@ export function parseDocEditProposal(reply: string): {
   const match = reply.match(/```proposal\s*(\{[\s\S]*?\})\s*```/);
   if (!match) return null;
   try {
-    const parsed = JSON.parse(match[1]);
-    if (parsed.docType && parsed.content && parsed.summary) {
-      return parsed;
+    const parsed: unknown = JSON.parse(match[1]);
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      typeof (parsed as Record<string, unknown>).docType === 'string' &&
+      typeof (parsed as Record<string, unknown>).content === 'string' &&
+      typeof (parsed as Record<string, unknown>).summary === 'string'
+    ) {
+      return parsed as { docType: string; content: string; summary: string };
     }
   } catch {
     // Invalid JSON

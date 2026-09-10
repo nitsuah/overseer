@@ -118,12 +118,15 @@ export async function getPullRequestReadiness(
     for (const pr of nodes) {
       const ciState = pr.commits?.nodes?.[0]?.commit?.statusCheckRollup?.state ?? null;
       const ciFailing = ciState === 'FAILURE' || ciState === 'ERROR';
+      const ciPassing = ciState === 'SUCCESS';
       const changesRequested = pr.reviewDecision === 'CHANGES_REQUESTED';
       const hasConflicts = pr.mergeable === 'CONFLICTING';
 
       const threads = pr.reviewThreads?.nodes || [];
       const threadsResolved = threads.length > 0 && threads.every((t) => t.isResolved);
-      const staleReview = changesRequested && threadsResolved && !ciFailing && !hasConflicts;
+      // Require CI to have actually finished green, not merely "not failing" —
+      // PENDING/EXPECTED/null states shouldn't count as "stale, safe to merge".
+      const staleReview = changesRequested && threadsResolved && ciPassing && !hasConflicts;
 
       records.push({
         number: pr.number,

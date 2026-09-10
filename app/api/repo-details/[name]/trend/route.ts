@@ -29,16 +29,20 @@ export async function GET(
 
   try {
     const db = getNeonClient();
+    // Fetch the most recent 200 snapshots (DESC + LIMIT), then reverse to
+    // chronological order for the chart. The previous ASC + LIMIT 200 always
+    // returned the *oldest* 200 rows once a repo passed 200 snapshots, so the
+    // sparkline silently stopped picking up new data.
     const rows = await db`
       SELECT s.commit_frequency, s.avg_pr_merge_time_hours, s.health_score,
              s.open_prs, s.total_loc, s.captured_at
       FROM repo_snapshots s
       JOIN repos r ON r.id = s.repo_id
       WHERE r.name = ${name}
-      ORDER BY s.captured_at ASC
+      ORDER BY s.captured_at DESC
       LIMIT 200
     `;
-    return NextResponse.json({ success: true, snapshots: rows }, { status: 200 });
+    return NextResponse.json({ success: true, snapshots: rows.reverse() }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });

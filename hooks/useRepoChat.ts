@@ -70,6 +70,16 @@ function storageKeyFor(namespace: string): string {
     return `${STORAGE_PREFIX}.${encodeURIComponent(namespace)}`;
 }
 
+function isValidProposal(value: unknown): value is NonNullable<ChatThreadMessage['proposal']> {
+    if (typeof value !== 'object' || value === null) return false;
+    const p = value as Record<string, unknown>;
+    return (
+        typeof p.docType === 'string' &&
+        typeof p.content === 'string' &&
+        typeof p.summary === 'string'
+    );
+}
+
 function isValidThreadMessage(value: unknown): value is ChatThreadMessage {
     if (typeof value !== 'object' || value === null) return false;
     const m = value as Record<string, unknown>;
@@ -77,7 +87,8 @@ function isValidThreadMessage(value: unknown): value is ChatThreadMessage {
         (m.role === 'user' || m.role === 'assistant') &&
         typeof m.content === 'string' &&
         typeof m.id === 'string' &&
-        typeof m.createdAt === 'string'
+        typeof m.createdAt === 'string' &&
+        (m.proposal === undefined || isValidProposal(m.proposal))
     );
 }
 
@@ -284,7 +295,7 @@ export function useRepoChat(identity?: string | null): UseRepoChatResult {
                             role: 'assistant',
                             content: data.reply ?? '(empty response)',
                             createdAt: new Date().toISOString(),
-                            proposal: data.proposal ?? undefined,
+                            proposal: isValidProposal(data.proposal) ? data.proposal : undefined,
                             rateLimitWarning: data.rateLimitWarning ?? undefined,
                         },
                     ],

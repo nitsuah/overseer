@@ -182,7 +182,7 @@ export async function getZombieBranches(
         } | null;
       } | null;
     }>(
-      `query($owner: String!, $repo: String!, $staleAfterDays: Int!) {
+      `query($owner: String!, $repo: String!) {
         repository(owner: $owner, name: $repo) {
           refs(refPrefix: "refs/heads/", first: 100, orderBy: { field: COMMIT_DATE, direction: DESC }) {
             nodes {

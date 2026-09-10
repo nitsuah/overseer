@@ -57,7 +57,9 @@ export async function POST(
         };
 
         const normalized = String(docType).toLowerCase();
-        const approvedTarget = TARGET_PATHS[normalized];
+        const approvedTarget = Object.prototype.hasOwnProperty.call(TARGET_PATHS, normalized)
+            ? TARGET_PATHS[normalized]
+            : undefined;
         if (!approvedTarget) {
             return NextResponse.json({
                 error: `Unknown doc type: ${docType}. No target path mapping found.`,

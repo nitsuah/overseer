@@ -34,6 +34,25 @@ test('parseCodeDensity preserves code around an inline closed block comment', ()
   expect(stats.tokens).toBe(4);
 });
 
+test('parseCodeDensity strips a trailing line comment after a closed inline block comment', () => {
+  const content = `const value = /* explanation */ 1; // trailing note
+`;
+  const stats = parseCodeDensity(content);
+  expect(stats.commentLines).toBe(1);
+  expect(stats.codeLines).toBe(1);
+  // Trailing "// trailing note" must not be counted as code tokens.
+  expect(stats.tokens).toBe(4);
+});
+
+test('parseCodeDensity does not count a code line when only a trailing comment remains', () => {
+  const content = `/* explanation */ // trailing note only
+`;
+  const stats = parseCodeDensity(content);
+  expect(stats.commentLines).toBe(1);
+  expect(stats.codeLines).toBe(0);
+  expect(stats.tokens).toBe(0);
+});
+
 test('aggregateCodeDensity computes ratio and density across files', () => {
   const result = aggregateCodeDensity([
     { path: 'src/a.ts', content: '// c\nconst a = 1;\nconst b = 2;\n' },

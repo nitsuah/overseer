@@ -52,7 +52,14 @@ export function parseCodeDensity(content: string): {
         // Comment opens and closes on the same line (e.g. `const x = /* note */ 1;`).
         // Strip it and tokenize whatever code remains instead of discarding the line.
         commentLines++;
-        const remainder = (line.slice(0, blockStart) + ' ' + line.slice(blockEnd + 2)).trim();
+        let remainder = (line.slice(0, blockStart) + ' ' + line.slice(blockEnd + 2)).trim();
+        // The remainder can itself carry a trailing line comment (e.g.
+        // `const x = /* note */ 1; // trailing`) — strip that too, or it
+        // gets miscounted as code tokens.
+        const remainderLineComment = remainder.indexOf('//');
+        if (remainderLineComment !== -1) {
+          remainder = remainder.slice(0, remainderLineComment).trim();
+        }
         if (remainder) {
           codeLines++;
           tokens += remainder.split(/\s+/).filter(Boolean).length;

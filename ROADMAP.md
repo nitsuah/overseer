@@ -59,7 +59,7 @@ Next Review: 2026-09-15
 
 ## Portfolio Intelligence Batch (2026-09-03)
 
-> Shipped on the `feat/v2-portfolio-intelligence` branch (PR #204). Chat-driven doc editing (proposal/apply/dismiss), cross-repo dependency mapping, token-density + comment-to-code ratio metrics, a DB scaling assessment, and velocity/tech-debt trending all landed together.
+> Shipped on the `feat/v2-portfolio-intelligence` branch (PR #204). Chat-driven doc editing (proposal/apply/dismiss), cross-repo dependency mapping, token-density + comment-to-code ratio metrics, a DB scaling assessment, and velocity trending all landed together. Technical-debt trending and zombie-branch detection are still open (see TASKS.md).
 
 - [x] Chat-driven doc-edit proposals: propose → inline diff card → apply via the existing PR flow (stages 1, 2, 4 of the TASKS.md item)
 - [x] Cross-repo dependency graph (`/api/dependencies`)

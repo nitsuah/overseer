@@ -376,7 +376,17 @@ export default function Dashboard() {
           // guess was wrong for outliers like `license` (no extension) and
           // `codeowners`/`funding` (live under .github/), which made the
           // Apply action 400 for those doc types.
-          const resolvedPath = resolveDocTargetPath(proposal.docType) ?? `${proposal.docType.toUpperCase()}.md`;
+          const resolvedPath = resolveDocTargetPath(proposal.docType);
+          if (!resolvedPath) {
+            // Don't synthesize a fallback path (e.g. "UNKNOWN.md") — that
+            // would open a preview the Apply action can only reject with a
+            // 400 anyway, since fix-doc/route.ts validates against this
+            // same map. Tell the user instead of showing a broken preview.
+            setToastMessage(
+              `"${proposal.docType}" isn't a supported document type, so this proposal can't be applied.`,
+            );
+            return;
+          }
           const proposalFiles = [{
             type: 'doc' as const,
             docType: proposal.docType,

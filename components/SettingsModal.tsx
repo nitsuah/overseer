@@ -62,7 +62,12 @@ export function SettingsModal({ isOpen, onClose, userIdentity }: SettingsModalPr
         if (err instanceof Error && err.name === 'AbortError') return;
         setError('Could not load your current AI key settings.');
       })
-      .finally(() => setLoadingStatus(false));
+      .finally(() => {
+        // A closed-then-reopened modal aborts the earlier request, but its
+        // .finally() still runs — without this guard it could clear loading
+        // state for a newer request that's still in flight.
+        if (!controller.signal.aborted) setLoadingStatus(false);
+      });
 
     // Opening Settings at all counts as having seen the BYOK option — don't
     // nudge again after this regardless of what the user does inside. Uses

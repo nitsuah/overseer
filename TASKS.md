@@ -1,6 +1,6 @@
 # Tasks
 
-## updated: 2026-09-03
+## updated: 2026-09-10
 
 ## In Progress
 
@@ -31,6 +31,26 @@
   - Context: agent-board, bb-mcp, nitsuah-io, and overseer share overlapping stacks and could benefit from surfaced cross-repo links.
   - Acceptance Criteria: the dashboard shows inferred or declared connections between related repos and surfaces shared-stack signals; visualized as an interactive 3D graph with filter and click-to-detail interactions.
   - Status: ✅ SHIPPED (this branch) — `GET /api/dependencies` infers connections from shared topics + primary language; rendered as a collapsible SVG graph + connection list (`DependencyGraph.tsx`) on the dashboard. The 3D/click-to-detail visualization from the original acceptance criteria is not implemented — current graph is 2D SVG.
+
+- [ ] Thread `full_name` through to the trend endpoint instead of matching by short `name`.
+  - Priority: P2
+  - Context: flagged by CodeRabbit on PR #204 (2026-09-09) — `GET /api/repo-details/[name]/trend` matches `repos.name`, which is ambiguous if two tracked repos across different owners share a short name. `repo.full_name` is already available at every call site (`RepoTableRow.tsx`, `MobileRepoCard.tsx`) but isn't threaded through `ExpandableRow` -> `RepositoryStatsSectionStatic` -> the trend fetch URL. Deferred rather than rushed since it touches three component layers.
+  - Acceptance Criteria: the trend route (and its callers) key on `full_name` or `repo_id`, not the bare `name` column; add a regression test with two same-named repos under different owners.
+
+- [ ] Durably persist agent task receipts instead of a fire-and-forget write.
+  - Priority: P2
+  - Context: flagged by CodeRabbit on PR #204 (2026-09-09) — `app/api/agent/tasks/route.ts` calls `void persistReceipt(task)` without awaiting it or handling failure, so a receipt can silently be lost if the serverless instance is recycled before the write completes. Deferred — needs a design decision (await + surface failure to the caller vs. a durable queue) rather than a blind await that could turn a background write into a slow foreground one.
+  - Acceptance Criteria: task receipts are durably persisted (or the caller is told persistence failed) even when the serverless instance is recycled immediately after the response is sent.
+
+- [ ] Paginate `reviewThreads`/`refs` GraphQL connections for large PRs and repos.
+  - Priority: P2
+  - Context: flagged by CodeRabbit on PR #204 (2026-09-09) — two related gaps: (1) `lib/github/prs.ts`'s stale-review query requests `reviewThreads(first: 50)` unpaginated, so a PR with more than 50 threads can be misclassified as `staleReview` (only the first page is checked for `isResolved`); (2) `lib/github/repos.ts`'s `getZombieBranches` requests `refs(first: 100, ...)` unpaginated, so repos with more than 100 branches will under-report zombie branches beyond the first page. Deferred together since both need the same nested-connection pagination pattern; (2) is more tractable (single top-level connection) than (1) (nested under `pullRequests`).
+  - Acceptance Criteria: both queries page through their full result set (or a documented, deliberately-capped window) rather than silently truncating at the first page.
+
+- [ ] Move focusable PR/CI/homepage links out of the mobile repo card's `role="button"` wrapper.
+  - Priority: P2
+  - Context: flagged by CodeRabbit on PR #204 (2026-09-09) — `MobileRepoCard.tsx` renders focusable `<a>` links for CI/PR/homepage nested inside the card's outer `role="button" tabIndex={0} onKeyDown` wrapper, which is an accessibility anti-pattern (nested interactive elements produce inconsistent keyboard/screen-reader behavior). Deferred as a heavier restructure rather than a quick class-name fix.
+  - Acceptance Criteria: the card's expand/collapse affordance and the CI/PR/homepage links are structurally siblings (not nested interactive elements), verified with a keyboard-navigation and screen-reader pass.
 
 ### DB & backend scaling
 

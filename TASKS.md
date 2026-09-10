@@ -12,6 +12,7 @@
   - Priority: P1
   - Context: overseer exposes an Agent Task Queue API and agent-board runs a local model runtime, but no bridge routes tasks between them.
   - Acceptance Criteria: a v0 bridge dispatches at least one queued overseer task to agent-board's runtime and reports completion status back to the queue.
+  - Status: ✅ SHIPPED (PR #159, hardened in PR #204) — `motorPoolBridge.dispatch()` in `lib/agent-bridge.ts` creates a session via agent-board's `POST /api/sessions`, delivers the task as the session's first message via `POST /api/sessions/:id/message`, and returns the `motorPoolSessionId`; `app/api/agent/tasks/route.ts`'s queue runner awaits the dispatch and writes the result/status (`completed`/`failed`) back onto the queued task, with a simulated-execution fallback (preserving any already-created session id) when the runtime is unreachable. Covered by `tests/agent-bridge.test.ts` and `tests/agent-tasks.test.ts` (full suite: 562 tests passing, `tsc --noEmit` clean).
 
 ### P2 - Medium
 

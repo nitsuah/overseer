@@ -177,21 +177,56 @@ describe('MobileRepoCard – loading state', () => {
 // ── Authenticated actions ─────────────────────────────────────────────────────
 
 describe('MobileRepoCard – authenticated actions', () => {
-  it('shows sync button when authenticated', () => {
+  it('shows the sync (hold-to-sync) button when authenticated', () => {
     render(<MobileRepoCard {...baseProps({ isAuthenticated: true })} />);
-    expect(screen.getByTitle('Sync')).toBeTruthy();
+    expect(screen.getByTitle('Hold to sync')).toBeTruthy();
   });
 
-  it('hides sync button when not authenticated', () => {
+  it('hides the sync button when not authenticated', () => {
     render(<MobileRepoCard {...baseProps({ isAuthenticated: false })} />);
-    expect(screen.queryByTitle('Sync')).toBeNull();
+    expect(screen.queryByTitle('Hold to sync')).toBeNull();
   });
 
-  it('calls onSyncSingleRepo when sync button is clicked', () => {
+  // Mobile/half-width sync is deliberately a long press (not a tap) — the
+  // actions row is dense enough that a stray tap shouldn't kick off a
+  // background sync. See the onPointerDown/onPointerUp handlers in
+  // MobileRepoCard.
+  it('does not call onSyncSingleRepo on a plain click', () => {
     const onSyncSingleRepo = vi.fn();
     render(<MobileRepoCard {...baseProps({ onSyncSingleRepo })} />);
-    fireEvent.click(screen.getByTitle('Sync'));
-    expect(onSyncSingleRepo).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByTitle('Hold to sync'));
+    expect(onSyncSingleRepo).not.toHaveBeenCalled();
+  });
+
+  it('does not call onSyncSingleRepo on a short press', () => {
+    vi.useFakeTimers();
+    try {
+      const onSyncSingleRepo = vi.fn();
+      render(<MobileRepoCard {...baseProps({ onSyncSingleRepo })} />);
+      const button = screen.getByTitle('Hold to sync');
+      fireEvent.pointerDown(button);
+      vi.advanceTimersByTime(200); // well under the ~550ms long-press threshold
+      fireEvent.pointerUp(button);
+      vi.advanceTimersByTime(1000);
+      expect(onSyncSingleRepo).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('calls onSyncSingleRepo after a long press', () => {
+    vi.useFakeTimers();
+    try {
+      const onSyncSingleRepo = vi.fn();
+      render(<MobileRepoCard {...baseProps({ onSyncSingleRepo })} />);
+      const button = screen.getByTitle('Hold to sync');
+      fireEvent.pointerDown(button);
+      vi.advanceTimersByTime(600); // past the ~550ms long-press threshold
+      expect(onSyncSingleRepo).toHaveBeenCalledOnce();
+      fireEvent.pointerUp(button);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows hide button when authenticated', () => {

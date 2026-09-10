@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     const prompt = buildPracticePrompt(enrichedContext);
 
     // Generate AI content
-    const generatedContent = await generateAIContent(prompt);
+    const { text: generatedContent } = await generateAIContent(prompt);
 
     // Return generated content for modal review
     return NextResponse.json({

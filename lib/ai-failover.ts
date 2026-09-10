@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import logger from './log';
-import { getAvailableProviders, AIProviderConfig } from './ai-providers';
+import { getAvailableProviders, AIProviderConfig, AIProvider, defaultModelFor } from './ai-providers';
 import { getWorkingModel } from './gemini-model-discovery';
 
 // --- Circuit breaker ---
@@ -99,15 +99,46 @@ interface GenerationOptions {
   temperature?: number;
   maxTokens?: number;
   useShortResponse?: boolean;
+  /** BYOK: a signed-in user's own provider + API key. Tried first (highest
+   * priority), then falls through to the app's own shared providers if it
+   * errors — so a revoked/invalid personal key degrades gracefully instead
+   * of hard-failing the request. */
+  userOverride?: { provider: AIProvider; apiKey: string };
+}
+
+export interface FailoverResult {
+  text: string;
+  /** Which key actually produced the reply -- not just which was attempted.
+   * A failed personal key falls through to 'shared', so callers must gate
+   * any per-user shared-key budget on this, not on whether an override was
+   * configured. */
+  servedBy: 'user-override' | 'shared';
 }
 
 export async function generateWithFailover(
   prompt: string,
   options: GenerationOptions = {}
-): Promise<string> {
-  const providers = getAvailableProviders();
+): Promise<FailoverResult> {
+  const sharedProviders = getAvailableProviders();
 
-  if (providers.length === 0) {
+  // The user-override entry is a one-shot best-effort attempt, tracked
+  // outside the shared circuit breaker: a bad/revoked personal key must
+  // never mark the app's own shared provider unhealthy for every other
+  // user, and a shared-provider outage must never block someone whose
+  // personal key is working fine.
+  const overrideEntry: AIProviderConfig | null = options.userOverride
+    ? {
+        name: options.userOverride.provider,
+        enabled: true,
+        apiKey: options.userOverride.apiKey,
+        model: defaultModelFor(options.userOverride.provider),
+        priority: 0,
+      }
+    : null;
+
+  const providers = sharedProviders;
+
+  if (providers.length === 0 && !overrideEntry) {
     throw new Error('No AI providers configured. Please set GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY');
   }
 
@@ -115,6 +146,20 @@ export async function generateWithFailover(
   const maxTokens = options.maxTokens ?? (options.useShortResponse ? 1024 : 2048);
 
   let lastError: Error | null = null;
+
+  if (overrideEntry) {
+    try {
+      logger.info(`[AI Failover] Trying user-provided key for provider: ${overrideEntry.name}`);
+      const result = await generateWithProvider(overrideEntry, prompt, { temperature, maxTokens });
+      logger.info(`[AI Failover] Success with user-provided key (${overrideEntry.name})`);
+      return { text: result, servedBy: 'user-override' };
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.warn(`[AI Failover] User-provided key failed (${overrideEntry.name}), falling back to shared providers: ${err.message}`);
+      lastError = err;
+    }
+  }
+
   let skippedCount = 0;
 
   for (const provider of providers) {
@@ -132,7 +177,7 @@ export async function generateWithFailover(
       const result = await generateWithProvider(provider, prompt, { temperature, maxTokens });
       markHealthy(provider.name);
       logger.info(`[AI Failover] Success with provider: ${provider.name}`);
-      return result;
+      return { text: result, servedBy: 'shared' };
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.warn(`[AI Failover] Provider ${provider.name} failed: ${err.message}`);
@@ -141,7 +186,7 @@ export async function generateWithFailover(
     }
   }
 
-  if (skippedCount === providers.length) {
+  if (providers.length > 0 && skippedCount === providers.length) {
     throw new Error('All AI providers are temporarily unavailable (circuit open due to quota or recent errors)');
   }
   throw new Error(`All AI providers failed. Last error: ${lastError?.message}`);

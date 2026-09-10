@@ -25,6 +25,8 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS avg_loc_per_file INTEGER`,
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS max_file_size INTEGER`,
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS loc_language_breakdown JSONB`,
+    `ALTER TABLE repos ADD COLUMN IF NOT EXISTS token_density NUMERIC`,
+    `ALTER TABLE repos ADD COLUMN IF NOT EXISTS comment_to_code_ratio NUMERIC`,
 
     // repos: test coverage
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS test_case_count INTEGER DEFAULT 0`,
@@ -64,6 +66,8 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     // repos: PR readiness breakdown
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS prs_ready_count INTEGER DEFAULT 0`,
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS prs_blocked_count INTEGER DEFAULT 0`,
+    `ALTER TABLE repos ADD COLUMN IF NOT EXISTS stale_review_count INTEGER DEFAULT 0`,
+    `ALTER TABLE repos ADD COLUMN IF NOT EXISTS zombie_branch_count INTEGER DEFAULT 0`,
 
     // repos: identity keyed by full_name (owner/name) so repos with the same
     // short name across different owners don't share state. Drop the UNIQUE on
@@ -108,4 +112,56 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     `CREATE INDEX IF NOT EXISTS idx_repos_security_policy ON repos(has_security_policy)`,
     `CREATE INDEX IF NOT EXISTS idx_repos_security_last_checked ON repos(security_last_checked)`,
     `CREATE INDEX IF NOT EXISTS idx_tasks_subsection ON tasks(subsection)`,
+
+    // agent_task_receipts: persistent log of agent task queue runs (session
+    // receipts). The in-memory queue in app/api/agent/tasks/route.ts is lost on
+    // restart; this table keeps a durable record of what each agent session did.
+    `CREATE TABLE IF NOT EXISTS agent_task_receipts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      task_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      priority TEXT NOT NULL,
+      status TEXT NOT NULL,
+      payload JSONB,
+      meta JSONB,
+      result JSONB,
+      error TEXT,
+      motor_pool_session_id TEXT,
+      submitted_by_email TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      queued_at TIMESTAMP WITH TIME ZONE,
+      started_at TIMESTAMP WITH TIME ZONE,
+      completed_at TIMESTAMP WITH TIME ZONE
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_agent_task_receipts_created ON agent_task_receipts(created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_agent_task_receipts_type ON agent_task_receipts(type)`,
+
+    // repo_snapshots: time-series of per-repo signals so velocity and
+    // technical-debt can be trended over rolling quarters. One row per sync.
+    `CREATE TABLE IF NOT EXISTS repo_snapshots (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      repo_id UUID REFERENCES repos(id) ON DELETE CASCADE,
+      commit_frequency NUMERIC,
+      avg_pr_merge_time_hours NUMERIC,
+      health_score INTEGER,
+      open_prs INTEGER,
+      total_loc INTEGER,
+      captured_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_repo_snapshots_repo_captured ON repo_snapshots(repo_id, captured_at)`,
+
+    // user_ai_keys: BYOK — one row per signed-in user who has opted to use
+    // their own AI provider key instead of the app's shared/default one.
+    // api_key_encrypted is AES-256-GCM ciphertext (lib/byok-crypto.ts); the
+    // plaintext key is never persisted. Keyed by email (the same identity
+    // NextAuth session.user.email already namespaces client-side chat
+    // threads by) rather than the `users` table's github_id, since a
+    // session can reach this table before any users-table sync has run.
+    `CREATE TABLE IF NOT EXISTS user_ai_keys (
+      user_email TEXT PRIMARY KEY,
+      provider TEXT NOT NULL,
+      api_key_encrypted TEXT NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`,
 ];

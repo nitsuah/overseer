@@ -32,7 +32,7 @@ Files provided:
     }
 
     try {
-        return await generateWithFailover(prompt, { useShortResponse: true });
+        return (await generateWithFailover(prompt, { useShortResponse: true })).text;
     } catch (error) {
         logger.warn('All AI providers failed for repo summary:', error);
 
@@ -69,7 +69,7 @@ export async function generateMissingDoc(
 Context: ${contextFiles}`;
 
     try {
-        return await generateWithFailover(prompt);
+        return (await generateWithFailover(prompt)).text;
     } catch (error) {
         logger.warn('All AI providers failed for missing doc:', error);
 
@@ -124,7 +124,7 @@ For each suggestion output exactly this format:
 Be specific to this repo's domain and tech stack. Prioritize by impact.`;
 
     try {
-        return await generateWithFailover(prompt, { useShortResponse: false });
+        return (await generateWithFailover(prompt, { useShortResponse: false })).text;
     } catch (error) {
         logger.warn('All AI providers failed for feature suggestions:', error);
         if (error instanceof Error) {
@@ -174,7 +174,7 @@ For each suggestion output EXACTLY this format (one per line, no numbering, no e
 **Goal Title** — one sentence describing the user value and why this quarter.`;
 
     try {
-        return await generateWithFailover(prompt, { useShortResponse: true });
+        return (await generateWithFailover(prompt, { useShortResponse: true })).text;
     } catch (error) {
         logger.warn('All AI providers failed for roadmap suggestions:', error);
         return null;
@@ -209,19 +209,36 @@ ${context.currentContent.slice(0, 8000)}
 --- END ---`;
 
     try {
-        return await generateWithFailover(prompt, { useShortResponse: false });
+        return (await generateWithFailover(prompt, { useShortResponse: false })).text;
     } catch (error) {
         logger.warn('All AI providers failed for doc improvement:', error);
         return null;
     }
 }
 
+export interface GenerateAIContentResult {
+    text: string;
+    /** True only if a personal key actually produced the reply -- false if
+     * one was configured but failed and the shared key served the request
+     * instead. Callers must gate any shared-key budget on this, not on
+     * whether userOverride was passed in. */
+    usingOwnKey: boolean;
+}
+
 /**
  * Generate AI content with automatic failover across providers.
+ *
+ * @param userOverride BYOK: a signed-in user's own provider + API key,
+ *   tried first before the app's shared providers (see
+ *   generateWithFailover's userOverride option).
  */
-export async function generateAIContent(prompt: string): Promise<string> {
+export async function generateAIContent(
+    prompt: string,
+    userOverride?: { provider: 'gemini' | 'openai' | 'anthropic'; apiKey: string }
+): Promise<GenerateAIContentResult> {
     try {
-        return await generateWithFailover(prompt);
+        const result = await generateWithFailover(prompt, { userOverride });
+        return { text: result.text, usingOwnKey: result.servedBy === 'user-override' };
     } catch (error) {
         logger.warn('All AI providers failed for AI content:', error);
 

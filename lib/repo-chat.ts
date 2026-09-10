@@ -73,6 +73,72 @@ export function _resetAnonChatRateLimitForTests(): void {
     anonRateLimitMap.clear();
 }
 
+// --- Authenticated shared-key rate limiting (BYOK) ---
+//
+// A signed-in user without their own AI key rides the app's shared/default
+// provider key. That's still a shared, metered resource — one heavy user on
+// the shared key can starve everyone else — so it gets its own (more
+// generous than anonymous) per-user budget. A user with their own key
+// (userOverride set) is never subject to this limit; they're spending their
+// own quota, not the app's.
+export const AUTHED_SHARED_KEY_RATE_LIMIT = 30;
+export const AUTHED_SHARED_KEY_RATE_WINDOW_MS = 5 * 60_000; // 5 minutes
+export const AUTHED_SHARED_KEY_RATE_LIMIT_MAX_ENTRIES = 20_000;
+/** Surface a throttling warning to the client once this fraction of the
+ * budget remains, so they can set their own key before actually being cut
+ * off. */
+export const AUTHED_SHARED_KEY_WARN_REMAINING_FRACTION = 0.2;
+
+export interface SharedKeyRateLimitResult {
+    allowed: boolean;
+    remaining: number;
+    limit: number;
+    /** True once remaining budget drops to/below the warn threshold. */
+    nearLimit: boolean;
+}
+
+const authedSharedKeyRateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function evictExpiredAuthedSharedKeyRateLimitEntries(now: number): void {
+    for (const [userId, entry] of authedSharedKeyRateLimitMap) {
+        if (now >= entry.resetAt) authedSharedKeyRateLimitMap.delete(userId);
+    }
+}
+
+/**
+ * Returns the signed-in `userId`'s (typically email) remaining budget on the
+ * app's shared AI key for the current window, incrementing its counter as a
+ * side effect. Mirrors {@link checkAnonChatRateLimit}'s bounded-map shape.
+ */
+export function checkAuthedSharedKeyRateLimit(userId: string, now: number = Date.now()): SharedKeyRateLimitResult {
+    const warnAt = Math.ceil(AUTHED_SHARED_KEY_RATE_LIMIT * AUTHED_SHARED_KEY_WARN_REMAINING_FRACTION);
+    const entry = authedSharedKeyRateLimitMap.get(userId);
+
+    if (!entry || now >= entry.resetAt) {
+        if (!authedSharedKeyRateLimitMap.has(userId) && authedSharedKeyRateLimitMap.size >= AUTHED_SHARED_KEY_RATE_LIMIT_MAX_ENTRIES) {
+            evictExpiredAuthedSharedKeyRateLimitEntries(now);
+        }
+        if (!authedSharedKeyRateLimitMap.has(userId) && authedSharedKeyRateLimitMap.size >= AUTHED_SHARED_KEY_RATE_LIMIT_MAX_ENTRIES) {
+            return { allowed: false, remaining: 0, limit: AUTHED_SHARED_KEY_RATE_LIMIT, nearLimit: true };
+        }
+        authedSharedKeyRateLimitMap.set(userId, { count: 1, resetAt: now + AUTHED_SHARED_KEY_RATE_WINDOW_MS });
+        const remaining = AUTHED_SHARED_KEY_RATE_LIMIT - 1;
+        return { allowed: true, remaining, limit: AUTHED_SHARED_KEY_RATE_LIMIT, nearLimit: remaining <= warnAt };
+    }
+
+    if (entry.count >= AUTHED_SHARED_KEY_RATE_LIMIT) {
+        return { allowed: false, remaining: 0, limit: AUTHED_SHARED_KEY_RATE_LIMIT, nearLimit: true };
+    }
+    entry.count++;
+    const remaining = AUTHED_SHARED_KEY_RATE_LIMIT - entry.count;
+    return { allowed: true, remaining, limit: AUTHED_SHARED_KEY_RATE_LIMIT, nearLimit: remaining <= warnAt };
+}
+
+/** Test-only: reset all tracked rate-limit state between test cases. */
+export function _resetAuthedSharedKeyRateLimitForTests(): void {
+    authedSharedKeyRateLimitMap.clear();
+}
+
 export interface DocStatusLike {
     doc_type: string;
     exists?: boolean | null;
@@ -347,6 +413,42 @@ Conversation so far:
 ${transcript}
 
 Overseer:`;
+}
+
+/**
+ * Parse a structured doc-edit proposal from the model's reply.
+ * Expected format (fenced code block):
+ * ```proposal
+ * {
+ *   "docType": "readme|roadmap|tasks|metrics|features|contributing|security|changelog|license|codeowners|copilot|funding|issue_template|issue_templates|pr_template|flow_tasks_prompt|handoff_prompt",
+ *   "content": "full file content to write",
+ *   "summary": "one-line description of the change"
+ * }
+ * ```
+ * Returns null if no valid proposal found.
+ */
+export function parseDocEditProposal(reply: string): {
+  docType: string;
+  content: string;
+  summary: string;
+} | null {
+  const match = reply.match(/```proposal\s*(\{[\s\S]*?\})\s*```/);
+  if (!match) return null;
+  try {
+    const parsed: unknown = JSON.parse(match[1]);
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      typeof (parsed as Record<string, unknown>).docType === 'string' &&
+      typeof (parsed as Record<string, unknown>).content === 'string' &&
+      typeof (parsed as Record<string, unknown>).summary === 'string'
+    ) {
+      return parsed as { docType: string; content: string; summary: string };
+    }
+  } catch {
+    // Invalid JSON
+  }
+  return null;
 }
 
 export interface ParsedMessages {

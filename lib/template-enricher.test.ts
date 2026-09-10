@@ -122,19 +122,19 @@ describe('enrichTemplateWithAI', () => {
   });
 
   it('returns enriched content from AI', async () => {
-    vi.mocked(generateAIContent).mockResolvedValue('# Enriched README');
+    vi.mocked(generateAIContent).mockResolvedValue({ text: '# Enriched README', usingOwnKey: false });
     const result = await enrichTemplateWithAI('readme', '# Template', repo);
     expect(result).toBe('# Enriched README');
   });
 
   it('strips markdown code fences from AI response', async () => {
-    vi.mocked(generateAIContent).mockResolvedValue('```markdown\n# README\n```');
+    vi.mocked(generateAIContent).mockResolvedValue({ text: '```markdown\n# README\n```', usingOwnKey: false });
     const result = await enrichTemplateWithAI('readme', '# Template', repo);
     expect(result).toBe('# README');
   });
 
   it('strips opening code fence with language label', async () => {
-    vi.mocked(generateAIContent).mockResolvedValue('```yaml\nkey: value\n```');
+    vi.mocked(generateAIContent).mockResolvedValue({ text: '```yaml\nkey: value\n```', usingOwnKey: false });
     const result = await enrichTemplateWithAI('dependabot', 'key: placeholder', repo);
     expect(result).toBe('key: value');
   });
@@ -152,20 +152,20 @@ describe('enrichTemplateWithAI', () => {
   });
 
   it('normalizes CRLF line endings in AI response', async () => {
-    vi.mocked(generateAIContent).mockResolvedValue('line1\r\nline2\r\nline3');
+    vi.mocked(generateAIContent).mockResolvedValue({ text: 'line1\r\nline2\r\nline3', usingOwnKey: false });
     const result = await enrichTemplateWithAI('readme', '', repo);
     expect(result).not.toContain('\r\n');
     expect(result).toContain('line1\nline2');
   });
 
   it('falls back to original when AI returns empty fenced block', async () => {
-    vi.mocked(generateAIContent).mockResolvedValue('```markdown\n```');
+    vi.mocked(generateAIContent).mockResolvedValue({ text: '```markdown\n```', usingOwnKey: false });
     const result = await enrichTemplateWithAI('readme', '# Original', repo);
     expect(result).toBe('# Original');
   });
 
   it('falls back to original when AI returns empty string', async () => {
-    vi.mocked(generateAIContent).mockResolvedValue('');
+    vi.mocked(generateAIContent).mockResolvedValue({ text: '', usingOwnKey: false });
     const result = await enrichTemplateWithAI('readme', '# Original', repo);
     expect(result).toBe('# Original');
   });

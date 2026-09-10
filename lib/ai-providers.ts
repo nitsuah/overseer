@@ -78,21 +78,21 @@ export function getAvailableProviders(): AIProviderConfig[] {
       name: 'gemini',
       enabled: !!getApiKey('gemini'),
       apiKey: getApiKey('gemini'),
-      model: getConfiguredModel(),
+      model: defaultModelFor('gemini'),
       priority: geminiPriority,
     },
     {
       name: 'openai',
       enabled: !!getApiKey('openai'),
       apiKey: getApiKey('openai'),
-      model: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
+      model: defaultModelFor('openai'),
       priority: providerOrder.indexOf('openai') + 1,
     },
     {
       name: 'anthropic',
       enabled: !!getApiKey('anthropic'),
       apiKey: getApiKey('anthropic'),
-      model: process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022',
+      model: defaultModelFor('anthropic'),
       priority: providerOrder.indexOf('anthropic') + 1,
     },
   ];
@@ -116,4 +116,23 @@ export function getPrimaryProvider(): AIProviderConfig | null {
 export function getFallbackProviders(): AIProviderConfig[] {
   const providers = getAvailableProviders();
   return providers.slice(1);
+}
+
+/** The default model used for a provider when the caller supplies only an
+ * API key (e.g. a user's BYOK override) with no explicit model choice. */
+export function defaultModelFor(provider: AIProvider): string {
+  switch (provider) {
+    case 'gemini':
+      return getConfiguredModel();
+    case 'openai':
+      return process.env.OPENAI_MODEL || 'gpt-4-turbo-preview';
+    case 'anthropic':
+      return process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
+    default:
+      throw new Error(`Unknown provider: ${provider}`);
+  }
+}
+
+export function isKnownProvider(value: unknown): value is AIProvider {
+  return value === 'gemini' || value === 'openai' || value === 'anthropic';
 }

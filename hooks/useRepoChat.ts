@@ -14,6 +14,15 @@ export interface ChatThreadMessage extends ChatMessage {
     createdAt: string;
     /** Set when the request for this turn failed; lets the UI mark it. */
     failed?: boolean;
+    /** Structured doc-edit proposal returned by the server. */
+    proposal?: {
+      docType: string;
+      content: string;
+      summary: string;
+    };
+    /** BYOK: set when this turn rode the app's shared AI key and is
+     * approaching its per-user rate limit. */
+    rateLimitWarning?: string;
 }
 
 export type ChatThreads = Record<string, ChatThreadMessage[]>;
@@ -36,6 +45,10 @@ export interface UseRepoChatResult {
     sendMessage: (repoName: string, text: string) => Promise<void>;
     /** Deletes `repoName`'s thread entirely (and clears any active error). */
     clearThread: (repoName: string) => void;
+    /** Clears the proposal attached to one assistant message, without
+     *  touching the rest of the thread — used when the user dismisses a
+     *  proposed doc edit instead of applying it. */
+    dismissProposal: (repoName: string, messageId: string) => void;
     /** The repo with an in-flight `sendMessage` call, or `null`. */
     sendingRepo: string | null;
     /** The most recent request-level error, or `null`. */
@@ -57,6 +70,16 @@ function storageKeyFor(namespace: string): string {
     return `${STORAGE_PREFIX}.${encodeURIComponent(namespace)}`;
 }
 
+function isValidProposal(value: unknown): value is NonNullable<ChatThreadMessage['proposal']> {
+    if (typeof value !== 'object' || value === null) return false;
+    const p = value as Record<string, unknown>;
+    return (
+        typeof p.docType === 'string' &&
+        typeof p.content === 'string' &&
+        typeof p.summary === 'string'
+    );
+}
+
 function isValidThreadMessage(value: unknown): value is ChatThreadMessage {
     if (typeof value !== 'object' || value === null) return false;
     const m = value as Record<string, unknown>;
@@ -64,7 +87,8 @@ function isValidThreadMessage(value: unknown): value is ChatThreadMessage {
         (m.role === 'user' || m.role === 'assistant') &&
         typeof m.content === 'string' &&
         typeof m.id === 'string' &&
-        typeof m.createdAt === 'string'
+        typeof m.createdAt === 'string' &&
+        (m.proposal === undefined || isValidProposal(m.proposal))
     );
 }
 
@@ -177,6 +201,19 @@ export function useRepoChat(identity?: string | null): UseRepoChatResult {
         });
     }, []);
 
+    const dismissProposal = useCallback((repoName: string, messageId: string) => {
+        setThreads((prev) => {
+            const existing = prev[repoName];
+            if (!existing) return prev;
+            return {
+                ...prev,
+                [repoName]: existing.map((m) =>
+                    m.id === messageId ? { ...m, proposal: undefined } : m
+                ),
+            };
+        });
+    }, []);
+
     const sendMessage = useCallback(
         async (repoName: string, text: string): Promise<void> => {
             const trimmed = text.trim();
@@ -258,6 +295,8 @@ export function useRepoChat(identity?: string | null): UseRepoChatResult {
                             role: 'assistant',
                             content: data.reply ?? '(empty response)',
                             createdAt: new Date().toISOString(),
+                            proposal: isValidProposal(data.proposal) ? data.proposal : undefined,
+                            rateLimitWarning: data.rateLimitWarning ?? undefined,
                         },
                     ],
                 }));
@@ -285,5 +324,5 @@ export function useRepoChat(identity?: string | null): UseRepoChatResult {
         [threads, sendingRepo]
     );
 
-    return { threads, getThread, sendMessage, clearThread, sendingRepo, error };
+    return { threads, getThread, sendMessage, clearThread, dismissProposal, sendingRepo, error };
 }

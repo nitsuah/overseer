@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { randomUUID } from 'crypto';
 import { motorPoolBridge, type AgentTaskRecord } from '@/lib/agent-bridge';
+import { getNeonClient, ensureSchema } from '@/lib/db';
+import logger from '@/lib/log';
 
 export const runtime = 'nodejs';
 
@@ -159,6 +161,36 @@ const executeTask = (task: TaskQueueItem): Promise<TaskRecord> =>
     meta: task.meta,
   });
 
+/**
+ * Persist a terminal task as a durable session receipt. The in-memory queue is
+ * lost on restart; this keeps a record of what each agent session did. Best
+ * effort — a DB failure must not fail the task itself.
+ */
+const persistReceipt = async (task: TaskQueueItem): Promise<void> => {
+  try {
+    const db = getNeonClient();
+    await ensureSchema(db);
+    const motorPoolSessionId =
+      (task.result as { motorPoolSessionId?: string } | undefined)?.motorPoolSessionId ?? null;
+    await db`
+      INSERT INTO agent_task_receipts (
+        task_id, type, priority, status, payload, meta, result, error,
+        motor_pool_session_id, submitted_by_email,
+        created_at, queued_at, started_at, completed_at
+      )
+      VALUES (
+        ${task.id}, ${task.type}, ${task.priority}, ${task.status},
+        ${JSON.stringify(task.payload ?? {})}, ${task.meta ? JSON.stringify(task.meta) : null},
+        ${task.result ? JSON.stringify(task.result) : null}, ${task.error ?? null},
+        ${motorPoolSessionId}, ${task.submittedBy?.email ?? null},
+        ${task.createdAt}, ${task.queuedAt}, ${task.startedAt ?? null}, ${task.completedAt ?? null}
+      )
+    `;
+  } catch (error) {
+    logger.warn(`[agent-tasks] Failed to persist receipt for ${task.id}:`, error);
+  }
+};
+
 const processQueue = async () => {
   if (runnerActive) {
     return;
@@ -190,12 +222,14 @@ const processQueue = async () => {
         task.result = result;
         task.completedAt = completedAt;
         task.updatedAt = completedAt;
+        void persistReceipt(task);
       } catch (error) {
         const completedAt = new Date().toISOString();
         task.status = 'failed';
         task.error = sanitizeError(error);
         task.completedAt = completedAt;
         task.updatedAt = completedAt;
+        void persistReceipt(task);
       }
     }
   } finally {
@@ -290,6 +324,26 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, task: toPublicTask(task) }, { status: 200 });
+  }
+
+  // Session receipts: durable history from the DB (survives queue restarts).
+  if (req.nextUrl.searchParams.get('receipts') === 'true') {
+    try {
+      const db = getNeonClient();
+      await ensureSchema(db);
+      const rows = await db`
+        SELECT task_id, type, priority, status, result, error, motor_pool_session_id,
+               submitted_by_email, created_at, queued_at, started_at, completed_at
+        FROM agent_task_receipts
+        WHERE submitted_by_email = ${callerEmail}
+        ORDER BY created_at DESC
+        LIMIT 100
+      `;
+      return NextResponse.json({ success: true, receipts: rows }, { status: 200 });
+    } catch (error) {
+      logger.warn('[agent-tasks] Failed to read receipts:', error);
+      return NextResponse.json({ success: false, error: 'Failed to read receipts' }, { status: 500 });
+    }
   }
 
   pruneExpiredTasks();

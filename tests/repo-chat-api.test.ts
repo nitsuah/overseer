@@ -10,7 +10,7 @@ import { NextRequest } from 'next/server';
 import type { Session } from 'next-auth';
 
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
-vi.mock('@/lib/db', () => ({ getNeonClient: vi.fn() }));
+vi.mock('@/lib/db', () => ({ getNeonClient: vi.fn(), ensureSchema: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@/lib/log', () => ({ default: { warn: vi.fn(), info: vi.fn(), error: vi.fn() } }));
 vi.mock('@/lib/default-repos', () => ({ DEFAULT_REPOS: [{ name: 'overseer' }] }));
 vi.mock('@/lib/ai', () => ({ generateAIContent: vi.fn() }));
@@ -18,8 +18,12 @@ vi.mock('@/lib/ai', () => ({ generateAIContent: vi.fn() }));
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
 import { generateAIContent } from '@/lib/ai';
-// Real (unmocked) module: resets the in-memory anon rate limiter between tests.
-import { _resetAnonChatRateLimitForTests, ANON_CHAT_RATE_LIMIT } from '@/lib/repo-chat';
+// Real (unmocked) module: resets the in-memory rate limiters between tests.
+import {
+    _resetAnonChatRateLimitForTests,
+    _resetAuthedSharedKeyRateLimitForTests,
+    ANON_CHAT_RATE_LIMIT,
+} from '@/lib/repo-chat';
 
 const mockAuth = vi.mocked(auth) as unknown as Mock<() => Promise<Session | null>>;
 const mockGetNeonClient = vi.mocked(getNeonClient);
@@ -74,12 +78,16 @@ describe('POST /api/repos/[name]/chat', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         _resetAnonChatRateLimitForTests();
+        _resetAuthedSharedKeyRateLimitForTests();
         mockAuth.mockResolvedValue({
             user: { name: 'testuser', email: 'test@example.com' },
             expires: new Date(Date.now() + 86400000).toISOString(),
         } as Session);
         mockGetNeonClient.mockReturnValue(makeDb() as never);
-        mockGenerate.mockResolvedValue('You should finish the conversational interface first.');
+        mockGenerate.mockResolvedValue({
+            text: 'You should finish the conversational interface first.',
+            usingOwnKey: false,
+        });
     });
 
     it('returns 400 for a malformed JSON body', async () => {

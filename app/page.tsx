@@ -10,10 +10,14 @@ import { RepoTableRow } from '@/components/dashboard/RepoTableRow';
 import { useRepos, useRepoDetails, useRepoExpansion, useRepoPolling } from '@/hooks/useDashboard';
 import { useRepoActions } from '@/hooks/useRepoActions';
 import { MobileRepoCard } from '@/components/dashboard/MobileRepoCard';
+import { DependencyGraph } from '@/components/dashboard/DependencyGraph';
 import { useRepoFilters } from '@/hooks/useRepoFilters';
 import { useRepoChat } from '@/hooks/useRepoChat';
 import { RepoChatPanel } from '@/components/chat/RepoChatPanel';
+import { SettingsModal } from '@/components/SettingsModal';
+import { resolveDocTargetPath } from '@/lib/doc-target-paths';
 import { detectRepoType, RepoType } from '@/lib/repo-type';
+import { byokPromptKey } from '@/lib/byok-prompt-key';
 import type { Repo } from '@/types/repo';
 
 export default function Dashboard() {
@@ -29,12 +33,31 @@ export default function Dashboard() {
   const [showAddRepo, setShowAddRepo] = useState(false);
   const [addRepoUrl, setAddRepoUrl] = useState('');
   const [addRepoType, setAddRepoType] = useState<RepoType>('unknown');
-  const [expandedHealth, setExpandedHealth] = useState(false);
+  // Per-repo, not a single shared flag — otherwise expanding the health
+  // breakdown or docs panel on one row would expand it on every row in the
+  // list at once, since they all render from the same map() call.
+  const [expandedHealthRepos, setExpandedHealthRepos] = useState<Set<string>>(new Set());
+  const [expandedDocsRepos, setExpandedDocsRepos] = useState<Set<string>>(new Set());
+  const toggleHealthExpanded = (repoName: string) => {
+    setExpandedHealthRepos((prev) => {
+      const next = new Set(prev);
+      if (next.has(repoName)) next.delete(repoName); else next.add(repoName);
+      return next;
+    });
+  };
+  const toggleDocsExpanded = (repoName: string) => {
+    setExpandedDocsRepos((prev) => {
+      const next = new Set(prev);
+      if (next.has(repoName)) next.delete(repoName); else next.add(repoName);
+      return next;
+    });
+  };
   const [showTour, setShowTour] = useState(false);
   const [chatRepoName, setChatRepoName] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // One chat thread ("friend") per repo, persisted across sessions.
-  const { getThread, sendMessage, clearThread, sendingRepo, error: chatError } = useRepoChat(session?.user?.email);
+  const { getThread, sendMessage, clearThread, dismissProposal, sendingRepo, error: chatError } = useRepoChat(session?.user?.email);
 
   const {
     addingRepo,
@@ -46,6 +69,9 @@ export default function Dashboard() {
     previewRepoName,
     previewMode,
     setPreviewModalOpen,
+    setPreviewFiles,
+    setPreviewRepoName,
+    setPreviewMode,
     handleAddRepo,
     handleRemoveRepo,
     handleRestoreRepo,
@@ -187,6 +213,7 @@ export default function Dashboard() {
         onStartTour={() => setShowTour(true)}
         showHidden={showHidden}
         onToggleHidden={() => setShowHidden(!showHidden)}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
       <div className="px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 space-y-4 md:space-y-6">
         {filteredRepos.length === 0 ? (
@@ -210,7 +237,7 @@ export default function Dashboard() {
                   syncingRepo={syncingRepo}
                   generatingSummary={generatingSummary}
                   isAuthenticated={!!session}
-                  onToggleHealth={() => setExpandedHealth(!expandedHealth)}
+                  onToggleHealth={() => toggleHealthExpanded(repo.name)}
                   onToggleExpanded={() => handleToggleExpanded(repo.name)}
                   onRemove={() => handleRemoveRepo(repo.name)}
                   onFixAllDocs={() => handleFixAllDocs(repo.full_name)}
@@ -283,8 +310,10 @@ export default function Dashboard() {
                       syncingRepo={syncingRepo}
                       generatingSummary={generatingSummary}
                       isAuthenticated={!!session}
-                      expandedHealth={expandedHealth}
-                      onToggleHealth={() => setExpandedHealth(!expandedHealth)}
+                      expandedHealth={expandedHealthRepos.has(repo.name)}
+                      onToggleHealth={() => toggleHealthExpanded(repo.name)}
+                      expandedDocs={expandedDocsRepos.has(repo.name)}
+                      onToggleDocs={() => toggleDocsExpanded(repo.name)}
                       onToggleExpanded={() => handleToggleExpanded(repo.name)}
                       onRemove={() => handleRemoveRepo(repo.name)}
                       onFixAllDocs={() => handleFixAllDocs(repo.full_name)}
@@ -304,6 +333,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+        <DependencyGraph />
       </div>
       <RepoChatPanel
         isOpen={chatRepoName !== null}
@@ -320,8 +350,58 @@ export default function Dashboard() {
         sending={sendingRepo !== null}
         error={chatError}
         onClose={() => setChatRepoName(null)}
-        onSend={(text) => { if (chatRepoName) void sendMessage(chatRepoName, text); }}
+        onSend={(text: string): void => {
+          if (!chatRepoName) return;
+          // First-ever AI use in this browser for this identity: nudge
+          // toward Settings once, non-blockingly, rather than gating the
+          // send on it. BYOK's actual fallback-to-shared-key behavior
+          // doesn't depend on this notice; it's a courtesy heads-up.
+          try {
+            const promptKey = byokPromptKey(session?.user?.email);
+            if (session?.user?.email && !window.localStorage.getItem(promptKey)) {
+              window.localStorage.setItem(promptKey, '1');
+              setToastMessage("Using Overseer's shared AI key. Add your own in Settings (gear icon) if you want higher limits.");
+            }
+          } catch {
+            // localStorage unavailable — skip the nudge, not fatal.
+          }
+          void sendMessage(chatRepoName, text);
+        }}
         onClear={() => { if (chatRepoName) clearThread(chatRepoName); }}
+        onApplyProposal={(proposal) => {
+          if (!chatRepoName) return;
+          // Open the preview modal with the proposed content
+          // Use the same docType -> path mapping fix-doc/route.ts validates
+          // against, rather than guessing `${docType.toUpperCase()}.md` — that
+          // guess was wrong for outliers like `license` (no extension) and
+          // `codeowners`/`funding` (live under .github/), which made the
+          // Apply action 400 for those doc types.
+          const resolvedPath = resolveDocTargetPath(proposal.docType);
+          if (!resolvedPath) {
+            // Don't synthesize a fallback path (e.g. "UNKNOWN.md") — that
+            // would open a preview the Apply action can only reject with a
+            // 400 anyway, since fix-doc/route.ts validates against this
+            // same map. Tell the user instead of showing a broken preview.
+            setToastMessage(
+              `"${proposal.docType}" isn't a supported document type, so this proposal can't be applied.`,
+            );
+            return;
+          }
+          const proposalFiles = [{
+            type: 'doc' as const,
+            docType: proposal.docType,
+            path: resolvedPath,
+            content: proposal.content,
+            practiceType: undefined,
+          }];
+          setPreviewFiles(proposalFiles);
+          setPreviewRepoName(chatRepoName);
+          setPreviewMode('single');
+          setPreviewModalOpen(true);
+        }}
+        onDismissProposal={(messageId) => {
+          if (chatRepoName) dismissProposal(chatRepoName, messageId);
+        }}
       />
       {showTour && <GuidedTour onClose={() => setShowTour(false)} />}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
@@ -333,6 +413,11 @@ export default function Dashboard() {
         onConfirm={confirmPRCreation}
         loading={fixingDoc}
         mode={previewMode}
+      />
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        userIdentity={session?.user?.email}
       />
     </>
   );

@@ -22,6 +22,8 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Bus Factor Analysis**: Contributor concentration risk using 80/20 rule
 - **Commit Frequency**: Average commits/week from last 12 weeks
 - **PR Merge Time**: Average hours from creation to merge for last 30 PRs
+- **Token-Density & Comment-to-Code Ratio**: Computed from sampled source files during sync (`lib/parsers/code-density.ts`) and surfaced in expanded repo stats (desktop + mobile)
+- **Velocity & Health-Score Trending**: A `repo_snapshots` row is recorded on every sync (commit frequency, PR merge time, health score, open PRs, LOC); `GET /api/repo-details/[name]/trend` powers a health-score sparkline in the expanded stats panel
 - **Features Parser**: Extracts and displays features from FEATURES.md by category
 - **Best Practices Detection**: 10 automated checks (CI/CD, pre-commit, linting, branch protection, testing, Docker, etc.)
 - **Community Standards**: 12 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt
@@ -30,8 +32,8 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 ### 🤖 Cross-Repo Orchestration
 
-- **Cross-Repo Dependency Mapping**: Infer and display connections between related repos sharing a stack (e.g., agent-board ↔ bb-mcp ↔ overseer) _(planned)_
-- **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution _(planned)_
+- **Cross-Repo Dependency Mapping**: `GET /api/dependencies` infers connections between related repos sharing a stack (shared topics + primary language, e.g. agent-board ↔ bb-mcp ↔ overseer); rendered as a collapsible SVG graph + connection list (`DependencyGraph.tsx`) on the dashboard
+- **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution _(planned — v0 dispatch bridge, see TASKS.md)_
 - **MCP Server**: `POST /api/mcp` — JSON-RPC 2.0 endpoint (MCP spec 2024-11-05) exposing 7 tools to any MCP-compatible agent client: `get_repo_health` (health score, CI, vuln counts, activity), `list_tasks` (per-repo tasks with optional status filter), `list_repos` (full portfolio with health/CI/vuln metadata, filterable by min_health/language/type/has_vulns), `get_repo_details` (tasks, roadmap, docs, best practices, community standards), `get_portfolio_overview` (aggregate health distribution, CI pass rate, security posture), `search_repos` (name/description/language search with LIKE-metachar escaping), `get_security_summary` (single-repo or portfolio-wide vuln/secret/code-scanning posture); Bearer token auth via `MCP_API_KEY` env var; 60 req/min rate limit; `GET /api/mcp` returns public capability doc without auth
 - **LLM Context Endpoint**: `GET /api/context` — LLM-optimized JSON dump of the full portfolio or a single repo (`?repo=owner/repo`); no auth returns default repos only, Bearer token or NextAuth session returns full portfolio; designed to be passed directly as context to an LLM or MCP agent
 
@@ -63,6 +65,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Model Caching (1-hour TTL)**: Discovered working Gemini models are cached in-memory for 1 hour; repeated requests skip the discovery round-trip until the TTL expires or a model error forces re-discovery
 - **Unified `GEMINI_MODEL_NAME` Env Var**: Single `GEMINI_MODEL_NAME` environment variable controls the Gemini model across all code paths; previously scattered per-call overrides removed
 - **Per-Repo Conversational Interface**: Messenger-style slide-in chat panel opened from a chat icon on every repo row/card; each repo is its own persistent thread ("one friend per repo") stored in localStorage. The server rebuilds context per turn from the same tables the dashboard renders — health signals, doc status, TASKS.md and ROADMAP.md — and pre-computes documentation staleness so answers are grounded in real state rather than inferred. Ships one-tap repo-hygiene workflows ("summarize my stale docs", "what should I work on next?") and routes through the existing multi-provider AI failover chain
+- **Chat-Driven Doc-Edit Proposals**: The chat can propose a specific, diffable edit to a doc file — the assistant's reply is parsed for a fenced ` ```proposal``` ` JSON block (`parseDocEditProposal`) and rendered inline as a card with Apply/Dismiss actions; Apply routes the proposed content into the existing preview-and-PR modal (reusing `fix-doc`'s validated `TARGET_PATHS` mapping) rather than writing to the repo directly
 
 ### 📝 Documentation Management
 
@@ -92,6 +95,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **GraphQL Rate Limit Safety**: Null checks for optional GraphQL rate limit data
 - **TypeScript Build Stability**: Session type extensions, array mutation fixes, centralized repo detection
 - **Batched DB Queries**: Per-repo detail queries consolidated into a single `db.transaction()` call, reducing Neon serverless round trips from up to 8 sequential requests to one per repo (PR #128)
+- **DB Scaling Assessment**: `docs/db-scaling-assessment.md` covers index coverage, slow-query candidates, and connection pooling limits as repo/user count grows
 
 ### 🎯 Project Tracking
 
@@ -180,7 +184,9 @@ These ensure the dashboard always has content, even for non-authenticated visito
 ## 🆕 Planned & Upcoming Features
 
 - **AI-Assisted Roadmap Management**: Auto-suggest roadmap items from repo health signals; auto-update progress from linked PR/issue state (Q3 2026)
-- **Cross-Repo Dependency Mapping**: Interactive 3D graph visualizing shared-stack connections across the portfolio (Q3 2026)
+- **3D Cross-Repo Dependency Graph**: Upgrade the shipped 2D SVG dependency graph to an interactive 3D visualization with click-to-detail (Q3 2026)
+- **Agent Dispatch Bridge v0**: Route queued overseer agent tasks to agent-board's local model runtime and report completion back to the queue (Q3 2026)
+- **Zombie-Branch Detection**: Flag stale long-lived branches with a bulk-cleanup dialog (Q3 2026)
 - **Autonomous Plan Execution**: Agents read ROADMAP.md and TASKS.md, open PRs, and close items end to end (Q4 2026)
 - **Portfolio Intelligence Dashboard**: Cross-repo health roll-up, trend lines, and strategic signal view (Q4 2026)
 - **Mobile-Responsive PWA**: Lightweight PWA packaging (Q4 2026) — responsive mobile card layout already shipped (PR #180)
@@ -193,7 +199,7 @@ These ensure the dashboard always has content, even for non-authenticated visito
 - **AI Feature Suggestions**: Repo-context-aware feature ideation with optional user prompt (shipped PR #132)
 - **AI Summaries**: Context-aware, market-trend-driven repository summaries
 - **Security Signal Integration**: Dependabot and secret-scanning signals weighted in health score
-- **Real-Time Analytics**: Velocity scoring, technical-debt trending, and zombie-branch detection (planned Q3)
+- **Real-Time Analytics**: Velocity scoring and health-score trending shipped (`repo_snapshots` + trend endpoint + sparkline); technical-debt trending and zombie-branch detection still planned
 
 ## 📈 Market-Relevant Improvements
 
@@ -294,5 +300,7 @@ Health scores are displayed as letter grades (A-F) with detailed component break
 - **Scheduled Jobs**: Netlify scheduled functions for auto-sync
 
 ## 📅 Last Updated
+
+2026-09-03 - Portfolio Intelligence batch (PR #204): chat-driven doc-edit proposals (propose/apply/dismiss), cross-repo dependency graph, token-density + comment-to-code ratio metrics, DB scaling assessment doc, and velocity/health-score trending all shipped; Planned section updated to reflect remaining work (3D dependency graph, dispatch bridge v0, zombie-branch detection)
 
 2026-08-22 - MCP server shipped; Gemini model discovery centralization, auto-discovery fallback, model caching, unified env var added; docs/config/ detection and org fallback awareness documented; Planned section updated; default Gemini model updated to gemini-2.5-flash

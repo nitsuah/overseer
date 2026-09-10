@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
-import { LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle, LayoutDashboard, Menu } from "lucide-react";
+import { LogOut, Zap, CheckCircle, AlertCircle, Tag, Plus, Filter, X, RefreshCw, HelpCircle, LayoutDashboard, Menu, Settings } from "lucide-react";
 import Link from "next/link";
 import { GithubIcon } from "@/components/icons/GithubIcon";
 import { VigilIcon } from "@/components/icons/VigilIcon";
@@ -38,6 +38,7 @@ interface HeaderProps {
     onStartTour?: () => void;
     showHidden?: boolean;
     onToggleHidden?: () => void;
+    onOpenSettings?: () => void;
 }
 
 const repoTypes: RepoType[] = ['web-app', 'game', 'tool', 'library', 'bot', 'research', 'unknown'];
@@ -73,6 +74,7 @@ export default function Header(props: HeaderProps = {}) {
         onStartTour,
         showHidden,
         onToggleHidden,
+        onOpenSettings,
     } = props;
 
     const [showStatusPills, setShowStatusPills] = useState(false);
@@ -114,7 +116,50 @@ export default function Header(props: HeaderProps = {}) {
             <div className="hidden md:flex items-center gap-3">
                 {/* Rate Limit Indicator */}
                 {session && <RateLimitDisplay {...rateLimitState} />}
-                
+
+                {/* Show Hidden Button — sits between the rate-limit indicator and Add repo */}
+                {session && onToggleHidden && (
+                    <button
+                        onClick={onToggleHidden}
+                        className={`p-2 rounded-lg border transition-all duration-300 ${showHidden
+                            ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400 shadow-lg shadow-indigo-500/20'
+                            : 'bg-slate-800/90 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-slate-300'
+                            }`}
+                        title={showHidden ? "Hide hidden repositories" : "Show hidden repositories"}
+                    >
+                        {/* Using Eye/EyeOff logic, assuming Eye is 'show' state meaning active */}
+                        <div className="relative">
+                            <div className={`absolute inset-0 bg-indigo-500 rounded-full blur-sm opacity-0 transition-opacity ${showHidden ? 'opacity-20' : ''}`}></div>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className={`relative transition-transform ${showHidden ? 'scale-110' : ''}`}
+                            >
+                                {showHidden ? (
+                                    <>
+                                        <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                                        <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                                        <line x1="2" x2="22" y1="2" y2="22" />
+                                    </>
+                                )}
+                            </svg>
+                        </div>
+                    </button>
+                )}
+
                 {/* Repo Controls */}
                 {session && onToggleAddRepo && (
                     <div className="flex items-center gap-2">
@@ -254,11 +299,10 @@ export default function Header(props: HeaderProps = {}) {
                                         }}
                                         className="flex items-center gap-1.5 text-sm font-medium transition-colors relative"
                                         data-tour="filters"
+                                        title="Filters"
+                                        aria-label="Filters"
                                     >
                                         <Filter className={`h-4 w-4 ${hasActiveFilters ? 'text-purple-400' : 'text-slate-300 group-hover/filter:text-blue-400'}`} />
-                                        <span className={hasActiveFilters ? 'text-purple-400' : 'text-slate-300 group-hover/filter:text-blue-400'}>
-                                            Filters
-                                        </span>
                                         {repoCount && (
                                             <span className="pill relative overflow-hidden text-sky-300 font-bold shadow-lg shadow-sky-500/20 ml-1 text-[10px]">
                                                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent motion-safe:animate-[shimmer_3s_infinite]"></span>
@@ -275,47 +319,19 @@ export default function Header(props: HeaderProps = {}) {
                                 )}
                             </div>
                         </div>
-                        {/* Show Hidden Button */}
-                        <button
-                            onClick={onToggleHidden}
-                            className={`p-2 rounded-lg border transition-all duration-300 ${showHidden
-                                ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400 shadow-lg shadow-indigo-500/20'
-                                : 'bg-slate-800/90 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-slate-300'
-                                }`}
-                            title={showHidden ? "Hide hidden repositories" : "Show hidden repositories"}
-                        >
-                            {/* Using Eye/EyeOff logic, assuming Eye is 'show' state meaning active */}
-                            <div className="relative">
-                                <div className={`absolute inset-0 bg-indigo-500 rounded-full blur-sm opacity-0 transition-opacity ${showHidden ? 'opacity-20' : ''}`}></div>
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className={`relative transition-transform ${showHidden ? 'scale-110' : ''}`}
-                                >
-                                    {showHidden ? (
-                                        <>
-                                            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-                                            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-                                            <line x1="2" x2="22" y1="2" y2="22" />
-                                        </>
-                                    )}
-                                </svg>
-                            </div>
-                        </button>
                     </div>
+                )}
+
+                {/* Settings (BYOK AI key) */}
+                {session && onOpenSettings && (
+                    <button
+                        onClick={onOpenSettings}
+                        className="p-2 rounded-lg bg-slate-800/90 border border-slate-700 text-slate-400 hover:border-indigo-500/50 hover:text-indigo-300 transition-all duration-200"
+                        title="AI provider settings"
+                        aria-label="AI provider settings"
+                    >
+                        <Settings className="h-4 w-4" />
+                    </button>
                 )}
 
                 {/* PMO Link */}
@@ -426,7 +442,7 @@ export default function Header(props: HeaderProps = {}) {
                                     <span className="relative flex items-center drop-shadow-[0_0_4px_rgba(125,211,252,0.6)]">
                                         <Tag className="h-3.5 w-3.5" />
                                         <span className="w-0 group-hover/version:w-auto overflow-hidden transition-all duration-300 ease-out">
-                                            <span className="ml-1.5 whitespace-nowrap inline-block">v0.1.7</span>
+                                            <span className="ml-1.5 whitespace-nowrap inline-block">v0.2.0</span>
                                         </span>
                                     </span>
                                 </span>
@@ -474,23 +490,32 @@ export default function Header(props: HeaderProps = {}) {
                                     </div>
                                 </button>
                             ) : (
-                                <div
-                                    className="h-11 w-11 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center text-sm font-bold text-white shadow-lg"
+                                <button
+                                    onClick={() => setShowStatusPills(!showStatusPills)}
+                                    className="h-11 w-11 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center text-sm font-bold text-white shadow-lg cursor-pointer focus:outline-none"
+                                    title="Toggle status indicators"
                                     data-tour="profile-close"
                                 >
                                     {session.user?.name?.charAt(0) ?? 'U'}
+                                </button>
+                            )}
+                            {/* Name/email stay hidden until the user clicks the avatar to expand
+                                the profile (showStatusPills) — keeps the collapsed control to just
+                                the profile icon and avoids the wide inline name/email pushing the
+                                header's right cluster past the viewport on narrower/half-width
+                                screens. */}
+                            {showStatusPills && (
+                                <div className="flex flex-col justify-center transition-all duration-300 flex-1 min-w-0 pl-3 pr-14">
+                                    <span className="text-sm font-semibold bg-gradient-to-r from-purple-300 to-fuchsia-300 bg-clip-text text-transparent whitespace-nowrap">
+                                        {session.user?.name ?? 'User'}
+                                    </span>
+                                    {session.user?.email && (
+                                        <span className="text-[11px] text-slate-400 truncate">
+                                            {session.user.email}
+                                        </span>
+                                    )}
                                 </div>
                             )}
-                            <div className="flex flex-col justify-center transition-all duration-300 flex-1 min-w-0 pl-3 pr-14">
-                                <span className="text-sm font-semibold bg-gradient-to-r from-purple-300 to-fuchsia-300 bg-clip-text text-transparent whitespace-nowrap">
-                                    {session.user?.name ?? 'User'}
-                                </span>
-                                {session.user?.email && (
-                                    <span className="text-[11px] text-slate-400 truncate">
-                                        {session.user.email}
-                                    </span>
-                                )}
-                            </div>
 
                             {/* Sign Out Button - Overlays right side on hover */}
                             <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto">
@@ -556,41 +581,9 @@ export default function Header(props: HeaderProps = {}) {
         {/* Mobile dropdown menu */}
         {mobileMenuOpen && session && (
             <div className="md:hidden mt-3 border-t border-slate-700/50 pt-3 flex flex-col gap-3">
-                {/* Profile row */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        {session.user?.image && (
-                            <Image
-                                src={session.user.image}
-                                alt={session.user?.name ?? 'User'}
-                                width={32}
-                                height={32}
-                                className="rounded-full ring-1 ring-purple-500/60"
-                            />
-                        )}
-                        <span className="text-sm font-semibold text-slate-200">{session.user?.name}</span>
-                    </div>
-                    <button
-                        onClick={() => signOut()}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-sm"
-                    >
-                        <LogOut className="h-3.5 w-3.5" />
-                        Sign out
-                    </button>
-                </div>
-
-                {/* Action row */}
+                {/* Action row — "Sync All" is intentionally not duplicated here; the
+                    top mobile bar already has a one-tap sync icon. */}
                 <div className="flex items-center gap-2 flex-wrap">
-                    {onSync && (
-                        <button
-                            onClick={() => { onSync(); setMobileMenuOpen(false); }}
-                            disabled={syncing}
-                            className="flex items-center gap-1.5 px-3 py-2 btn-primary-gradient rounded-lg text-sm font-medium disabled:opacity-50"
-                        >
-                            <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-                            {syncing ? 'Syncing…' : 'Sync All'}
-                        </button>
-                    )}
                     <Link
                         href="/pmo"
                         onClick={() => setMobileMenuOpen(false)}
@@ -599,6 +592,15 @@ export default function Header(props: HeaderProps = {}) {
                         <LayoutDashboard className="h-4 w-4" />
                         PMO
                     </Link>
+                    {onOpenSettings && (
+                        <button
+                            onClick={() => { onOpenSettings(); setMobileMenuOpen(false); }}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium text-slate-300"
+                        >
+                            <Settings className="h-4 w-4" />
+                            AI Settings
+                        </button>
+                    )}
                     {onToggleAddRepo && (
                         <button
                             onClick={() => {
@@ -729,7 +731,29 @@ export default function Header(props: HeaderProps = {}) {
                     </div>
                 )}
 
-                <RateLimitDisplay {...rateLimitState} />
+                {/* Profile + rate limit — last items in the mobile expanded nav */}
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-700/50">
+                    <div className="flex items-center gap-2 min-w-0">
+                        {session.user?.image && (
+                            <Image
+                                src={session.user.image}
+                                alt={session.user?.name ?? 'User'}
+                                width={32}
+                                height={32}
+                                className="rounded-full ring-1 ring-purple-500/60 shrink-0"
+                            />
+                        )}
+                        <span className="text-sm font-semibold text-slate-200 truncate">{session.user?.name}</span>
+                        <button
+                            onClick={() => signOut()}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-xs shrink-0"
+                        >
+                            <LogOut className="h-3 w-3" />
+                            Sign out
+                        </button>
+                    </div>
+                    <RateLimitDisplay {...rateLimitState} />
+                </div>
             </div>
         )}
         </header>

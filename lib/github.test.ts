@@ -304,38 +304,48 @@ describe('GitHubClient', () => {
                     nodes: [
                         // Ready: not draft, no changes requested, CI passing
                         {
+                            number: 1,
                             isDraft: false,
                             reviewDecision: 'APPROVED',
                             mergeable: 'MERGEABLE',
                             commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                            reviewThreads: { nodes: [] },
                         },
                         // Blocked: draft
                         {
+                            number: 2,
                             isDraft: true,
                             reviewDecision: null,
                             mergeable: 'MERGEABLE',
                             commits: { nodes: [] },
+                            reviewThreads: { nodes: [] },
                         },
-                        // Blocked: changes requested
+                        // Blocked: changes requested (threads unresolved)
                         {
+                            number: 3,
                             isDraft: false,
                             reviewDecision: 'CHANGES_REQUESTED',
                             mergeable: 'MERGEABLE',
                             commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                            reviewThreads: { nodes: [{ isResolved: false }] },
                         },
                         // Blocked: CI failing
                         {
+                            number: 4,
                             isDraft: false,
                             reviewDecision: null,
                             mergeable: 'MERGEABLE',
                             commits: { nodes: [{ commit: { statusCheckRollup: { state: 'FAILURE' } } }] },
+                            reviewThreads: { nodes: [] },
                         },
                         // Blocked: merge conflict
                         {
+                            number: 5,
                             isDraft: false,
                             reviewDecision: null,
                             mergeable: 'CONFLICTING',
                             commits: { nodes: [{ commit: { statusCheckRollup: null } }] },
+                            reviewThreads: { nodes: [] },
                         },
                     ],
                 },
@@ -343,14 +353,51 @@ describe('GitHubClient', () => {
         });
 
         const readiness = await client.getPullRequestReadiness('repo-1');
-        expect(readiness).toEqual({ readyCount: 1, blockedCount: 4 });
+        expect(readiness.readyCount).toBe(1);
+        expect(readiness.blockedCount).toBe(4);
+        expect(readiness.staleReviewCount).toBe(0);
+        expect(readiness.records).toHaveLength(5);
+    });
+
+    it('should flag stale reviews: CHANGES_REQUESTED with all threads resolved and CI green', async () => {
+        mockGraphql.mockResolvedValue({
+            repository: {
+                pullRequests: {
+                    nodes: [
+                        // Stale review: changes requested but all threads resolved, CI green
+                        {
+                            number: 10,
+                            isDraft: false,
+                            reviewDecision: 'CHANGES_REQUESTED',
+                            mergeable: 'MERGEABLE',
+                            commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                            reviewThreads: { nodes: [{ isResolved: true }, { isResolved: true }] },
+                        },
+                        // Not stale: changes requested with unresolved thread
+                        {
+                            number: 11,
+                            isDraft: false,
+                            reviewDecision: 'CHANGES_REQUESTED',
+                            mergeable: 'MERGEABLE',
+                            commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                            reviewThreads: { nodes: [{ isResolved: true }, { isResolved: false }] },
+                        },
+                    ],
+                },
+            },
+        });
+
+        const readiness = await client.getPullRequestReadiness('repo-1');
+        expect(readiness.staleReviewCount).toBe(1);
+        expect(readiness.records[0]).toMatchObject({ number: 10, staleReview: true });
+        expect(readiness.records[1]).toMatchObject({ number: 11, staleReview: false });
     });
 
     it('should return zero counts when PR readiness query fails', async () => {
         mockGraphql.mockRejectedValue(new Error('GraphQL error'));
 
         const readiness = await client.getPullRequestReadiness('repo-1');
-        expect(readiness).toEqual({ readyCount: 0, blockedCount: 0 });
+        expect(readiness).toEqual({ readyCount: 0, blockedCount: 0, staleReviewCount: 0, records: [] });
     });
 
     it('should create PR for a single file', async () => {

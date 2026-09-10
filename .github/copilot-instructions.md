@@ -95,7 +95,7 @@ class Button extends React.Component {
 
 - Write unit tests for individual components and functions.
 - Write integration tests for API endpoints and component interactions.
-- Use Jest and React Testing Library for testing.
+- Use Vitest and React Testing Library for testing (the repo's actual test runner — `package.json`'s `test` script and every existing suite use Vitest, not Jest).
 - Aim for high test coverage ( > 80%).
 
 **Example:**
@@ -143,8 +143,8 @@ test('renders learn react link', () => {
 
 ## Preferred Libraries & Tools
 
-- **React Testing Library:** For component testing.  Reason: Encourages testing from a user perspective.
-- **Jest:** For unit testing. Reason: Widely used and well-supported.
+- **React Testing Library:** For component testing. Reason: Encourages testing from a user perspective.
+- **Vitest:** For unit testing. Reason: the repo's actual test runner (Vite-native, fast, ESM-first) — no Jest dependency exists in `package.json`.
 - **Zustand:** For state management. Reason: Simple, unopinionated, and easy to learn.
 - **Axios/Fetch:** For making API requests. Reason: Reliable and well-tested.
 - **ESLint/Prettier:** For code linting and formatting. Reason: Ensures code consistency.

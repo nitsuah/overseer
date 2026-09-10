@@ -17,6 +17,8 @@ import {
   HelpCircle,
   BookOpen,
   MessageSquare,
+  GitBranch,
+  ChevronsLeft,
 } from 'lucide-react';
 import ExpandableRow from '@/components/ExpandableRow';
 import { Repo, RepoDetails } from '@/types/repo';
@@ -45,6 +47,8 @@ interface RepoTableRowProps {
   isAuthenticated?: boolean;
   expandedHealth: boolean;
   onToggleHealth: () => void;
+  expandedDocs: boolean;
+  onToggleDocs: () => void;
   onToggleExpanded: () => void;
   onRemove: () => void;
   onFixAllDocs: () => void;
@@ -70,6 +74,8 @@ export function RepoTableRow({
   isAuthenticated = true,
   expandedHealth,
   onToggleHealth,
+  expandedDocs,
+  onToggleDocs,
   onToggleExpanded,
   onRemove,
   onFixAllDocs,
@@ -186,6 +192,36 @@ export function RepoTableRow({
                 </a>
               );
             })()}
+            {!repo.is_hidden && repo.stale_review_count !== undefined && repo.stale_review_count > 0 && (
+              <a
+                href={`${repo.url}/pulls`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
+                title={`${repo.stale_review_count} PR(s) blocked by a stale review — all threads resolved and CI green, but review still says changes requested`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GitPullRequest className="h-4 w-4" />
+                <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                  {repo.stale_review_count}
+                </span>
+              </a>
+            )}
+            {!repo.is_hidden && repo.zombie_branch_count !== undefined && repo.zombie_branch_count > 0 && (
+              <a
+                href={`${repo.url}/branches`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative p-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 rounded transition-colors"
+                title={`${repo.zombie_branch_count} stale branch(es) with no commits in 30+ days`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GitBranch className="h-4 w-4" />
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                  {repo.zombie_branch_count}
+                </span>
+              </a>
+            )}
             {/* Open Issues and Vulnerability Alerts */}
             {!repo.is_hidden && repo.open_issues_count !== undefined && repo.open_issues_count > 0 && (
               <a
@@ -269,6 +305,8 @@ export function RepoTableRow({
             fixingDoc={fixingDoc}
             syncingRepo={syncingRepo}
             isAuthenticated={isAuthenticated}
+            expanded={expandedDocs}
+            onToggleExpanded={onToggleDocs}
             onFixAllDocs={onFixAllDocs}
             onSyncSingleRepo={onSyncSingleRepo}
           />
@@ -406,6 +444,8 @@ export function RepoTableRow({
               commitFrequency={repo.commit_frequency}
               busFactor={repo.bus_factor}
               avgPrMergeTimeHours={repo.avg_pr_merge_time_hours}
+              tokenDensity={repo.token_density}
+              commentToCodeRatio={repo.comment_to_code_ratio}
               onSyncSingleRepo={onSyncSingleRepo}
               syncingRepo={syncingRepo}
               repoNameForSync={repo.name}
@@ -431,6 +471,8 @@ function DocStatusDisplay({
   fixingDoc,
   syncingRepo,
   isAuthenticated = true,
+  expanded,
+  onToggleExpanded,
   onFixAllDocs,
   onSyncSingleRepo,
 }: {
@@ -443,9 +485,11 @@ function DocStatusDisplay({
   fixingDoc: boolean;
   syncingRepo: string | null;
   isAuthenticated?: boolean;
+  expanded: boolean;
+  onToggleExpanded: () => void;
   onFixAllDocs: () => void;
   onSyncSingleRepo: () => void;
-}) {
+}): React.JSX.Element {
   // Calculate repo type within this component
   const repoType = repo.repo_type
     ? (repo.repo_type as RepoType)
@@ -555,8 +599,47 @@ function DocStatusDisplay({
     })
   ].join('\n');
 
+  // Collapsed (default) state: one icon giving a relative doc-health scale —
+  // not the A-F grade and not the raw percentage, just a coarse signal.
+  // Click expands to the full per-doc icon breakdown (the previous default).
+  if (!expanded) {
+    const score = docHealth?.score ?? 0;
+    const tier =
+      score >= 80
+        ? { Icon: CheckCircle2, color: 'text-green-400', label: 'Docs healthy' }
+        : score >= 40
+          ? { Icon: AlertCircle, color: 'text-yellow-400', label: 'Docs need attention' }
+          : { Icon: XCircle, color: 'text-red-400', label: 'Docs missing or unhealthy' };
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleExpanded();
+        }}
+        className={`p-1 rounded transition-colors hover:bg-slate-700/50 ${tier.color}`}
+        title={`${tier.label} — click to see each document\n\n${docHealthTooltip}`}
+        aria-label={`${tier.label}. Click to expand doc status`}
+        aria-expanded={false}
+      >
+        <tier.Icon className="h-5 w-5" />
+      </button>
+    );
+  }
+
   return (
     <div className="flex items-center gap-2" title={docHealthTooltip}>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleExpanded();
+        }}
+        className="p-0.5 rounded text-slate-500 hover:text-slate-300 hover:bg-slate-700/50 transition-colors"
+        title="Collapse doc status"
+        aria-label="Collapse doc status"
+        aria-expanded={true}
+      >
+        <ChevronsLeft className="h-3.5 w-3.5" />
+      </button>
       <span title={readme.title}>
         <BookOpen className={`h-4 w-4 ${readme.exists ? readme.iconColor : 'opacity-20'}`} />
       </span>
@@ -574,7 +657,10 @@ function DocStatusDisplay({
       </span>
       {isAuthenticated && !allDocsPresent && docHealth && docHealth.score < 100 && (
         <button
-          onClick={onFixAllDocs}
+          onClick={(e) => {
+            e.stopPropagation();
+            onFixAllDocs();
+          }}
           className="ml-2 p-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded transition-colors"
           title="Fix all missing docs"
           disabled={fixingDoc}

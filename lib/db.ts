@@ -15,6 +15,37 @@ export function getNeonClient() {
 
 let schemaEnsured = false;
 
+// @neondatabase/serverless's HTTP driver has no built-in query timeout, and
+// its tagged-template call form (the one used throughout this codebase, e.g.
+// persistReceipt in app/api/agent/tasks/route.ts) exposes no abort/signal
+// hook to pass one in. A hung request -- a Neon-side stall, a bad network
+// path -- would otherwise block whatever awaited it forever. For
+// processQueue specifically, that means runnerActive never resets and every
+// later-enqueued task stalls behind it for the rest of that warm instance's
+// life. Racing the query against a timer bounds *wait time*: the caller is
+// guaranteed to get control back within NEON_QUERY_TIMEOUT_MS regardless of
+// what the underlying HTTP request is doing (it isn't cancelled, so it may
+// keep running in the background -- this trades a small amount of wasted
+// background work for guaranteed forward progress, which is the actual
+// requirement here).
+export const NEON_QUERY_TIMEOUT_MS = 10_000;
+
+export async function withQueryTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+    let timer: ReturnType<typeof setTimeout>;
+    const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(
+            () => reject(new Error(`${label} timed out after ${NEON_QUERY_TIMEOUT_MS}ms`)),
+            NEON_QUERY_TIMEOUT_MS,
+        );
+    });
+
+    try {
+        return await Promise.race([promise, timeout]);
+    } finally {
+        clearTimeout(timer!);
+    }
+}
+
 /**
  * Applies SCHEMA_MIGRATIONS so the live database self-heals when code starts
  * relying on columns/indexes that haven't been added to production yet.
@@ -25,7 +56,7 @@ export async function ensureSchema(db: ReturnType<typeof getNeonClient>): Promis
 
     for (const statement of SCHEMA_MIGRATIONS) {
         try {
-            await db.query(statement);
+            await withQueryTimeout(db.query(statement), 'schema migration');
         } catch (error) {
             const err = error as Error & { code?: string };
             // 42701 = duplicate_column, 42P07 = duplicate_table, 42710 = duplicate_object

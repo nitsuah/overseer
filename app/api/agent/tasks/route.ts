@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { auth } from '@/auth';
 import { randomUUID } from 'crypto';
 import { motorPoolBridge, type AgentTaskRecord } from '@/lib/agent-bridge';
-import { getNeonClient, ensureSchema } from '@/lib/db';
+import { getNeonClient, ensureSchema, withQueryTimeout } from '@/lib/db';
 import logger from '@/lib/log';
 
 export const runtime = 'nodejs';
@@ -196,23 +196,26 @@ interface ReceiptPersistResult {
 const persistReceipt = async (task: TaskQueueItem): Promise<ReceiptPersistResult> => {
   try {
     const db = getNeonClient();
-    await ensureSchema(db);
+    await withQueryTimeout(ensureSchema(db), 'ensureSchema');
     const motorPoolSessionId =
       (task.result as { motorPoolSessionId?: string } | undefined)?.motorPoolSessionId ?? null;
-    await db`
-      INSERT INTO agent_task_receipts (
-        task_id, type, priority, status, payload, meta, result, error,
-        motor_pool_session_id, submitted_by_email,
-        created_at, queued_at, started_at, completed_at
-      )
-      VALUES (
-        ${task.id}, ${task.type}, ${task.priority}, ${task.status},
-        ${JSON.stringify(task.payload ?? {})}, ${task.meta ? JSON.stringify(task.meta) : null},
-        ${task.result ? JSON.stringify(task.result) : null}, ${task.error ?? null},
-        ${motorPoolSessionId}, ${task.submittedBy?.email ?? null},
-        ${task.createdAt}, ${task.queuedAt}, ${task.startedAt ?? null}, ${task.completedAt ?? null}
-      )
-    `;
+    await withQueryTimeout(
+      db`
+        INSERT INTO agent_task_receipts (
+          task_id, type, priority, status, payload, meta, result, error,
+          motor_pool_session_id, submitted_by_email,
+          created_at, queued_at, started_at, completed_at
+        )
+        VALUES (
+          ${task.id}, ${task.type}, ${task.priority}, ${task.status},
+          ${JSON.stringify(task.payload ?? {})}, ${task.meta ? JSON.stringify(task.meta) : null},
+          ${task.result ? JSON.stringify(task.result) : null}, ${task.error ?? null},
+          ${motorPoolSessionId}, ${task.submittedBy?.email ?? null},
+          ${task.createdAt}, ${task.queuedAt}, ${task.startedAt ?? null}, ${task.completedAt ?? null}
+        )
+      `,
+      'receipt insert',
+    );
     return { success: true };
   } catch (error) {
     const message = sanitizeError(error);

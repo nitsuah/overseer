@@ -37,6 +37,13 @@ vi.mock('next/server', async () => {
 vi.mock('@/lib/db', () => ({
   getNeonClient: vi.fn(),
   ensureSchema: vi.fn(),
+  // route.ts's persistReceipt wraps calls in withQueryTimeout (see
+  // lib/db.ts) to bound how long a hung Neon HTTP request can block the
+  // queue. Pass through unmodified here -- these tests aren't exercising
+  // the timeout behavior itself (that's real Promise/timer plumbing, not
+  // worth re-testing against a mocked db), just persistReceipt's own
+  // success/failure handling.
+  withQueryTimeout: vi.fn((promise: Promise<unknown>) => promise),
 }));
 
 vi.mock('@/lib/log', () => ({

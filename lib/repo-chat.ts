@@ -78,12 +78,22 @@ export function _resetAnonChatRateLimitForTests(): void {
 // A signed-in user without their own AI key rides the app's shared/default
 // provider key. That's still a shared, metered resource — one heavy user on
 // the shared key can starve everyone else — so it gets its own (more
-// generous than anonymous) per-user budget. A user with their own key
-// (userOverride set) is never subject to this limit; they're spending their
-// own quota, not the app's.
+// generous than anonymous) per-user budget. A user with their own key that
+// actually works is never charged against this limit; they're spending
+// their own quota, not the app's.
+//
+// This used to be a process-local `Map`, which under-enforced badly: Netlify
+// can run separate serverless instances per invocation, so each cold-started
+// instance started with an empty map and a user could get up to
+// AUTHED_SHARED_KEY_RATE_LIMIT requests *per instance* in the same window
+// instead of total (CodeRabbit, PR #204). The counter now lives in Neon
+// (`shared_key_rate_limits`, see lib/schema-migrations.ts) so every instance
+// reads/writes the same row. The `INSERT ... ON CONFLICT DO UPDATE` below
+// takes a per-row lock in Postgres, so concurrent requests for the same user
+// (whether from the same instance or different ones) serialize instead of
+// racing -- no separate lock/queue needed.
 export const AUTHED_SHARED_KEY_RATE_LIMIT = 30;
 export const AUTHED_SHARED_KEY_RATE_WINDOW_MS = 5 * 60_000; // 5 minutes
-export const AUTHED_SHARED_KEY_RATE_LIMIT_MAX_ENTRIES = 20_000;
 /** Surface a throttling warning to the client once this fraction of the
  * budget remains, so they can set their own key before actually being cut
  * off. */
@@ -97,46 +107,106 @@ export interface SharedKeyRateLimitResult {
     nearLimit: boolean;
 }
 
-const authedSharedKeyRateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-function evictExpiredAuthedSharedKeyRateLimitEntries(now: number): void {
-    for (const [userId, entry] of authedSharedKeyRateLimitMap) {
-        if (now >= entry.resetAt) authedSharedKeyRateLimitMap.delete(userId);
-    }
+export interface SharedKeyReservation extends SharedKeyRateLimitResult {
+    /**
+     * Epoch-ms identifier of the rate-limit window this reservation was made
+     * in. Pass it back to {@link releaseAuthedSharedKeySlot} so a release
+     * only ever applies to the same window it reserved from -- a request
+     * that straddles a window rollover should not decrement the *next*
+     * window's fresh counter. Only set when `allowed` is true.
+     */
+    windowResetAt?: number;
 }
 
 /**
- * Returns the signed-in `userId`'s (typically email) remaining budget on the
- * app's shared AI key for the current window, incrementing its counter as a
- * side effect. Mirrors {@link checkAnonChatRateLimit}'s bounded-map shape.
+ * Minimal shape of the tagged-template SQL function this module needs.
+ * Deliberately loose (rather than typing the exact row shape) so it's
+ * structurally compatible with `ReturnType<typeof getNeonClient>`
+ * (lib/db.ts) -- Neon's real query function returns `Record<string, any>[]`
+ * wrapped in its own thenable type, which a narrower row type here is not
+ * always assignable from. The actual row shape is asserted where it's read,
+ * same as other callers of the Neon client in this codebase (e.g. the `as
+ * RepoRow` casts in app/api/repos/[name]/chat/route.ts).
  */
-export function checkAuthedSharedKeyRateLimit(userId: string, now: number = Date.now()): SharedKeyRateLimitResult {
+export type SharedKeyRateLimitDb = (
+    strings: TemplateStringsArray,
+    ...values: unknown[]
+) => Promise<unknown[]>;
+
+function toReservationResult(row: { count: number | string; reset_at_ms: number | string } | undefined): SharedKeyReservation {
     const warnAt = Math.ceil(AUTHED_SHARED_KEY_RATE_LIMIT * AUTHED_SHARED_KEY_WARN_REMAINING_FRACTION);
-    const entry = authedSharedKeyRateLimitMap.get(userId);
-
-    if (!entry || now >= entry.resetAt) {
-        if (!authedSharedKeyRateLimitMap.has(userId) && authedSharedKeyRateLimitMap.size >= AUTHED_SHARED_KEY_RATE_LIMIT_MAX_ENTRIES) {
-            evictExpiredAuthedSharedKeyRateLimitEntries(now);
-        }
-        if (!authedSharedKeyRateLimitMap.has(userId) && authedSharedKeyRateLimitMap.size >= AUTHED_SHARED_KEY_RATE_LIMIT_MAX_ENTRIES) {
-            return { allowed: false, remaining: 0, limit: AUTHED_SHARED_KEY_RATE_LIMIT, nearLimit: true };
-        }
-        authedSharedKeyRateLimitMap.set(userId, { count: 1, resetAt: now + AUTHED_SHARED_KEY_RATE_WINDOW_MS });
-        const remaining = AUTHED_SHARED_KEY_RATE_LIMIT - 1;
-        return { allowed: true, remaining, limit: AUTHED_SHARED_KEY_RATE_LIMIT, nearLimit: remaining <= warnAt };
-    }
-
-    if (entry.count >= AUTHED_SHARED_KEY_RATE_LIMIT) {
+    if (!row) {
+        // Should not happen (INSERT ... RETURNING always yields a row), but
+        // fail closed rather than granting unbudgeted access.
         return { allowed: false, remaining: 0, limit: AUTHED_SHARED_KEY_RATE_LIMIT, nearLimit: true };
     }
-    entry.count++;
-    const remaining = AUTHED_SHARED_KEY_RATE_LIMIT - entry.count;
-    return { allowed: true, remaining, limit: AUTHED_SHARED_KEY_RATE_LIMIT, nearLimit: remaining <= warnAt };
+
+    const count = Number(row.count);
+    const windowResetAt = Number(row.reset_at_ms);
+    if (count > AUTHED_SHARED_KEY_RATE_LIMIT) {
+        return { allowed: false, remaining: 0, limit: AUTHED_SHARED_KEY_RATE_LIMIT, nearLimit: true };
+    }
+    const remaining = AUTHED_SHARED_KEY_RATE_LIMIT - count;
+    return {
+        allowed: true,
+        remaining,
+        limit: AUTHED_SHARED_KEY_RATE_LIMIT,
+        nearLimit: remaining <= warnAt,
+        windowResetAt,
+    };
 }
 
-/** Test-only: reset all tracked rate-limit state between test cases. */
-export function _resetAuthedSharedKeyRateLimitForTests(): void {
-    authedSharedKeyRateLimitMap.clear();
+/**
+ * Atomically reserve one slot of `userId`'s shared-AI-key budget for the
+ * current fixed window, creating/rolling the window as needed. Must be
+ * called BEFORE any code path that might spend the shared key on this
+ * user's behalf -- including a BYOK personal-key attempt that could
+ * silently fall through to the shared key on failure (CWE-770). If the
+ * personal key then succeeds, release the reservation with
+ * {@link releaseAuthedSharedKeySlot} so a working key isn't unnecessarily
+ * charged.
+ */
+export async function reserveAuthedSharedKeySlot(
+    db: SharedKeyRateLimitDb,
+    userId: string,
+    now: number = Date.now()
+): Promise<SharedKeyReservation> {
+    const freshResetAt = now + AUTHED_SHARED_KEY_RATE_WINDOW_MS;
+    const rows = await db`
+        INSERT INTO shared_key_rate_limits (user_email, count, reset_at_ms)
+        VALUES (${userId}, 1, ${freshResetAt})
+        ON CONFLICT (user_email) DO UPDATE SET
+            count = CASE
+                WHEN shared_key_rate_limits.reset_at_ms <= ${now} THEN 1
+                ELSE shared_key_rate_limits.count + 1
+            END,
+            reset_at_ms = CASE
+                WHEN shared_key_rate_limits.reset_at_ms <= ${now} THEN ${freshResetAt}
+                ELSE shared_key_rate_limits.reset_at_ms
+            END,
+            updated_at = NOW()
+        RETURNING count, reset_at_ms
+    `;
+    return toReservationResult(rows[0] as { count: number | string; reset_at_ms: number | string } | undefined);
+}
+
+/**
+ * Give back a slot reserved by {@link reserveAuthedSharedKeySlot}, e.g.
+ * because a BYOK personal key ended up serving the request after all. A
+ * no-op if the window has already rolled over since the reservation (the
+ * `reset_at_ms` guard means it can never decrement a *different* window's
+ * fresh counter).
+ */
+export async function releaseAuthedSharedKeySlot(
+    db: SharedKeyRateLimitDb,
+    userId: string,
+    windowResetAt: number
+): Promise<void> {
+    await db`
+        UPDATE shared_key_rate_limits
+        SET count = GREATEST(count - 1, 0), updated_at = NOW()
+        WHERE user_email = ${userId} AND reset_at_ms = ${windowResetAt}
+    `;
 }
 
 export interface DocStatusLike {

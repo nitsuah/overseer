@@ -22,11 +22,6 @@
   - Acceptance Criteria: broken into stages — (1) chat can propose a specific, diffable edit to one doc file and show it inline before applying; (2) accepting the proposal opens a PR via the existing fix-doc PR flow rather than writing directly; (3) the chat can check an item off in TASKS.md or move it to FEATURES.md when the user confirms it's shipped, referencing the same parser the dashboard already uses so state never diverges from what's rendered elsewhere; (4) before calling `createPrForFile`, the caller-supplied target path must be validated against the approved doc list (TASKS.md/ROADMAP.md/FEATURES.md, matching the existing `TARGET_PATHS` mapping) — never pass a chat-supplied path straight through unchecked.
   - Status: stages (1), (2), and (4) ✅ SHIPPED — `parseDocEditProposal` in `lib/repo-chat.ts` extracts a fenced ` ```proposal``` ` JSON block from the assistant's reply; `RepoChatPanel` renders it as an inline card with Apply/Dismiss; Apply routes the proposed content into the existing preview-and-PR modal (`onApplyProposal` in `app/page.tsx`) rather than writing directly; `fix-doc`'s `TARGET_PATHS` validation (already hardened in this branch) covers the PR path. Stage (3) — checking off/moving items directly from chat — still open.
 
-- [ ] Stale-review detector for PR readiness.
-  - Priority: P2
-  - Context: new idea (2026-08-28) — CodeRabbit (and likely other bot reviewers) sometimes leave a PR's formal review decision at `CHANGES_REQUESTED` even after every inline finding is resolved and CI is green, silently blocking branch-protection-gated auto-merge until a human notices.
-  - Acceptance Criteria: for repos with a linked PR, surface a count/badge when `reviewDecision === CHANGES_REQUESTED` but all review threads are resolved and required checks pass; link directly to the PR so the discrepancy can be verified and merged or re-reviewed.
-
 - [ ] Add cross-repo dependency mapping.
   - Priority: P2
   - Context: agent-board, bb-mcp, nitsuah-io, and overseer share overlapping stacks and could benefit from surfaced cross-repo links.
@@ -51,7 +46,7 @@
 
 - [ ] Move focusable PR/CI/homepage links out of the mobile repo card's `role="button"` wrapper.
   - Priority: P2
-  - Context: flagged by CodeRabbit on PR #204 (2026-09-09) — `MobileRepoCard.tsx` renders focusable `<a>` links for CI/PR/homepage nested inside the card's outer `role="button" tabIndex={0} onKeyDown` wrapper, which is an accessibility anti-pattern (nested interactive elements produce inconsistent keyboard/screen-reader behavior). Deferred as a heavier restructure rather than a quick class-name fix.
+  - Context: flagged by CodeRabbit on PR #204 (2026-09-09) — `MobileRepoCard.tsx` renders focusable `<a>` links for CI/PR/homepage nested inside the card's outer `role="button" tabIndex={0} onKeyDown` wrapper, which is an accessibility anti-pattern (nested interactive elements produce inconsistent keyboard/screen-reader behavior). Deferred as a heavier restructure rather than a quick class-name fix. Re-flagged on PR #215 (2026-09-11): the new stale-review-PR link added there is one more instance of this exact same pre-existing wrapper pattern — not a new problem, but the eventual restructure needs to cover it too.
   - Acceptance Criteria: the card's expand/collapse affordance and the CI/PR/homepage links are structurally siblings (not nested interactive elements), verified with a keyboard-navigation and screen-reader pass.
 
 ### DB & backend scaling

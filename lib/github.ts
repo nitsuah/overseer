@@ -77,7 +77,13 @@ export class GitHubClient {
     return PRs.getPullRequests(this.octokit, owner || this.owner, repo);
   }
 
-  getPullRequestReadiness(repo: string, owner?: string): Promise<{ readyCount: number; blockedCount: number; staleReviewCount: number; records: PullRequestReadinessRecord[] }> {
+  getPullRequestReadiness(repo: string, owner?: string): Promise<{
+    readyCount: number;
+    blockedCount: number;
+    staleReviewCount: number;
+    staleReviewPrNumbers: number[];
+    records: PullRequestReadinessRecord[];
+  }> {
     return PRs.getPullRequestReadiness(this.octokit, owner || this.owner, repo);
   }
 

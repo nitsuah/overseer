@@ -34,7 +34,10 @@ import {
  * survives what used to reset the old process-local Map (see the "shared
  * across cold starts" tests below).
  */
-function makeFakeSharedKeyRateLimitTable() {
+function makeFakeSharedKeyRateLimitTable(): {
+    db: SharedKeyRateLimitDb;
+    rows: Map<string, { count: number; reset_at_ms: number }>;
+} {
     const rows = new Map<string, { count: number; reset_at_ms: number }>();
 
     const db = (async (strings: TemplateStringsArray, ...values: unknown[]) => {

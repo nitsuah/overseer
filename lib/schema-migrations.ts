@@ -164,4 +164,22 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )`,
+
+    // shared_key_rate_limits: shared (cross-instance) fixed-window counter
+    // backing checkAuthedSharedKeyRateLimit's replacement in lib/repo-chat.ts
+    // (reserveAuthedSharedKeySlot / releaseAuthedSharedKeySlot). Replaces a
+    // process-local Map that under-enforced across Netlify's per-invocation
+    // serverless instances -- every instance now reads/writes the same row,
+    // and the INSERT ... ON CONFLICT DO UPDATE in reserveAuthedSharedKeySlot
+    // takes a per-row lock so concurrent requests for the same user
+    // serialize instead of racing. `reset_at_ms` is the epoch-ms end of the
+    // user's current fixed window (compared/rolled in application code, not
+    // an actual TTL/expiry column -- rows are small and keyed one-per-user,
+    // so they are left in place rather than reaped).
+    `CREATE TABLE IF NOT EXISTS shared_key_rate_limits (
+      user_email TEXT PRIMARY KEY,
+      count INTEGER NOT NULL DEFAULT 0,
+      reset_at_ms BIGINT NOT NULL,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`,
 ];

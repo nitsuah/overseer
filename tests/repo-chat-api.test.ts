@@ -14,16 +14,17 @@ vi.mock('@/lib/db', () => ({ getNeonClient: vi.fn(), ensureSchema: vi.fn().mockR
 vi.mock('@/lib/log', () => ({ default: { warn: vi.fn(), info: vi.fn(), error: vi.fn() } }));
 vi.mock('@/lib/default-repos', () => ({ DEFAULT_REPOS: [{ name: 'overseer' }] }));
 vi.mock('@/lib/ai', () => ({ generateAIContent: vi.fn() }));
+// Real crypto/env config isn't under test here; the route only needs a
+// stand-in plaintext key back for a well-formed encrypted row.
+vi.mock('@/lib/byok-crypto', () => ({ decryptApiKey: vi.fn().mockReturnValue('sk-fake-personal-key') }));
 
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
 import { generateAIContent } from '@/lib/ai';
-// Real (unmocked) module: resets the in-memory rate limiters between tests.
-import {
-    _resetAnonChatRateLimitForTests,
-    _resetAuthedSharedKeyRateLimitForTests,
-    ANON_CHAT_RATE_LIMIT,
-} from '@/lib/repo-chat';
+// Real (unmocked) module: resets the in-memory anonymous rate limiter between
+// tests. The authed shared-key limiter is now Neon-backed (no module-level
+// state to reset) -- makeDb below provides a fresh fake table per test.
+import { _resetAnonChatRateLimitForTests, ANON_CHAT_RATE_LIMIT, AUTHED_SHARED_KEY_RATE_LIMIT } from '@/lib/repo-chat';
 
 const mockAuth = vi.mocked(auth) as unknown as Mock<() => Promise<Session | null>>;
 const mockGetNeonClient = vi.mocked(getNeonClient);
@@ -49,8 +50,44 @@ const fakeRepo = {
 type MockDb = Mock<(...args: unknown[]) => Promise<unknown[]>> & { transaction: Mock };
 type RouteParams = { params: Promise<{ name: string }> };
 
-function makeDb(repoResult: unknown[] = [fakeRepo]): MockDb {
-    const db = vi.fn().mockResolvedValue(repoResult) as unknown as MockDb;
+/**
+ * Builds a fake Neon client good enough to drive the route end to end,
+ * including a real (in-memory) implementation of the
+ * `shared_key_rate_limits` reserve/release queries -- see
+ * lib/repo-chat.ts's reserveAuthedSharedKeySlot/releaseAuthedSharedKeySlot
+ * for the real SQL this mirrors. `userKeyRows` stands in for the
+ * `user_ai_keys` lookup (empty by default: no personal key configured).
+ */
+function makeDb(repoResult: unknown[] = [fakeRepo], userKeyRows: unknown[] = []): MockDb {
+    const rateLimitRows = new Map<string, { count: number; reset_at_ms: number }>();
+
+    const db = vi.fn(async (strings: TemplateStringsArray, ...values: unknown[]) => {
+        const text = strings.join(' ');
+
+        if (text.includes('FROM user_ai_keys')) {
+            return userKeyRows;
+        }
+        if (text.includes('INSERT INTO shared_key_rate_limits')) {
+            const [userId, freshResetAt, now] = values as [string, number, number];
+            const existing = rateLimitRows.get(userId);
+            const row = !existing || existing.reset_at_ms <= now
+                ? { count: 1, reset_at_ms: freshResetAt }
+                : { count: existing.count + 1, reset_at_ms: existing.reset_at_ms };
+            rateLimitRows.set(userId, row);
+            return [{ count: row.count, reset_at_ms: row.reset_at_ms }];
+        }
+        if (text.includes('UPDATE shared_key_rate_limits')) {
+            const [userId, windowResetAt] = values as [string, number];
+            const existing = rateLimitRows.get(userId);
+            if (existing && existing.reset_at_ms === windowResetAt) {
+                existing.count = Math.max(existing.count - 1, 0);
+            }
+            return [];
+        }
+
+        return repoResult;
+    }) as unknown as MockDb;
+
     db.transaction = vi.fn().mockResolvedValue([
         [{ title: 'Add conversational interface', status: 'todo', section: 'P2 - Medium' }], // tasks
         [{ title: 'PMO mode', quarter: 'Q3', status: 'planned' }],                           // roadmap_items
@@ -78,7 +115,6 @@ describe('POST /api/repos/[name]/chat', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         _resetAnonChatRateLimitForTests();
-        _resetAuthedSharedKeyRateLimitForTests();
         mockAuth.mockResolvedValue({
             user: { name: 'testuser', email: 'test@example.com' },
             expires: new Date(Date.now() + 86400000).toISOString(),
@@ -247,5 +283,85 @@ describe('POST /api/repos/[name]/chat', () => {
 
         const res = await POST(makeRequest(validBody), params());
         expect(res.status).toBe(500);
+    });
+
+    describe('authenticated shared-key rate limiting (Neon-backed reserve/release)', () => {
+        const personalKeyRow = [{ provider: 'openai', api_key_encrypted: 'iv.tag.data' }];
+
+        it('rate-limits an authenticated user with no personal key once the shared budget is exhausted', async () => {
+            for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT; i++) {
+                const res = await POST(makeRequest(validBody), params());
+                expect(res.status).toBe(200);
+            }
+
+            const limited = await POST(makeRequest(validBody), params());
+            const data = await limited.json();
+
+            expect(limited.status).toBe(429);
+            expect(data.error).toMatch(/shared AI key's rate limit/i);
+            // Budget is exhausted before the model is reached for the final call.
+            expect(mockGenerate).toHaveBeenCalledTimes(AUTHED_SHARED_KEY_RATE_LIMIT);
+        });
+
+        it('does not consume shared-key budget when a working personal key serves every request', async () => {
+            mockGetNeonClient.mockReturnValue(makeDb([fakeRepo], personalKeyRow) as never);
+            mockGenerate.mockResolvedValue({ text: 'ok', usingOwnKey: true });
+
+            // Comfortably more requests than the shared budget: none should be
+            // throttled, because each reservation taken before the call is
+            // released once the personal key is confirmed to have served the
+            // reply.
+            for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT * 3; i++) {
+                const res = await POST(makeRequest(validBody), params());
+                expect(res.status).toBe(200);
+                const data = await res.json();
+                expect(data.rateLimitWarning).toBeUndefined();
+            }
+        });
+
+        it('reserves the shared-key slot before the AI call, so consecutive personal-key failures cannot exceed the shared budget (CWE-770)', async () => {
+            mockGetNeonClient.mockReturnValue(makeDb([fakeRepo], personalKeyRow) as never);
+            // Personal key is configured but fails at call time on every
+            // request; generateAIContent's real fallback behavior for that
+            // case is usingOwnKey: false (see lib/ai.ts).
+            mockGenerate.mockResolvedValue({ text: 'served by shared key', usingOwnKey: false });
+
+            for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT; i++) {
+                const res = await POST(makeRequest(validBody), params());
+                expect(res.status).toBe(200);
+                const data = await res.json();
+                expect(data.rateLimitWarning).toMatch(/saved API key failed/i);
+            }
+
+            const limited = await POST(makeRequest(validBody), params());
+            const data = await limited.json();
+            expect(limited.status).toBe(429);
+            expect(data.error).toMatch(/shared AI key's rate limit/i);
+        });
+
+        it('interleaves personal-key successes and failures without the successes eroding the shared budget', async () => {
+            mockGetNeonClient.mockReturnValue(makeDb([fakeRepo], personalKeyRow) as never);
+
+            // Five successful personal-key calls up front must not count
+            // against the shared budget at all -- each reservation taken for
+            // them is released once success is confirmed.
+            mockGenerate.mockResolvedValue({ text: 'ok', usingOwnKey: true });
+            for (let i = 0; i < 5; i++) {
+                const res = await POST(makeRequest(validBody), params());
+                expect(res.status).toBe(200);
+            }
+
+            // The personal key now fails on every call: exactly the full
+            // shared budget's worth of these should still succeed (served by
+            // the shared key) before being throttled -- proving the earlier
+            // successes left the budget untouched.
+            mockGenerate.mockResolvedValue({ text: 'served by shared key', usingOwnKey: false });
+            for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT; i++) {
+                const res = await POST(makeRequest(validBody), params());
+                expect(res.status).toBe(200);
+            }
+            const limited = await POST(makeRequest(validBody), params());
+            expect(limited.status).toBe(429);
+        });
     });
 });

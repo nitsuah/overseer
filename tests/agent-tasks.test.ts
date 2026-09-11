@@ -13,6 +13,24 @@ vi.mock('@/auth', () => ({
   auth: vi.fn(),
 }));
 
+// after() needs Next's request-scoped AsyncLocalStorage context, which only
+// exists when a route handler runs inside the real Next.js server. These
+// tests call POST/GET by importing and invoking them directly (see
+// makeRequest below), so that context is absent and the real after() throws
+// synchronously. Keep everything else in next/server real; just approximate
+// after()'s "run once handling is done" semantics with an immediate,
+// unawaited invocation, which is all these tests need to observe
+// processQueue actually running.
+vi.mock('next/server', async () => {
+  const actual = await vi.importActual<typeof import('next/server')>('next/server');
+  return {
+    ...actual,
+    after: (callback: () => unknown) => {
+      void callback();
+    },
+  };
+});
+
 // Mocked (rather than left real) so receipt-persistence tests can control
 // whether the durable write to agent_task_receipts succeeds or fails,
 // without needing a real DATABASE_URL in the test environment.

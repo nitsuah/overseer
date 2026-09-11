@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { auth } from '@/auth';
 import { randomUUID } from 'crypto';
 import { motorPoolBridge, type AgentTaskRecord } from '@/lib/agent-bridge';
@@ -45,7 +45,14 @@ interface TaskQueueItem {
   };
   /**
    * Whether the durable receipt write for this (terminal) task succeeded.
-   * Undefined while the task hasn't reached a terminal status yet.
+   * Undefined whenever the outcome isn't known yet: either the task hasn't
+   * reached a terminal status, OR it just has (status flips to
+   * completed/failed first) and the receipt write triggered by that
+   * transition is still in flight. A GET racing that narrow window will
+   * correctly see a terminal status with receiptPersisted still undefined —
+   * that's the accurate "durability not yet confirmed" signal, not a bug;
+   * the task's own result is already final regardless of receipt durability
+   * (see persistReceipt's docstring). Poll again to observe true/false.
    */
   receiptPersisted?: boolean;
   receiptError?: string;
@@ -274,7 +281,12 @@ const enqueueTask = (task: TaskQueueItem) => {
   taskStore.set(task.id, task);
   pendingQueue.push(task.id);
   pruneTaskStore();
-  void processQueue();
+  // Netlify (and other serverless platforms) can tear down the function
+  // once the HTTP response is sent — a bare `void processQueue()` isn't
+  // guaranteed to survive past that point. next/server's after() is the
+  // framework-level, deployment-agnostic hook for "run this after the
+  // response is flushed, but keep the invocation alive until it settles."
+  after(processQueue);
 };
 
 const toPublicTask = (task: TaskQueueItem) => ({

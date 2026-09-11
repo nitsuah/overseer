@@ -86,9 +86,9 @@ export function isStaleReview(pr: {
  */
 export function getStaleReviewPrNumbers(records: PullRequestReadinessRecord[]): number[] {
   return records
-    .filter((r) => r.staleReview)
-    .map((r) => r.number)
-    .sort((a, b) => a - b);
+    .filter((r: PullRequestReadinessRecord) => r.staleReview)
+    .map((r: PullRequestReadinessRecord) => r.number)
+    .sort((a: number, b: number) => a - b);
 }
 
 export async function getPullRequestReadiness(

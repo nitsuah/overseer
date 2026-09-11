@@ -314,7 +314,7 @@ export function MobileRepoCard({
                 )}
               </a>
             )}
-            {!repo.is_hidden && (repo.stale_review_count ?? 0) > 0 && (() => {
+            {!repo.is_hidden && (repo.stale_review_count ?? 0) > 0 && ((): React.JSX.Element => {
               const staleNumbers = repo.stale_review_pr_numbers ?? [];
               // Link straight to the (lowest-numbered) stale PR so it's a
               // one-click jump to dismiss/re-request review and merge; fall
@@ -332,7 +332,7 @@ export function MobileRepoCard({
                   rel="noopener noreferrer"
                   className="relative p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
                   title={staleTitle}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e: React.MouseEvent<HTMLAnchorElement>) => e.stopPropagation()}
                 >
                   <GitPullRequest className="h-3.5 w-3.5" />
                   <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 px-0.5 flex items-center justify-center">

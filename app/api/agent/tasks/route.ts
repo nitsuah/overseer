@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { auth } from '@/auth';
 import { randomUUID } from 'crypto';
 import { motorPoolBridge, type AgentTaskRecord } from '@/lib/agent-bridge';
-import { getNeonClient, ensureSchema } from '@/lib/db';
+import { getNeonClient, ensureSchema, withQueryTimeout } from '@/lib/db';
 import logger from '@/lib/log';
 
 export const runtime = 'nodejs';
@@ -43,6 +43,19 @@ interface TaskQueueItem {
     name?: string | null;
     email?: string | null;
   };
+  /**
+   * Whether the durable receipt write for this (terminal) task succeeded.
+   * Undefined whenever the outcome isn't known yet: either the task hasn't
+   * reached a terminal status, OR it just has (status flips to
+   * completed/failed first) and the receipt write triggered by that
+   * transition is still in flight. A GET racing that narrow window will
+   * correctly see a terminal status with receiptPersisted still undefined —
+   * that's the accurate "durability not yet confirmed" signal, not a bug;
+   * the task's own result is already final regardless of receipt durability
+   * (see persistReceipt's docstring). Poll again to observe true/false.
+   */
+  receiptPersisted?: boolean;
+  receiptError?: string;
 }
 
 const MAX_TASKS = 1000;
@@ -161,33 +174,53 @@ const executeTask = (task: TaskQueueItem): Promise<TaskRecord> =>
     meta: task.meta,
   });
 
+interface ReceiptPersistResult {
+  success: boolean;
+  error?: string;
+}
+
 /**
  * Persist a terminal task as a durable session receipt. The in-memory queue is
- * lost on restart; this keeps a record of what each agent session did. Best
- * effort — a DB failure must not fail the task itself.
+ * lost on restart; this keeps a record of what each agent session did.
+ *
+ * The write is awaited by the caller (see processQueue) so it isn't racing
+ * serverless instance teardown as a fire-and-forget promise would. A failure
+ * here must NOT fail the task itself — the task's own result already
+ * succeeded/failed independently of whether its receipt got durably stored —
+ * so failures are caught, logged loudly via logger.warn (this codebase's
+ * convention for discoverable-but-non-fatal problems), and reported back to
+ * the caller via the returned result so processQueue can record it on the
+ * task (surfaced through GET /api/agent/tasks?id=... as `receiptPersisted` /
+ * `receiptError`) rather than being silently swallowed.
  */
-const persistReceipt = async (task: TaskQueueItem): Promise<void> => {
+const persistReceipt = async (task: TaskQueueItem): Promise<ReceiptPersistResult> => {
   try {
     const db = getNeonClient();
-    await ensureSchema(db);
+    await withQueryTimeout(ensureSchema(db), 'ensureSchema');
     const motorPoolSessionId =
       (task.result as { motorPoolSessionId?: string } | undefined)?.motorPoolSessionId ?? null;
-    await db`
-      INSERT INTO agent_task_receipts (
-        task_id, type, priority, status, payload, meta, result, error,
-        motor_pool_session_id, submitted_by_email,
-        created_at, queued_at, started_at, completed_at
-      )
-      VALUES (
-        ${task.id}, ${task.type}, ${task.priority}, ${task.status},
-        ${JSON.stringify(task.payload ?? {})}, ${task.meta ? JSON.stringify(task.meta) : null},
-        ${task.result ? JSON.stringify(task.result) : null}, ${task.error ?? null},
-        ${motorPoolSessionId}, ${task.submittedBy?.email ?? null},
-        ${task.createdAt}, ${task.queuedAt}, ${task.startedAt ?? null}, ${task.completedAt ?? null}
-      )
-    `;
+    await withQueryTimeout(
+      db`
+        INSERT INTO agent_task_receipts (
+          task_id, type, priority, status, payload, meta, result, error,
+          motor_pool_session_id, submitted_by_email,
+          created_at, queued_at, started_at, completed_at
+        )
+        VALUES (
+          ${task.id}, ${task.type}, ${task.priority}, ${task.status},
+          ${JSON.stringify(task.payload ?? {})}, ${task.meta ? JSON.stringify(task.meta) : null},
+          ${task.result ? JSON.stringify(task.result) : null}, ${task.error ?? null},
+          ${motorPoolSessionId}, ${task.submittedBy?.email ?? null},
+          ${task.createdAt}, ${task.queuedAt}, ${task.startedAt ?? null}, ${task.completedAt ?? null}
+        )
+      `,
+      'receipt insert',
+    );
+    return { success: true };
   } catch (error) {
-    logger.warn(`[agent-tasks] Failed to persist receipt for ${task.id}:`, error);
+    const message = sanitizeError(error);
+    logger.warn(`[agent-tasks] Failed to persist receipt for task ${task.id}:`, error);
+    return { success: false, error: message };
   }
 };
 
@@ -222,14 +255,24 @@ const processQueue = async () => {
         task.result = result;
         task.completedAt = completedAt;
         task.updatedAt = completedAt;
-        void persistReceipt(task);
+
+        const receipt = await persistReceipt(task);
+        task.receiptPersisted = receipt.success;
+        if (!receipt.success) {
+          task.receiptError = receipt.error;
+        }
       } catch (error) {
         const completedAt = new Date().toISOString();
         task.status = 'failed';
         task.error = sanitizeError(error);
         task.completedAt = completedAt;
         task.updatedAt = completedAt;
-        void persistReceipt(task);
+
+        const receipt = await persistReceipt(task);
+        task.receiptPersisted = receipt.success;
+        if (!receipt.success) {
+          task.receiptError = receipt.error;
+        }
       }
     }
   } finally {
@@ -241,7 +284,12 @@ const enqueueTask = (task: TaskQueueItem) => {
   taskStore.set(task.id, task);
   pendingQueue.push(task.id);
   pruneTaskStore();
-  void processQueue();
+  // Netlify (and other serverless platforms) can tear down the function
+  // once the HTTP response is sent — a bare `void processQueue()` isn't
+  // guaranteed to survive past that point. next/server's after() is the
+  // framework-level, deployment-agnostic hook for "run this after the
+  // response is flushed, but keep the invocation alive until it settles."
+  after(processQueue);
 };
 
 const toPublicTask = (task: TaskQueueItem) => ({
@@ -259,6 +307,8 @@ const toPublicTask = (task: TaskQueueItem) => ({
   completedAt: task.completedAt,
   updatedAt: task.updatedAt,
   submittedBy: task.submittedBy,
+  receiptPersisted: task.receiptPersisted,
+  receiptError: task.receiptError,
 });
 
 export async function POST(req: NextRequest) {

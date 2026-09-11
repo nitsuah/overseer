@@ -314,21 +314,33 @@ export function MobileRepoCard({
                 )}
               </a>
             )}
-            {!repo.is_hidden && (repo.stale_review_count ?? 0) > 0 && (
-              <a
-                href={`${repo.url}/pulls`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
-                title={`${repo.stale_review_count} PR(s) blocked by a stale review — all threads resolved and CI green, but review still says changes requested`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <GitPullRequest className="h-3.5 w-3.5" />
-                <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 px-0.5 flex items-center justify-center">
-                  {repo.stale_review_count}
-                </span>
-              </a>
-            )}
+            {!repo.is_hidden && (repo.stale_review_count ?? 0) > 0 && (() => {
+              const staleNumbers = repo.stale_review_pr_numbers ?? [];
+              // Link straight to the (lowest-numbered) stale PR so it's a
+              // one-click jump to dismiss/re-request review and merge; fall
+              // back to the generic PR list only for rows synced before
+              // stale_review_pr_numbers existed.
+              const staleHref = staleNumbers.length > 0 ? `${repo.url}/pull/${staleNumbers[0]}` : `${repo.url}/pulls`;
+              const staleTitle =
+                staleNumbers.length > 0
+                  ? `${repo.stale_review_count} PR(s) blocked by a stale review — all threads resolved and CI green, but review still says changes requested: #${staleNumbers.join(', #')}`
+                  : `${repo.stale_review_count} PR(s) blocked by a stale review — all threads resolved and CI green, but review still says changes requested`;
+              return (
+                <a
+                  href={staleHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
+                  title={staleTitle}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GitPullRequest className="h-3.5 w-3.5" />
+                  <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 px-0.5 flex items-center justify-center">
+                    {repo.stale_review_count}
+                  </span>
+                </a>
+              );
+            })()}
             {!repo.is_hidden && (repo.zombie_branch_count ?? 0) > 0 && (
               <a
                 href={`${repo.url}/branches`}

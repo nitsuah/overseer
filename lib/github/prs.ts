@@ -56,11 +56,52 @@ export interface PullRequestReadinessRecord {
   staleReview: boolean;
 }
 
+/**
+ * Pure classification helper, deliberately kept separate from the GraphQL
+ * fetch above: given a PR's raw review/CI signals, decides whether it's
+ * "stale-reviewed" — a formal CHANGES_REQUESTED decision that GitHub never
+ * auto-clears when its threads resolve (that needs a re-review or a
+ * dismissal), even though the PR is otherwise code-and-review-complete.
+ * Distinct from a PR that's genuinely still blocked on open feedback or
+ * failing/pending checks.
+ */
+export function isStaleReview(pr: {
+  reviewDecision: string | null;
+  mergeable: string;
+  ciState: string | null;
+  threadsResolved: boolean;
+}): boolean {
+  const changesRequested = pr.reviewDecision === 'CHANGES_REQUESTED';
+  const ciPassing = pr.ciState === 'SUCCESS';
+  const hasConflicts = pr.mergeable === 'CONFLICTING';
+  // Require CI to have actually finished green, not merely "not failing" —
+  // PENDING/EXPECTED/null states shouldn't count as "stale, safe to merge".
+  return changesRequested && pr.threadsResolved && ciPassing && !hasConflicts;
+}
+
+/**
+ * Pure helper: extracts the PR numbers flagged as stale-reviewed from a set
+ * of readiness records, sorted ascending, so the dashboard can link straight
+ * to each affected PR instead of a repo's generic PR list.
+ */
+export function getStaleReviewPrNumbers(records: PullRequestReadinessRecord[]): number[] {
+  return records
+    .filter((r) => r.staleReview)
+    .map((r) => r.number)
+    .sort((a, b) => a - b);
+}
+
 export async function getPullRequestReadiness(
   octokit: Octokit,
   owner: string,
   repo: string
-): Promise<{ readyCount: number; blockedCount: number; staleReviewCount: number; records: PullRequestReadinessRecord[] }> {
+): Promise<{
+  readyCount: number;
+  blockedCount: number;
+  staleReviewCount: number;
+  staleReviewPrNumbers: number[];
+  records: PullRequestReadinessRecord[];
+}> {
   try {
     const result = await octokit.graphql<{
       repository: {
@@ -118,15 +159,17 @@ export async function getPullRequestReadiness(
     for (const pr of nodes) {
       const ciState = pr.commits?.nodes?.[0]?.commit?.statusCheckRollup?.state ?? null;
       const ciFailing = ciState === 'FAILURE' || ciState === 'ERROR';
-      const ciPassing = ciState === 'SUCCESS';
       const changesRequested = pr.reviewDecision === 'CHANGES_REQUESTED';
       const hasConflicts = pr.mergeable === 'CONFLICTING';
 
       const threads = pr.reviewThreads?.nodes || [];
       const threadsResolved = threads.length > 0 && threads.every((t) => t.isResolved);
-      // Require CI to have actually finished green, not merely "not failing" —
-      // PENDING/EXPECTED/null states shouldn't count as "stale, safe to merge".
-      const staleReview = changesRequested && threadsResolved && ciPassing && !hasConflicts;
+      const staleReview = isStaleReview({
+        reviewDecision: pr.reviewDecision,
+        mergeable: pr.mergeable,
+        ciState,
+        threadsResolved,
+      });
 
       records.push({
         number: pr.number,
@@ -146,10 +189,10 @@ export async function getPullRequestReadiness(
       }
     }
 
-    return { readyCount, blockedCount, staleReviewCount, records };
+    return { readyCount, blockedCount, staleReviewCount, staleReviewPrNumbers: getStaleReviewPrNumbers(records), records };
   } catch (error) {
     logger.warn(`[GitHub] Failed to fetch PR readiness for ${owner}/${repo}:`, error);
-    return { readyCount: 0, blockedCount: 0, staleReviewCount: 0, records: [] };
+    return { readyCount: 0, blockedCount: 0, staleReviewCount: 0, staleReviewPrNumbers: [], records: [] };
   }
 }
 

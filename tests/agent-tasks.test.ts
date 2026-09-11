@@ -13,12 +13,33 @@ vi.mock('@/auth', () => ({
   auth: vi.fn(),
 }));
 
+// Mocked (rather than left real) so receipt-persistence tests can control
+// whether the durable write to agent_task_receipts succeeds or fails,
+// without needing a real DATABASE_URL in the test environment.
+vi.mock('@/lib/db', () => ({
+  getNeonClient: vi.fn(),
+  ensureSchema: vi.fn(),
+}));
+
+vi.mock('@/lib/log', () => ({
+  default: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+
 import { auth } from '@/auth';
+import { getNeonClient, ensureSchema } from '@/lib/db';
+import logger from '@/lib/log';
 
 // next-auth's `auth` export has a 5-overload type whose last overload
 // (middleware wrapper) is what vi.mocked() infers; cast to the actual
 // session-lookup signature used by route handlers.
 const mockAuth = vi.mocked(auth) as unknown as Mock<() => Promise<Session | null>>;
+const mockGetNeonClient = vi.mocked(getNeonClient);
+const mockEnsureSchema = vi.mocked(ensureSchema);
+const mockLoggerWarn = vi.mocked(logger.warn);
+
+// Tagged-template-callable stand-in for the real `neon()` client: calling
+// `db\`...\`` just invokes this mock function with the template pieces.
+const makeMockDb = (impl: () => Promise<unknown>) => vi.fn(impl);
 
 const makeRequest = (body: unknown) =>
   new NextRequest('http://localhost:3000/api/agent/tasks', {
@@ -56,6 +77,12 @@ const waitForTaskToSettle = async (
 describe('POST /api/agent/tasks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: receipt persistence succeeds, so tests unrelated to receipt
+    // handling don't need to know this plumbing exists.
+    mockEnsureSchema.mockResolvedValue(undefined);
+    mockGetNeonClient.mockReturnValue(
+      makeMockDb(() => Promise.resolve([])) as unknown as ReturnType<typeof getNeonClient>
+    );
   });
 
   it('should return 401 when unauthenticated', async () => {
@@ -275,6 +302,95 @@ describe('POST /api/agent/tasks', () => {
 
     expect(response.status).toBe(401);
     expect(data.error).toBe('Unauthorized');
+  });
+
+  it('should mark the task as completed with receiptPersisted: true when the receipt write succeeds', async () => {
+    mockAuth.mockResolvedValue({
+      user: { name: 'testuser', email: 'test@example.com' },
+      expires: new Date(Date.now() + 86400000).toISOString(),
+    } as never);
+
+    const createResponse = await POST(
+      makeRequest({ type: 'build', payload: { repo: 'owner/repo' } })
+    );
+    const createData = await createResponse.json();
+    const taskId = createData.task.id as string;
+
+    const settledTask = await waitForTaskToSettle(taskId);
+
+    expect(settledTask.status).toBe('completed');
+    expect(settledTask.receiptPersisted).toBe(true);
+    expect(settledTask.receiptError).toBeUndefined();
+  });
+
+  it('should not crash the route or fail the task when persistReceipt fails, and should surface + log the failure', async () => {
+    mockAuth.mockResolvedValue({
+      user: { name: 'testuser', email: 'test@example.com' },
+      expires: new Date(Date.now() + 86400000).toISOString(),
+    } as never);
+
+    // Simulate the durable write to agent_task_receipts failing (e.g. the DB
+    // is unreachable) while the task's own execution still succeeds.
+    mockGetNeonClient.mockReturnValue(
+      makeMockDb(() => Promise.reject(new Error('connection terminated unexpectedly'))) as unknown as ReturnType<
+        typeof getNeonClient
+      >
+    );
+
+    const createResponse = await POST(
+      makeRequest({ type: 'build', payload: { repo: 'owner/repo' } })
+    );
+    const createData = await createResponse.json();
+    const taskId = createData.task.id as string;
+
+    // The route must not throw / crash despite the receipt write failing.
+    const settledTask = await waitForTaskToSettle(taskId);
+
+    // The task's own result is unaffected by the receipt-persistence failure.
+    expect(settledTask.status).toBe('completed');
+    expect(settledTask.result).toBeDefined();
+
+    // The failure is surfaced on the task rather than silently swallowed.
+    expect(settledTask.receiptPersisted).toBe(false);
+    expect(settledTask.receiptError).toContain('connection terminated unexpectedly');
+
+    // The failure is also logged loudly server-side, matching this
+    // codebase's logger.warn convention for discoverable-but-non-fatal issues.
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      expect.stringContaining(`Failed to persist receipt for task ${taskId}`),
+      expect.any(Error)
+    );
+  });
+
+  it('should surface a receipt-persistence failure for a failed task too, without masking the task error', async () => {
+    mockAuth.mockResolvedValue({
+      user: { name: 'testuser', email: 'test@example.com' },
+      expires: new Date(Date.now() + 86400000).toISOString(),
+    } as never);
+
+    mockGetNeonClient.mockReturnValue(
+      makeMockDb(() => Promise.reject(new Error('write failed'))) as unknown as ReturnType<typeof getNeonClient>
+    );
+
+    // type: 'fail' triggers executeTaskSimulated's deliberate failure path
+    // (see lib/agent-bridge.ts) when the motor-pool runtime is unreachable,
+    // which is always true in this test environment.
+    const createResponse = await POST(
+      makeRequest({ type: 'fail', payload: { repo: 'owner/repo' } })
+    );
+    const createData = await createResponse.json();
+    const taskId = createData.task.id as string;
+
+    const settledTask = await waitForTaskToSettle(taskId);
+
+    // The task's own failure (unrelated to receipt persistence) is preserved.
+    expect(settledTask.status).toBe('failed');
+    expect(settledTask.error).toBeDefined();
+
+    // A receipt-persistence failure must still be recorded and must not
+    // overwrite/mask the task's own error.
+    expect(settledTask.receiptPersisted).toBe(false);
+    expect(settledTask.receiptError).toContain('write failed');
   });
 });
 

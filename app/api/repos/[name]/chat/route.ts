@@ -247,7 +247,26 @@ export async function POST(
             }
         }
 
-        const { text: reply, usingOwnKey } = await generateAIContent(prompt, userOverride);
+        let reply: string;
+        let usingOwnKey: boolean;
+        try {
+            ({ text: reply, usingOwnKey } = await generateAIContent(prompt, userOverride));
+        } catch (generateError) {
+            // The reservation above was taken speculatively, before knowing
+            // whether the call would even succeed. If it throws outright
+            // (all providers down, etc.) the request never actually spent
+            // the shared key, so give the slot back rather than leaving it
+            // permanently consumed by a request that produced no reply. The
+            // outer catch below still owns turning this into a 500/503.
+            if (session?.user?.email && sharedKeyReservation) {
+                try {
+                    await releaseAuthedSharedKeySlot(db, session.user.email, sharedKeyReservation.windowResetAt);
+                } catch (releaseError) {
+                    logger.warn('Failed to release shared-key reservation after a failed AI call:', releaseError);
+                }
+            }
+            throw generateError;
+        }
 
         if (session?.user?.email && sharedKeyReservation) {
             if (usingOwnKey) {

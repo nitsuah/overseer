@@ -363,5 +363,25 @@ describe('POST /api/repos/[name]/chat', () => {
             const limited = await POST(makeRequest(validBody), params());
             expect(limited.status).toBe(429);
         });
+
+        it('releases the reservation when generateAIContent rejects outright, so a provider outage does not permanently drain the budget', async () => {
+            mockGenerate.mockRejectedValue(new Error('All AI providers failed. Last error: boom'));
+
+            // More failed calls than the budget: each one reserves before the
+            // call and must release it in the catch path, or this would 429
+            // well before the loop finishes.
+            for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT * 2; i++) {
+                const res = await POST(makeRequest(validBody), params());
+                expect(res.status).toBe(503);
+            }
+
+            // The budget should be fully intact: a full window's worth of
+            // successful calls now succeed without hitting 429.
+            mockGenerate.mockResolvedValue({ text: 'ok', usingOwnKey: false });
+            for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT; i++) {
+                const res = await POST(makeRequest(validBody), params());
+                expect(res.status).toBe(200);
+            }
+        });
     });
 });

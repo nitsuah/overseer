@@ -64,9 +64,12 @@ interface ReviewThreadsConnection {
 // Safety net for pathological PRs with an enormous number of review threads —
 // bounds the follow-up pagination below at 2,000 threads/PR (20 pages * 100).
 // We only ever hit this cap when *every* thread seen so far is resolved (an
-// unresolved thread short-circuits immediately, see fetchAllThreadsResolved),
-// so this cap can only cause a false "stale" positive on a genuinely
-// pathological PR, never a false negative.
+// unresolved thread short-circuits immediately, see fetchAllThreadsResolved).
+// Hitting it means the connection wasn't fully exhausted, so
+// fetchAllThreadsResolved fails closed to `false` rather than guessing --
+// this cap can only cause a false negative (a genuinely-all-resolved PR
+// with more threads than the cap doesn't get the stale-review badge),
+// never a false positive.
 const MAX_REVIEW_THREAD_PAGES = 20;
 
 /**
@@ -94,24 +97,42 @@ async function fetchAllThreadsResolved(
 
   while (hasNextPage && pages < MAX_REVIEW_THREAD_PAGES) {
     pages++;
-    const result = await octokit.graphql<{
-      node: { reviewThreads: ReviewThreadsConnection } | null;
-    }>(
-      `query($id: ID!, $cursor: String) {
-        node(id: $id) {
-          ... on PullRequest {
-            reviewThreads(first: 100, after: $cursor) {
-              pageInfo { hasNextPage endCursor }
-              nodes { isResolved }
+    let result: { node: { reviewThreads: ReviewThreadsConnection } | null };
+    try {
+      result = await octokit.graphql<{
+        node: { reviewThreads: ReviewThreadsConnection } | null;
+      }>(
+        `query($id: ID!, $cursor: String) {
+          node(id: $id) {
+            ... on PullRequest {
+              reviewThreads(first: 100, after: $cursor) {
+                pageInfo { hasNextPage endCursor }
+                nodes { isResolved }
+              }
             }
           }
-        }
-      }`,
-      { id: prNodeId, cursor }
-    );
+        }`,
+        { id: prNodeId, cursor }
+      );
+    } catch (error) {
+      // A follow-up pagination call failing (network blip, rate limit)
+      // must not propagate up through getPullRequestReadiness's loop and
+      // wipe out readiness data for every other PR in the repo -- contain
+      // it to "this PR isn't confirmed stale" and move on.
+      logger.warn(`[GitHub] reviewThreads pagination failed for PR node ${prNodeId}:`, error);
+      return false;
+    }
 
     const threads = result.node?.reviewThreads;
-    if (!threads) break;
+    // An incomplete fetch (missing connection, or hitting the page cap
+    // below while more pages remain) means unexamined threads could still
+    // exist beyond this point -- we cannot safely claim "all resolved"
+    // without having seen everything. Fail closed to `false` rather than
+    // `hadThreads`, since a false negative here is safe (a genuinely-fine
+    // PR just doesn't get the stale-review badge) while a false positive
+    // could tell a caller "safe to merge" when an unresolved thread is
+    // sitting just past where pagination stopped.
+    if (!threads) return false;
     hadThreads = hadThreads || threads.nodes.length > 0;
     for (const thread of threads.nodes) {
       if (!thread.isResolved) return false;
@@ -120,6 +141,7 @@ async function fetchAllThreadsResolved(
     cursor = threads.pageInfo.endCursor;
   }
 
+  if (hasNextPage) return false;
   return hadThreads;
 }
 

@@ -575,6 +575,87 @@ describe('GitHubClient', () => {
             expect(mockGraphql).toHaveBeenCalledTimes(1);
             expect(readiness.records[0]).toMatchObject({ number: 22, threadsResolved: false, staleReview: false });
         });
+
+        // Regression tests for CodeRabbit findings on PR #216 itself: the
+        // pagination fix above had its own two correctness gaps.
+        it('should treat a missing follow-up connection as not-resolved rather than guessing true', async () => {
+            mockGraphql
+                .mockResolvedValueOnce({
+                    repository: {
+                        pullRequests: {
+                            nodes: [
+                                {
+                                    id: 'PR_kwMISSING',
+                                    number: 23,
+                                    isDraft: false,
+                                    reviewDecision: 'CHANGES_REQUESTED',
+                                    mergeable: 'MERGEABLE',
+                                    commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                                    reviewThreads: {
+                                        pageInfo: { hasNextPage: true, endCursor: 'cursor-1' },
+                                        nodes: [{ isResolved: true }],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                })
+                // Follow-up page comes back with no `node` at all (e.g. the
+                // PR vanished mid-pagination) -- unexamined threads may
+                // still exist, so this must NOT be reported as resolved.
+                .mockResolvedValueOnce({ node: null });
+
+            const readiness = await client.getPullRequestReadiness('repo-1');
+
+            expect(readiness.records[0]).toMatchObject({ number: 23, threadsResolved: false, staleReview: false });
+        });
+
+        it('should isolate a follow-up pagination failure to one PR, preserving other PRs in the same repo', async () => {
+            mockGraphql
+                .mockResolvedValueOnce({
+                    repository: {
+                        pullRequests: {
+                            nodes: [
+                                {
+                                    id: 'PR_kwFAILS',
+                                    number: 24,
+                                    isDraft: false,
+                                    reviewDecision: 'CHANGES_REQUESTED',
+                                    mergeable: 'MERGEABLE',
+                                    commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                                    // Needs a follow-up page, which will reject below.
+                                    reviewThreads: {
+                                        pageInfo: { hasNextPage: true, endCursor: 'cursor-1' },
+                                        nodes: [{ isResolved: true }],
+                                    },
+                                },
+                                {
+                                    id: 'PR_kwOK',
+                                    number: 25,
+                                    isDraft: false,
+                                    reviewDecision: 'CHANGES_REQUESTED',
+                                    mergeable: 'MERGEABLE',
+                                    commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                                    reviewThreads: {
+                                        pageInfo: { hasNextPage: false, endCursor: null },
+                                        nodes: [{ isResolved: true }],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                })
+                .mockRejectedValueOnce(new Error('GraphQL rate limited'));
+
+            const readiness = await client.getPullRequestReadiness('repo-1');
+
+            // PR #24's pagination blew up -- it's conservatively "not stale",
+            // but PR #25's own (independent, already-resolved) result must
+            // survive rather than the whole repository call throwing/empty.
+            expect(readiness.records).toHaveLength(2);
+            expect(readiness.records[0]).toMatchObject({ number: 24, threadsResolved: false, staleReview: false });
+            expect(readiness.records[1]).toMatchObject({ number: 25, threadsResolved: true, staleReview: true });
+        });
     });
 
     it('should create PR for a single file', async () => {

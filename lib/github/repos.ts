@@ -160,6 +160,26 @@ export interface ZombieBranch {
   daysInactive: number | null;
 }
 
+interface RefsPage {
+  repository: {
+    refs: {
+      nodes: Array<{
+        name: string;
+        target: { committedDate: string | null } | null;
+      }>;
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    } | null;
+  } | null;
+}
+
+// Refs are ordered by COMMIT_DATE DESC (most-recently-committed first), so the
+// stale/zombie branches we actually care about sit at the *tail* of the
+// connection — we can't stop early and must walk every page to avoid
+// under-reporting. Cap at 20 pages (2,000 branches) purely as a runaway-repo
+// safety net; any repo with that many live branches has bigger problems than
+// this dashboard.
+const MAX_REFS_PAGES = 20;
+
 /**
  * Fetch branches with their latest commit dates via GraphQL so stale
  * long-lived branches can be surfaced. Returns branches sorted by most
@@ -172,34 +192,39 @@ export async function getZombieBranches(
   staleAfterDays = 30
 ): Promise<ZombieBranch[]> {
   try {
-    const result = await octokit.graphql<{
-      repository: {
-        refs: {
-          nodes: Array<{
-            name: string;
-            target: { committedDate: string | null };
-          }>;
-        } | null;
-      } | null;
-    }>(
-      `query($owner: String!, $repo: String!) {
-        repository(owner: $owner, name: $repo) {
-          refs(refPrefix: "refs/heads/", first: 100, orderBy: { field: COMMIT_DATE, direction: DESC }) {
-            nodes {
-              name
-              target {
-                ... on Commit {
-                  committedDate
+    const nodes: Array<{ name: string; target: { committedDate: string | null } | null }> = [];
+    let cursor: string | null = null;
+    let hasNextPage = true;
+    let pages = 0;
+
+    while (hasNextPage && pages < MAX_REFS_PAGES) {
+      pages++;
+      const result: RefsPage = await octokit.graphql<RefsPage>(
+        `query($owner: String!, $repo: String!, $cursor: String) {
+          repository(owner: $owner, name: $repo) {
+            refs(refPrefix: "refs/heads/", first: 100, after: $cursor, orderBy: { field: COMMIT_DATE, direction: DESC }) {
+              nodes {
+                name
+                target {
+                  ... on Commit {
+                    committedDate
+                  }
                 }
               }
+              pageInfo { hasNextPage endCursor }
             }
           }
-        }
-      }`,
-      { owner, repo, staleAfterDays }
-    );
+        }`,
+        { owner, repo, cursor }
+      );
 
-    const nodes = result.repository?.refs?.nodes || [];
+      const refs = result.repository?.refs;
+      if (!refs) break;
+      nodes.push(...refs.nodes);
+      hasNextPage = refs.pageInfo.hasNextPage;
+      cursor = refs.pageInfo.endCursor;
+    }
+
     const now = Date.now();
     const branches: ZombieBranch[] = nodes.map((node) => {
       const lastCommitDate = node.target?.committedDate ?? null;

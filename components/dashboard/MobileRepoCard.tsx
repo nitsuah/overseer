@@ -129,28 +129,33 @@ export function MobileRepoCard({
   return (
     <Fragment>
       <div
-        className={`cursor-pointer transition-colors border-b border-slate-700/30 ${
+        className={`relative transition-colors border-b border-slate-700/30 ${
           repo.is_hidden
             ? 'bg-slate-900/40 text-slate-500'
             : 'bg-gradient-to-r from-slate-900/60 via-slate-800/40 to-slate-900/60 active:from-slate-800/70 active:via-slate-700/50 active:to-slate-800/70'
         }`}
-        role="button"
-        tabIndex={0}
-        aria-expanded={isExpanded}
-        aria-controls={`mobile-card-details-${repo.name}`}
-        onClick={onToggleExpanded}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onToggleExpanded();
-          }
-        }}
       >
-        <div className="px-3 py-2.5 space-y-1.5">
+        {/*
+          Expand/collapse control lives as its own full-card button, a SIBLING
+          of the interactive content below (not an ancestor of it). It sits
+          behind the content (z-0) and is only reachable by the browser's hit
+          testing where the content above it has `pointer-events-none`, so
+          nothing needs `stopPropagation()` — there's no parent/child
+          interactive nesting left for clicks to fight over.
+        */}
+        <button
+          type="button"
+          aria-expanded={isExpanded}
+          aria-controls={`mobile-card-details-${repo.name}`}
+          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${repo.name} card details`}
+          onClick={onToggleExpanded}
+          className="absolute inset-0 z-0 h-full w-full cursor-pointer"
+        />
+        <div className="relative z-10 px-3 py-2.5 space-y-1.5 pointer-events-none">
           {/* Row 1: type + name + live + actions */}
           <div className="flex items-center gap-2 justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
-              <div className={repo.is_hidden ? 'opacity-50 grayscale' : ''}>
+              <div className={`pointer-events-auto ${repo.is_hidden ? 'opacity-50 grayscale' : ''}`}>
                 <TypeEditor
                   repoType={repoType}
                   repoName={repo.name}
@@ -162,12 +167,11 @@ export function MobileRepoCard({
                 href={repo.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`font-medium text-sm truncate hover:underline ${
+                className={`pointer-events-auto font-medium text-sm truncate hover:underline ${
                   repo.is_hidden
                     ? 'text-slate-500 hover:text-slate-400'
                     : 'text-blue-400 hover:text-blue-300'
                 }`}
-                onClick={(e) => e.stopPropagation()}
               >
                 {repo.name}
               </a>
@@ -177,19 +181,18 @@ export function MobileRepoCard({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Visit ${repo.name} homepage`}
-                  className={`p-0.5 rounded shrink-0 transition-colors ${
+                  className={`pointer-events-auto p-0.5 rounded shrink-0 transition-colors ${
                     repo.is_hidden
                       ? 'bg-slate-800 text-slate-600'
                       : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
                   }`}
-                  onClick={(e) => e.stopPropagation()}
                 >
                   <Play className="h-3 w-3 fill-current" />
                 </a>
               )}
               {!repo.is_hidden && detectActivityState(repo.last_commit_date) === ActivityState.Maintenance && (
                 <span
-                  className="px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 text-[10px] font-semibold uppercase tracking-wide shrink-0"
+                  className="pointer-events-auto px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 text-[10px] font-semibold uppercase tracking-wide shrink-0"
                   title={`No commits in ${MAINTENANCE_MODE_DAYS}+ days — maintenance mode`}
                 >
                   maintenance
@@ -204,13 +207,12 @@ export function MobileRepoCard({
                   href={`${repo.url}/actions`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`p-1 rounded transition-colors ${
+                  className={`pointer-events-auto p-1 rounded transition-colors ${
                     repo.ci_status === 'passing'
                       ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
                       : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                   }`}
                   title={`CI: ${repo.ci_status}`}
-                  onClick={(e) => e.stopPropagation()}
                 >
                   {repo.ci_status === 'passing'
                     ? <CheckCircle2 className="h-3.5 w-3.5" />
@@ -220,8 +222,8 @@ export function MobileRepoCard({
               {repo.is_hidden ? (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); onUnhide?.(); }}
-                  className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded text-xs font-bold flex items-center gap-1 transition-colors"
+                  onClick={() => onUnhide?.()}
+                  className="pointer-events-auto px-2 py-0.5 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded text-xs font-bold flex items-center gap-1 transition-colors"
                 >
                   <RefreshCw className="h-3 w-3" />
                   Restore
@@ -231,8 +233,8 @@ export function MobileRepoCard({
                   {onOpenChat && (
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); onOpenChat(); }}
-                      className="p-1 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded transition-colors"
+                      onClick={() => onOpenChat()}
+                      className="pointer-events-auto p-1 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded transition-colors"
                       title={`Chat about ${repo.name}`}
                       aria-label={`Chat about ${repo.name}`}
                     >
@@ -244,18 +246,15 @@ export function MobileRepoCard({
                       type="button"
                       aria-label={syncingRepo === repo.name ? 'Syncing…' : 'Hold to sync this repository'}
                       title={syncingRepo === repo.name ? 'Syncing…' : 'Hold to sync'}
-                      onClick={(e) => {
-                        // A plain tap is intentionally a no-op — sync only
-                        // fires from the long press below.
-                        e.stopPropagation();
-                      }}
-                      onPointerDown={(e) => { e.stopPropagation(); startLongPress(); }}
-                      onPointerUp={(e) => { e.stopPropagation(); clearPressTimer(); }}
+                      // A plain tap is intentionally a no-op — sync only
+                      // fires from the long press below.
+                      onPointerDown={startLongPress}
+                      onPointerUp={clearPressTimer}
                       onPointerLeave={clearPressTimer}
                       onPointerCancel={clearPressTimer}
                       onContextMenu={(e) => e.preventDefault()}
                       disabled={syncingRepo === repo.name}
-                      className="p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 touch-none select-none"
+                      className="pointer-events-auto p-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors disabled:opacity-50 touch-none select-none"
                       style={{ WebkitTouchCallout: 'none' }}
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${syncingRepo === repo.name ? 'animate-spin' : ''}`} />
@@ -264,8 +263,8 @@ export function MobileRepoCard({
                   {isAuthenticated && (
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                      className="p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
+                      onClick={() => onRemove()}
+                      className="pointer-events-auto p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
                       title="Hide"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -279,7 +278,7 @@ export function MobileRepoCard({
           {/* Row 2: health + alert badges + doc icons */}
           <div className="flex items-center gap-2 flex-wrap">
             {/* Health grade */}
-            <div className={repo.is_hidden ? 'opacity-50 grayscale' : ''}>
+            <div className={`pointer-events-auto ${repo.is_hidden ? 'opacity-50 grayscale' : ''}`}>
               {details ? (
                 <HealthBreakdown
                   repo={repo}
@@ -298,13 +297,12 @@ export function MobileRepoCard({
                 href={`${repo.url}/pulls`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`relative p-1 rounded transition-colors ${
+                className={`pointer-events-auto relative p-1 rounded transition-colors ${
                   blocked > 0
                     ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
                     : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
                 }`}
                 title={`${repo.open_prs} open PRs`}
-                onClick={(e) => e.stopPropagation()}
               >
                 <GitPullRequest className="h-3.5 w-3.5" />
                 {blocked > 0 && (
@@ -319,9 +317,8 @@ export function MobileRepoCard({
                 href={`${repo.url}/pulls`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
+                className="pointer-events-auto relative p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
                 title={`${repo.stale_review_count} PR(s) blocked by a stale review — all threads resolved and CI green, but review still says changes requested`}
-                onClick={(e) => e.stopPropagation()}
               >
                 <GitPullRequest className="h-3.5 w-3.5" />
                 <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 px-0.5 flex items-center justify-center">
@@ -334,9 +331,8 @@ export function MobileRepoCard({
                 href={`${repo.url}/branches`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative p-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 rounded transition-colors"
+                className="pointer-events-auto relative p-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 rounded transition-colors"
                 title={`${repo.zombie_branch_count} stale branch(es) with no commits in 30+ days`}
-                onClick={(e) => e.stopPropagation()}
               >
                 <GitBranch className="h-3.5 w-3.5" />
                 <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 px-0.5 flex items-center justify-center">
@@ -349,9 +345,8 @@ export function MobileRepoCard({
                 href={`${repo.url}/issues`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative p-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded transition-colors"
+                className="pointer-events-auto relative p-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded transition-colors"
                 title={`${repo.open_issues_count} open issues`}
-                onClick={(e) => e.stopPropagation()}
               >
                 <AlertCircle className="h-3.5 w-3.5" />
                 <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 px-0.5 flex items-center justify-center">
@@ -364,9 +359,8 @@ export function MobileRepoCard({
                 href={`${repo.url}/security/dependabot`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
+                className="pointer-events-auto relative p-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
                 title={`${repo.vuln_alert_count} vulnerability alerts`}
-                onClick={(e) => e.stopPropagation()}
               >
                 <Shield className="h-3.5 w-3.5" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full h-3.5 min-w-3.5 px-0.5 flex items-center justify-center">
@@ -385,7 +379,7 @@ export function MobileRepoCard({
             )}
             {docIconState && (
               <div
-                className="flex items-center gap-1 ml-auto"
+                className="pointer-events-auto flex items-center gap-1 ml-auto"
                 title={docHealth ? `Doc health: ${docHealth.score}%` : 'Doc status'}
               >
                 {docIconState.map(({ type, Icon, label, color, exists, healthState }) => (

@@ -120,18 +120,16 @@ describe('MobileRepoCard – expansion', () => {
     expect(onToggleExpanded).toHaveBeenCalledOnce();
   });
 
-  it('calls onToggleExpanded on Enter keydown', () => {
-    const onToggleExpanded = vi.fn();
-    const { container } = render(<MobileRepoCard {...baseProps({ onToggleExpanded })} />);
-    fireEvent.keyDown(getCard(container), { key: 'Enter' });
-    expect(onToggleExpanded).toHaveBeenCalledOnce();
-  });
-
-  it('calls onToggleExpanded on Space keydown', () => {
-    const onToggleExpanded = vi.fn();
-    const { container } = render(<MobileRepoCard {...baseProps({ onToggleExpanded })} />);
-    fireEvent.keyDown(getCard(container), { key: ' ' });
-    expect(onToggleExpanded).toHaveBeenCalledOnce();
+  // The expand/collapse control is a real <button> (not a role="button" div
+  // with a manual onKeyDown), so Enter/Space activation is a native HTML
+  // guarantee rather than application logic — real browsers synthesize a
+  // `click` from those keys automatically. jsdom's fireEvent.keyDown does not
+  // reproduce that native synthesis, so there's nothing meaningful to assert
+  // by firing a bare keydown here; instead we assert the semantic contract
+  // that makes keyboard activation guaranteed: it must actually be a button.
+  it('renders the expand/collapse control as a native <button>', () => {
+    const { container } = render(<MobileRepoCard {...baseProps()} />);
+    expect(getCard(container).tagName).toBe('BUTTON');
   });
 
   it('renders ExpandableRow when isExpanded and details are provided', () => {
@@ -152,6 +150,26 @@ describe('MobileRepoCard – expansion', () => {
   it('sets aria-expanded to false when collapsed', () => {
     const { container } = render(<MobileRepoCard {...baseProps({ isExpanded: false })} />);
     expect(getCard(container).getAttribute('aria-expanded')).toBe('false');
+  });
+
+  // Regression test for the nested-interactive a11y anti-pattern (CodeRabbit,
+  // PR #204/#215): the expand toggle used to be an ancestor `role="button"`
+  // wrapper around the repo-name link, homepage link, etc., which needed
+  // `stopPropagation()` on every one of them to avoid double-triggering the
+  // toggle. It's now a sibling <button> instead, so a click on the repo-name
+  // link structurally cannot bubble into it — no stopPropagation required.
+  it('does not call onToggleExpanded when the repo name link is clicked', () => {
+    const onToggleExpanded = vi.fn();
+    render(<MobileRepoCard {...baseProps({ onToggleExpanded })} />);
+    fireEvent.click(screen.getByText('my-repo'));
+    expect(onToggleExpanded).not.toHaveBeenCalled();
+  });
+
+  it('does not nest the repo name link inside the expand/collapse button', () => {
+    const { container } = render(<MobileRepoCard {...baseProps()} />);
+    const toggleButton = getCard(container);
+    const nameLink = screen.getByText('my-repo');
+    expect(toggleButton.contains(nameLink)).toBe(false);
   });
 });
 

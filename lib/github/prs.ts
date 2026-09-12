@@ -56,6 +56,73 @@ export interface PullRequestReadinessRecord {
   staleReview: boolean;
 }
 
+interface ReviewThreadsConnection {
+  pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  nodes: Array<{ isResolved: boolean }>;
+}
+
+// Safety net for pathological PRs with an enormous number of review threads —
+// bounds the follow-up pagination below at 2,000 threads/PR (20 pages * 100).
+// We only ever hit this cap when *every* thread seen so far is resolved (an
+// unresolved thread short-circuits immediately, see fetchAllThreadsResolved),
+// so this cap can only cause a false "stale" positive on a genuinely
+// pathological PR, never a false negative.
+const MAX_REVIEW_THREAD_PAGES = 20;
+
+/**
+ * Determines whether *all* of a PR's review threads are resolved, following
+ * GraphQL pagination beyond the first page fetched in the parent query.
+ * Short-circuits as soon as an unresolved thread is found, since that alone
+ * is enough to know the PR isn't a "stale review" candidate — avoiding extra
+ * GraphQL round-trips for PRs that clearly still have open feedback.
+ */
+async function fetchAllThreadsResolved(
+  octokit: Octokit,
+  prNodeId: string,
+  initialThreads: ReviewThreadsConnection
+): Promise<boolean> {
+  let hadThreads = initialThreads.nodes.length > 0;
+  for (const thread of initialThreads.nodes) {
+    if (!thread.isResolved) return false;
+  }
+
+  // pageInfo is optional here defensively (e.g. in tests that stub a bare
+  // `{ nodes: [...] }` shape) — treat a missing pageInfo as "no more pages".
+  let hasNextPage = initialThreads.pageInfo?.hasNextPage ?? false;
+  let cursor = initialThreads.pageInfo?.endCursor ?? null;
+  let pages = 0;
+
+  while (hasNextPage && pages < MAX_REVIEW_THREAD_PAGES) {
+    pages++;
+    const result = await octokit.graphql<{
+      node: { reviewThreads: ReviewThreadsConnection } | null;
+    }>(
+      `query($id: ID!, $cursor: String) {
+        node(id: $id) {
+          ... on PullRequest {
+            reviewThreads(first: 100, after: $cursor) {
+              pageInfo { hasNextPage endCursor }
+              nodes { isResolved }
+            }
+          }
+        }
+      }`,
+      { id: prNodeId, cursor }
+    );
+
+    const threads = result.node?.reviewThreads;
+    if (!threads) break;
+    hadThreads = hadThreads || threads.nodes.length > 0;
+    for (const thread of threads.nodes) {
+      if (!thread.isResolved) return false;
+    }
+    hasNextPage = threads.pageInfo.hasNextPage;
+    cursor = threads.pageInfo.endCursor;
+  }
+
+  return hadThreads;
+}
+
 export async function getPullRequestReadiness(
   octokit: Octokit,
   owner: string,
@@ -66,6 +133,7 @@ export async function getPullRequestReadiness(
       repository: {
         pullRequests: {
           nodes: Array<{
+            id: string;
             number: number;
             isDraft: boolean;
             reviewDecision: string | null;
@@ -75,9 +143,7 @@ export async function getPullRequestReadiness(
                 commit: { statusCheckRollup: { state: string } | null };
               }>;
             };
-            reviewThreads: {
-              nodes: Array<{ isResolved: boolean }>;
-            };
+            reviewThreads: ReviewThreadsConnection;
           }>;
         } | null;
       } | null;
@@ -86,6 +152,7 @@ export async function getPullRequestReadiness(
         repository(owner: $owner, name: $repo) {
           pullRequests(states: OPEN, first: 50) {
             nodes {
+              id
               number
               isDraft
               reviewDecision
@@ -98,6 +165,7 @@ export async function getPullRequestReadiness(
                 }
               }
               reviewThreads(first: 50) {
+                pageInfo { hasNextPage endCursor }
                 nodes {
                   isResolved
                 }
@@ -122,8 +190,11 @@ export async function getPullRequestReadiness(
       const changesRequested = pr.reviewDecision === 'CHANGES_REQUESTED';
       const hasConflicts = pr.mergeable === 'CONFLICTING';
 
-      const threads = pr.reviewThreads?.nodes || [];
-      const threadsResolved = threads.length > 0 && threads.every((t) => t.isResolved);
+      const threadsResolved = await fetchAllThreadsResolved(
+        octokit,
+        pr.id,
+        pr.reviewThreads ?? { pageInfo: { hasNextPage: false, endCursor: null }, nodes: [] }
+      );
       // Require CI to have actually finished green, not merely "not failing" —
       // PENDING/EXPECTED/null states shouldn't count as "stale, safe to merge".
       const staleReview = changesRequested && threadsResolved && ciPassing && !hasConflicts;

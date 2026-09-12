@@ -268,6 +268,67 @@ describe('GitHubClient', () => {
         ]);
     });
 
+    // Regression tests for the refs(first: 100) pagination gap (CodeRabbit,
+    // PR #204): repos with more than 100 branches used to under-report zombie
+    // branches beyond the first page, since refs are ordered most-recently-
+    // committed first — the stale branches we actually care about sit at the
+    // tail of the connection, past page 1.
+    describe('getZombieBranches pagination', () => {
+        it('should follow refs pagination to find a zombie branch beyond the first page', async () => {
+            const recentDate = new Date(Date.now() - 1 * 86400000).toISOString();
+            const oldDate = new Date(Date.now() - 100 * 86400000).toISOString();
+
+            mockGraphql
+                .mockResolvedValueOnce({
+                    repository: {
+                        refs: {
+                            nodes: [{ name: 'active-branch', target: { committedDate: recentDate } }],
+                            pageInfo: { hasNextPage: true, endCursor: 'cursor-1' },
+                        },
+                    },
+                })
+                .mockResolvedValueOnce({
+                    repository: {
+                        refs: {
+                            nodes: [{ name: 'zombie-branch', target: { committedDate: oldDate } }],
+                            pageInfo: { hasNextPage: false, endCursor: null },
+                        },
+                    },
+                });
+
+            const branches = await client.getZombieBranches('repo-1', undefined, 30);
+
+            expect(mockGraphql).toHaveBeenCalledTimes(2);
+            expect(mockGraphql.mock.calls[1][1]).toMatchObject({ cursor: 'cursor-1' });
+            expect(branches).toHaveLength(1);
+            expect(branches[0].name).toBe('zombie-branch');
+        });
+
+        it('should cap refs pagination at the documented safety limit', async () => {
+            const oldDate = new Date(Date.now() - 100 * 86400000).toISOString();
+            mockGraphql.mockResolvedValue({
+                repository: {
+                    refs: {
+                        nodes: [{ name: 'branch', target: { committedDate: oldDate } }],
+                        // Always claims another page exists, to exercise the cap.
+                        pageInfo: { hasNextPage: true, endCursor: 'always-more' },
+                    },
+                },
+            });
+
+            await client.getZombieBranches('repo-1', undefined, 30);
+
+            // MAX_REFS_PAGES in lib/github/repos.ts — kept in sync with this test.
+            expect(mockGraphql).toHaveBeenCalledTimes(20);
+        });
+
+        it('should return an empty list when the zombie branches query fails', async () => {
+            mockGraphql.mockRejectedValue(new Error('GraphQL error'));
+            const branches = await client.getZombieBranches('repo-1');
+            expect(branches).toEqual([]);
+        });
+    });
+
     it('should get pull requests', async () => {
         mockPullsList.mockResolvedValue({
             data: [
@@ -398,6 +459,122 @@ describe('GitHubClient', () => {
 
         const readiness = await client.getPullRequestReadiness('repo-1');
         expect(readiness).toEqual({ readyCount: 0, blockedCount: 0, staleReviewCount: 0, records: [] });
+    });
+
+    // Regression tests for the reviewThreads(first: 50) pagination gap
+    // (CodeRabbit, PR #204): a PR with more than 50 review threads used to
+    // only have its first page checked for isResolved, so it could be
+    // misclassified as staleReview (falsely "all resolved") when threads
+    // beyond page 1 were still open.
+    describe('reviewThreads pagination', () => {
+        it('should follow pagination and find an unresolved thread beyond the first page', async () => {
+            mockGraphql
+                .mockResolvedValueOnce({
+                    repository: {
+                        pullRequests: {
+                            nodes: [
+                                {
+                                    id: 'PR_kwABC',
+                                    number: 20,
+                                    isDraft: false,
+                                    reviewDecision: 'CHANGES_REQUESTED',
+                                    mergeable: 'MERGEABLE',
+                                    commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                                    // First page: all resolved, but more pages exist.
+                                    reviewThreads: {
+                                        pageInfo: { hasNextPage: true, endCursor: 'cursor-1' },
+                                        nodes: [{ isResolved: true }, { isResolved: true }],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                })
+                .mockResolvedValueOnce({
+                    // Follow-up page fetched via node(id) — contains an unresolved thread.
+                    node: {
+                        reviewThreads: {
+                            pageInfo: { hasNextPage: false, endCursor: null },
+                            nodes: [{ isResolved: false }],
+                        },
+                    },
+                });
+
+            const readiness = await client.getPullRequestReadiness('repo-1');
+
+            expect(mockGraphql).toHaveBeenCalledTimes(2);
+            expect(mockGraphql.mock.calls[1][1]).toMatchObject({ id: 'PR_kwABC', cursor: 'cursor-1' });
+            expect(readiness.records[0]).toMatchObject({ number: 20, threadsResolved: false, staleReview: false });
+            expect(readiness.staleReviewCount).toBe(0);
+        });
+
+        it('should mark threadsResolved true only once every page confirms all threads resolved', async () => {
+            mockGraphql
+                .mockResolvedValueOnce({
+                    repository: {
+                        pullRequests: {
+                            nodes: [
+                                {
+                                    id: 'PR_kwXYZ',
+                                    number: 21,
+                                    isDraft: false,
+                                    reviewDecision: 'CHANGES_REQUESTED',
+                                    mergeable: 'MERGEABLE',
+                                    commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                                    reviewThreads: {
+                                        pageInfo: { hasNextPage: true, endCursor: 'cursor-1' },
+                                        nodes: [{ isResolved: true }, { isResolved: true }],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                })
+                .mockResolvedValueOnce({
+                    node: {
+                        reviewThreads: {
+                            pageInfo: { hasNextPage: false, endCursor: null },
+                            nodes: [{ isResolved: true }],
+                        },
+                    },
+                });
+
+            const readiness = await client.getPullRequestReadiness('repo-1');
+
+            expect(mockGraphql).toHaveBeenCalledTimes(2);
+            expect(readiness.records[0]).toMatchObject({ number: 21, threadsResolved: true, staleReview: true });
+            expect(readiness.staleReviewCount).toBe(1);
+        });
+
+        it('should short-circuit without a follow-up request when an unresolved thread is on the first page', async () => {
+            mockGraphql.mockResolvedValueOnce({
+                repository: {
+                    pullRequests: {
+                        nodes: [
+                            {
+                                id: 'PR_kwLMN',
+                                number: 22,
+                                isDraft: false,
+                                reviewDecision: 'CHANGES_REQUESTED',
+                                mergeable: 'MERGEABLE',
+                                commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                                // hasNextPage true, but an unresolved thread already
+                                // settles threadsResolved=false — no need to paginate further.
+                                reviewThreads: {
+                                    pageInfo: { hasNextPage: true, endCursor: 'cursor-1' },
+                                    nodes: [{ isResolved: false }, { isResolved: true }],
+                                },
+                            },
+                        ],
+                    },
+                },
+            });
+
+            const readiness = await client.getPullRequestReadiness('repo-1');
+
+            expect(mockGraphql).toHaveBeenCalledTimes(1);
+            expect(readiness.records[0]).toMatchObject({ number: 22, threadsResolved: false, staleReview: false });
+        });
     });
 
     it('should create PR for a single file', async () => {

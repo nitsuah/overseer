@@ -67,6 +67,10 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS prs_ready_count INTEGER DEFAULT 0`,
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS prs_blocked_count INTEGER DEFAULT 0`,
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS stale_review_count INTEGER DEFAULT 0`,
+    // JSONB array of PR numbers currently flagged stale-reviewed, so the UI
+    // can link straight to each affected PR instead of the repo's generic
+    // PR list. Populated alongside stale_review_count during sync.
+    `ALTER TABLE repos ADD COLUMN IF NOT EXISTS stale_review_pr_numbers JSONB DEFAULT '[]'::jsonb`,
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS zombie_branch_count INTEGER DEFAULT 0`,
 
     // repos: identity keyed by full_name (owner/name) so repos with the same

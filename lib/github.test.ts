@@ -3,6 +3,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GitHubClient } from './github';
 import { githubCache } from './github-cache';
+import { isStaleReview, getStaleReviewPrNumbers, type PullRequestReadinessRecord } from './github/prs';
 
 // Mock Octokit methods used across GitHubClient methods
 const mockListForAuthenticatedUser = vi.fn();
@@ -356,6 +357,7 @@ describe('GitHubClient', () => {
         expect(readiness.readyCount).toBe(1);
         expect(readiness.blockedCount).toBe(4);
         expect(readiness.staleReviewCount).toBe(0);
+        expect(readiness.staleReviewPrNumbers).toEqual([]);
         expect(readiness.records).toHaveLength(5);
     });
 
@@ -382,22 +384,40 @@ describe('GitHubClient', () => {
                             commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
                             reviewThreads: { nodes: [{ isResolved: true }, { isResolved: false }] },
                         },
+                        // Also stale, and lower-numbered than PR 10 — verifies
+                        // staleReviewPrNumbers is sorted ascending, not insertion order.
+                        {
+                            number: 3,
+                            isDraft: false,
+                            reviewDecision: 'CHANGES_REQUESTED',
+                            mergeable: 'MERGEABLE',
+                            commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] },
+                            reviewThreads: { nodes: [{ isResolved: true }] },
+                        },
                     ],
                 },
             },
         });
 
         const readiness = await client.getPullRequestReadiness('repo-1');
-        expect(readiness.staleReviewCount).toBe(1);
+        expect(readiness.staleReviewCount).toBe(2);
+        expect(readiness.staleReviewPrNumbers).toEqual([3, 10]);
         expect(readiness.records[0]).toMatchObject({ number: 10, staleReview: true });
         expect(readiness.records[1]).toMatchObject({ number: 11, staleReview: false });
+        expect(readiness.records[2]).toMatchObject({ number: 3, staleReview: true });
     });
 
     it('should return zero counts when PR readiness query fails', async () => {
         mockGraphql.mockRejectedValue(new Error('GraphQL error'));
 
         const readiness = await client.getPullRequestReadiness('repo-1');
-        expect(readiness).toEqual({ readyCount: 0, blockedCount: 0, staleReviewCount: 0, records: [] });
+        expect(readiness).toEqual({
+            readyCount: 0,
+            blockedCount: 0,
+            staleReviewCount: 0,
+            staleReviewPrNumbers: [],
+            records: [],
+        });
     });
 
     it('should create PR for a single file', async () => {
@@ -699,5 +719,72 @@ describe('GitHubClient', () => {
         });
 
         errorSpy.mockRestore();
+    });
+});
+
+describe('isStaleReview', () => {
+    const base = {
+        reviewDecision: 'CHANGES_REQUESTED' as string | null,
+        mergeable: 'MERGEABLE',
+        ciState: 'SUCCESS' as string | null,
+        threadsResolved: true,
+    };
+
+    it('is true when changes are requested, every thread is resolved, CI is green, and there are no conflicts', () => {
+        expect(isStaleReview(base)).toBe(true);
+    });
+
+    it('is false when the review decision is not CHANGES_REQUESTED', () => {
+        expect(isStaleReview({ ...base, reviewDecision: 'APPROVED' })).toBe(false);
+        expect(isStaleReview({ ...base, reviewDecision: null })).toBe(false);
+    });
+
+    it('is false when any thread is still unresolved', () => {
+        expect(isStaleReview({ ...base, threadsResolved: false })).toBe(false);
+    });
+
+    it('is false when CI has not finished green — pending, failing, or unknown all count as not stale', () => {
+        expect(isStaleReview({ ...base, ciState: 'PENDING' })).toBe(false);
+        expect(isStaleReview({ ...base, ciState: 'FAILURE' })).toBe(false);
+        expect(isStaleReview({ ...base, ciState: null })).toBe(false);
+    });
+
+    it('is false when the branch has merge conflicts, even with an otherwise-stale review', () => {
+        expect(isStaleReview({ ...base, mergeable: 'CONFLICTING' })).toBe(false);
+    });
+});
+
+describe('getStaleReviewPrNumbers', () => {
+    const record = (overrides: Partial<PullRequestReadinessRecord>): PullRequestReadinessRecord => ({
+        number: 1,
+        reviewDecision: null,
+        mergeable: 'MERGEABLE',
+        ciState: 'SUCCESS',
+        threadsResolved: true,
+        staleReview: false,
+        ...overrides,
+    });
+
+    it('returns an empty array when no records are stale-reviewed', () => {
+        expect(getStaleReviewPrNumbers([record({ number: 5, staleReview: false })])).toEqual([]);
+    });
+
+    it('extracts only the stale-reviewed PR numbers, ignoring non-stale records', () => {
+        const records = [
+            record({ number: 10, staleReview: true }),
+            record({ number: 11, staleReview: false }),
+            record({ number: 3, staleReview: true }),
+        ];
+        expect(getStaleReviewPrNumbers(records)).toEqual([3, 10]);
+    });
+
+    it('sorts numerically ascending, not by insertion order or string order', () => {
+        const records = [
+            record({ number: 20, staleReview: true }),
+            record({ number: 100, staleReview: true }),
+            record({ number: 3, staleReview: true }),
+        ];
+        // A naive string/lexicographic sort would put 100 before 20 before 3.
+        expect(getStaleReviewPrNumbers(records)).toEqual([3, 20, 100]);
     });
 });

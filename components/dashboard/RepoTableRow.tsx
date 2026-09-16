@@ -192,21 +192,33 @@ export function RepoTableRow({
                 </a>
               );
             })()}
-            {!repo.is_hidden && repo.stale_review_count !== undefined && repo.stale_review_count > 0 && (
-              <a
-                href={`${repo.url}/pulls`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
-                title={`${repo.stale_review_count} PR(s) blocked by a stale review — all threads resolved and CI green, but review still says changes requested`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <GitPullRequest className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
-                  {repo.stale_review_count}
-                </span>
-              </a>
-            )}
+            {!repo.is_hidden && repo.stale_review_count !== undefined && repo.stale_review_count > 0 && ((): React.JSX.Element => {
+              const staleNumbers = repo.stale_review_pr_numbers ?? [];
+              // Link straight to the (lowest-numbered) stale PR so it's a
+              // one-click jump to dismiss/re-request review and merge; fall
+              // back to the generic PR list only for rows synced before
+              // stale_review_pr_numbers existed.
+              const staleHref = staleNumbers.length > 0 ? `${repo.url}/pull/${staleNumbers[0]}` : `${repo.url}/pulls`;
+              const staleTitle =
+                staleNumbers.length > 0
+                  ? `${repo.stale_review_count} PR(s) blocked by a stale review — all threads resolved and CI green, but review still says changes requested: #${staleNumbers.join(', #')}`
+                  : `${repo.stale_review_count} PR(s) blocked by a stale review — all threads resolved and CI green, but review still says changes requested`;
+              return (
+                <a
+                  href={staleHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative p-1 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded transition-colors"
+                  title={staleTitle}
+                  onClick={(e: React.MouseEvent<HTMLAnchorElement>) => e.stopPropagation()}
+                >
+                  <GitPullRequest className="h-4 w-4" />
+                  <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                    {repo.stale_review_count}
+                  </span>
+                </a>
+              );
+            })()}
             {!repo.is_hidden && repo.zombie_branch_count !== undefined && repo.zombie_branch_count > 0 && (
               <a
                 href={`${repo.url}/branches`}

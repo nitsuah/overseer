@@ -8,7 +8,8 @@ import { isKnownProvider, AIProvider } from '@/lib/ai-providers';
 import {
     buildChatPrompt,
     checkAnonChatRateLimit,
-    checkAuthedSharedKeyRateLimit,
+    reserveAuthedSharedKeySlot,
+    releaseAuthedSharedKeySlot,
     findStaleDocs,
     parseChatMessages,
     parseDocEditProposal,
@@ -167,10 +168,11 @@ export async function POST(
         const db = getNeonClient();
         await ensureSchema(db);
 
-        // BYOK: a signed-in user with their own AI key uses it (and is not
-        // subject to the shared-key budget below); everyone else rides the
-        // app's shared/default provider chain, which is metered per-user so
-        // one heavy user can't starve everyone else on it.
+        // BYOK: a signed-in user with a *working* personal AI key is not
+        // subject to the shared-key budget below; everyone else (including a
+        // user whose configured key fails at call time) rides the app's
+        // shared/default provider chain, which is metered per-user so one
+        // heavy user can't starve everyone else on it.
         let userOverride: { provider: AIProvider; apiKey: string } | undefined;
         let rateLimitWarning: string | undefined;
         if (session?.user?.email) {
@@ -186,21 +188,6 @@ export async function POST(
                     };
                 } catch (decryptError) {
                     logger.warn('Failed to decrypt stored BYOK key, falling back to shared provider:', decryptError);
-                }
-            }
-
-            if (!userOverride) {
-                const limitResult = checkAuthedSharedKeyRateLimit(session.user.email);
-                if (!limitResult.allowed) {
-                    return NextResponse.json(
-                        {
-                            error: `You've hit the shared AI key's rate limit (${limitResult.limit} requests / 5 min). Add your own API key in Settings for unlimited use, or try again shortly.`,
-                        },
-                        { status: 429 }
-                    );
-                }
-                if (limitResult.nearLimit) {
-                    rateLimitWarning = `You're using the app's shared AI key and are close to its rate limit (${limitResult.remaining}/${limitResult.limit} requests left this window). Add your own API key in Settings to avoid being throttled.`;
                 }
             }
         }
@@ -229,19 +216,76 @@ export async function POST(
         const snapshot = toSnapshot(repo, tasks, roadmapItems, docStatuses);
         const prompt = buildChatPrompt(snapshot, parsed.messages!);
 
-        const { text: reply, usingOwnKey } = await generateAIContent(prompt, userOverride);
+        // Set whenever a slot was reserved against the shared budget for
+        // this request, whether or not a personal key is configured --
+        // released below if a configured personal key ends up serving the
+        // reply, so a working key isn't unnecessarily charged. Reserved
+        // immediately before the provider call (not earlier) so a request
+        // that fails validation or the DB transaction above never consumes
+        // budget for an AI call that was never attempted.
+        let sharedKeyReservation: { windowResetAt: number } | undefined;
+        if (session?.user?.email) {
+            // Reserve BEFORE the AI call, not just when no personal key is
+            // configured at all -- a configured key can still fail
+            // (revoked/expired/out of quota) and generateAIContent silently
+            // falls through to the shared key, and by the time that's known
+            // it's too late to enforce the budget (CWE-770). Reserving here
+            // and releasing below if the personal key actually succeeds
+            // keeps both cases correctly metered.
+            const reservation = await reserveAuthedSharedKeySlot(db, session.user.email);
+            if (!reservation.allowed) {
+                return NextResponse.json(
+                    {
+                        error: `You've hit the shared AI key's rate limit (${reservation.limit} requests / 5 min). Add your own API key in Settings for unlimited use, or try again shortly.`,
+                    },
+                    { status: 429 }
+                );
+            }
+            sharedKeyReservation = { windowResetAt: reservation.windowResetAt! };
+            if (reservation.nearLimit) {
+                rateLimitWarning = `You're using the app's shared AI key and are close to its rate limit (${reservation.remaining}/${reservation.limit} requests left this window). Add your own API key in Settings to avoid being throttled.`;
+            }
+        }
 
-        // A configured personal key can still fail (revoked/expired/out of
-        // quota) and silently fall through to the shared key inside
-        // generateAIContent. The pre-check above only ran when no key was
-        // configured at all, so that fallback would otherwise never be
-        // metered. Charge it after the fact -- we can't undo the API spend
-        // that already happened, but this stops it from staying permanently
-        // invisible to the budget and surfaces a warning for next time.
-        if (userOverride && !usingOwnKey && session?.user?.email) {
-            const limitResult = checkAuthedSharedKeyRateLimit(session.user.email);
-            if (!limitResult.allowed || limitResult.nearLimit) {
-                rateLimitWarning = `Your saved API key failed, so this request used the app's shared AI key instead (${limitResult.remaining}/${limitResult.limit} requests left this window). Check your key in Settings.`;
+        let reply: string;
+        let usingOwnKey: boolean;
+        try {
+            ({ text: reply, usingOwnKey } = await generateAIContent(prompt, userOverride));
+        } catch (generateError) {
+            // The reservation above was taken speculatively, before knowing
+            // whether the call would even succeed. If it throws outright
+            // (all providers down, etc.) the request never actually spent
+            // the shared key, so give the slot back rather than leaving it
+            // permanently consumed by a request that produced no reply. The
+            // outer catch below still owns turning this into a 500/503.
+            if (session?.user?.email && sharedKeyReservation) {
+                try {
+                    await releaseAuthedSharedKeySlot(db, session.user.email, sharedKeyReservation.windowResetAt);
+                } catch (releaseError) {
+                    logger.warn('Failed to release shared-key reservation after a failed AI call:', releaseError);
+                }
+            }
+            throw generateError;
+        }
+
+        if (session?.user?.email && sharedKeyReservation) {
+            if (usingOwnKey) {
+                // The personal key actually served the request: give back
+                // the speculative reservation taken before the call. Best
+                // effort -- the reply is already generated, so a release
+                // failure (e.g. a transient Neon blip) must not turn this
+                // into a 500; it just means that one reservation isn't
+                // refunded, which self-corrects at the next window roll.
+                try {
+                    await releaseAuthedSharedKeySlot(db, session.user.email, sharedKeyReservation.windowResetAt);
+                } catch (releaseError) {
+                    logger.warn('Failed to release shared-key reservation:', releaseError);
+                }
+            } else if (userOverride) {
+                // Configured but failed at call time and silently fell
+                // through to the shared key -- already correctly charged by
+                // the reservation taken before the call.
+                rateLimitWarning = `Your saved API key failed, so this request used the app's shared AI key instead. Check your key in Settings.`;
             }
         }
 

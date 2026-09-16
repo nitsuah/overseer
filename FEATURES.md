@@ -29,6 +29,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Community Standards**: 12 checks for CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, LICENSE, CHANGELOG, Issue/PR templates, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt
 - **Org-Level Fallback Awareness**: Community standards satisfied solely by the owner's `.github` repo (no repo-local copy) are marked with a distinct "Org" badge and a tooltip naming the source repo, instead of an indistinguishable "Present"
 - **Extended File Location Detection**: Standards detection accepts files found under `docs/` or `config/` subdirectories in addition to the repo root and `.github/`, reducing false-negative health scores for repos that organize their governance files in subdirectories
+- **Stale-Review Detector**: Surfaces a badge when a PR's formal review decision is `CHANGES_REQUESTED` but every review thread is resolved and CI is green — a state GitHub never auto-clears on its own, which otherwise silently blocks branch-protection-gated merges until a human notices. The badge links directly to the lowest-numbered affected PR.
 
 ### 🤖 Cross-Repo Orchestration
 

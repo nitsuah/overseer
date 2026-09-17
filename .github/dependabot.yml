@@ -11,6 +11,12 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # eslint 10 breaks npm ci (ERESOLVE) because this repo's eslint-plugin-*
+      # deps still cap their peer dep at eslint 9.x. See issue #212 / PR #208.
+      # Remove once those plugins ship eslint-10-compatible releases.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

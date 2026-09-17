@@ -64,4 +64,4 @@ services:
       - /app/node_modules
     environment:
       - CI=true
-    command: sh -lc "npm run lint && npx vitest run && npx tsc --noEmit"
+    command: sh -lc "npm run lint && npx vitest run --config config/vitest.config.ts && npx tsc --noEmit"

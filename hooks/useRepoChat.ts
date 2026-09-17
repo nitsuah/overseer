@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MAX_CHAT_MESSAGES, type ChatMessage } from '@/lib/repo-chat';
 
-const STORAGE_PREFIX = 'overseer.repo-chat.v1';
+const STORAGE_PREFIX = 'vigil.repo-chat.v1';
 /** Storage namespace used when no authenticated identity is available. */
 const ANON_NAMESPACE = 'anon';
 /** Keep persisted threads bounded so localStorage cannot grow without limit. */

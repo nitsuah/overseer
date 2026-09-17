@@ -24,7 +24,7 @@ export function getGitHubAuthorizationUrl(): string {
  * Get help instructions for authorizing an organization
  */
 export function getOrgAuthHelpText(orgName: string): string {
-    return `To authorize Overseer for the ${orgName} organization:
+    return `To authorize Vigil for the ${orgName} organization:
 
 1. Click the link that opened (or visit: ${getGitHubAuthorizationUrl()})
 2. Scroll to "Organization access"

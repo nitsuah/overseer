@@ -12,7 +12,6 @@ import type { Session } from 'next-auth';
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
 vi.mock('@/lib/db', () => ({ getNeonClient: vi.fn(), ensureSchema: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@/lib/log', () => ({ default: { warn: vi.fn(), info: vi.fn(), error: vi.fn() } }));
-vi.mock('@/lib/default-repos', () => ({ DEFAULT_REPOS: [{ name: 'overseer' }] }));
 vi.mock('@/lib/ai', () => ({ generateAIContent: vi.fn() }));
 // Real crypto/env config isn't under test here; the route only needs a
 // stand-in plaintext key back for a well-formed encrypted row.
@@ -21,10 +20,9 @@ vi.mock('@/lib/byok-crypto', () => ({ decryptApiKey: vi.fn().mockReturnValue('sk
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
 import { generateAIContent } from '@/lib/ai';
-// Real (unmocked) module: resets the in-memory anonymous rate limiter between
-// tests. The authed shared-key limiter is now Neon-backed (no module-level
-// state to reset) -- makeDb below provides a fresh fake table per test.
-import { _resetAnonChatRateLimitForTests, ANON_CHAT_RATE_LIMIT, AUTHED_SHARED_KEY_RATE_LIMIT } from '@/lib/repo-chat';
+// The authed shared-key limiter is Neon-backed (no module-level state to
+// reset) -- makeDb below provides a fresh fake table per test.
+import { AUTHED_SHARED_KEY_RATE_LIMIT } from '@/lib/repo-chat';
 
 const mockAuth = vi.mocked(auth) as unknown as Mock<() => Promise<Session | null>>;
 const mockGetNeonClient = vi.mocked(getNeonClient);
@@ -114,7 +112,6 @@ const validBody = { messages: [{ role: 'user', content: 'What should I work on n
 describe('POST /api/repos/[name]/chat', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        _resetAnonChatRateLimitForTests();
         mockAuth.mockResolvedValue({
             user: { name: 'testuser', email: 'test@example.com' },
             expires: new Date(Date.now() + 86400000).toISOString(),
@@ -163,65 +160,17 @@ describe('POST /api/repos/[name]/chat', () => {
         expect(data.error).toBe('Repo not found');
     });
 
-    it('returns 401 when unauthenticated and the repo is not a public default', async () => {
+    it('returns 401 when unauthenticated, regardless of the repo', async () => {
         mockAuth.mockResolvedValue(null);
-        mockGetNeonClient.mockReturnValue(makeDb([{ ...fakeRepo, name: 'private-repo' }]) as never);
 
-        const res = await POST(makeRequest(validBody, 'private-repo'), params('private-repo'));
+        const res = await POST(makeRequest(validBody, 'overseer'), params());
+        const data = await res.json();
+
         expect(res.status).toBe(401);
-    });
-
-    it('allows unauthenticated chat about a default repo', async () => {
-        mockAuth.mockResolvedValue(null);
-
-        const res = await POST(makeRequest(validBody, 'overseer', { 'x-nf-client-connection-ip': '9.9.9.1' }), params());
-        expect(res.status).toBe(200);
-    });
-
-    it('rate-limits an anonymous caller once its budget is exhausted (CWE-770)', async () => {
-        mockAuth.mockResolvedValue(null);
-        const headers = { 'x-nf-client-connection-ip': '9.9.9.2' };
-
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
-            const ok = await POST(makeRequest(validBody, 'overseer', headers), params());
-            expect(ok.status).toBe(200);
-        }
-
-        const limited = await POST(makeRequest(validBody, 'overseer', headers), params());
-        const data = await limited.json();
-
-        expect(limited.status).toBe(429);
-        expect(data.error).toMatch(/rate limit/i);
-        // The budget is exhausted before the DB/model are ever reached.
-        expect(mockGenerate).toHaveBeenCalledTimes(ANON_CHAT_RATE_LIMIT);
-    });
-
-    it('tracks anonymous rate limits per client, not globally', async () => {
-        mockAuth.mockResolvedValue(null);
-
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
-            const res = await POST(
-                makeRequest(validBody, 'overseer', { 'x-nf-client-connection-ip': '9.9.9.3' }),
-                params()
-            );
-            expect(res.status).toBe(200);
-        }
-
-        // A different client IP still has its own budget.
-        const res = await POST(
-            makeRequest(validBody, 'overseer', { 'x-nf-client-connection-ip': '9.9.9.4' }),
-            params()
-        );
-        expect(res.status).toBe(200);
-    });
-
-    it('does not rate-limit authenticated callers', async () => {
-        // Authenticated session is the beforeEach default; no client-IP header
-        // needed since the limiter only runs in the unauthenticated branch.
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT + 3; i++) {
-            const res = await POST(makeRequest(validBody), params());
-            expect(res.status).toBe(200);
-        }
+        expect(data.error).toBe('Unauthorized');
+        // Auth is checked before the DB or model are ever reached.
+        expect(mockGetNeonClient).not.toHaveBeenCalled();
+        expect(mockGenerate).not.toHaveBeenCalled();
     });
 
     it('replies with the model output and a context summary', async () => {

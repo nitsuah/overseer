@@ -33,7 +33,7 @@ describe('GET /api/mcp', () => {
     const res = await GET();
     const body = await res.json();
     expect(res.status).toBe(200);
-    expect(body.name).toBe('overseer-mcp');
+    expect(body.name).toBe('vigil-mcp');
     expect(body.tools.map((t: { name: string }) => t.name)).toEqual([
       'get_repo_health',
       'list_tasks',
@@ -73,7 +73,7 @@ describe('POST /api/mcp methods', () => {
   it('initialize returns server info', async () => {
     const res = await POST(post({ jsonrpc: '2.0', method: 'initialize', id: 1 }));
     const body = await res.json();
-    expect(body.result.serverInfo.name).toBe('overseer-mcp');
+    expect(body.result.serverInfo.name).toBe('vigil-mcp');
     expect(body.result.protocolVersion).toBe('2024-11-05');
   });
 

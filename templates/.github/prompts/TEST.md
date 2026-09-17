@@ -7,7 +7,7 @@
 
 ## Instructions
 
-You are working on one of the repositories in the Overseer portfolio — a collection of GitHub projects monitored and tracked by the [Overseer](https://github.com/nitsuah/overseer) meta-intelligence dashboard. Your goal is to improve the testing backbone and coverage incrementally.
+You are working on one of the repositories in the Vigil portfolio — a collection of GitHub projects monitored and tracked by the [Vigil](https://github.com/nitsuah/overseer) meta-intelligence dashboard. Your goal is to improve the testing backbone and coverage incrementally.
 
 ### Supported Repositories
 

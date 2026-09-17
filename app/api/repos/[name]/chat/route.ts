@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getNeonClient, ensureSchema } from '@/lib/db';
-import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { generateAIContent } from '@/lib/ai';
 import { decryptApiKey } from '@/lib/byok-crypto';
 import { isKnownProvider, AIProvider } from '@/lib/ai-providers';
 import {
     buildChatPrompt,
-    checkAnonChatRateLimit,
     reserveAuthedSharedKeySlot,
     releaseAuthedSharedKeySlot,
     findStaleDocs,
@@ -109,14 +107,6 @@ function toSnapshot(
     };
 }
 
-function getClientIp(request: NextRequest): string {
-    // x-forwarded-for / x-real-ip are caller-supplied and can be rotated by an
-    // anonymous client to defeat the per-IP rate limit below.
-    // x-nf-client-connection-ip is populated by Netlify's own edge and cannot
-    // be spoofed by the request itself.
-    return request.headers.get('x-nf-client-connection-ip') || 'unknown';
-}
-
 /**
  * POST /api/repos/[name]/chat
  *
@@ -150,19 +140,11 @@ export async function POST(
     try {
         const session = await auth();
 
-        // Every turn reaches the database and calls the AI provider chain, so
-        // an anonymous caller must be budgeted before either happens (CWE-770:
-        // unauthenticated requests are otherwise free to generate unlimited
-        // inference load against a public default repo). Authenticated
-        // requests are unaffected.
+        // Repo chat is an authenticated-only feature: every turn reaches the
+        // database and calls the AI provider chain, and the per-user shared-key
+        // budget below assumes a real user identity to meter against.
         if (!session) {
-            const clientIp = getClientIp(request);
-            if (!checkAnonChatRateLimit(clientIp)) {
-                return NextResponse.json(
-                    { error: 'Rate limit exceeded. Please try again in a minute, or sign in for unlimited access.' },
-                    { status: 429 }
-                );
-            }
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const db = getNeonClient();
@@ -197,15 +179,6 @@ export async function POST(
             return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
         }
         const repo = repoRows[0] as RepoRow;
-
-        // Unauthenticated visitors may only chat about the public default repos,
-        // matching the read access granted by /api/repo-details/[name].
-        if (!session) {
-            const defaultRepoNames = DEFAULT_REPOS.map((r) => r.name);
-            if (!defaultRepoNames.includes(repo.name)) {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-            }
-        }
 
         const [tasks, roadmapItems, docStatuses] = await db.transaction([
             db`SELECT * FROM tasks WHERE repo_id = ${repo.id} ORDER BY created_at DESC`,

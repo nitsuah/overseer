@@ -2,7 +2,7 @@
 
 Last Validated: 2026-09-11 (native `npx vitest run --coverage` — no Docker in this cloud automation environment)
 Health Score: 95/100
-Compliance: Overseer/PM core metrics and health scoring validated for Q3 2026
+Compliance: Vigil/PM core metrics and health scoring validated for Q3 2026
 
 ## Core Metrics
 
@@ -31,13 +31,13 @@ Compliance: Overseer/PM core metrics and health scoring validated for Q3 2026
 | Open Issues   | 0          | GitHub issues                             |
 | PR Turnaround | < 1 day    | Typical merge time                        |
 | Skipped Tests | 1          | Gemini health check skips without API key |
-| Health Score  | 95/100     | Overseer's own score                      |
+| Health Score  | 95/100     | Vigil's own score                         |
 | Last Updated  | 2026-08-22 | Docker test/audit refresh                 |
 
 ## Verification
 
 - Coverage command: `docker compose -f docker-compose.test.yml run --rm coverage`
-- Docker build smoke test: `docker build -t overseer-devops-check .`
+- Docker build smoke test: `docker build -t vigil-devops-check .`
 - Production image note: the Docker build now uses placeholder auth values only during the build stage; runtime containers still require real auth secrets.
 
 <!--

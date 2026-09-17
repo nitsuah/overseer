@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Build production image
-        run: docker build -t overseer-docker-smoke .
+        run: docker build -t vigil-docker-smoke .
 
       - name: Validate test-stack runtime command
         run: docker compose -f config/docker-compose.test.yml run --rm test sh -lc "npx vitest --version"

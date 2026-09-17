@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { MAX_CHAT_MESSAGES, type ChatMessage } from '@/lib/repo-chat';
 
 const STORAGE_PREFIX = 'vigil.repo-chat.v1';
+/** Pre-rebrand storage prefix. Read once per namespace to migrate any
+ * existing threads forward; never written to again. */
+const LEGACY_STORAGE_PREFIX = 'overseer.repo-chat.v1';
 /** Storage namespace used when no authenticated identity is available. */
 const ANON_NAMESPACE = 'anon';
 /** Keep persisted threads bounded so localStorage cannot grow without limit. */
@@ -70,6 +73,10 @@ function storageKeyFor(namespace: string): string {
     return `${STORAGE_PREFIX}.${encodeURIComponent(namespace)}`;
 }
 
+function legacyStorageKeyFor(namespace: string): string {
+    return `${LEGACY_STORAGE_PREFIX}.${encodeURIComponent(namespace)}`;
+}
+
 function isValidProposal(value: unknown): value is NonNullable<ChatThreadMessage['proposal']> {
     if (typeof value !== 'object' || value === null) return false;
     const p = value as Record<string, unknown>;
@@ -97,11 +104,9 @@ function isValidThreadMessage(value: unknown): value is ChatThreadMessage {
  * hand-edited localStorage value can never reach `sendMessage` and throw when
  * it is spread into a new array (which would otherwise skip the try/finally
  * that resets `sendingRepo`). */
-function loadThreads(namespace: string): ChatThreads {
-    if (typeof window === 'undefined') return {};
+function parseThreadsJson(raw: string | null): ChatThreads {
+    if (!raw) return {};
     try {
-        const raw = window.localStorage.getItem(storageKeyFor(namespace));
-        if (!raw) return {};
         const parsed: unknown = JSON.parse(raw);
         if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
 
@@ -115,6 +120,29 @@ function loadThreads(namespace: string): ChatThreads {
     } catch {
         return {};
     }
+}
+
+function loadThreads(namespace: string): ChatThreads {
+    if (typeof window === 'undefined') return {};
+
+    const current = parseThreadsJson(window.localStorage.getItem(storageKeyFor(namespace)));
+    if (Object.keys(current).length > 0) return current;
+
+    // One-time migration from the pre-rebrand key: a repo's threads would
+    // otherwise sit unread in localStorage forever post-rename, since nothing
+    // reads LEGACY_STORAGE_PREFIX once STORAGE_PREFIX exists.
+    const legacyKey = legacyStorageKeyFor(namespace);
+    const legacy = parseThreadsJson(window.localStorage.getItem(legacyKey));
+    if (Object.keys(legacy).length === 0) return legacy;
+
+    try {
+        window.localStorage.setItem(storageKeyFor(namespace), JSON.stringify(legacy));
+        window.localStorage.removeItem(legacyKey);
+    } catch {
+        // Storage may be unavailable (private mode, quota); still hand back
+        // the migrated threads for this session even if persisting failed.
+    }
+    return legacy;
 }
 
 function persistThreads(namespace: string, threads: ChatThreads): void {

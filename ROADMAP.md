@@ -71,5 +71,5 @@ Next Review: 2026-09-15
 
 - GitHub repositories and markdown remain the source of truth.
 - Cross-repo orchestration and autonomous plan execution are the long-term product direction.
-- Per-repo detailed execution stays in each repo's own TASKS.md; overseer tracks aggregate state.
+- Per-repo detailed execution stays in each repo's own TASKS.md; Vigil tracks aggregate state.
 - Detailed execution work for overseer itself stays in TASKS.md.

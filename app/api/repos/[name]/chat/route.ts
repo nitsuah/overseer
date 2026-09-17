@@ -147,6 +147,14 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // The shared-key budget below must be metered by an identifier that
+        // can never be silently absent. session.user.email can be -- GitHub
+        // omits it when the account has no public email and the
+        // /user/emails fallback also fails -- which would otherwise let such
+        // a session skip metering entirely (CWE-770). session.userId (the
+        // JWT sub, GitHub's numeric user id) is always set once signed in.
+        const meterId = session.user?.email ?? session.userId;
+
         const db = getNeonClient();
         await ensureSchema(db);
 
@@ -197,7 +205,7 @@ export async function POST(
         // that fails validation or the DB transaction above never consumes
         // budget for an AI call that was never attempted.
         let sharedKeyReservation: { windowResetAt: number } | undefined;
-        if (session?.user?.email) {
+        if (meterId) {
             // Reserve BEFORE the AI call, not just when no personal key is
             // configured at all -- a configured key can still fail
             // (revoked/expired/out of quota) and generateAIContent silently
@@ -205,7 +213,7 @@ export async function POST(
             // it's too late to enforce the budget (CWE-770). Reserving here
             // and releasing below if the personal key actually succeeds
             // keeps both cases correctly metered.
-            const reservation = await reserveAuthedSharedKeySlot(db, session.user.email);
+            const reservation = await reserveAuthedSharedKeySlot(db, meterId);
             if (!reservation.allowed) {
                 return NextResponse.json(
                     {
@@ -231,9 +239,9 @@ export async function POST(
             // the shared key, so give the slot back rather than leaving it
             // permanently consumed by a request that produced no reply. The
             // outer catch below still owns turning this into a 500/503.
-            if (session?.user?.email && sharedKeyReservation) {
+            if (meterId && sharedKeyReservation) {
                 try {
-                    await releaseAuthedSharedKeySlot(db, session.user.email, sharedKeyReservation.windowResetAt);
+                    await releaseAuthedSharedKeySlot(db, meterId, sharedKeyReservation.windowResetAt);
                 } catch (releaseError) {
                     logger.warn('Failed to release shared-key reservation after a failed AI call:', releaseError);
                 }
@@ -241,7 +249,7 @@ export async function POST(
             throw generateError;
         }
 
-        if (session?.user?.email && sharedKeyReservation) {
+        if (meterId && sharedKeyReservation) {
             if (usingOwnKey) {
                 // The personal key actually served the request: give back
                 // the speculative reservation taken before the call. Best
@@ -250,7 +258,7 @@ export async function POST(
                 // into a 500; it just means that one reservation isn't
                 // refunded, which self-corrects at the next window roll.
                 try {
-                    await releaseAuthedSharedKeySlot(db, session.user.email, sharedKeyReservation.windowResetAt);
+                    await releaseAuthedSharedKeySlot(db, meterId, sharedKeyReservation.windowResetAt);
                 } catch (releaseError) {
                     logger.warn('Failed to release shared-key reservation:', releaseError);
                 }

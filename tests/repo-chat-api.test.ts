@@ -173,6 +173,26 @@ describe('POST /api/repos/[name]/chat', () => {
         expect(mockGenerate).not.toHaveBeenCalled();
     });
 
+    it('still meters a session with no public email using session.userId (CWE-770)', async () => {
+        // GitHub omits email when the account has no public email and the
+        // /user/emails fallback also fails; session.userId (the JWT sub) is
+        // always set once signed in and must not let this session dodge the
+        // shared-key budget entirely.
+        mockAuth.mockResolvedValue({
+            user: { name: 'testuser' },
+            userId: 'gh-99999',
+            expires: new Date(Date.now() + 86400000).toISOString(),
+        } as Session);
+
+        for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT; i++) {
+            const res = await POST(makeRequest(validBody), params());
+            expect(res.status).toBe(200);
+        }
+
+        const limited = await POST(makeRequest(validBody), params());
+        expect(limited.status).toBe(429);
+    });
+
     it('replies with the model output and a context summary', async () => {
         const res = await POST(makeRequest(validBody), params());
         const data = await res.json();

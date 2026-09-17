@@ -101,4 +101,40 @@ describe('useRepoChat', () => {
         );
         expect(result.current.sendingRepo).toBeNull();
     });
+
+    it('migrates threads from the pre-rebrand storage key on first load', () => {
+        const identity = 'user@example.com';
+        const legacyKey = `overseer.repo-chat.v1.${encodeURIComponent(identity)}`;
+        const newKey = `vigil.repo-chat.v1.${encodeURIComponent(identity)}`;
+        const legacyThread = [
+            { id: 'm1', role: 'user', content: 'hi from before the rename', createdAt: new Date().toISOString() },
+        ];
+        window.localStorage.setItem(legacyKey, JSON.stringify({ 'repo-a': legacyThread }));
+
+        const { result } = renderHook(() => useRepoChat(identity));
+
+        expect(result.current.getThread('repo-a')).toEqual(legacyThread);
+        expect(window.localStorage.getItem(legacyKey)).toBeNull();
+        expect(JSON.parse(window.localStorage.getItem(newKey)!)).toEqual({ 'repo-a': legacyThread });
+    });
+
+    it('ignores the legacy key once the new key already has threads', () => {
+        const identity = 'user@example.com';
+        const legacyKey = `overseer.repo-chat.v1.${encodeURIComponent(identity)}`;
+        const newKey = `vigil.repo-chat.v1.${encodeURIComponent(identity)}`;
+        const legacyThread = [
+            { id: 'old', role: 'user', content: 'legacy message', createdAt: new Date().toISOString() },
+        ];
+        const currentThread = [
+            { id: 'new', role: 'user', content: 'current message', createdAt: new Date().toISOString() },
+        ];
+        window.localStorage.setItem(legacyKey, JSON.stringify({ 'repo-a': legacyThread }));
+        window.localStorage.setItem(newKey, JSON.stringify({ 'repo-a': currentThread }));
+
+        const { result } = renderHook(() => useRepoChat(identity));
+
+        expect(result.current.getThread('repo-a')).toEqual(currentThread);
+        // Left alone rather than merged -- the new key already has data.
+        expect(window.localStorage.getItem(legacyKey)).not.toBeNull();
+    });
 });

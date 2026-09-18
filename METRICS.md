@@ -36,7 +36,7 @@ Compliance: Overseer/PM core metrics and health scoring validated for Q3 2026
 
 ## Verification
 
-- Coverage command: `docker compose -f docker-compose.test.yml run --rm coverage`
+- Coverage command: `docker compose -f config/docker-compose.test.yml run --rm coverage`
 - Docker build smoke test: `docker build -t overseer-devops-check .`
 - Production image note: the Docker build now uses placeholder auth values only during the build stage; runtime containers still require real auth secrets.
 

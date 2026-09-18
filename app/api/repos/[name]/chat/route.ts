@@ -13,6 +13,7 @@ import {
     parseDocEditProposal,
     type RepoChatSnapshot,
 } from '@/lib/repo-chat';
+import { canAccessRepo } from '@/lib/repo-access';
 import logger from '@/lib/log';
 
 export const runtime = 'nodejs';
@@ -40,6 +41,7 @@ interface RepoRow {
     ci_status?: string | null;
     testing_status?: string | null;
     coverage_score?: number | null;
+    private_repo?: boolean | null;
 }
 
 interface TaskRow {
@@ -192,6 +194,17 @@ export async function POST(
             return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
         }
         const repo = repoRows[0] as RepoRow;
+
+        // A signed-in session is not itself proof of access to *this* repo
+        // (CWE-639): `repos` is a single shared table with no per-row owner,
+        // so without this check any authenticated user could chat about any
+        // repo anyone has ever synced, private or not, just by knowing its
+        // name. 404 (not 403) so a private repo's existence isn't confirmed
+        // to a caller who can't see it -- same response as a genuinely
+        // missing repo above.
+        if (!(await canAccessRepo(db, repo, session.userId))) {
+            return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
+        }
 
         const [tasks, roadmapItems, docStatuses] = await db.transaction([
             db`SELECT * FROM tasks WHERE repo_id = ${repo.id} ORDER BY created_at DESC`,

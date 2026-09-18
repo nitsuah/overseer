@@ -125,6 +125,14 @@ export async function POST(
         return NextResponse.json({ error: 'Repo name required' }, { status: 400 });
     }
 
+    // Checked before request.json()/parseChatMessages() below: an
+    // unauthenticated caller must not be able to spend CPU/memory parsing and
+    // traversing an arbitrarily large body before being rejected (CWE-400).
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let body: unknown;
     try {
         body = await request.json();
@@ -138,15 +146,6 @@ export async function POST(
     }
 
     try {
-        const session = await auth();
-
-        // Repo chat is an authenticated-only feature: every turn reaches the
-        // database and calls the AI provider chain, and the per-user shared-key
-        // budget below assumes a real user identity to meter against.
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
         // The shared-key budget below must be metered by an identifier that
         // can never be silently absent. session.user.email can be -- GitHub
         // omits it when the account has no public email and the
@@ -154,6 +153,12 @@ export async function POST(
         // a session skip metering entirely (CWE-770). session.userId (the
         // JWT sub, GitHub's numeric user id) is always set once signed in.
         const meterId = session.user?.email ?? session.userId;
+        // Both are absent only for a malformed/corrupted session -- fail
+        // closed rather than silently letting it ride the shared key
+        // unmetered.
+        if (!meterId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
         const db = getNeonClient();
         await ensureSchema(db);

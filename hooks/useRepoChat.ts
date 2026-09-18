@@ -122,17 +122,27 @@ function parseThreadsJson(raw: string | null): ChatThreads {
     }
 }
 
+/** localStorage.getItem() can throw (storage blocked/denied by the browser),
+ * not just return null -- callers must never let that exception escape. */
+function safeGetItem(key: string): string | null {
+    try {
+        return window.localStorage.getItem(key);
+    } catch {
+        return null;
+    }
+}
+
 function loadThreads(namespace: string): ChatThreads {
     if (typeof window === 'undefined') return {};
 
-    const current = parseThreadsJson(window.localStorage.getItem(storageKeyFor(namespace)));
+    const current = parseThreadsJson(safeGetItem(storageKeyFor(namespace)));
     if (Object.keys(current).length > 0) return current;
 
     // One-time migration from the pre-rebrand key: a repo's threads would
     // otherwise sit unread in localStorage forever post-rename, since nothing
     // reads LEGACY_STORAGE_PREFIX once STORAGE_PREFIX exists.
     const legacyKey = legacyStorageKeyFor(namespace);
-    const legacy = parseThreadsJson(window.localStorage.getItem(legacyKey));
+    const legacy = parseThreadsJson(safeGetItem(legacyKey));
     if (Object.keys(legacy).length === 0) return legacy;
 
     try {

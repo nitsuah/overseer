@@ -173,6 +173,16 @@ describe('POST /api/repos/[name]/chat', () => {
         expect(mockGenerate).not.toHaveBeenCalled();
     });
 
+    it('rejects an unauthenticated caller before parsing the request body (CWE-400)', async () => {
+        mockAuth.mockResolvedValue(null);
+
+        // A malformed body would otherwise be JSON-parsed (and fail with 400)
+        // before auth is ever checked; it must 401 instead, proving auth runs
+        // first and the body is never touched.
+        const res = await POST(makeRequest('not json'), params());
+        expect(res.status).toBe(401);
+    });
+
     it('still meters a session with no public email using session.userId (CWE-770)', async () => {
         // GitHub omits email when the account has no public email and the
         // /user/emails fallback also fails; session.userId (the JWT sub) is
@@ -191,6 +201,20 @@ describe('POST /api/repos/[name]/chat', () => {
 
         const limited = await POST(makeRequest(validBody), params());
         expect(limited.status).toBe(429);
+    });
+
+    it('fails closed with 401 when a session has neither email nor userId', async () => {
+        // Malformed/corrupted session -- there is no identity left to meter
+        // against, so it must be rejected rather than riding the shared key
+        // unmetered.
+        mockAuth.mockResolvedValue({
+            user: { name: 'testuser' },
+            expires: new Date(Date.now() + 86400000).toISOString(),
+        } as Session);
+
+        const res = await POST(makeRequest(validBody), params());
+        expect(res.status).toBe(401);
+        expect(mockGenerate).not.toHaveBeenCalled();
     });
 
     it('replies with the model output and a context summary', async () => {

@@ -1,6 +1,6 @@
 # Metrics
 
-Last Validated: 2026-09-11 (native `npx vitest run --coverage` — no Docker in this cloud automation environment)
+Last Validated: 2026-09-18 (native `npx vitest run --coverage --config config/vitest.config.ts` — no Docker in this cloud automation environment)
 Health Score: 95/100
 Compliance: Vigil/PM core metrics and health scoring validated for Q3 2026
 
@@ -8,11 +8,11 @@ Compliance: Vigil/PM core metrics and health scoring validated for Q3 2026
 
 | Metric              | Value  | Notes                                                                                                                                                             |
 | ------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Code Coverage       | 81.20% | Overall statement coverage from native `npx vitest run --coverage --config config/vitest.config.ts`. Branch: 67.67%, Function: 73.99%, Line: 82.96%.              |
+| Code Coverage       | 83.34% | Overall statement coverage from native `npx vitest run --coverage --config config/vitest.config.ts`. Branch: 69.01%, Function: 76.86%, Line: 85.20%.              |
 | Build Time          | ~6s    | Local dev build                                                                                                                                                   |
 | Bundle Size         | TBD    | Not measured yet                                                                                                                                                  |
 | Test Files          | 39     | All vitest test files passing natively, including expanded GitHub client and Gemini model discovery coverage.                                                     |
-| Test Cases          | 563    | Native coverage run reports 562 passing tests and 1 skipped Gemini health check when no API key is provided.                                                      |
+| Test Cases          | 593    | Native coverage run reports 592 passing tests and 1 skipped Gemini health check when no API key is provided.                                                      |
 | E2E Test Files      | 1      | Playwright E2E tests (e2e/dashboard.spec.ts)                                                                                                                      |
 | E2E Test Cases      | 34     | Playwright tests passing in e2e/dashboard.spec.ts                                                                                                                 |
 | Database Tables     | 8      | repos, tasks, roadmap_items, metrics, doc_status, features, best_practices, community_standards                                                                   |

@@ -19,6 +19,10 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     // repos: sync metadata
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE`,
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS readme_last_updated TIMESTAMP WITH TIME ZONE`,
+    // Mirrors GitHub's `private` flag as of the last sync -- see
+    // lib/repo-access.ts. Defaults FALSE so pre-existing rows stay visible
+    // until their next sync repopulates the real value.
+    `ALTER TABLE repos ADD COLUMN IF NOT EXISTS private_repo BOOLEAN DEFAULT FALSE`,
 
     // repos: lines-of-code metrics
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS total_loc INTEGER`,
@@ -185,5 +189,17 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
       count INTEGER NOT NULL DEFAULT 0,
       reset_at_ms BIGINT NOT NULL,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`,
+
+    // repo_access: which signed-in GitHub users have confirmed access to a
+    // given (private) repo, as of their last sync/add. See lib/repo-access.ts
+    // and database/schema.sql for the full rationale -- `repos` is a single
+    // shared table with no per-row owner, so a private repo's visibility is
+    // gated by this table rather than by the repo simply existing.
+    `CREATE TABLE IF NOT EXISTS repo_access (
+      repo_id UUID NOT NULL REFERENCES repos(id) ON DELETE CASCADE,
+      github_user_id TEXT NOT NULL,
+      granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      PRIMARY KEY (repo_id, github_user_id)
     )`,
 ];

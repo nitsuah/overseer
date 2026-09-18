@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
         context_type: 'single_repo',
         generated_at: new Date().toISOString(),
         instructions:
-          "Structured context about a GitHub repository tracked in Overseer. " +
+          "Structured context about a GitHub repository tracked in Vigil. " +
           "Use it to answer questions about health, tasks, roadmap, documentation, and security.",
         repo: {
           name:             repo.name,
@@ -173,7 +173,7 @@ export async function GET(req: NextRequest) {
       context_type: 'portfolio',
       generated_at: new Date().toISOString(),
       instructions:
-        "Structured context about a portfolio of GitHub repositories tracked in Overseer. " +
+        "Structured context about a portfolio of GitHub repositories tracked in Vigil. " +
         "Use it to answer questions about repository health, project status, security posture, " +
         "what needs attention, and cross-repo patterns.",
       summary: {

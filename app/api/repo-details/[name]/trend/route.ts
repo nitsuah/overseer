@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
+import { canAccessRepo } from '@/lib/repo-access';
 
 export const runtime = 'nodejs';
 
@@ -29,17 +30,31 @@ export async function GET(
 
   try {
     const db = getNeonClient();
+
+    // Look up the repo first (rather than joining by name below) so access
+    // can be checked before any snapshot data is returned. Signed in is not
+    // itself proof of access to *this* repo (CWE-639): `repos` has no
+    // per-row owner. 404 (not 403) so a private repo's existence isn't
+    // confirmed to a caller who can't see it.
+    const [repo] = await db`SELECT id, private_repo FROM repos WHERE name = ${name} LIMIT 1` as
+      Array<{ id: string; private_repo?: boolean }>;
+    if (!repo) {
+      return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
+    }
+    if (session?.user && !(await canAccessRepo(db, repo, session.userId))) {
+      return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
+    }
+
     // Fetch the most recent 200 snapshots (DESC + LIMIT), then reverse to
     // chronological order for the chart. The previous ASC + LIMIT 200 always
     // returned the *oldest* 200 rows once a repo passed 200 snapshots, so the
     // sparkline silently stopped picking up new data.
     const rows = await db`
-      SELECT s.commit_frequency, s.avg_pr_merge_time_hours, s.health_score,
-             s.open_prs, s.total_loc, s.captured_at
-      FROM repo_snapshots s
-      JOIN repos r ON r.id = s.repo_id
-      WHERE r.name = ${name}
-      ORDER BY s.captured_at DESC
+      SELECT commit_frequency, avg_pr_merge_time_hours, health_score,
+             open_prs, total_loc, captured_at
+      FROM repo_snapshots
+      WHERE repo_id = ${repo.id}
+      ORDER BY captured_at DESC
       LIMIT 200
     `;
     return NextResponse.json({ success: true, snapshots: rows.reverse() }, { status: 200 });

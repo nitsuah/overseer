@@ -1,5 +1,5 @@
 /**
- * Playwright E2E tests for Overseer dashboard.
+ * Playwright E2E tests for Vigil dashboard.
  *
  * Auth notes:
  *  - proxy.ts middleware allows: /, /login, /api/auth/*, /api/repos*, /api/repo-details*, /api/seed-defaults
@@ -9,18 +9,20 @@
  */
 
 import { test, expect } from '@playwright/test';
+import type { Browser } from '@playwright/test';
+import { encode } from 'next-auth/jwt';
 
 // ─── Core: page loads ────────────────────────────────────────────────────────
 
 test.describe('Dashboard – Core', () => {
   test('loads and shows page heading', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('h1').filter({ hasText: /seer/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('h1').filter({ hasText: /vigil/i })).toBeVisible({ timeout: 15000 });
   });
 
   test('has correct page title', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/Overseer/);
+    await expect(page).toHaveTitle(/Vigil/);
   });
 
   test('loads within 5 seconds', async ({ page }) => {
@@ -106,7 +108,7 @@ test.describe('Dashboard – Mobile (375 × 812)', () => {
 
   test('shows heading on mobile', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('h1').filter({ hasText: /seer/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1').filter({ hasText: /vigil/i })).toBeVisible({ timeout: 10000 });
   });
 
   test('shows mobile sign-in button', async ({ page }) => {
@@ -163,7 +165,7 @@ test.describe('Login page', () => {
     await page.goto('/login');
     const body = await page.content();
     // Should contain sign-in related content
-    expect(body.toLowerCase()).toMatch(/sign in|github|login|overseer/i);
+    expect(body.toLowerCase()).toMatch(/sign in|github|login|vigil/i);
   });
 
   test('has a sign-in button', async ({ page }) => {
@@ -240,7 +242,7 @@ test.describe('Public API routes', () => {
     const res = await request.get('/');
     expect(res.status()).toBe(200);
     const text = await res.text();
-    expect(text).toContain('Overseer');
+    expect(text).toContain('Vigil');
   });
 });
 
@@ -320,6 +322,101 @@ test.describe('Dashboard – Docs column summary icon', () => {
     const summaryButtons = docsCell.locator('button[aria-label*="Docs"]');
     await expect(summaryButtons).toHaveCount(1);
     await expect(summaryButtons.first()).toBeVisible();
+  });
+});
+
+// ─── Repo chat: authentication boundary ───────────────────────────────────────
+//
+// "Chat about repo" is authenticated-only end to end:
+//  - app/api/repos/[name]/chat/route.ts returns 401 before touching the DB or
+//    calling the AI provider when there is no session.
+//  - app/page.tsx only wires up `onOpenChat` (which RepoTableRow/MobileRepoCard
+//    render as the `[data-tour="repo-chat"]` button) once a session exists, so
+//    signed-out visitors never see the option at all.
+//
+// `authenticatedContext` mints a real Auth.js v5 session cookie via
+// next-auth/jwt's `encode` (the officially documented way to test Auth.js
+// apps without driving the actual GitHub OAuth handshake) so these tests
+// don't depend on live GitHub credentials.
+
+async function authenticatedContext(browser: Browser) {
+  const secret = process.env.NEXTAUTH_SECRET;
+  test.skip(!secret, 'NEXTAUTH_SECRET is not set in this environment');
+
+  const sessionToken = await encode({
+    token: { name: 'E2E Test User', email: 'e2e-test@example.com', sub: 'e2e-test-user' },
+    secret: secret!,
+    salt: 'authjs.session-token',
+  });
+
+  const context = await browser.newContext();
+  await context.addCookies([
+    { name: 'authjs.session-token', value: sessionToken, domain: 'localhost', path: '/' },
+  ]);
+  return context;
+}
+
+test.describe('Repo chat – authentication boundary', () => {
+  test('unauthenticated: chat button is not rendered on the dashboard', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(2000);
+    await expect(page.locator('[data-tour="repo-chat"]')).toHaveCount(0);
+  });
+
+  test('unauthenticated: POST /api/repos/[name]/chat is rejected before reaching the DB or model', async ({ request }) => {
+    const res = await request.post('/api/repos/overseer/chat', {
+      data: { messages: [{ role: 'user', content: 'hello' }] },
+    });
+    expect(res.status()).toBe(401);
+    const body = await res.json();
+    expect(body.error).toBe('Unauthorized');
+  });
+
+  test('authenticated: chat button is rendered once signed in', async ({ browser }) => {
+    const context = await authenticatedContext(browser);
+    const page = await context.newPage();
+    await page.goto('/');
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(3000);
+
+    const rowCount = await page.locator('table tbody tr').count();
+    test.skip(rowCount === 0, 'No repo rows loaded to assert against');
+    await expect(page.locator('[data-tour="repo-chat"]').first()).toBeVisible();
+    await context.close();
+  });
+
+  test('authenticated: POST /api/repos/[name]/chat is no longer rejected for lack of a session', async ({ browser }) => {
+    const context = await authenticatedContext(browser);
+    const res = await context.request.post('/api/repos/overseer/chat', {
+      data: { messages: [{ role: 'user', content: 'hello' }] },
+    });
+    // Authenticated requests can still fail downstream (e.g. no DB/AI provider
+    // configured in this environment), but never with the 401 an
+    // unauthenticated caller gets — that boundary is what's under test here.
+    expect(res.status()).not.toBe(401);
+    await context.close();
+  });
+
+  test('signing out removes the chat option and restores the sign-in prompt', async ({ browser }) => {
+    const context = await authenticatedContext(browser);
+    const page = await context.newPage();
+    await page.goto('/');
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(2000);
+
+    // Simulate sign-out by clearing the session cookie, then reload: the
+    // header should flip back to signed-out state and the chat option
+    // should disappear along with it.
+    await context.clearCookies();
+    await page.reload();
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(2000);
+
+    await expect(page.locator('[data-tour="repo-chat"]')).toHaveCount(0);
+    const signInBtn = page.locator('button, [role="button"]').filter({ hasText: /sign in/i });
+    await expect(signInBtn.first()).toBeVisible({ timeout: 10000 });
+    await context.close();
   });
 });
 

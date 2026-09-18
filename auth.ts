@@ -85,6 +85,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             logger.debug('Session callback', { session, token });
             // Extend session with accessToken (type augmentation)
             (session as typeof session & { accessToken?: string }).accessToken = token.accessToken as string;
+            // token.sub is the GitHub user's numeric id, set from `profile.id`
+            // (see the GitHub provider's profile() above) and always present --
+            // unlike session.user.email, which GitHub omits for accounts with
+            // no public email when the /user/emails fallback also fails.
+            // Callers that need a metering/identity key that can never be
+            // silently absent should prefer this over session.user.email.
+            (session as typeof session & { userId?: string }).userId = token.sub as string;
             return session;
         },
         async redirect({ url, baseUrl }) {

@@ -1,4 +1,4 @@
-# Overseer
+# Vigil
 
 ---
 
@@ -13,7 +13,7 @@
 
 ## Mission Statement
 
-Overseer bridges human intent and AI execution through enforced documentation standards (ROADMAP, TASKS, METRICS, FEATURES).
+Vigil bridges human intent and AI execution through enforced documentation standards (ROADMAP, TASKS, METRICS, FEATURES).
 
 **Key Outcomes:**
 
@@ -99,7 +99,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ```bash
 # Build the production image without injecting real secrets
-docker build -t overseer-devops-check .
+docker build -t vigil-devops-check .
 
 # Run unit tests in the test container
 docker compose -f config/docker-compose.test.yml run --rm test
@@ -158,7 +158,7 @@ NETLIFY_AUTH_TOKEN=
 ## Project Structure
 
 ```bash
-overseer/
+vigil/
 ├── app/                    # Next.js app directory
 │   ├── page.tsx           # Main dashboard
 │   ├── api/               # API routes
@@ -180,7 +180,7 @@ overseer/
 
 ## Standardized MD Files
 
-Overseer expects repos to have these files for full functionality:
+Vigil expects repos to have these files for full functionality:
 
 - **README.md** - Project overview and setup instructions
 - **ROADMAP.md** - High-level objectives and quarterly plans
@@ -195,16 +195,16 @@ See `/templates` for examples with AI agent instructions.
 
 ## Health Score
 
-Overseer calculates a composite 0–100 score across 6 weighted components:
+Vigil calculates a composite 0–100 score across 6 weighted components:
 
-| Component             | Weight | What It Measures                                                      |
-| --------------------- | ------ | --------------------------------------------------------------------- |
+| Component             | Weight | What It Measures                                                        |
+| --------------------- | ------ | ----------------------------------------------------------------------- |
 | Best Practices        | 30%    | CI/CD, pre-commit, linting, branch protection, Docker, Dependabot, etc. |
-| Security              | 30%    | Dependabot vulnerability alerts and secret-scanning alerts            |
-| Documentation Health  | 15%    | Presence and health of the 8 tracked doc files                       |
-| Testing & Quality     | 15%    | Test coverage percentage, framework detection, CI pass/fail           |
-| Community Standards   | 5%     | 12 community health files (CODE_OF_CONDUCT, CONTRIBUTING, etc.)      |
-| Activity & Engagement | 5%     | Commit frequency, PR/issue counts, contributor activity               |
+| Security              | 30%    | Dependabot vulnerability alerts and secret-scanning alerts              |
+| Documentation Health  | 15%    | Presence and health of the 8 tracked doc files                          |
+| Testing & Quality     | 15%    | Test coverage percentage, framework detection, CI pass/fail             |
+| Community Standards   | 5%     | 12 community health files (CODE_OF_CONDUCT, CONTRIBUTING, etc.)         |
+| Activity & Engagement | 5%     | Commit frequency, PR/issue counts, contributor activity                 |
 
 Scores are displayed as letter grades (A–F) with per-component breakdowns in the detail panel. See [FEATURES.md](FEATURES.md) for full details.
 

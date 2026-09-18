@@ -15,6 +15,8 @@ export interface RepoMetadata {
   pushedAt: string;
   isFork: boolean;
   archived: boolean;
+  /** GitHub's `private` flag -- gates repo_access enforcement (lib/repo-access.ts). */
+  isPrivate: boolean;
 }
 
 export interface BranchInfo {

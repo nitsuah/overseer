@@ -49,3 +49,5 @@ node_modules/
 /playwright/.auth/
 .playwright-mcp/
 .agent
+# Local Netlify folder
+.netlify

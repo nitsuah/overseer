@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getNeonClient, ensureSchema } from '@/lib/db';
-import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { generateAIContent } from '@/lib/ai';
 import { decryptApiKey } from '@/lib/byok-crypto';
 import { isKnownProvider, AIProvider } from '@/lib/ai-providers';
 import {
     buildChatPrompt,
-    checkAnonChatRateLimit,
     reserveAuthedSharedKeySlot,
     releaseAuthedSharedKeySlot,
     findStaleDocs,
@@ -15,6 +13,7 @@ import {
     parseDocEditProposal,
     type RepoChatSnapshot,
 } from '@/lib/repo-chat';
+import { canAccessRepo } from '@/lib/repo-access';
 import logger from '@/lib/log';
 
 export const runtime = 'nodejs';
@@ -42,6 +41,7 @@ interface RepoRow {
     ci_status?: string | null;
     testing_status?: string | null;
     coverage_score?: number | null;
+    private_repo?: boolean | null;
 }
 
 interface TaskRow {
@@ -109,14 +109,6 @@ function toSnapshot(
     };
 }
 
-function getClientIp(request: NextRequest): string {
-    // x-forwarded-for / x-real-ip are caller-supplied and can be rotated by an
-    // anonymous client to defeat the per-IP rate limit below.
-    // x-nf-client-connection-ip is populated by Netlify's own edge and cannot
-    // be spoofed by the request itself.
-    return request.headers.get('x-nf-client-connection-ip') || 'unknown';
-}
-
 /**
  * POST /api/repos/[name]/chat
  *
@@ -135,6 +127,14 @@ export async function POST(
         return NextResponse.json({ error: 'Repo name required' }, { status: 400 });
     }
 
+    // Checked before request.json()/parseChatMessages() below: an
+    // unauthenticated caller must not be able to spend CPU/memory parsing and
+    // traversing an arbitrarily large body before being rejected (CWE-400).
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let body: unknown;
     try {
         body = await request.json();
@@ -148,21 +148,18 @@ export async function POST(
     }
 
     try {
-        const session = await auth();
-
-        // Every turn reaches the database and calls the AI provider chain, so
-        // an anonymous caller must be budgeted before either happens (CWE-770:
-        // unauthenticated requests are otherwise free to generate unlimited
-        // inference load against a public default repo). Authenticated
-        // requests are unaffected.
-        if (!session) {
-            const clientIp = getClientIp(request);
-            if (!checkAnonChatRateLimit(clientIp)) {
-                return NextResponse.json(
-                    { error: 'Rate limit exceeded. Please try again in a minute, or sign in for unlimited access.' },
-                    { status: 429 }
-                );
-            }
+        // The shared-key budget below must be metered by an identifier that
+        // can never be silently absent. session.user.email can be -- GitHub
+        // omits it when the account has no public email and the
+        // /user/emails fallback also fails -- which would otherwise let such
+        // a session skip metering entirely (CWE-770). session.userId (the
+        // JWT sub, GitHub's numeric user id) is always set once signed in.
+        const meterId = session.user?.email ?? session.userId;
+        // Both are absent only for a malformed/corrupted session -- fail
+        // closed rather than silently letting it ride the shared key
+        // unmetered.
+        if (!meterId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const db = getNeonClient();
@@ -198,13 +195,15 @@ export async function POST(
         }
         const repo = repoRows[0] as RepoRow;
 
-        // Unauthenticated visitors may only chat about the public default repos,
-        // matching the read access granted by /api/repo-details/[name].
-        if (!session) {
-            const defaultRepoNames = DEFAULT_REPOS.map((r) => r.name);
-            if (!defaultRepoNames.includes(repo.name)) {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-            }
+        // A signed-in session is not itself proof of access to *this* repo
+        // (CWE-639): `repos` is a single shared table with no per-row owner,
+        // so without this check any authenticated user could chat about any
+        // repo anyone has ever synced, private or not, just by knowing its
+        // name. 404 (not 403) so a private repo's existence isn't confirmed
+        // to a caller who can't see it -- same response as a genuinely
+        // missing repo above.
+        if (!(await canAccessRepo(db, repo, session.userId))) {
+            return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
         }
 
         const [tasks, roadmapItems, docStatuses] = await db.transaction([
@@ -224,7 +223,7 @@ export async function POST(
         // that fails validation or the DB transaction above never consumes
         // budget for an AI call that was never attempted.
         let sharedKeyReservation: { windowResetAt: number } | undefined;
-        if (session?.user?.email) {
+        if (meterId) {
             // Reserve BEFORE the AI call, not just when no personal key is
             // configured at all -- a configured key can still fail
             // (revoked/expired/out of quota) and generateAIContent silently
@@ -232,7 +231,7 @@ export async function POST(
             // it's too late to enforce the budget (CWE-770). Reserving here
             // and releasing below if the personal key actually succeeds
             // keeps both cases correctly metered.
-            const reservation = await reserveAuthedSharedKeySlot(db, session.user.email);
+            const reservation = await reserveAuthedSharedKeySlot(db, meterId);
             if (!reservation.allowed) {
                 return NextResponse.json(
                     {
@@ -258,9 +257,9 @@ export async function POST(
             // the shared key, so give the slot back rather than leaving it
             // permanently consumed by a request that produced no reply. The
             // outer catch below still owns turning this into a 500/503.
-            if (session?.user?.email && sharedKeyReservation) {
+            if (meterId && sharedKeyReservation) {
                 try {
-                    await releaseAuthedSharedKeySlot(db, session.user.email, sharedKeyReservation.windowResetAt);
+                    await releaseAuthedSharedKeySlot(db, meterId, sharedKeyReservation.windowResetAt);
                 } catch (releaseError) {
                     logger.warn('Failed to release shared-key reservation after a failed AI call:', releaseError);
                 }
@@ -268,7 +267,7 @@ export async function POST(
             throw generateError;
         }
 
-        if (session?.user?.email && sharedKeyReservation) {
+        if (meterId && sharedKeyReservation) {
             if (usingOwnKey) {
                 // The personal key actually served the request: give back
                 // the speculative reservation taken before the call. Best
@@ -277,7 +276,7 @@ export async function POST(
                 // into a 500; it just means that one reservation isn't
                 // refunded, which self-corrects at the next window roll.
                 try {
-                    await releaseAuthedSharedKeySlot(db, session.user.email, sharedKeyReservation.windowResetAt);
+                    await releaseAuthedSharedKeySlot(db, meterId, sharedKeyReservation.windowResetAt);
                 } catch (releaseError) {
                     logger.warn('Failed to release shared-key reservation:', releaseError);
                 }

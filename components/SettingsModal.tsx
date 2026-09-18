@@ -134,7 +134,7 @@ export function SettingsModal({ isOpen, onClose, userIdentity }: SettingsModalPr
     <Modal isOpen={isOpen} onClose={onClose} title="AI Provider Settings" size="sm">
       <div className="space-y-4 text-sm">
         <p className="text-slate-400">
-          By default, chat and AI features use Overseer&apos;s own shared AI key. You can
+          By default, chat and AI features use Vigil&apos;s own shared AI key. You can
           use your own provider key instead — useful if you want higher limits or a
           specific model.
         </p>
@@ -143,7 +143,7 @@ export function SettingsModal({ isOpen, onClose, userIdentity }: SettingsModalPr
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
           <span>
             Using your own key means <strong>you are responsible for your own usage and
-            costs</strong> with that provider. Overseer never sees or stores your key in
+            costs</strong> with that provider. Vigil never sees or stores your key in
             plain text.
           </span>
         </div>

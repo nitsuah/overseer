@@ -12,7 +12,6 @@ import type { Session } from 'next-auth';
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
 vi.mock('@/lib/db', () => ({ getNeonClient: vi.fn(), ensureSchema: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@/lib/log', () => ({ default: { warn: vi.fn(), info: vi.fn(), error: vi.fn() } }));
-vi.mock('@/lib/default-repos', () => ({ DEFAULT_REPOS: [{ name: 'overseer' }] }));
 vi.mock('@/lib/ai', () => ({ generateAIContent: vi.fn() }));
 // Real crypto/env config isn't under test here; the route only needs a
 // stand-in plaintext key back for a well-formed encrypted row.
@@ -21,10 +20,9 @@ vi.mock('@/lib/byok-crypto', () => ({ decryptApiKey: vi.fn().mockReturnValue('sk
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
 import { generateAIContent } from '@/lib/ai';
-// Real (unmocked) module: resets the in-memory anonymous rate limiter between
-// tests. The authed shared-key limiter is now Neon-backed (no module-level
-// state to reset) -- makeDb below provides a fresh fake table per test.
-import { _resetAnonChatRateLimitForTests, ANON_CHAT_RATE_LIMIT, AUTHED_SHARED_KEY_RATE_LIMIT } from '@/lib/repo-chat';
+// The authed shared-key limiter is Neon-backed (no module-level state to
+// reset) -- makeDb below provides a fresh fake table per test.
+import { AUTHED_SHARED_KEY_RATE_LIMIT } from '@/lib/repo-chat';
 
 const mockAuth = vi.mocked(auth) as unknown as Mock<() => Promise<Session | null>>;
 const mockGetNeonClient = vi.mocked(getNeonClient);
@@ -58,7 +56,11 @@ type RouteParams = { params: Promise<{ name: string }> };
  * for the real SQL this mirrors. `userKeyRows` stands in for the
  * `user_ai_keys` lookup (empty by default: no personal key configured).
  */
-function makeDb(repoResult: unknown[] = [fakeRepo], userKeyRows: unknown[] = []): MockDb {
+function makeDb(
+    repoResult: unknown[] = [fakeRepo],
+    userKeyRows: unknown[] = [],
+    repoAccessRows: unknown[] = []
+): MockDb {
     const rateLimitRows = new Map<string, { count: number; reset_at_ms: number }>();
 
     const db = vi.fn(async (strings: TemplateStringsArray, ...values: unknown[]) => {
@@ -66,6 +68,9 @@ function makeDb(repoResult: unknown[] = [fakeRepo], userKeyRows: unknown[] = [])
 
         if (text.includes('FROM user_ai_keys')) {
             return userKeyRows;
+        }
+        if (text.includes('FROM repo_access')) {
+            return repoAccessRows;
         }
         if (text.includes('INSERT INTO shared_key_rate_limits')) {
             const [userId, freshResetAt, now] = values as [string, number, number];
@@ -114,7 +119,6 @@ const validBody = { messages: [{ role: 'user', content: 'What should I work on n
 describe('POST /api/repos/[name]/chat', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        _resetAnonChatRateLimitForTests();
         mockAuth.mockResolvedValue({
             user: { name: 'testuser', email: 'test@example.com' },
             expires: new Date(Date.now() + 86400000).toISOString(),
@@ -163,65 +167,98 @@ describe('POST /api/repos/[name]/chat', () => {
         expect(data.error).toBe('Repo not found');
     });
 
-    it('returns 401 when unauthenticated and the repo is not a public default', async () => {
+    it('returns 401 when unauthenticated, regardless of the repo', async () => {
         mockAuth.mockResolvedValue(null);
-        mockGetNeonClient.mockReturnValue(makeDb([{ ...fakeRepo, name: 'private-repo' }]) as never);
 
-        const res = await POST(makeRequest(validBody, 'private-repo'), params('private-repo'));
+        const res = await POST(makeRequest(validBody, 'overseer'), params());
+        const data = await res.json();
+
+        expect(res.status).toBe(401);
+        expect(data.error).toBe('Unauthorized');
+        // Auth is checked before the DB or model are ever reached.
+        expect(mockGetNeonClient).not.toHaveBeenCalled();
+        expect(mockGenerate).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unauthenticated caller before parsing the request body (CWE-400)', async () => {
+        mockAuth.mockResolvedValue(null);
+
+        // A malformed body would otherwise be JSON-parsed (and fail with 400)
+        // before auth is ever checked; it must 401 instead, proving auth runs
+        // first and the body is never touched.
+        const res = await POST(makeRequest('not json'), params());
         expect(res.status).toBe(401);
     });
 
-    it('allows unauthenticated chat about a default repo', async () => {
-        mockAuth.mockResolvedValue(null);
+    describe('private-repo authorization (CWE-639)', () => {
+        const privateRepo = { ...fakeRepo, name: 'someones-private-repo', private_repo: true };
 
-        const res = await POST(makeRequest(validBody, 'overseer', { 'x-nf-client-connection-ip': '9.9.9.1' }), params());
-        expect(res.status).toBe(200);
-    });
+        it('returns 404 for a private repo the signed-in user has no repo_access for (someone else\'s repo)', async () => {
+            mockGetNeonClient.mockReturnValue(makeDb([privateRepo], [], []) as never);
 
-    it('rate-limits an anonymous caller once its budget is exhausted (CWE-770)', async () => {
-        mockAuth.mockResolvedValue(null);
-        const headers = { 'x-nf-client-connection-ip': '9.9.9.2' };
+            const res = await POST(makeRequest(validBody, privateRepo.name), params(privateRepo.name));
+            const data = await res.json();
 
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
-            const ok = await POST(makeRequest(validBody, 'overseer', headers), params());
-            expect(ok.status).toBe(200);
-        }
+            expect(res.status).toBe(404);
+            expect(data.error).toBe('Repo not found');
+            // Never reaches the model for a repo the caller can't see.
+            expect(mockGenerate).not.toHaveBeenCalled();
+        });
 
-        const limited = await POST(makeRequest(validBody, 'overseer', headers), params());
-        const data = await limited.json();
+        it('allows a private repo the signed-in user has a repo_access row for (their own repo)', async () => {
+            mockAuth.mockResolvedValue({
+                user: { name: 'testuser', email: 'test@example.com' },
+                userId: 'gh-owner-1',
+                expires: new Date(Date.now() + 86400000).toISOString(),
+            } as Session);
+            mockGetNeonClient.mockReturnValue(makeDb([privateRepo], [], [{ '?column?': 1 }]) as never);
 
-        expect(limited.status).toBe(429);
-        expect(data.error).toMatch(/rate limit/i);
-        // The budget is exhausted before the DB/model are ever reached.
-        expect(mockGenerate).toHaveBeenCalledTimes(ANON_CHAT_RATE_LIMIT);
-    });
-
-    it('tracks anonymous rate limits per client, not globally', async () => {
-        mockAuth.mockResolvedValue(null);
-
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
-            const res = await POST(
-                makeRequest(validBody, 'overseer', { 'x-nf-client-connection-ip': '9.9.9.3' }),
-                params()
-            );
+            const res = await POST(makeRequest(validBody, privateRepo.name), params(privateRepo.name));
             expect(res.status).toBe(200);
-        }
+        });
 
-        // A different client IP still has its own budget.
-        const res = await POST(
-            makeRequest(validBody, 'overseer', { 'x-nf-client-connection-ip': '9.9.9.4' }),
-            params()
-        );
-        expect(res.status).toBe(200);
+        it('allows any signed-in user to reach a repo that is not marked private', async () => {
+            // fakeRepo has no private_repo field at all -- same as an
+            // explicit `false` (public), and must not require repo_access.
+            mockGetNeonClient.mockReturnValue(makeDb([fakeRepo], [], []) as never);
+
+            const res = await POST(makeRequest(validBody), params());
+            expect(res.status).toBe(200);
+        });
     });
 
-    it('does not rate-limit authenticated callers', async () => {
-        // Authenticated session is the beforeEach default; no client-IP header
-        // needed since the limiter only runs in the unauthenticated branch.
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT + 3; i++) {
+    it('still meters a session with no public email using session.userId (CWE-770)', async () => {
+        // GitHub omits email when the account has no public email and the
+        // /user/emails fallback also fails; session.userId (the JWT sub) is
+        // always set once signed in and must not let this session dodge the
+        // shared-key budget entirely.
+        mockAuth.mockResolvedValue({
+            user: { name: 'testuser' },
+            userId: 'gh-99999',
+            expires: new Date(Date.now() + 86400000).toISOString(),
+        } as Session);
+
+        for (let i = 0; i < AUTHED_SHARED_KEY_RATE_LIMIT; i++) {
             const res = await POST(makeRequest(validBody), params());
             expect(res.status).toBe(200);
         }
+
+        const limited = await POST(makeRequest(validBody), params());
+        expect(limited.status).toBe(429);
+    });
+
+    it('fails closed with 401 when a session has neither email nor userId', async () => {
+        // Malformed/corrupted session -- there is no identity left to meter
+        // against, so it must be rejected rather than riding the shared key
+        // unmetered.
+        mockAuth.mockResolvedValue({
+            user: { name: 'testuser' },
+            expires: new Date(Date.now() + 86400000).toISOString(),
+        } as Session);
+
+        const res = await POST(makeRequest(validBody), params());
+        expect(res.status).toBe(401);
+        expect(mockGenerate).not.toHaveBeenCalled();
     });
 
     it('replies with the model output and a context summary', async () => {

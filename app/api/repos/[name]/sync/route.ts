@@ -4,6 +4,7 @@ import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
 import logger from '@/lib/log';
 import { syncRepo } from '@/lib/sync';
+import { grantRepoAccess } from '@/lib/repo-access';
 
 export async function POST(
     request: NextRequest,
@@ -61,6 +62,10 @@ export async function POST(
 
         // Sync the repo
         await syncRepo(repo, github, db);
+
+        // `repo` was just fetched with this user's own GitHub token, so
+        // GitHub itself confirmed they can see it -- record that (CWE-639).
+        await grantRepoAccess(db, repo.fullName, session.userId);
 
         // Return the updated row so the frontend can patch state without a full list refetch
         const [updatedRepo] = await db`SELECT * FROM repos WHERE name = ${repoName} LIMIT 1`;

@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
 import { syncRepo } from '@/lib/sync';
+import { grantRepoAccess } from '@/lib/repo-access';
 
 export async function POST(request: NextRequest) {
     try {
@@ -67,6 +68,10 @@ export async function POST(request: NextRequest) {
         // Sync repo (inserts into DB and fetches docs)
         const db = getNeonClient();
         await syncRepo(repoMeta, github, db);
+
+        // repoMeta was just fetched with this user's own GitHub token, so
+        // GitHub itself confirmed they can see it -- record that (CWE-639).
+        await grantRepoAccess(db, repoMeta.fullName, session.userId);
 
         // Ensure repo is visible and update repo type if provided
         // Use repoMeta.name (from GitHub API) to ensure case-sensitive match

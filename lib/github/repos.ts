@@ -20,6 +20,7 @@ interface RepoDataInput {
   pushed_at: string | null | undefined;
   fork: boolean;
   archived: boolean;
+  private: boolean;
 }
 
 function mapRepo(data: RepoDataInput): RepoMetadata {
@@ -40,6 +41,7 @@ function mapRepo(data: RepoDataInput): RepoMetadata {
     pushedAt: data.pushed_at || new Date().toISOString(),
     isFork: data.fork || false,
     archived: data.archived || false,
+    isPrivate: data.private || false,
   };
 }
 

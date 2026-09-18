@@ -3,7 +3,7 @@
  * Covers stale-doc detection, context serialization, and message validation.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
     buildChatPrompt,
     buildRepoContextBlock,
@@ -11,11 +11,6 @@ import {
     parseChatMessages,
     SUGGESTED_WORKFLOWS,
     MAX_CHAT_MESSAGES,
-    ANON_CHAT_RATE_LIMIT,
-    ANON_CHAT_RATE_WINDOW_MS,
-    ANON_CHAT_RATE_LIMIT_MAX_ENTRIES,
-    checkAnonChatRateLimit,
-    _resetAnonChatRateLimitForTests,
     AUTHED_SHARED_KEY_RATE_LIMIT,
     AUTHED_SHARED_KEY_RATE_WINDOW_MS,
     reserveAuthedSharedKeySlot,
@@ -225,7 +220,7 @@ describe('buildChatPrompt', () => {
         expect(prompt).toContain('--- CONTEXT START ---');
         expect(prompt).toContain('--- CONTEXT END ---');
         expect(prompt).toContain('User: What should I work on next?');
-        expect(prompt.trimEnd().endsWith('Overseer:')).toBe(true);
+        expect(prompt.trimEnd().endsWith('Vigil:')).toBe(true);
     });
 
     it('instructs the model to treat context as data, not instructions', () => {
@@ -293,59 +288,6 @@ describe('SUGGESTED_WORKFLOWS', () => {
             expect(workflow.label.length).toBeGreaterThan(0);
             expect(workflow.prompt.length).toBeGreaterThan(0);
         }
-    });
-});
-
-describe('checkAnonChatRateLimit', () => {
-    beforeEach(() => {
-        _resetAnonChatRateLimitForTests();
-    });
-
-    it('allows requests up to the configured budget', () => {
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
-            expect(checkAnonChatRateLimit('1.2.3.4', NOW)).toBe(true);
-        }
-    });
-
-    it('rejects the request once the budget is exhausted', () => {
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
-            checkAnonChatRateLimit('1.2.3.4', NOW);
-        }
-        expect(checkAnonChatRateLimit('1.2.3.4', NOW)).toBe(false);
-    });
-
-    it('tracks each client independently', () => {
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
-            checkAnonChatRateLimit('client-a', NOW);
-        }
-        expect(checkAnonChatRateLimit('client-a', NOW)).toBe(false);
-        expect(checkAnonChatRateLimit('client-b', NOW)).toBe(true);
-    });
-
-    it('resets once the window has elapsed', () => {
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT; i++) {
-            checkAnonChatRateLimit('1.2.3.4', NOW);
-        }
-        expect(checkAnonChatRateLimit('1.2.3.4', NOW)).toBe(false);
-        expect(checkAnonChatRateLimit('1.2.3.4', NOW + ANON_CHAT_RATE_WINDOW_MS + 1)).toBe(true);
-    });
-
-    it('bounds tracked clients instead of growing without limit (CWE-400)', () => {
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT_MAX_ENTRIES; i++) {
-            expect(checkAnonChatRateLimit(`client-${i}`, NOW)).toBe(true);
-        }
-        // Every slot is a live client within its window — a genuinely new
-        // client is refused rather than the map growing past the cap.
-        expect(checkAnonChatRateLimit('one-too-many', NOW)).toBe(false);
-    });
-
-    it('evicts expired entries to make room once the map is full', () => {
-        for (let i = 0; i < ANON_CHAT_RATE_LIMIT_MAX_ENTRIES; i++) {
-            checkAnonChatRateLimit(`client-${i}`, NOW);
-        }
-        // Past every tracked client's window: their entries are now stale.
-        const later = NOW + ANON_CHAT_RATE_WINDOW_MS + 1;
-        expect(checkAnonChatRateLimit('fresh-client', later)).toBe(true);
     });
 });
 

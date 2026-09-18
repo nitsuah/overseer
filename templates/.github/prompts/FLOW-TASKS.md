@@ -55,7 +55,7 @@ After the execution plan is produced:
 - Keep the execution plan output under 40 lines per task entry.
 - Use the checkbox status in TASKS.md as ground truth: `- [ ]` todo, `- [/]` in progress, `- [x]` done.
 
-## Overseer Compliance
+## Vigil Compliance
 
 - Parsed task bullets must start at column 0 with `- [ ]`, `- [/]`, or `- [x]`.
 - Do not add or remove section headers (`## Todo`, `## In Progress`, `## Done`) when updating TASKS.md.

@@ -1,4 +1,4 @@
-# Overseer Features
+# Vigil Features
 
 Status guide: features listed here are shipped unless explicitly marked as planned in ROADMAP.md or TASKS.md.
 
@@ -79,7 +79,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 - **Auto-Fix Community Standards**: One-click PR creation for missing standards (12 types: CODE_OF_CONDUCT, SECURITY, LICENSE, CHANGELOG, CONTRIBUTING, Issue Templates, PR Template, CODEOWNERS, Copilot Instructions, FUNDING, FLOW-TASKS Prompt, HANDOFF Prompt)
 - **Batch Operations**: Fix all missing docs or all missing standards with single PR
 - **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, and community standards templates
-- **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Overseer compliance and avoiding hallucination
+- **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Vigil compliance and avoiding hallucination
 - **Doc Health Scoring**: Percentage-based health scores for documentation completeness
 - **Template Health Detection**: Content hashing to identify unchanged/dormant templates
 - **OAuth Error Handling**: Comprehensive error detection for organization access restrictions with auto-redirect to GitHub authorization
@@ -175,9 +175,9 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 ### 🏠 Default Repositories
 
-Overseer includes default repositories that are always synced and displayed:
+Vigil includes default repositories that are always synced and displayed:
 
-- `nitsuah/overseer` - The Overseer dashboard itself
+- `nitsuah/overseer` - The Vigil dashboard itself
 - `Nitsuah-Labs/nitsuah-io` - The Nitsuah.io website
 
 These ensure the dashboard always has content, even for non-authenticated visitors. Configure in `lib/default-repos.ts`.
@@ -214,7 +214,7 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 ### 📋 Tracked Documentation
 
-Overseer monitors the following documentation files in each repository:
+Vigil monitors the following documentation files in each repository:
 
 - **FEATURES.md** - Features organized by category with descriptions
 - **ROADMAP.md** - Quarterly planning and milestones
@@ -227,7 +227,7 @@ Overseer monitors the following documentation files in each repository:
 
 ## ✨ Best Practices & Community Standards
 
-Overseer tracks adherence to development and community standards with 4-state health tracking (Missing, Dormant, Malformed, Healthy):
+Vigil tracks adherence to development and community standards with 4-state health tracking (Missing, Dormant, Malformed, Healthy):
 
 ### 🛡️ Community Standards
 
@@ -259,7 +259,7 @@ Overseer tracks adherence to development and community standards with 4-state he
 
 ## 💯 Health Score System
 
-Overseer calculates comprehensive health scores (0-100) based on 6 weighted components:
+Vigil calculates comprehensive health scores (0-100) based on 6 weighted components:
 
 | Component             | Weight | What It Measures                                                                                                                                                                    |
 | --------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

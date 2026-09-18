@@ -1,5 +1,5 @@
-// Simple logger with debug gating via OVERSEER_DEBUG or NODE_ENV
-const isDebug = process.env.OVERSEER_DEBUG === 'true' || process.env.NODE_ENV !== 'production';
+// Simple logger with debug gating via VIGIL_DEBUG or NODE_ENV
+const isDebug = process.env.VIGIL_DEBUG === 'true' || process.env.NODE_ENV !== 'production';
 
 export function debug(...args: unknown[]) {
   if (isDebug) {

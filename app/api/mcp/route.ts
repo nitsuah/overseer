@@ -1,5 +1,5 @@
 /**
- * Overseer MCP Server — exposes repo intelligence as MCP tools.
+ * Vigil MCP Server — exposes repo intelligence as MCP tools.
  *
  * Transport: HTTP JSON-RPC 2.0  (MCP spec 2024-11-05)
  * Auth:      Authorization: Bearer <MCP_API_KEY>
@@ -200,7 +200,7 @@ async function getRepoHealth(args: Row): Promise<string> {
   `;
 
   if (rows.length === 0) {
-    return JSON.stringify({ error: `Repository "${name}" not found in overseer` });
+    return JSON.stringify({ error: `Repository "${name}" not found in Vigil` });
   }
 
   const r = rows[0] as Row;
@@ -572,10 +572,10 @@ function rpcResult(id: unknown, result: unknown) {
 /** GET /api/mcp — capability discovery (no auth required) */
 export async function GET() {
   return NextResponse.json({
-    name:            'overseer-mcp',
+    name:            'vigil-mcp',
     version:         '0.2.0',
     protocolVersion: '2024-11-05',
-    description:     'Overseer repo intelligence as MCP tools — portfolio health, task tracking, security posture, and roadmap status',
+    description:     'Vigil repo intelligence as MCP tools — portfolio health, task tracking, security posture, and roadmap status',
     tools:           TOOLS.map(t => ({ name: t.name, description: t.description, inputSchema: t.inputSchema })),
     auth:            'Authorization: Bearer <MCP_API_KEY env var>',
     rateLimit:       `${RATE_LIMIT} requests / minute per IP`,
@@ -614,7 +614,7 @@ export async function POST(req: NextRequest) {
         return rpcResult(id, {
           protocolVersion: '2024-11-05',
           capabilities:    { tools: {} },
-          serverInfo:      { name: 'overseer-mcp', version: '0.2.0' },
+          serverInfo:      { name: 'vigil-mcp', version: '0.2.0' },
         });
 
       case 'tools/list':

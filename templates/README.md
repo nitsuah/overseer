@@ -1,6 +1,6 @@
 # Templates Directory
 
-This directory contains all the template files used by Overseer to generate best practice files for repositories.
+This directory contains all the template files used by Vigil to generate best practice files for repositories.
 
 ## 📁 Directory Structure
 
@@ -51,7 +51,7 @@ templates/
 
 ## 🔧 Language-Aware Templates
 
-Overseer automatically selects the appropriate template based on the repository's detected language:
+Vigil automatically selects the appropriate template based on the repository's detected language:
 
 ### JavaScript/TypeScript Projects
 

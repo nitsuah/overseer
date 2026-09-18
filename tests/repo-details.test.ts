@@ -41,7 +41,7 @@ const fakeRepo = {
     secret_scanning_alert_count: 0,
 };
 
-function makeDb(repoResult: unknown[] = [fakeRepo]) {
+function makeDb(repoResult: unknown[] = [fakeRepo], repoAccessRows: unknown[] = []) {
     const transactionResult = [
         [{ id: 't1', title: 'Task 1' }],    // tasks
         [{ id: 'r1', title: 'Ship X' }],     // roadmap_items
@@ -52,7 +52,10 @@ function makeDb(repoResult: unknown[] = [fakeRepo]) {
         [],                                   // community_standards
     ];
 
-    const db = vi.fn().mockResolvedValue(repoResult);
+    const db = vi.fn(async (strings: TemplateStringsArray) => {
+        if (strings.join(' ').includes('FROM repo_access')) return repoAccessRows;
+        return repoResult;
+    });
     (db as unknown as Record<string, unknown>).transaction = vi.fn().mockResolvedValue(transactionResult);
     return db;
 }
@@ -83,6 +86,39 @@ describe('GET /api/repo-details/[name]', () => {
         expect(res.status).toBe(401);
         // transaction should NOT have been called — we bailed out before detail queries
         expect((db as unknown as Record<string, Mock>).transaction).not.toHaveBeenCalled();
+    });
+
+    it('returns 404 for a private repo the signed-in user has no repo_access for (CWE-639)', async () => {
+        const privateRepo = { ...fakeRepo, name: 'someones-private-repo', private_repo: true };
+        const db = makeDb([privateRepo], []);
+        mockGetNeonClient.mockReturnValue(db as never);
+
+        const res = await GET(
+            makeRequest(privateRepo.name),
+            { params: Promise.resolve({ name: privateRepo.name }) }
+        );
+        const body = await res.json();
+
+        expect(res.status).toBe(404);
+        expect(body.error).toBe('Repo not found');
+        expect((db as unknown as Record<string, Mock>).transaction).not.toHaveBeenCalled();
+    });
+
+    it('allows a private repo the signed-in user has a repo_access row for', async () => {
+        mockAuth.mockResolvedValue({
+            user: { name: 'testuser', email: 'test@example.com' },
+            userId: 'gh-owner-1',
+            expires: new Date(Date.now() + 86400000).toISOString(),
+        } as Session);
+        const privateRepo = { ...fakeRepo, name: 'my-private-repo', private_repo: true };
+        const db = makeDb([privateRepo], [{ '?column?': 1 }]);
+        mockGetNeonClient.mockReturnValue(db as never);
+
+        const res = await GET(
+            makeRequest(privateRepo.name),
+            { params: Promise.resolve({ name: privateRepo.name }) }
+        );
+        expect(res.status).toBe(200);
     });
 
     it('fetches all detail tables via a single db.transaction() call', async () => {

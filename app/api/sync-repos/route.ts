@@ -5,6 +5,7 @@ import { GitHubClient, RepoMetadata } from '@/lib/github';
 import { getNeonClient, ensureSchema } from '@/lib/db';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { syncRepo, syncRepoMetadata } from '@/lib/sync';
+import { grantRepoAccess } from '@/lib/repo-access';
 import { filterReposForSync, SyncFilters } from '@/lib/sync-filters';
 
 const GITHUB_API_TIMEOUT_MS = 10000;
@@ -166,6 +167,10 @@ export async function POST(request: Request): Promise<NextResponse> {
             for (const repo of reposToSync) {
                 try {
                     await syncRepoMetadata(repo, db);
+                    // repo came from this user's own github.listRepos() call
+                    // above, so their GitHub token already confirmed access
+                    // (CWE-639) -- record it now that the row exists.
+                    await grantRepoAccess(db, repo.fullName, String(githubUserId));
                     successCount++;
                 } catch (repoError: unknown) {
                     const message = repoError instanceof Error ? repoError.message : 'Unknown error';
@@ -254,6 +259,7 @@ export async function POST(request: Request): Promise<NextResponse> {
                             const repoMeta = retryQueue.shift()!;
                             try {
                                 await syncRepoMetadata(repoMeta, db);
+                                await grantRepoAccess(db, repoMeta.fullName, String(githubUserId));
                                 successCount++;
                                 errorCount--;
                             } catch (repoError: unknown) {

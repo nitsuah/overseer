@@ -26,7 +26,7 @@ export function parseGitHubError(error: unknown): GitHubErrorDetails {
         return {
             type: 'oauth_restriction',
             message: errorMessage,
-            userMessage: `${orgName} organization requires authorization. Click here to grant access to Overseer.`,
+            userMessage: `${orgName} organization requires authorization. Click here to grant access to Vigil.`,
             actionable: true,
             helpUrl: getOAuthAuthorizationUrl()
         };
@@ -101,7 +101,7 @@ export function getOAuthAuthorizationUrl(): string {
 /**
  * Generate authorization instructions for organization access
  */
-export function getOrgAuthInstructions(orgName: string, appName: string = 'Overseer'): string {
+export function getOrgAuthInstructions(orgName: string, appName: string = 'Vigil'): string {
     return `
 To authorize ${appName} for the ${orgName} organization:
 

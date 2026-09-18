@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getNeonClient } from '@/lib/db';
 import { auth } from '@/auth';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
+import { canAccessRepo } from '@/lib/repo-access';
 import logger from '@/lib/log';
 
 export async function GET(
@@ -34,6 +35,12 @@ export async function GET(
             if (!defaultRepoNames.includes(repo.name)) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             }
+        } else if (!(await canAccessRepo(db, repo as { id: string; private_repo?: boolean }, session.userId))) {
+            // Signed in, but this repo is private and not theirs (CWE-639):
+            // `repos` has no per-row owner, so being authenticated at all
+            // isn't proof of access to *this* repo. 404 (not 403) so its
+            // existence isn't confirmed to a caller who can't see it.
+            return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
         }
 
         // Round trip 2: fetch all seven detail tables in a single HTTP transaction

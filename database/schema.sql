@@ -18,6 +18,11 @@ CREATE TABLE IF NOT EXISTS repos (
   last_commit_date TIMESTAMP WITH TIME ZONE,
   is_fork BOOLEAN DEFAULT FALSE,
   is_archived BOOLEAN DEFAULT FALSE,
+  -- Mirrors GitHub's `private` flag as of the last sync. Public repos are
+  -- visible to any signed-in user; private repos require a repo_access row.
+  -- Defaults FALSE so pre-existing rows stay visible until their next sync
+  -- repopulates the real value (see lib/repo-access.ts).
+  private_repo BOOLEAN DEFAULT FALSE,
   is_hidden BOOLEAN DEFAULT FALSE,
   repo_type TEXT CHECK (repo_type IN ('web-app', 'game', 'tool', 'library', 'bot', 'research', 'other')) DEFAULT 'other',
   ai_summary TEXT,
@@ -246,6 +251,19 @@ CREATE TABLE IF NOT EXISTS user_ai_keys (
   api_key_encrypted TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Repo access: which signed-in GitHub users have confirmed access to a given
+-- (private) repo, as of their last sync/add. Granted only by routes that just
+-- fetched the repo through that user's own GitHub token (so GitHub itself
+-- confirmed access) -- never inferred from the repo's presence alone, since
+-- `repos` is a single shared table with no per-row owner. Public repos
+-- (repos.private_repo = FALSE) skip this check entirely; see lib/repo-access.ts.
+CREATE TABLE IF NOT EXISTS repo_access (
+  repo_id UUID NOT NULL REFERENCES repos(id) ON DELETE CASCADE,
+  github_user_id TEXT NOT NULL,
+  granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (repo_id, github_user_id)
 );
 
 -- Enable Row Level Security (RLS)

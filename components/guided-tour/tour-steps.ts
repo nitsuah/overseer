@@ -9,7 +9,7 @@ export interface TourStep {
 export const tourSteps: TourStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Overseer',
+    title: 'Welcome to Vigil',
     description:
       "A quick tour of your repository intelligence dashboard. We'll walk through the key features automatically. Click Skip Tour anytime to exit.",
     target: 'header',
@@ -159,7 +159,7 @@ export const tourSteps: TourStep[] = [
   {
     id: 'version-info',
     title: 'Version Info',
-    description: 'Current Overseer version. Useful for debugging and checking for updates.',
+    description: 'Current Vigil version. Useful for debugging and checking for updates.',
     target: '[data-tour="version-info"]',
     position: 'bottom',
   },

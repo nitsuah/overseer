@@ -4,5 +4,5 @@
  * browser doesn't suppress the notice for a different user.
  */
 export function byokPromptKey(identity: string | null | undefined): string {
-  return `overseer.byok.prompted.${identity ?? 'anon'}`;
+  return `vigil.byok.prompted.${identity ?? 'anon'}`;
 }

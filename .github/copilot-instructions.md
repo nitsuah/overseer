@@ -4,7 +4,7 @@ This file provides custom instructions to GitHub Copilot when working in this re
 
 ## Project Context
 
-**Project Name:** Overseer  
+**Project Name:** Vigil  
 **Description:** Meta-Repository Intelligence Layer
 **Tech Stack:** TypeScript, React, Next.js
 

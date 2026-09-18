@@ -19,6 +19,7 @@ function repo(overrides: Partial<RepoMetadata> & { name: string }): RepoMetadata
     pushedAt: '2024-01-01T00:00:00Z',
     isFork: false,
     archived: false,
+    isPrivate: false,
     ...overrides,
   };
 }

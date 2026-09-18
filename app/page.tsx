@@ -249,7 +249,7 @@ export default function Dashboard() {
                   onGenerateSummary={() => handleGenerateSummary(repo.name)}
                   onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
                   onUnhide={() => handleRestoreRepo(repo.name)}
-                  onOpenChat={() => setChatRepoName(repo.name)}
+                  onOpenChat={session ? () => setChatRepoName(repo.name) : undefined}
                 />
               ))}
             </div>
@@ -325,7 +325,7 @@ export default function Dashboard() {
                       onGenerateSummary={() => handleGenerateSummary(repo.name)}
                       onSyncSingleRepo={() => handleSyncAndRefresh(repo.name)}
                       onUnhide={() => handleRestoreRepo(repo.name)}
-                      onOpenChat={() => setChatRepoName(repo.name)}
+                      onOpenChat={session ? () => setChatRepoName(repo.name) : undefined}
                     />
                   ))}
                 </tbody>
@@ -360,7 +360,7 @@ export default function Dashboard() {
             const promptKey = byokPromptKey(session?.user?.email);
             if (session?.user?.email && !window.localStorage.getItem(promptKey)) {
               window.localStorage.setItem(promptKey, '1');
-              setToastMessage("Using Overseer's shared AI key. Add your own in Settings (gear icon) if you want higher limits.");
+              setToastMessage("Using Vigil's shared AI key. Add your own in Settings (gear icon) if you want higher limits.");
             }
           } catch {
             // localStorage unavailable — skip the nudge, not fatal.

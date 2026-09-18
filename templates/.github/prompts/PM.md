@@ -1,14 +1,14 @@
-# PM Agent Instructions: Updating Repository Documentation for Overseer Compliance
+# PM Agent Instructions: Updating Repository Documentation for Vigil Compliance
 
-**Purpose**: This document provides comprehensive instructions for AI agents tasked with updating repository documentation to meet Overseer's parsing and display requirements.
+**Purpose**: This document provides comprehensive instructions for AI agents tasked with updating repository documentation to meet Vigil's parsing and display requirements.
 
-**Context**: Overseer is a meta-repository intelligence dashboard that parses standardized markdown files (ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, etc.) to provide health scoring, project tracking, and documentation compliance monitoring across multiple repositories.
+**Context**: Vigil is a meta-repository intelligence dashboard that parses standardized markdown files (ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, etc.) to provide health scoring, project tracking, and documentation compliance monitoring across multiple repositories.
 
 ---
 
 ## Introduction
 
-I need you to update this repository's documentation to meet Overseer compliance standards.
+I need you to update this repository's documentation to meet Vigil compliance standards.
 
 **Instructions:**
 
@@ -16,7 +16,7 @@ I need you to update this repository's documentation to meet Overseer compliance
 2. Read this entire repository to understand what it does
 3. Update ROADMAP.md, TASKS.md, FEATURES.md, METRICS.md, CHANGELOG.md, and other required docs
 4. Preserve all existing content - only fix formatting and add missing sections
-5. Create a feature branch called `docs/overseer-compliance` (NOT main)
+5. Create a feature branch called `docs/vigil-compliance` (NOT main)
 6. Never hallucinate features or metrics - use "TBD" if unsure
 7. Be sure metrics are accurate, double check numbers, run tests yourself, ensure conformity (can always include additional attribute value pairs but keep existing ones unless no longer relevant)
 
@@ -40,7 +40,7 @@ I need you to update this repository's documentation to meet Overseer compliance
 
 ## 📋 Required Documentation Files
 
-Overseer expects these files at the repository root:
+Vigil expects these files at the repository root:
 
 ### Core Tracked Documents (Parsed & Displayed)
 
@@ -96,7 +96,7 @@ Overseer expects these files at the repository root:
 
 **Parser Expectations**:
 
-- Overseer parses `## Q` headers to identify quarters
+- Vigil parses `## Q` headers to identify quarters
 - Checkbox status determines progress tracking
 - Items under each quarter are grouped together
 
@@ -159,7 +159,7 @@ Overseer expects these files at the repository root:
 
 **Parser Expectations**:
 
-- Overseer ONLY recognizes these exact section names
+- Vigil ONLY recognizes these exact section names
 - Tasks are grouped by section for display
 - Checkbox state is visual only; section determines status
 
@@ -204,7 +204,7 @@ Overseer expects these files at the repository root:
 
 ### 3. METRICS.md
 
-**Purpose**: Self-report project metrics for display in Overseer dashboard.
+**Purpose**: Self-report project metrics for display in Vigil dashboard.
 
 **Required Structure**:
 
@@ -224,7 +224,7 @@ Overseer expects these files at the repository root:
 | Metric       | Value      | Notes           |
 | ------------ | ---------- | --------------- |
 | Open Issues  | 3          | GitHub issues   |
-| Health Score | 92/100     | Overseer score  |
+| Health Score | 92/100     | Vigil score     |
 | Last Updated | 2025-11-27 | Last audit date |
 ```
 
@@ -253,7 +253,7 @@ Overseer expects these files at the repository root:
 
 **Parser Expectations**:
 
-- Overseer extracts `Code Coverage` value and stores in database
+- Vigil extracts `Code Coverage` value and stores in database
 - All metrics are displayed in detail panel
 - Tables must have header row with separators
 
@@ -280,7 +280,7 @@ Overseer expects these files at the repository root:
 | ------------ | ---------- | -------------------- |
 | Open Issues  | 2          | GitHub issues        |
 | Open PRs     | 1          | Under review         |
-| Health Score | 95/100     | Overseer self-rating |
+| Health Score | 95/100     | Vigil self-rating    |
 | Last Updated | 2025-11-27 | Last metrics refresh |
 | Uptime       | 99.9%      | Last 30 days         |
 ```
@@ -314,7 +314,7 @@ Overseer expects these files at the repository root:
 
 **Parser Expectations**:
 
-- Overseer extracts features by category
+- Vigil extracts features by category
 - Displays up to 3 category cards in detail panel
 - Features are shown as bullet points under their category
 
@@ -644,7 +644,7 @@ For each file:
 
 **Solution**:
 
-1. **Create condensed Overseer-compliant version** at root (`ROADMAP.md`)
+1. **Create condensed Vigil-compliant version** at root (`ROADMAP.md`)
    - Extract high-level quarterly objectives
    - Convert to checkbox format with status indicators
    - Keep 1-2 lines per item maximum
@@ -656,7 +656,7 @@ For each file:
    - Reference from condensed ROADMAP if needed
 
 3. **Benefits of this approach**:
-   - Overseer can parse quarterly structure
+   - Vigil can parse quarterly structure
    - Detailed planning information preserved
    - Team still has access to full technical roadmap
    - Best of both worlds: compliance + detail
@@ -682,7 +682,7 @@ FROM (detailed, 700 lines):
 - [ ] Test on physical iOS devices...
       [continues for many lines]
 
-TO (condensed, Overseer-compliant):
+TO (condensed, Vigil-compliant):
 
 ## Q4 2025: Foundation & Mobile Fix (IN PROGRESS) 🚀
 
@@ -721,9 +721,9 @@ Before staging changes for user review, verify:
 
 ---
 
-## 📚 Reference: Overseer's Health Score Components
+## 📚 Reference: Vigil's Health Score Components
 
-Understanding what Overseer measures helps you prioritize documentation:
+Understanding what Vigil measures helps you prioritize documentation:
 
 | Component             | Weight | What It Measures                                                                       |
 | --------------------- | ------ | -------------------------------------------------------------------------------------- |
@@ -758,7 +758,7 @@ When performing PM-driven documentation reviews:
 
 4. **Distinguish Self-Reported vs. Own Metrics**
    - FEATURES.md "Code Coverage" feature = self-reported from target repositories
-   - METRICS.md "Code Coverage" metric = Overseer's own test coverage
+   - METRICS.md "Code Coverage" metric = Vigil's own test coverage
    - Add clarifications like "(self-reported from target repositories)" when ambiguous
 
 5. **Systematic Review Process**
@@ -944,7 +944,7 @@ This workflow prevents documentation bloat and ensures completed work is properl
 ### 📝 Documentation Management
 
 - **Standardized Templates**: ROADMAP.md, TASKS.md, METRICS.md, FEATURES.md, and community standards templates
-- **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Overseer compliance and avoiding hallucination
+- **Agent Instructions (PROMPT.md)**: Comprehensive guide for AI agents to update repository documentation while maintaining Vigil compliance and avoiding hallucination
 - **Auto-Fix Missing Docs**: One-click PR creation for missing documentation
 - **Batch Operations**: Fix all missing docs across repositories with single PR
 - **Doc Health Scoring**: Percentage-based health scores for documentation completeness
@@ -1131,7 +1131,7 @@ After:
 2. **Maintain Accuracy**: Only document what actually exists
 3. **Keep Context**: Include references between documents
 4. **Stay Actionable**: Todo should have clear, achievable tasks
-5. **Respect Format**: Follow all Overseer parsing requirements
+5. **Respect Format**: Follow all Vigil parsing requirements
 6. **Document Workflow**: Update this guide when workflow evolves
 7. **Track UX Improvements**: When discovering UX issues during development, add them to ROADMAP as "Future: UX Enhancements"
 
@@ -1233,7 +1233,7 @@ Before staging documentation updates for user review, ask yourself:
 3. **Did I preserve all existing unique content?** → Don't delete custom info
 4. **Are section names EXACTLY correct?** → Parser depends on exact matches
 5. **Would a human maintainer approve this?** → Quality check
-6. **Can Overseer parse this successfully?** → Format validation
+6. **Can Vigil parse this successfully?** → Format validation
 7. **Am I on a feature branch?** → Never work on main directly
 8. **Did I STAGE but NOT COMMIT changes?** → User must review first
 9. **Did I preserve detailed docs in docs/ folder?** → Don't delete, relocate
@@ -1271,7 +1271,7 @@ Before staging documentation updates for user review, ask yourself:
 
 If you're unsure about:
 
-- **Format requirements** → Reference this document and existing Overseer docs
+- **Format requirements** → Reference this document and existing Vigil docs
 - **Repository-specific content** → Read the codebase thoroughly
 - **What to include** → Include more context rather than less
 - **Custom sections** → Keep them if they don't break parsing
@@ -1283,7 +1283,7 @@ If you're unsure about:
 
 ## 🔗 Cross-Repo Awareness
 
-Overseer monitors a portfolio of repositories. When updating docs for any one repo, be aware of how it fits the broader portfolio:
+Vigil monitors a portfolio of repositories. When updating docs for any one repo, be aware of how it fits the broader portfolio:
 
 ### Portfolio Map (as of 2026 Q2)
 
@@ -1330,8 +1330,8 @@ When working on a repo, be aware of the full agent prompt toolkit:
 
 - **Version**: 1.2
 - **Last Updated**: 2026-04-03
-- **Maintained By**: Overseer Project
-- **Source**: Based on actual Overseer parsing requirements and health score calculations
+- **Maintained By**: Vigil Project
+- **Source**: Based on actual Vigil parsing requirements and health score calculations
 - **Changelog**:
   - v1.2 (2026-04-03): Added cross-repo awareness section, portfolio map, and agent prompt companion reference
   - v1.1 (2025-11-27): Added workflow guidance for user review, detailed roadmap preservation, metric estimation guidelines, and comprehensive DO/DON'T best practices

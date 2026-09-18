@@ -1,4 +1,4 @@
-// Dispatch bridge v0 — routes queued overseer agent tasks to agent-board's
+// Dispatch bridge v0 — routes queued Vigil agent tasks to agent-board's
 // local model runtime ("motor-pool") and reports the outcome back to the queue.
 //
 // The queue in app/api/agent/tasks/route.ts owns scheduling and status; this

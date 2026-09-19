@@ -6,7 +6,51 @@
 
 ## Todo
 
+### P0 - Critical
+
+- [x] Expanding any repo row crashes the whole dashboard ("This page couldn't load").
+  - Priority: P0
+  - Context: `token_density`/`comment_to_code_ratio` (Postgres NUMERIC) reach the client as strings, and `RepositoryStatsSectionStatic` called `.toFixed()` on them directly. Reproduced on production by clicking a row; present in every deploy since token-density shipped (Sept 2026), absent in the May 2026 deploy.
+  - Status: ✅ FIXED — NUMERIC-backed props are coerced through `toFiniteNumber()` before formatting; regression test in `RepositoryStatsSectionStatic.test.tsx`.
+
+- [ ] Add a React error boundary around expanded row details.
+  - Priority: P0
+  - Context: the row-expansion crash above took down the entire page because nothing catches render errors. One bad field in one repo's details should degrade that row only.
+  - Acceptance Criteria: a render error inside an expanded row/mobile card shows an inline "couldn't render details" state for that repo; the rest of the dashboard stays usable; covered by a test that throws inside a detail section.
+
+- [ ] Audit every other NUMERIC-backed field for the same string-vs-number bug.
+  - Priority: P0
+  - Context: `repos` NUMERIC columns (`coverage_score`, `commit_frequency`, `avg_pr_merge_time_hours`, `token_density`, `comment_to_code_ratio`) and `repo_snapshots` values come back from Neon as strings while `types/repo.ts` declares them `number`. Consider parsing once at the API boundary so the types tell the truth.
+
+- [ ] Scope the repo LIST and sibling routes by repo access (CWE-639, follow-up to PR #221).
+  - Priority: P0
+  - Context: PR #221 gated `chat`, `repo-details/[name]` and its `trend` route with `canAccessRepo()`. `GET /api/repos` still returns every synced repo (private included) to any signed-in user, and the other by-name routes (`fix-doc`, `generate-summary`, `events`, `debug`, `hide`, `update-type`, `suggest-*`, `improve-doc`, ...) are unaudited.
+  - Acceptance Criteria: the list and every by-name route filter on `private_repo`/`repo_access`; tests cover "own repo" and "someone else's private repo" for each.
+
+- [ ] Backfill `private_repo` for repos synced before PR #221.
+  - Priority: P0
+  - Context: the column defaults to `FALSE`, so previously-synced private repos stay visible to every signed-in user until their next sync repopulates it.
+  - Acceptance Criteria: run a full sync after deploy (or a one-off backfill) and verify no private repo is flagged public.
+
 ### P1 - High
+
+- [ ] Rename the GitHub repo `nitsuah/overseer` -> `nitsuah/vigil` and land the follow-up commit.
+  - Priority: P1
+  - Context: deliberately deferred in PR #221. Netlify's GitHub link and OAuth are unaffected (keyed by repo ID / site domain), but these hard-code the old name: `lib/default-repos.ts`, `lib/repo-type.ts`, `scripts/*.ts` queries, README badge/clone/GitHub URLs, `app/api/mcp/route.ts` example text, `templates/**` URLs.
+  - Acceptance Criteria: `gh repo rename`, update those references + local `origin`, re-sync so `repos.full_name` matches, grep for stray `overseer` refs.
+
+- [ ] Decide on renaming the Netlify site (`ghoverseer`) / adding a custom domain.
+  - Priority: P1
+  - Context: renaming changes the live URL, so the GitHub OAuth App callback URL must be updated in the same change or sign-in breaks. No custom domain/DNS exists today.
+
+- [ ] Run the Playwright e2e suite for real and wire it into CI.
+  - Priority: P1
+  - Context: the auth-boundary tests added in PR #221 (`e2e/dashboard.spec.ts`) have never been executed - the sandbox had no `NEXTAUTH_SECRET`/`DATABASE_URL` - and CI only runs vitest + build. The suite also asserted the old "Overseer" title for weeks unnoticed.
+  - Acceptance Criteria: e2e passes locally against a dev server, then runs in CI (or a scheduled workflow) so it can't rot again; add an e2e that expands a repo row and asserts the page survives.
+
+- [ ] Smoke-test the deployed app after each merge.
+  - Priority: P1
+  - Context: nothing verified production after PR #221, which is how the row-expansion crash went unnoticed for weeks.
 
 - [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
   - Priority: P1

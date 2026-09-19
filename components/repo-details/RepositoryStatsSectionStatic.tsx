@@ -38,6 +38,15 @@ interface TrendPoint {
   captured_at: string;
 }
 
+/** Postgres NUMERIC columns arrive from the Neon driver as strings ("21.7"),
+ * not numbers -- calling .toFixed() on one throws during render and, with no
+ * error boundary, takes the whole page down. Coerce at the boundary. */
+export function toFiniteNumber(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === '') return undefined;
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 export function RepositoryStatsSectionStatic({
   stars,
   forks,
@@ -58,6 +67,10 @@ export function RepositoryStatsSectionStatic({
   commentToCodeRatio,
   defaultExpanded = true,
 }: RepositoryStatsSectionStaticProps): JSX.Element {
+  const commitFreq = toFiniteNumber(commitFrequency);
+  const prMergeHours = toFiniteNumber(avgPrMergeTimeHours);
+  const tokenDens = toFiniteNumber(tokenDensity);
+  const commentRatio = toFiniteNumber(commentToCodeRatio);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [trend, setTrend] = useState<TrendPoint[]>([]);
 
@@ -181,10 +194,10 @@ export function RepositoryStatsSectionStatic({
           )}
 
           {/* Commit Frequency */}
-          {commitFrequency !== undefined && (
+          {commitFreq !== undefined && (
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 flex items-center gap-1"><span>📅</span>Commits/Month</span>
-              <span className="text-slate-200 font-medium">{typeof commitFrequency === 'number' ? commitFrequency.toFixed(1) : commitFrequency}</span>
+              <span className="text-slate-200 font-medium">{commitFreq.toFixed(1)}</span>
             </div>
           )}
 
@@ -197,26 +210,26 @@ export function RepositoryStatsSectionStatic({
           )}
 
           {/* PR Merge Time */}
-          {avgPrMergeTimeHours !== undefined && avgPrMergeTimeHours > 0 && (
+          {prMergeHours !== undefined && prMergeHours > 0 && (
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 flex items-center gap-1"><span>⏱️</span>Avg PR Merge Time</span>
-              <span className="text-slate-200 font-medium">{typeof avgPrMergeTimeHours === 'number' ? avgPrMergeTimeHours.toFixed(1) : avgPrMergeTimeHours}h</span>
+              <span className="text-slate-200 font-medium">{prMergeHours.toFixed(1)}h</span>
             </div>
           )}
 
           {/* Token Density */}
-          {tokenDensity !== undefined && tokenDensity !== null && (
+          {tokenDens !== undefined && (
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 flex items-center gap-1"><span>🧩</span>Token Density</span>
-              <span className="text-slate-200 font-medium">{tokenDensity.toFixed(1)} tok/line</span>
+              <span className="text-slate-200 font-medium">{tokenDens.toFixed(1)} tok/line</span>
             </div>
           )}
 
           {/* Comment-to-Code Ratio */}
-          {commentToCodeRatio !== undefined && commentToCodeRatio !== null && (
+          {commentRatio !== undefined && (
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 flex items-center gap-1"><span>💬</span>Comment/Code</span>
-              <span className="text-slate-200 font-medium">{(commentToCodeRatio * 100).toFixed(0)}%</span>
+              <span className="text-slate-200 font-medium">{(commentRatio * 100).toFixed(0)}%</span>
             </div>
           )}
 

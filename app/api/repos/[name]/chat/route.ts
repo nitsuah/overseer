@@ -42,6 +42,7 @@ interface RepoRow {
     testing_status?: string | null;
     coverage_score?: number | null;
     private_repo?: boolean | null;
+    visibility_verified?: boolean | null;
 }
 
 interface TaskRow {

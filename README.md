@@ -4,7 +4,7 @@
 
 ## **Last Updated:** 2026-08-09
 
-[![CI](https://github.com/nitsuah/overseer/actions/workflows/ci.yml/badge.svg)](https://github.com/nitsuah/overseer/actions)
+[![CI](https://github.com/nitsuah/vigil/actions/workflows/ci.yml/badge.svg)](https://github.com/nitsuah/vigil/actions)
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/ebf5c761-34fb-495b-bd86-ea57932296b3/deploy-status)](https://app.netlify.com/projects/ghoverseer/deploys)
 
@@ -55,8 +55,8 @@ Vigil bridges human intent and AI execution through enforced documentation stand
 
 ```bash
 # Clone the repo
-git clone https://github.com/nitsuah/overseer.git
-cd overseer
+git clone https://github.com/nitsuah/vigil.git
+cd vigil
 
 # Install dependencies
 npm install
@@ -80,7 +80,7 @@ npm run dev
 
 - [Live Dashboard](https://ghoverseer.netlify.app)
 - [Docs](./docs/)
-- [GitHub](https://github.com/nitsuah/overseer)
+- [GitHub](https://github.com/nitsuah/vigil)
 
 ## Contributing
 

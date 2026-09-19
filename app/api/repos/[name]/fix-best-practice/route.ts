@@ -7,6 +7,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import logger from '@/lib/log';
 import { detectTemplateLanguage } from '@/lib/detectLanguage';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 export async function POST(
     request: NextRequest,
@@ -23,6 +24,8 @@ export async function POST(
 
         const { practiceType, content: providedContent, path: providedPath } = await request.json();
         const repoName = params.name;
+        const denied = await denyIfNoRepoAccess(repoName, session);
+        if (denied) return denied;
 
         logger.debug('[fix-best-practice] Request details:', {
             practiceType,

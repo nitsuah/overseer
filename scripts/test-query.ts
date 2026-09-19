@@ -14,7 +14,7 @@ async function testQuery() {
     
     // Test 1: Get a repo
   logger.info('1. Getting repo...');
-    const repos = await db`SELECT * FROM repos WHERE name = 'overseer' LIMIT 1`;
+    const repos = await db`SELECT * FROM repos WHERE name = 'vigil' LIMIT 1`;
   logger.info('✓ Repo found:', repos[0]?.name);
     const repo = repos[0];
     

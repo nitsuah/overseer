@@ -23,6 +23,10 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     // lib/repo-access.ts. Defaults FALSE so pre-existing rows stay visible
     // until their next sync repopulates the real value.
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS private_repo BOOLEAN DEFAULT FALSE`,
+    // Set TRUE by every sync once private_repo has been read from GitHub. Rows
+    // that predate it stay FALSE and FAIL CLOSED in canAccessRepo until their
+    // next sync -- private_repo's own FALSE default can't be trusted for them.
+    `ALTER TABLE repos ADD COLUMN IF NOT EXISTS visibility_verified BOOLEAN DEFAULT FALSE`,
 
     // repos: lines-of-code metrics
     `ALTER TABLE repos ADD COLUMN IF NOT EXISTS total_loc INTEGER`,
@@ -83,6 +87,18 @@ export const SCHEMA_MIGRATIONS: readonly string[] = [
     // name) and make `full_name` the conflict target for upserts.
     `ALTER TABLE repos DROP CONSTRAINT IF EXISTS repos_name_key`,
     `ALTER TABLE repos ADD CONSTRAINT repos_full_name_key UNIQUE (full_name)`,
+
+    // GitHub repo rename nitsuah/overseer -> nitsuah/vigil. sync upserts on
+    // full_name, so without this the next sync would insert a SECOND row and
+    // orphan the original's tasks/roadmap/snapshots/repo_access grants. Runs
+    // only if the old row exists and the new one doesn't yet, so it is a no-op
+    // on fresh databases and on every re-run.
+    `UPDATE repos
+       SET name = 'vigil',
+           full_name = 'nitsuah/vigil',
+           url = REPLACE(url, 'github.com/nitsuah/overseer', 'github.com/nitsuah/vigil')
+     WHERE full_name = 'nitsuah/overseer'
+       AND NOT EXISTS (SELECT 1 FROM repos r2 WHERE r2.full_name = 'nitsuah/vigil')`,
 
     // doc_status
     `ALTER TABLE doc_status ADD COLUMN IF NOT EXISTS template_version TEXT`,

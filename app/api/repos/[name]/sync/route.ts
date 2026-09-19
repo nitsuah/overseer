@@ -5,6 +5,7 @@ import { getNeonClient } from '@/lib/db';
 import logger from '@/lib/log';
 import { syncRepo } from '@/lib/sync';
 import { grantRepoAccess } from '@/lib/repo-access';
+import { normalizeRepoRow } from '@/lib/numeric';
 
 export async function POST(
     request: NextRequest,
@@ -69,7 +70,7 @@ export async function POST(
 
         // Return the updated row so the frontend can patch state without a full list refetch
         const [updatedRepo] = await db`SELECT * FROM repos WHERE name = ${repoName} LIMIT 1`;
-        return NextResponse.json({ success: true, updatedRepo });
+        return NextResponse.json({ success: true, updatedRepo: normalizeRepoRow(updatedRepo) });
     } catch (error: unknown) {
         logger.warn('Error syncing repo:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';

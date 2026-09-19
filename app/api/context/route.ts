@@ -10,14 +10,15 @@
  *
  * Auth (checked in order):
  *   1. Authorization: Bearer <MCP_API_KEY>  →  full portfolio access
- *   2. NextAuth session cookie              →  full portfolio access
+ *   2. NextAuth session cookie              →  repos this user may access
  *   3. No auth                              →  default repos only
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getNeonClient } from '@/lib/db';
+import { getNeonClient, ensureSchema } from '@/lib/db';
 import { auth } from '@/auth';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
+import { canAccessRepo, getAccessibleRepoIds } from '@/lib/repo-access';
 import logger from '@/lib/log';
 import { healthGrade, buildGradeDist, buildCiDist } from '@/lib/health-grade';
 
@@ -56,6 +57,7 @@ export async function GET(req: NextRequest) {
 
     const defaultNames = DEFAULT_REPOS.map((r: { name: string }) => r.name);
     const db = getNeonClient();
+    await ensureSchema(db);
 
     // -----------------------------------------------------------------------
     // Single-repo context
@@ -68,8 +70,15 @@ export async function GET(req: NextRequest) {
         LIMIT 1
       `) as Row[];
 
+      // A session (unlike the bearer key, which is the portfolio admin) is not
+      // itself proof of access to this repo (CWE-639).
+      const denied =
+        repoRows.length > 0 && session &&
+        !(await canAccessRepo(db, repoRows[0] as unknown as { id: string }, session.userId));
+
       if (
         repoRows.length === 0 ||
+        denied ||
         (!authed && !defaultNames.includes(repoRows[0].name))
       ) {
         return NextResponse.json({ error: `Repository "${repoName}" not found` }, { status: 404 });
@@ -152,7 +161,7 @@ export async function GET(req: NextRequest) {
     // Portfolio context
     // -----------------------------------------------------------------------
     const allRows = (await db`
-      SELECT name, full_name, description, url, language, repo_type, health_score,
+      SELECT id, name, full_name, description, url, language, repo_type, health_score,
              ci_status, open_prs, open_issues_count, vuln_critical_count, vuln_high_count,
              secret_scanning_alert_count, last_commit_date, stars, testing_status,
              coverage_score, last_synced
@@ -161,9 +170,14 @@ export async function GET(req: NextRequest) {
       ORDER BY health_score ASC NULLS LAST
     `) as Row[];
 
-    const repos = authed
+    // Bearer key = portfolio admin (full portfolio); a session only sees repos
+    // it may access (CWE-639); guests only see the defaults.
+    const accessibleIds = session ? await getAccessibleRepoIds(db, session.userId) : null;
+    const repos = bearerOk
       ? allRows
-      : allRows.filter(r => defaultNames.includes(r.name));
+      : accessibleIds
+        ? allRows.filter(r => accessibleIds.has((r as unknown as { id: string }).id))
+        : allRows.filter(r => defaultNames.includes(r.name));
 
     const avgHealth = repos.length
       ? Math.round(repos.reduce((s, r) => s + (r.health_score ?? 0), 0) / repos.length)

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { getNeonClient } from '@/lib/db';
+import { getNeonClient, ensureSchema } from '@/lib/db';
+import { getAccessibleRepoIds } from '@/lib/repo-access';
 import logger from '@/lib/log';
 
 export interface PmoInProgressItem {
@@ -56,6 +57,7 @@ export async function GET() {
 
     try {
         const db = getNeonClient();
+        await ensureSchema(db);
 
         const [repos, roadmapAgg, taskAgg, inProgressItems] = await db.transaction([
             db`
@@ -110,8 +112,12 @@ export async function GET() {
             itemsByRepo.set(item.repo_id, arr);
         }
 
+        // Only repos this user may see (CWE-639): the shared repos table has no
+        // per-row owner, so being signed in is not enough.
+        const accessibleIds = await getAccessibleRepoIds(db, session.userId);
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const repoSummaries: PmoRepoSummary[] = (repos as any[]).map((r) => {
+        const repoSummaries: PmoRepoSummary[] = (repos as any[]).filter((r) => accessibleIds.has(r.id)).map((r) => {
             const rm = roadmapByRepo.get(r.id) as Record<string, number> | undefined;
             const tk = tasksByRepo.get(r.id) as Record<string, number> | undefined;
             return {

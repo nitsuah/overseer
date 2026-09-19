@@ -18,11 +18,13 @@ CREATE TABLE IF NOT EXISTS repos (
   last_commit_date TIMESTAMP WITH TIME ZONE,
   is_fork BOOLEAN DEFAULT FALSE,
   is_archived BOOLEAN DEFAULT FALSE,
-  -- Mirrors GitHub's `private` flag as of the last sync. Public repos are
-  -- visible to any signed-in user; private repos require a repo_access row.
-  -- Defaults FALSE so pre-existing rows stay visible until their next sync
-  -- repopulates the real value (see lib/repo-access.ts).
+  -- Mirrors GitHub's `private` flag as of the last sync. Verified-public repos
+  -- are visible to any signed-in user; everything else requires a repo_access
+  -- row (see lib/repo-access.ts).
   private_repo BOOLEAN DEFAULT FALSE,
+  -- TRUE once a sync has actually read private_repo from GitHub. Unverified
+  -- rows fail closed in canAccessRepo (lib/repo-access.ts).
+  visibility_verified BOOLEAN DEFAULT FALSE,
   is_hidden BOOLEAN DEFAULT FALSE,
   repo_type TEXT CHECK (repo_type IN ('web-app', 'game', 'tool', 'library', 'bot', 'research', 'other')) DEFAULT 'other',
   ai_summary TEXT,

@@ -7,13 +7,13 @@
 
 ## Instructions
 
-You are working on one of the repositories in the Vigil portfolio — a collection of GitHub projects monitored and tracked by the [Vigil](https://github.com/nitsuah/overseer) meta-intelligence dashboard. Your goal is to improve the testing backbone and coverage incrementally.
+You are working on one of the repositories in the Vigil portfolio — a collection of GitHub projects monitored and tracked by the [Vigil](https://github.com/nitsuah/vigil) meta-intelligence dashboard. Your goal is to improve the testing backbone and coverage incrementally.
 
 ### Supported Repositories
 
 | Repo          | Stack                 | Test Tool           | Notes                                                       |
 | ------------- | --------------------- | ------------------- | ----------------------------------------------------------- |
-| `overseer`    | TypeScript / Next.js  | Vitest + Playwright | Primary; target >62%                                        |
+| `vigil`       | TypeScript / Next.js  | Vitest + Playwright | Primary; target >62%                                        |
 | `agent-board` | JavaScript / Docker   | Jest or Vitest      | Dashboard under `dashboard/tests/`                          |
 | `bb-mcp`      | TypeScript / Node.js  | Vitest or Jest      | MCP tool unit tests                                         |
 | `farm-3j`     | TypeScript / Next.js  | Vitest              | Game logic, API routes                                      |
@@ -52,7 +52,7 @@ _Goal: Cover pure functions and utilities that require no mocking._
 
 _Goal: Test core business logic by isolating external dependencies (APIs, Database, UI)._
 
-- **overseer / farm-3j / nitsuah-io**: Mock Next.js API routes; test parser and business logic purely.
+- **vigil / farm-3j / nitsuah-io**: Mock Next.js API routes; test parser and business logic purely.
 - **agent-board**: Mock the Docker/Ollama session API. Test lifecycle and safety-layer logic as state transitions.
 - **bb-mcp**: Mock `@blackboard/learn-rest-client`. Test MCP tool handlers with fake course/content data.
 - **darkmoon**: Mock the WebSocket/Three.js canvas. Test game state transitions with deterministic inputs.
@@ -75,7 +75,7 @@ _Goal: Ensure components work together and handle errors gracefully._
 - **One Step at a Time**: Do not try to jump to Phase 4. Complete Phase 1 fully before moving to Phase 2.
 - **Update Metrics**: After every major PR/Commit, update `METRICS.md` with the new coverage %.
 - **Don't Break the Build**: Ensure `npm run build` or linting still passes.
-- **Docker-aware**: Some repos (overseer, agent-board, darkmoon, gcp) run tests inside Docker; confirm the test command before running.
+- **Docker-aware**: Some repos (vigil, agent-board, darkmoon, gcp) run tests inside Docker; confirm the test command before running.
 
 ## Example Prompt for the Bot
 

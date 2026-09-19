@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
 import { generateRoadmapSuggestions } from '@/lib/ai';
 import logger from '@/lib/log';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 export async function POST(
     request: NextRequest,
@@ -16,6 +17,8 @@ export async function POST(
         }
 
         const repoName = params.name;
+        const denied = await denyIfNoRepoAccess(repoName, session);
+        if (denied) return denied;
         const body = await request.json().catch(() => ({}));
         const userPrompt: string | undefined =
             typeof body.userPrompt === 'string' ? body.userPrompt.trim() || undefined : undefined;

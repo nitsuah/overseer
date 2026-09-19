@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getNeonClient } from '@/lib/db';
+import { getNeonClient, ensureSchema } from '@/lib/db';
 import { auth } from '@/auth';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
 import { canAccessRepo } from '@/lib/repo-access';
+import { normalizeRepoRow, normalizeMetricRow } from '@/lib/numeric';
 import logger from '@/lib/log';
 
 export async function GET(
@@ -19,6 +20,7 @@ export async function GET(
         }
 
         const db = getNeonClient();
+        await ensureSchema(db);
 
         // Round trip 1: get the repo row so we can auth-check and get repo.id.
         const repoRows = await db`SELECT * FROM repos WHERE name = ${repoName} LIMIT 1`;
@@ -27,7 +29,8 @@ export async function GET(
             return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
         }
 
-        const repo = repoRows[0];
+        // NUMERIC columns arrive as strings; give the client real numbers.
+        const repo = normalizeRepoRow(repoRows[0]);
 
         // If not authenticated, only allow access to default repos
         if (!session) {
@@ -35,7 +38,7 @@ export async function GET(
             if (!defaultRepoNames.includes(repo.name)) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             }
-        } else if (!(await canAccessRepo(db, repo as { id: string; private_repo?: boolean }, session.userId))) {
+        } else if (!(await canAccessRepo(db, repo as { id: string; full_name?: string; private_repo?: boolean; visibility_verified?: boolean }, session.userId))) {
             // Signed in, but this repo is private and not theirs (CWE-639):
             // `repos` has no per-row owner, so being authenticated at all
             // isn't proof of access to *this* repo. 404 (not 403) so its
@@ -64,7 +67,7 @@ export async function GET(
         ]);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const metrics = metricsRows.map((m: any) => ({
+        const metrics = metricsRows.map(normalizeMetricRow).map((m: any) => ({
             name: m.metric_name,
             value: m.value,
             unit: m.unit

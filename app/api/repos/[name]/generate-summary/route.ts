@@ -5,6 +5,7 @@ import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
 import { generateRepoSummary } from '@/lib/ai';
 import logger from '@/lib/log';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 export async function POST(
     request: NextRequest,
@@ -18,6 +19,8 @@ export async function POST(
         }
 
         const repoName = params.name;
+        const denied = await denyIfNoRepoAccess(repoName, session);
+        if (denied) return denied;
         const db = getNeonClient();
 
         // Get repo owner

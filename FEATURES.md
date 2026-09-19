@@ -33,8 +33,8 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 ### 🤖 Cross-Repo Orchestration
 
-- **Cross-Repo Dependency Mapping**: `GET /api/dependencies` infers connections between related repos sharing a stack (shared topics + primary language, e.g. agent-board ↔ bb-mcp ↔ overseer); rendered as a collapsible SVG graph + connection list (`DependencyGraph.tsx`) on the dashboard
-- **Agent Dispatch Bridge**: Route tasks from overseer's agent task queue to agent-board's local model runtime for execution _(planned — v0 dispatch bridge, see TASKS.md)_
+- **Cross-Repo Dependency Mapping**: `GET /api/dependencies` infers connections between related repos sharing a stack (shared topics + primary language, e.g. agent-board ↔ bb-mcp ↔ vigil); rendered as a collapsible SVG graph + connection list (`DependencyGraph.tsx`) on the dashboard
+- **Agent Dispatch Bridge**: Route tasks from vigil's agent task queue to agent-board's local model runtime for execution _(planned — v0 dispatch bridge, see TASKS.md)_
 - **MCP Server**: `POST /api/mcp` — JSON-RPC 2.0 endpoint (MCP spec 2024-11-05) exposing 7 tools to any MCP-compatible agent client: `get_repo_health` (health score, CI, vuln counts, activity), `list_tasks` (per-repo tasks with optional status filter), `list_repos` (full portfolio with health/CI/vuln metadata, filterable by min_health/language/type/has_vulns), `get_repo_details` (tasks, roadmap, docs, best practices, community standards), `get_portfolio_overview` (aggregate health distribution, CI pass rate, security posture), `search_repos` (name/description/language search with LIKE-metachar escaping), `get_security_summary` (single-repo or portfolio-wide vuln/secret/code-scanning posture); Bearer token auth via `MCP_API_KEY` env var; 60 req/min rate limit; `GET /api/mcp` returns public capability doc without auth
 - **LLM Context Endpoint**: `GET /api/context` — LLM-optimized JSON dump of the full portfolio or a single repo (`?repo=owner/repo`); no auth returns default repos only, Bearer token or NextAuth session returns full portfolio; designed to be passed directly as context to an LLM or MCP agent
 
@@ -177,7 +177,7 @@ Status guide: features listed here are shipped unless explicitly marked as plann
 
 Vigil includes default repositories that are always synced and displayed:
 
-- `nitsuah/overseer` - The Vigil dashboard itself
+- `nitsuah/vigil` - The Vigil dashboard itself
 - `Nitsuah-Labs/nitsuah-io` - The Nitsuah.io website
 
 These ensure the dashboard always has content, even for non-authenticated visitors. Configure in `lib/default-repos.ts`.
@@ -186,7 +186,7 @@ These ensure the dashboard always has content, even for non-authenticated visito
 
 - **AI-Assisted Roadmap Management**: Auto-suggest roadmap items from repo health signals; auto-update progress from linked PR/issue state (Q3 2026)
 - **3D Cross-Repo Dependency Graph**: Upgrade the shipped 2D SVG dependency graph to an interactive 3D visualization with click-to-detail (Q3 2026)
-- **Agent Dispatch Bridge v0**: Route queued overseer agent tasks to agent-board's local model runtime and report completion back to the queue (Q3 2026)
+- **Agent Dispatch Bridge v0**: Route queued vigil agent tasks to agent-board's local model runtime and report completion back to the queue (Q3 2026)
 - **Zombie-Branch Detection**: Flag stale long-lived branches with a bulk-cleanup dialog (Q3 2026)
 - **Autonomous Plan Execution**: Agents read ROADMAP.md and TASKS.md, open PRs, and close items end to end (Q4 2026)
 - **Portfolio Intelligence Dashboard**: Cross-repo health roll-up, trend lines, and strategic signal view (Q4 2026)

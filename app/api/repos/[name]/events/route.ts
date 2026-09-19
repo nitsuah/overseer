@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
 import logger from '@/lib/log';
 import { createOctokitClient } from '@/lib/githubClient';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 export async function GET(
     _req: NextRequest,
@@ -20,6 +21,8 @@ export async function GET(
 
         const params = await props.params;
         const repoName = params.name;
+        const denied = await denyIfNoRepoAccess(repoName, session);
+        if (denied) return denied;
 
         const db = getNeonClient();
         const rows = await db`SELECT full_name, last_synced FROM repos WHERE name = ${repoName} LIMIT 1`;

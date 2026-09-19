@@ -14,7 +14,7 @@ async function main() {
                COUNT(bp.id) as bp_count
         FROM repos r
         LEFT JOIN best_practices bp ON r.id = bp.repo_id
-        WHERE r.name IN ('skyview', 'overseer', 'farm-3j')
+        WHERE r.name IN ('skyview', 'vigil', 'farm-3j')
         GROUP BY r.id, r.name, r.full_name
         ORDER BY r.name
     `;

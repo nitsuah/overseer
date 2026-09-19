@@ -4,8 +4,8 @@
 export const DEFAULT_REPOS = [
     {
         owner: 'nitsuah',
-        name: 'overseer',
-        fullName: 'nitsuah/overseer'
+        name: 'vigil',
+        fullName: 'nitsuah/vigil'
     },
     {
         owner: 'Nitsuah-Labs',

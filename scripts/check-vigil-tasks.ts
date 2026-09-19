@@ -1,12 +1,12 @@
 import { getNeonClient } from '../lib/db';
 
-async function checkOverseerTasks() {
+async function checkVigilTasks() {
   const db = getNeonClient();
   
   try {
-    const repos = await db`SELECT id, name FROM repos WHERE name = 'overseer' LIMIT 1`;
+    const repos = await db`SELECT id, name FROM repos WHERE name = 'vigil' LIMIT 1`;
     if (repos.length === 0) {
-      console.log('overseer repository not found');
+      console.log('vigil repository not found');
       return;
     }
     
@@ -54,4 +54,4 @@ async function checkOverseerTasks() {
   }
 }
 
-checkOverseerTasks();
+checkVigilTasks();

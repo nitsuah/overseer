@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type JSX } from 'react';
+import { RowErrorBoundary } from './RowErrorBoundary';
 import { Task, RoadmapItem, DocStatus, Metric, Feature, BestPractice, CommunityStandard, SecurityConfig } from '@/types/repo';
 import { RepositoryStatsSectionStatic } from './repo-details/RepositoryStatsSectionStatic';
 import { TestingSection } from './repo-details/TestingSection';
@@ -70,7 +71,7 @@ interface ExpandableRowProps {
   onBack?: () => void;
 }
 
-export default function ExpandableRow({
+function ExpandableRowContent({
   tasks,
   roadmapItems,
   docStatuses,
@@ -288,5 +289,14 @@ export default function ExpandableRow({
         </div>
       </div>
     </div>
+  );
+}
+
+/** Isolates render errors to this one row (see RowErrorBoundary). */
+export default function ExpandableRow(props: ExpandableRowProps): JSX.Element {
+  return (
+    <RowErrorBoundary repoName={props.repoName}>
+      <ExpandableRowContent {...props} />
+    </RowErrorBoundary>
   );
 }

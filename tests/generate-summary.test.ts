@@ -18,6 +18,8 @@ vi.mock('@/lib/db', () => ({
   getNeonClient: vi.fn(),
 }));
 
+// Per-repo access is covered in repo-access-guard.test.ts.
+vi.mock('@/lib/repo-access-guard', () => ({ denyIfNoRepoAccess: vi.fn().mockResolvedValue(null) }));
 vi.mock('@/lib/github', () => ({
   GitHubClient: vi.fn(),
 }));

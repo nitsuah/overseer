@@ -1,6 +1,6 @@
 # Tasks
 
-## updated: 2026-09-10
+## updated: 2026-09-19
 
 ## In Progress
 
@@ -10,52 +10,50 @@
 
 - [x] Expanding any repo row crashes the whole dashboard ("This page couldn't load").
   - Priority: P0
-  - Context: `token_density`/`comment_to_code_ratio` (Postgres NUMERIC) reach the client as strings, and `RepositoryStatsSectionStatic` called `.toFixed()` on them directly. Reproduced on production by clicking a row; present in every deploy since token-density shipped (Sept 2026), absent in the May 2026 deploy.
-  - Status: ✅ FIXED — NUMERIC-backed props are coerced through `toFiniteNumber()` before formatting; regression test in `RepositoryStatsSectionStatic.test.tsx`.
+  - Context: `token_density`/`comment_to_code_ratio` (Postgres NUMERIC) reach the client as strings, and `RepositoryStatsSectionStatic` called `.toFixed()` on them directly. Present in every deploy since token-density shipped (Sept 2026).
+  - Status: ✅ FIXED (PR #225) — NUMERIC-backed props coerced via `toFiniteNumber()`; regression test in `RepositoryStatsSectionStatic.test.tsx`.
 
-- [ ] Add a React error boundary around expanded row details.
+- [x] Add a React error boundary around expanded row details.
   - Priority: P0
-  - Context: the row-expansion crash above took down the entire page because nothing catches render errors. One bad field in one repo's details should degrade that row only.
-  - Acceptance Criteria: a render error inside an expanded row/mobile card shows an inline "couldn't render details" state for that repo; the rest of the dashboard stays usable; covered by a test that throws inside a detail section.
+  - Status: ✅ SHIPPED — `RowErrorBoundary` wraps `ExpandableRow` (desktop table + mobile card). A render error now degrades that one row to an inline "Couldn't render details" state with Retry; everything else keeps working. Unit-tested, and verified in a real browser: with the original bug reintroduced the e2e fails while the page stays up. Also hardened `RateLimitDisplay`, which threw on a malformed payload and unmounted the page.
 
-- [ ] Audit every other NUMERIC-backed field for the same string-vs-number bug.
+- [x] Audit every other NUMERIC-backed field for the same string-vs-number bug.
   - Priority: P0
-  - Context: `repos` NUMERIC columns (`coverage_score`, `commit_frequency`, `avg_pr_merge_time_hours`, `token_density`, `comment_to_code_ratio`) and `repo_snapshots` values come back from Neon as strings while `types/repo.ts` declares them `number`. Consider parsing once at the API boundary so the types tell the truth.
+  - Status: ✅ SHIPPED — `lib/numeric.ts` normalizes `repos` (`coverage_score`, `commit_frequency`, `avg_pr_merge_time_hours`, `token_density`, `comment_to_code_ratio`), `repo_snapshots` and `metrics.value` at the API boundary (`/api/repos`, `/api/repo-details/[name]` + `/trend`, `/api/repos/[name]/sync`), so the client gets real numbers and the declared types are true. The UI-side `toFiniteNumber()` stays as defence in depth.
 
-- [ ] Scope the repo LIST and sibling routes by repo access (CWE-639, follow-up to PR #221).
+- [x] Scope the repo LIST and sibling routes by repo access (CWE-639, follow-up to PR #221).
   - Priority: P0
-  - Context: PR #221 gated `chat`, `repo-details/[name]` and its `trend` route with `canAccessRepo()`. `GET /api/repos` still returns every synced repo (private included) to any signed-in user, and the other by-name routes (`fix-doc`, `generate-summary`, `events`, `debug`, `hide`, `update-type`, `suggest-*`, `improve-doc`, ...) are unaudited.
-  - Acceptance Criteria: the list and every by-name route filter on `private_repo`/`repo_access`; tests cover "own repo" and "someone else's private repo" for each.
+  - Status: ✅ SHIPPED — `GET /api/repos` returns only default repos, verified-public repos, and repos the caller has a `repo_access` grant for. Every by-name route (`debug`, `events`, `fix-*`, `generate-summary`, `hide`, `unhide`, `update-type`, `improve-doc`, `suggest-*`, `roadmap-items/[id]`, `enrich-template`) now runs `denyIfNoRepoAccess()`; `context`, `dependencies` and `pmo/overview` filter to accessible repos (the MCP bearer key keeps full-portfolio access). Also found and fixed: `debug` had **no auth at all** and dumped a repo's roadmap/tasks/features/metrics to anyone, and `hide`/`unhide`/`update-type`/`roadmap-items` let any signed-in user modify any repo.
+  - Follow-ups: `name` is not unique across owners (see the trend-route ticket below); the guard requires access to every repo sharing a short name, which is conservative but correct.
 
-- [ ] Backfill `private_repo` for repos synced before PR #221.
+- [x] Backfill `private_repo` for repos synced before PR #221.
   - Priority: P0
-  - Context: the column defaults to `FALSE`, so previously-synced private repos stay visible to every signed-in user until their next sync repopulates it.
-  - Acceptance Criteria: run a full sync after deploy (or a one-off backfill) and verify no private repo is flagged public.
+  - Status: ✅ SHIPPED (fails closed) — instead of trusting the `FALSE` default, a new `visibility_verified` column is set only when a sync has actually read `private` from GitHub. Unverified rows are treated as possibly-private until re-synced (default repos are always visible). **After deploy, each user must click Sync once** to re-verify and re-grant their repos; until then their own private repos will be hidden from them too. This is deliberate.
 
 ### P1 - High
 
-- [ ] Rename the GitHub repo `nitsuah/overseer` -> `nitsuah/vigil` and land the follow-up commit.
+- [ ] Rename the GitHub repo `nitsuah/overseer` -> `nitsuah/vigil` (**post-merge step, needs a human go-ahead**).
   - Priority: P1
-  - Context: deliberately deferred in PR #221. Netlify's GitHub link and OAuth are unaffected (keyed by repo ID / site domain), but these hard-code the old name: `lib/default-repos.ts`, `lib/repo-type.ts`, `scripts/*.ts` queries, README badge/clone/GitHub URLs, `app/api/mcp/route.ts` example text, `templates/**` URLs.
-  - Acceptance Criteria: `gh repo rename`, update those references + local `origin`, re-sync so `repos.full_name` matches, grep for stray `overseer` refs.
+  - Status: code is ready — `DEFAULT_REPOS`, `repo-type`, scripts, README/templates and tests reference `vigil`, and an idempotent migration renames the existing `repos` row (`full_name`, `name`, `url`) so tasks/roadmap/snapshots/access grants survive instead of a duplicate row being created.
+  - Runbook, in this order: (1) merge and let Netlify deploy (the migration runs on first request); (2) `gh repo rename vigil --repo nitsuah/overseer`; (3) `git remote set-url origin https://github.com/nitsuah/vigil.git`; (4) sign in and click Sync so the default repo re-syncs under its new name; (5) confirm the smoke workflow is green. Renaming _before_ deploying would let a sync insert a second `nitsuah/vigil` row and cause the migration to skip.
+  - Netlify's GitHub link (keyed by repo ID) and OAuth (keyed by the site domain) are unaffected.
 
-- [ ] Decide on renaming the Netlify site (`ghoverseer`) / adding a custom domain.
+- [x] Decide whether to rename the Netlify site (`ghoverseer`) / add a custom domain.
   - Priority: P1
-  - Context: renaming changes the live URL, so the GitHub OAuth App callback URL must be updated in the same change or sign-in breaks. No custom domain/DNS exists today.
+  - Decision: **keep `ghoverseer.netlify.app` for now.** Renaming changes the live URL and requires editing the GitHub OAuth App's callback URL by hand (no API for it) in the same moment, or sign-in breaks; the only benefit is cosmetic. There is no custom domain today. Revisit if/when a custom domain is added — do the domain, the Netlify site name and the OAuth callback together, and update `SITE_URL` in `.github/workflows/smoke.yml` and `playwright.smoke.config.ts`.
 
-- [ ] Run the Playwright e2e suite for real and wire it into CI.
+- [x] Run the Playwright e2e suite for real and wire it into CI.
   - Priority: P1
-  - Context: the auth-boundary tests added in PR #221 (`e2e/dashboard.spec.ts`) have never been executed - the sandbox had no `NEXTAUTH_SECRET`/`DATABASE_URL` - and CI only runs vitest + build. The suite also asserted the old "Overseer" title for weeks unnoticed.
-  - Acceptance Criteria: e2e passes locally against a dev server, then runs in CI (or a scheduled workflow) so it can't rot again; add an e2e that expands a repo row and asserts the page survives.
+  - Status: ✅ SHIPPED — the old suite needed a live DB and had never run in CI (it asserted the wrong title for weeks). New DB-free suite `e2e/mocked/ui.spec.ts` (all `/api` calls mocked; expands a row using the exact NUMERIC-string payload that crashed prod; signed-out / signed-in / sign-out chat boundary with a real Auth.js session cookie) runs in `.github/workflows/e2e.yml` on every PR and push. Executed for real in the official Playwright image (6/6 pass) and mutation-checked. The live-API suite (`e2e/dashboard.spec.ts`) remains a local, DB-backed run.
 
-- [ ] Smoke-test the deployed app after each merge.
+- [x] Smoke-test the deployed app after each merge.
   - Priority: P1
-  - Context: nothing verified production after PR #221, which is how the row-expansion crash went unnoticed for weeks.
+  - Status: ✅ SHIPPED — `.github/workflows/smoke.yml` waits until `/api/version` reports the merged commit, then runs `e2e/smoke/prod.spec.ts` against production (rows render, expanding a live row survives, API serves real numbers). Run against today's production it passes the row checks and correctly fails the API-numbers check until this ships.
 
-- [ ] Connect overseer's agent task queue to agent-board's local model runtime (dispatch bridge v0).
+- [ ] Connect vigil's agent task queue to agent-board's local model runtime (dispatch bridge v0).
   - Priority: P1
-  - Context: overseer exposes an Agent Task Queue API and agent-board runs a local model runtime, but no bridge routes tasks between them.
-  - Acceptance Criteria: a v0 bridge dispatches at least one queued overseer task to agent-board's runtime and reports completion status back to the queue.
+  - Context: vigil exposes an Agent Task Queue API and agent-board runs a local model runtime, but no bridge routes tasks between them.
+  - Acceptance Criteria: a v0 bridge dispatches at least one queued vigil task to agent-board's runtime and reports completion status back to the queue.
   - Status: ✅ SHIPPED (PR #159, hardened in PR #204) — `motorPoolBridge.dispatch()` in `lib/agent-bridge.ts` creates a session via agent-board's `POST /api/sessions`, delivers the task as the session's first message via `POST /api/sessions/:id/message`, and returns the `motorPoolSessionId`; `app/api/agent/tasks/route.ts`'s queue runner awaits the dispatch and writes the result/status (`completed`/`failed`) back onto the queued task, with a simulated-execution fallback (preserving any already-created session id) when the runtime is unreachable. Covered by `tests/agent-bridge.test.ts` and `tests/agent-tasks.test.ts` (full suite: 562 tests passing, `tsc --noEmit` clean).
 
 ### P2 - Medium
@@ -68,7 +66,7 @@
 
 - [ ] Add cross-repo dependency mapping.
   - Priority: P2
-  - Context: agent-board, bb-mcp, nitsuah-io, and overseer share overlapping stacks and could benefit from surfaced cross-repo links.
+  - Context: agent-board, bb-mcp, nitsuah-io, and vigil share overlapping stacks and could benefit from surfaced cross-repo links.
   - Acceptance Criteria: the dashboard shows inferred or declared connections between related repos and surfaces shared-stack signals; visualized as an interactive 3D graph with filter and click-to-detail interactions.
   - Status: ✅ SHIPPED (this branch) — `GET /api/dependencies` infers connections from shared topics + primary language; rendered as a collapsible SVG graph + connection list (`DependencyGraph.tsx`) on the dashboard. The 3D/click-to-detail visualization from the original acceptance criteria is not implemented — current graph is 2D SVG.
 

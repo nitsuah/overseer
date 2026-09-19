@@ -1289,7 +1289,7 @@ Vigil monitors a portfolio of repositories. When updating docs for any one repo,
 
 | Repo                    | Stack                 | Priority      | Role                                     |
 | ----------------------- | --------------------- | ------------- | ---------------------------------------- |
-| nitsuah/overseer        | TypeScript / Next.js  | P0            | Meta-intelligence dashboard              |
+| nitsuah/vigil           | TypeScript / Next.js  | P0            | Meta-intelligence dashboard              |
 | nitsuah/agent-board     | JavaScript / Docker   | P1            | Local LLM agent runtime                  |
 | nitsuah/bb-mcp          | TypeScript / MCP      | P1            | Blackboard LMS MCP server                |
 | Nitsuah-Labs/nitsuah-io | TypeScript / Next.js  | P1            | Portfolio and identity site              |
@@ -1306,10 +1306,10 @@ Vigil monitors a portfolio of repositories. When updating docs for any one repo,
 ### Rules for Cross-Repo Documentation
 
 1. **Don't reference sibling repos in ROADMAP/TASKS unless directly connected** — keep each repo's docs self-contained.
-2. **Connection points to note in FEATURES.md**: if a repo integrates with overseer's agent queue or exposes an MCP tool, document that relationship.
+2. **Connection points to note in FEATURES.md**: if a repo integrates with vigil's agent queue or exposes an MCP tool, document that relationship.
 3. **Deprioritized repos** (stash, avatar): keep docs minimal; add a `## Notes` section flagging deprioritization reason.
 4. **When a repo ships an MCP server** (bb-mcp): note compatible MCP clients in README and FEATURES.md.
-5. **Shared stacks**: agent-board, bb-mcp, nitsuah-io, and overseer all use TypeScript/Node tooling; they share linting config conventions from overseer's template set.
+5. **Shared stacks**: agent-board, bb-mcp, nitsuah-io, and vigil all use TypeScript/Node tooling; they share linting config conventions from vigil's template set.
 
 ### Agent Prompt Companion Files
 

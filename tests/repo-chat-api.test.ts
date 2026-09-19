@@ -30,8 +30,10 @@ const mockGenerate = vi.mocked(generateAIContent);
 
 const fakeRepo = {
     id: 'repo-1',
-    name: 'overseer',
-    full_name: 'nitsuah/overseer',
+    name: 'vigil',
+    full_name: 'nitsuah/vigil',
+    visibility_verified: true,
+    private_repo: false,
     description: 'Portfolio dashboard',
     language: 'TypeScript',
     repo_type: 'web-app',
@@ -103,7 +105,7 @@ function makeDb(
 
 const makeRequest = (
     body: unknown,
-    name = 'overseer',
+    name = 'vigil',
     headers: Record<string, string> = {}
 ): NextRequest =>
     new NextRequest(`http://localhost:3000/api/repos/${name}/chat`, {
@@ -112,7 +114,7 @@ const makeRequest = (
         body: typeof body === 'string' ? body : JSON.stringify(body),
     });
 
-const params = (name = 'overseer'): RouteParams => ({ params: Promise.resolve({ name }) });
+const params = (name = 'vigil'): RouteParams => ({ params: Promise.resolve({ name }) });
 
 const validBody = { messages: [{ role: 'user', content: 'What should I work on next?' }] };
 
@@ -170,7 +172,7 @@ describe('POST /api/repos/[name]/chat', () => {
     it('returns 401 when unauthenticated, regardless of the repo', async () => {
         mockAuth.mockResolvedValue(null);
 
-        const res = await POST(makeRequest(validBody, 'overseer'), params());
+        const res = await POST(makeRequest(validBody, 'vigil'), params());
         const data = await res.json();
 
         expect(res.status).toBe(401);
@@ -191,7 +193,7 @@ describe('POST /api/repos/[name]/chat', () => {
     });
 
     describe('private-repo authorization (CWE-639)', () => {
-        const privateRepo = { ...fakeRepo, name: 'someones-private-repo', private_repo: true };
+        const privateRepo = { ...fakeRepo, name: 'someones-private-repo', full_name: 'someone/private-repo', private_repo: true };
 
         it('returns 404 for a private repo the signed-in user has no repo_access for (someone else\'s repo)', async () => {
             mockGetNeonClient.mockReturnValue(makeDb([privateRepo], [], []) as never);
@@ -217,9 +219,8 @@ describe('POST /api/repos/[name]/chat', () => {
             expect(res.status).toBe(200);
         });
 
-        it('allows any signed-in user to reach a repo that is not marked private', async () => {
-            // fakeRepo has no private_repo field at all -- same as an
-            // explicit `false` (public), and must not require repo_access.
+        it('allows any signed-in user to reach a verified-public repo', async () => {
+            // Verified-public (and a default repo): must not require repo_access.
             mockGetNeonClient.mockReturnValue(makeDb([fakeRepo], [], []) as never);
 
             const res = await POST(makeRequest(validBody), params());
@@ -269,7 +270,7 @@ describe('POST /api/repos/[name]/chat', () => {
         expect(data.success).toBe(true);
         expect(data.reply).toBe('You should finish the conversational interface first.');
         expect(data.context).toMatchObject({
-            repo: 'overseer',
+            repo: 'vigil',
             healthScore: 82,
             openTaskCount: 1,
             roadmapItemCount: 1,
@@ -283,7 +284,7 @@ describe('POST /api/repos/[name]/chat', () => {
         expect(mockGenerate).toHaveBeenCalledTimes(1);
         const prompt = mockGenerate.mock.calls[0][0];
 
-        expect(prompt).toContain('Repository: overseer');
+        expect(prompt).toContain('Repository: vigil');
         expect(prompt).toContain('Add conversational interface'); // TASKS.md
         expect(prompt).toContain('PMO mode');                     // ROADMAP.md
         expect(prompt).toContain('Health score: 82/100');

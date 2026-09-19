@@ -67,8 +67,8 @@ const NOW = Date.parse('2026-08-01T00:00:00Z');
 
 function makeSnapshot(overrides: Partial<RepoChatSnapshot> = {}): RepoChatSnapshot {
     return {
-        name: 'overseer',
-        fullName: 'nitsuah/overseer',
+        name: 'vigil',
+        fullName: 'nitsuah/vigil',
         description: 'Portfolio dashboard',
         language: 'TypeScript',
         repoType: 'web-app',
@@ -173,7 +173,7 @@ describe('buildRepoContextBlock', () => {
     it('includes health signals, docs, open tasks and roadmap', () => {
         const block = buildRepoContextBlock(makeSnapshot(), NOW);
 
-        expect(block).toContain('Repository: overseer');
+        expect(block).toContain('Repository: vigil');
         expect(block).toContain('Health score: 82/100');
         expect(block).toContain('Add conversational interface');
         expect(block).toContain('PMO mode');

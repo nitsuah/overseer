@@ -5,6 +5,7 @@ import { getNeonClient } from '@/lib/db';
 import fs from 'fs/promises';
 import path from 'path';
 import logger from '@/lib/log';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 export async function POST(
   request: NextRequest,
@@ -22,6 +23,8 @@ export async function POST(
     const filesFromModal = body.files as Array<{path: string; content: string; practiceType: string}> | undefined;
 
     const repoName = params.name;
+    const denied = await denyIfNoRepoAccess(repoName, session);
+    if (denied) return denied;
     const db = getNeonClient();
     const repoRows = await db`SELECT full_name FROM repos WHERE name = ${repoName} LIMIT 1`;
     if (repoRows.length === 0) {

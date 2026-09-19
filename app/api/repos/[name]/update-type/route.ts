@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/log';
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 export async function PATCH(
     request: NextRequest,
@@ -15,6 +16,8 @@ export async function PATCH(
 
         const params = await props.params;
         const repoName = params.name;
+        const denied = await denyIfNoRepoAccess(repoName, session);
+        if (denied) return denied;
         const { type } = await request.json();
 
         if (!repoName) {

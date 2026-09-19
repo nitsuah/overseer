@@ -13,7 +13,8 @@ export async function proxy(request: NextRequest) {
     pathname === '/' ||
     pathname.startsWith('/api/repos') ||
     pathname.startsWith('/api/repo-details') ||
-    pathname === '/api/seed-defaults'
+    pathname === '/api/seed-defaults' ||
+    pathname === '/api/version'
   ) {
     return NextResponse.next();
   }

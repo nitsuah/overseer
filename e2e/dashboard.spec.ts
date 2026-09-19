@@ -365,7 +365,7 @@ test.describe('Repo chat – authentication boundary', () => {
   });
 
   test('unauthenticated: POST /api/repos/[name]/chat is rejected before reaching the DB or model', async ({ request }) => {
-    const res = await request.post('/api/repos/overseer/chat', {
+    const res = await request.post('/api/repos/vigil/chat', {
       data: { messages: [{ role: 'user', content: 'hello' }] },
     });
     expect(res.status()).toBe(401);
@@ -388,7 +388,7 @@ test.describe('Repo chat – authentication boundary', () => {
 
   test('authenticated: POST /api/repos/[name]/chat is no longer rejected for lack of a session', async ({ browser }) => {
     const context = await authenticatedContext(browser);
-    const res = await context.request.post('/api/repos/overseer/chat', {
+    const res = await context.request.post('/api/repos/vigil/chat', {
       data: { messages: [{ role: 'user', content: 'hello' }] },
     });
     // Authenticated requests can still fail downstream (e.g. no DB/AI provider

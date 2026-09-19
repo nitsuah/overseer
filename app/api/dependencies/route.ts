@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getNeonClient } from '@/lib/db';
+import { getNeonClient, ensureSchema } from '@/lib/db';
 import { auth } from '@/auth';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
+import { getAccessibleRepoIds } from '@/lib/repo-access';
 
 export const runtime = 'nodejs';
 
@@ -31,6 +32,7 @@ export async function GET(): Promise<NextResponse> {
   try {
     const session = await auth();
     const db = getNeonClient();
+    await ensureSchema(db);
 
     const rows = await db`
       SELECT id, name, full_name, language, topics, description, url
@@ -44,8 +46,11 @@ export async function GET(): Promise<NextResponse> {
     }
 
     // Unauthenticated: only default repos
-    const visible = session
-      ? rows
+    // Signed in: only repos this user may see (CWE-639) -- the shared repos
+    // table has no per-row owner, so a session alone is not enough.
+    const accessibleIds = session ? await getAccessibleRepoIds(db, session.userId) : null;
+    const visible = accessibleIds
+      ? rows.filter((r) => accessibleIds.has(r.id))
       : rows.filter((r) => DEFAULT_REPOS.some((d) => d.fullName === r.full_name));
 
     const nodes = visible.map((r) => ({

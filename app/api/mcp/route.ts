@@ -75,7 +75,7 @@ const TOOLS = [
       properties: {
         name: {
           type: 'string',
-          description: 'Repository name (e.g. "overseer") or full name (e.g. "nitsuah/overseer")',
+          description: 'Repository name (e.g. "vigil") or full name (e.g. "nitsuah/vigil")',
         },
       },
       required: ['name'],

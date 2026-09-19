@@ -1,0 +1,71 @@
+name: Post-deploy smoke
+
+# After every merge to main, wait for Netlify to publish THAT commit, then run a
+# signed-out smoke test against the live site. Catches the class of failure the
+# unit tests can't: a deploy that builds green but is broken in production
+# (e.g. expanding a repo row crashing the whole page).
+#
+# A red run here means production is broken -- check the deploy, don't ignore it.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SITE_URL: https://ghoverseer.netlify.app
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Wait for the deploy of this commit
+        run: |
+          expected="${{ github.sha }}"
+          echo "Waiting for $SITE_URL/api/version to report $expected"
+          for attempt in $(seq 1 60); do
+            live=$(curl -fsS --max-time 15 "$SITE_URL/api/version" 2>/dev/null | sed -n 's/.*"commit":"\([^"]*\)".*/\1/p' || true)
+            echo "attempt $attempt: live commit = ${live:-<unreachable>}"
+            if [ "$live" = "$expected" ]; then
+              echo "Deploy is live."
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "::error::Timed out waiting for $expected to be deployed (last seen: ${live:-none})"
+          exit 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke tests against production
+        run: npx playwright test -c playwright.smoke.config.ts
+        env:
+          CI: true
+          SMOKE_URL: ${{ env.SITE_URL }}
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

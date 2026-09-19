@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/log';
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 // Links a roadmap item to a tracked PR and/or an Agent Task Queue entry, so
 // DEV-flow handoff state is visible in the per-repo roadmap progress view.
@@ -16,6 +17,8 @@ export async function PATCH(
         }
 
         const { name: repoName, id } = await props.params;
+        const denied = await denyIfNoRepoAccess(repoName, session);
+        if (denied) return denied;
         if (!repoName || !id) {
             return NextResponse.json({ error: 'Repo name and roadmap item id required' }, { status: 400 });
         }

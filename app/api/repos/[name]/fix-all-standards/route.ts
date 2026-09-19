@@ -5,6 +5,7 @@ import { getNeonClient } from '@/lib/db';
 import fs from 'fs/promises';
 import path from 'path';
 import logger from '@/lib/log';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 export async function POST(
     request: NextRequest,
@@ -18,6 +19,8 @@ export async function POST(
         }
 
         const repoName = params.name;
+        const denied = await denyIfNoRepoAccess(repoName, session);
+        if (denied) return denied;
 
         // Get repo details
         const db = getNeonClient();

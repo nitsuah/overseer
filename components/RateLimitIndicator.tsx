@@ -70,7 +70,8 @@ export function useRateLimit(enabled: boolean = true): RateLimitState {
 export function RateLimitDisplay({ rateLimit, loading, error }: RateLimitState): React.JSX.Element | null {
   const [expanded, setExpanded] = useState(false);
 
-  if (loading || error || !rateLimit) return null;
+  // A malformed payload must hide this widget, not throw and unmount the page.
+  if (loading || error || !rateLimit?.core) return null;
 
   const percentage = (rateLimit.core.remaining / rateLimit.core.limit) * 100;
   const resetDate = new Date(rateLimit.core.reset);

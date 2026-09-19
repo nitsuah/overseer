@@ -8,6 +8,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import logger from '@/lib/log';
 import { resolveDocTargetPath, DOC_TARGET_PATHS } from '@/lib/doc-target-paths';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 export async function POST(
     request: NextRequest,
@@ -28,6 +29,8 @@ export async function POST(
         }
 
         const repoName = params.name;
+        const denied = await denyIfNoRepoAccess(repoName, session);
+        if (denied) return denied;
 
         // Map logical doc types to target paths (where they should go in the repo).
         // Shared with app/page.tsx's chat-proposal adapter (lib/doc-target-paths.ts)

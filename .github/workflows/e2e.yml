@@ -1,0 +1,51 @@
+name: E2E
+
+# DB-free Playwright suite (e2e/mocked): every /api call is mocked, so it needs
+# no secrets or database -- only dummy auth env, set in playwright.ci.config.ts.
+# The live-API suite (e2e/dashboard.spec.ts) needs a real database and is run
+# locally. This job exists so the dashboard's core flows (expanding a repo row,
+# the repo-chat auth boundary) can't silently rot the way the old suite did.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e
+        run: npx playwright test -c playwright.ci.config.ts
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

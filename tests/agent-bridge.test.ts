@@ -1,5 +1,5 @@
 /**
- * Tests for lib/agent-bridge.ts — the dispatch bridge between overseer's
+ * Tests for lib/agent-bridge.ts — the dispatch bridge between vigil's
  * agent task queue and agent-board's local model runtime ("motor-pool").
  *
  * Focus: once a session has been created in the runtime, every failure path
@@ -25,7 +25,7 @@ vi.mock('@/lib/log', () => ({ default: { warn: vi.fn(), info: vi.fn(), error: vi
 const task: DispatchableTask = {
     id: 'task-1',
     type: 'lint',
-    payload: { repo: 'overseer' },
+    payload: { repo: 'vigil' },
     priority: 'normal',
 };
 

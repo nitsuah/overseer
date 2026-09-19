@@ -6,6 +6,7 @@ import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
 import fs from 'fs/promises';
 import path from 'path';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 export async function POST(
     request: NextRequest,
@@ -19,6 +20,8 @@ export async function POST(
         }
 
         const repoName = params.name;
+        const denied = await denyIfNoRepoAccess(repoName, session);
+        if (denied) return denied;
         const db = getNeonClient();
         
         // Allow files with content to be passed directly from modal

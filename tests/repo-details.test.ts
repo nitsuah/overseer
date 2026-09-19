@@ -11,9 +11,9 @@ import { NextRequest } from 'next/server';
 import type { Session } from 'next-auth';
 
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
-vi.mock('@/lib/db', () => ({ getNeonClient: vi.fn() }));
+vi.mock('@/lib/db', () => ({ getNeonClient: vi.fn(), ensureSchema: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@/lib/log', () => ({ default: { warn: vi.fn(), info: vi.fn(), error: vi.fn() } }));
-vi.mock('@/lib/default-repos', () => ({ DEFAULT_REPOS: [{ name: 'overseer' }] }));
+vi.mock('@/lib/default-repos', () => ({ DEFAULT_REPOS: [{ name: 'vigil', fullName: 'nitsuah/vigil' }] }));
 
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
@@ -26,10 +26,12 @@ const makeRequest = (name: string) =>
 
 const fakeRepo = {
     id: 'repo-1',
-    name: 'overseer',
-    full_name: 'nitsuah/overseer',
+    name: 'vigil',
+    full_name: 'nitsuah/vigil',
+    visibility_verified: true,
+    private_repo: false,
     description: 'test',
-    url: 'https://github.com/nitsuah/overseer',
+    url: 'https://github.com/nitsuah/vigil',
     has_security_policy: true,
     has_security_advisories: false,
     private_vuln_reporting_enabled: false,
@@ -89,7 +91,7 @@ describe('GET /api/repo-details/[name]', () => {
     });
 
     it('returns 404 for a private repo the signed-in user has no repo_access for (CWE-639)', async () => {
-        const privateRepo = { ...fakeRepo, name: 'someones-private-repo', private_repo: true };
+        const privateRepo = { ...fakeRepo, name: 'someones-private-repo', full_name: 'someone/private-repo', private_repo: true };
         const db = makeDb([privateRepo], []);
         mockGetNeonClient.mockReturnValue(db as never);
 
@@ -110,7 +112,7 @@ describe('GET /api/repo-details/[name]', () => {
             userId: 'gh-owner-1',
             expires: new Date(Date.now() + 86400000).toISOString(),
         } as Session);
-        const privateRepo = { ...fakeRepo, name: 'my-private-repo', private_repo: true };
+        const privateRepo = { ...fakeRepo, name: 'my-private-repo', full_name: 'me/my-private-repo', private_repo: true };
         const db = makeDb([privateRepo], [{ '?column?': 1 }]);
         mockGetNeonClient.mockReturnValue(db as never);
 
@@ -125,7 +127,7 @@ describe('GET /api/repo-details/[name]', () => {
         const db = makeDb();
         mockGetNeonClient.mockReturnValue(db as never);
 
-        const res = await GET(makeRequest('overseer'), { params: Promise.resolve({ name: 'overseer' }) });
+        const res = await GET(makeRequest('vigil'), { params: Promise.resolve({ name: 'vigil' }) });
         expect(res.status).toBe(200);
 
         // The transaction mock should have been called exactly once
@@ -141,7 +143,7 @@ describe('GET /api/repo-details/[name]', () => {
         const db = makeDb();
         mockGetNeonClient.mockReturnValue(db as never);
 
-        const res = await GET(makeRequest('overseer'), { params: Promise.resolve({ name: 'overseer' }) });
+        const res = await GET(makeRequest('vigil'), { params: Promise.resolve({ name: 'vigil' }) });
         const body = await res.json();
 
         expect(body.metrics).toEqual([{ name: 'loc', value: 100, unit: 'lines' }]);
@@ -151,11 +153,11 @@ describe('GET /api/repo-details/[name]', () => {
         const db = makeDb();
         mockGetNeonClient.mockReturnValue(db as never);
 
-        const res = await GET(makeRequest('overseer'), { params: Promise.resolve({ name: 'overseer' }) });
+        const res = await GET(makeRequest('vigil'), { params: Promise.resolve({ name: 'vigil' }) });
         const body = await res.json();
 
         expect(body).toMatchObject({
-            repo: expect.objectContaining({ name: 'overseer' }),
+            repo: expect.objectContaining({ name: 'vigil' }),
             tasks: expect.any(Array),
             roadmapItems: expect.any(Array),
             metrics: expect.any(Array),

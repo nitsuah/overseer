@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { getNeonClient } from '@/lib/db';
+import { getNeonClient, ensureSchema } from '@/lib/db';
 import { DEFAULT_REPOS } from '@/lib/default-repos';
-import { canAccessRepo } from '@/lib/repo-access';
+import { canAccessRepo, type RepoAccessCheck } from '@/lib/repo-access';
+import { normalizeSnapshotRow } from '@/lib/numeric';
 
 export const runtime = 'nodejs';
 
@@ -30,14 +31,16 @@ export async function GET(
 
   try {
     const db = getNeonClient();
+    await ensureSchema(db);
 
     // Look up the repo first (rather than joining by name below) so access
     // can be checked before any snapshot data is returned. Signed in is not
     // itself proof of access to *this* repo (CWE-639): `repos` has no
     // per-row owner. 404 (not 403) so a private repo's existence isn't
     // confirmed to a caller who can't see it.
-    const [repo] = await db`SELECT id, private_repo FROM repos WHERE name = ${name} LIMIT 1` as
-      Array<{ id: string; private_repo?: boolean }>;
+    const [repo] = await db`
+      SELECT id, full_name, private_repo, visibility_verified FROM repos WHERE name = ${name} LIMIT 1
+    ` as unknown as RepoAccessCheck[];
     if (!repo) {
       return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
     }
@@ -57,7 +60,7 @@ export async function GET(
       ORDER BY captured_at DESC
       LIMIT 200
     `;
-    return NextResponse.json({ success: true, snapshots: rows.reverse() }, { status: 200 });
+    return NextResponse.json({ success: true, snapshots: rows.reverse().map(normalizeSnapshotRow) }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });

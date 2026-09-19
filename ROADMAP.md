@@ -35,7 +35,7 @@ Next Review: 2026-09-15
 - [x] Add the conversational interface foundation: one or two chat-driven repo-hygiene workflows end-to-end (PR #196 — per-repo chat panel, "summarize my stale docs" / "what should I work on next?")
 - [x] Add advanced analytics: velocity scoring — `repo_snapshots` time-series + trend endpoint + sparkline (commit frequency, PR merge time, health score, open PRs, total LOC); technical-debt trending and zombie-branch detection still open (see TASKS.md)
 - [x] Expand MCP tooling surface: 7 tools now ship (`get_repo_health`, `list_repos`, `get_repo_details`, `get_portfolio_overview`, `search_repos`, `list_tasks`, `get_security_summary`) + `/api/context` LLM context endpoint (PR #181)
-- [x] Add cross-repo dependency mapping to surface shared-stack connections (e.g., agent-board ↔ bb-mcp ↔ overseer) — `GET /api/dependencies` + `DependencyGraph.tsx`; 2D SVG rather than the originally-scoped 3D graph
+- [x] Add cross-repo dependency mapping to surface shared-stack connections (e.g., agent-board ↔ bb-mcp ↔ vigil) — `GET /api/dependencies` + `DependencyGraph.tsx`; 2D SVG rather than the originally-scoped 3D graph
 
 ## Q4 2026: Portfolio Intelligence (Exploratory) 🧪
 
@@ -72,4 +72,4 @@ Next Review: 2026-09-15
 - GitHub repositories and markdown remain the source of truth.
 - Cross-repo orchestration and autonomous plan execution are the long-term product direction.
 - Per-repo detailed execution stays in each repo's own TASKS.md; Vigil tracks aggregate state.
-- Detailed execution work for overseer itself stays in TASKS.md.
+- Detailed execution work for vigil itself stays in TASKS.md.

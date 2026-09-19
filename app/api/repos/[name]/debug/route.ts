@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
 import logger from '@/lib/log';
 import { getNeonClient } from '@/lib/db';
+import { auth } from '@/auth';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ name: string }> }
 ) {
     try {
+        // Dumps every roadmap item, task, feature, metric and doc status for a
+        // repo, so it needs the same auth + per-repo access as the other
+        // by-name routes (this route previously had neither).
+        const session = await auth();
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
         const { name } = await params;
+        const denied = await denyIfNoRepoAccess(name, session);
+        if (denied) return denied;
         const db = getNeonClient();
 
         // Get repo ID

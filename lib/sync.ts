@@ -37,12 +37,12 @@ export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
     await db`
         INSERT INTO repos (
             name, full_name, description, language, stars, forks, open_issues, url, homepage, topics,
-            last_synced, updated_at, last_commit_date, is_archived, private_repo
+            last_synced, updated_at, last_commit_date, is_archived, private_repo, visibility_verified
         )
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars},
             ${repo.forks}, ${repo.openIssues}, ${repo.url}, ${repo.homepage}, ${repo.topics},
-            NOW(), NOW(), ${lastCommitDate}, ${repo.archived}, ${repo.isPrivate}
+            NOW(), NOW(), ${lastCommitDate}, ${repo.archived}, ${repo.isPrivate}, TRUE
         )
         ON CONFLICT (full_name) DO UPDATE SET
           description = EXCLUDED.description,
@@ -57,7 +57,8 @@ export async function syncRepoMetadata(repo: RepoMetadata, db: any) {
           updated_at = NOW(),
           last_commit_date = EXCLUDED.last_commit_date,
           is_archived = EXCLUDED.is_archived,
-          private_repo = EXCLUDED.private_repo
+          private_repo = EXCLUDED.private_repo,
+          visibility_verified = TRUE
     `;
 }
 
@@ -229,7 +230,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             contributor_count, commit_frequency, bus_factor, avg_pr_merge_time_hours, contributors_last_checked,
             has_security_policy, has_security_advisories, private_vuln_reporting_enabled,
             dependabot_alerts_enabled, dependabot_alert_count, code_scanning_enabled, code_scanning_alert_count,
-            secret_scanning_enabled, secret_scanning_alert_count, security_last_checked, private_repo
+            secret_scanning_enabled, secret_scanning_alert_count, security_last_checked, private_repo, visibility_verified
         )
         VALUES (
             ${repo.name}, ${repo.fullName}, ${repo.description}, ${repo.language}, ${repo.stars},
@@ -240,7 +241,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
             ${contributorCount}, ${finiteOrNull(commitFrequency)}, ${busFactor}, ${finiteOrNull(avgPrMergeTimeHours)}, NOW(),
             ${hasSecurityPolicy}, ${hasSecurityAdvisories}, ${privateVulnReportingEnabled},
             ${dependabotAlertsEnabled}, ${dependabotAlertCount}, ${codeScanningEnabled}, ${codeScanningAlertCount},
-            ${secretScanningEnabled}, ${secretScanningAlertCount}, NOW(), ${repo.isPrivate}
+            ${secretScanningEnabled}, ${secretScanningAlertCount}, NOW(), ${repo.isPrivate}, TRUE
         )
         ON CONFLICT (full_name) DO UPDATE SET
           description = EXCLUDED.description,
@@ -255,6 +256,7 @@ export async function syncRepo(repo: RepoMetadata, github: GitHubClient, db: any
           updated_at = NOW(),
           last_commit_date = EXCLUDED.last_commit_date,
           private_repo = EXCLUDED.private_repo,
+          visibility_verified = TRUE,
           open_prs = EXCLUDED.open_prs,
           prs_ready_count = EXCLUDED.prs_ready_count,
           prs_blocked_count = EXCLUDED.prs_blocked_count,

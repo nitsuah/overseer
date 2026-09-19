@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getNeonClient } from '@/lib/db';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 import { enrichTemplateWithAI } from '@/lib/template-enricher';
 import type { RepoContext } from '@/lib/template-enricher';
 import logger from '@/lib/log';
@@ -33,6 +34,9 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    const denied = await denyIfNoRepoAccess(repoName, session);
+    if (denied) return denied;
 
     const db = getNeonClient();
     const repoRows = await db`

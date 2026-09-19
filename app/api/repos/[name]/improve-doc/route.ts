@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { GitHubClient } from '@/lib/github';
 import { getNeonClient } from '@/lib/db';
 import { generateDocImprovement } from '@/lib/ai';
+import { denyIfNoRepoAccess } from '@/lib/repo-access-guard';
 
 const DOC_PATHS: Record<string, string> = {
     readme: 'README.md',
@@ -39,6 +40,8 @@ export async function POST(
     }
 
     const repoName = params.name;
+    const denied = await denyIfNoRepoAccess(repoName, session);
+    if (denied) return denied;
     const db = getNeonClient();
     const repoRows = await db`SELECT full_name FROM repos WHERE name = ${repoName} LIMIT 1`;
     if (repoRows.length === 0) {
